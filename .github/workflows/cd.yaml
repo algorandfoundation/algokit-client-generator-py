@@ -69,13 +69,10 @@ jobs:
             -v DEBUG \
             --prerelease \
             --define=branch=main \
-            --define=upload_to_repository=true \
             publish
           gh release edit --prerelease "v$(poetry run semantic-release print-version --current)"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPOSITORY_USERNAME: __token__
-          REPOSITORY_PASSWORD: ${{ secrets.PYPI_API_KEY }}
 
       - name: Create Continuous Deployment - Production
         if: steps.get_branch.outputs.branch == 'main' && inputs.production_release
@@ -84,10 +81,10 @@ jobs:
             -v DEBUG \
             --define=version_source="commit" \
             --define=patch_without_tag=true \
-            --define=upload_to_repository=true \
             --define=branch=main \
             publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPOSITORY_USERNAME: __token__
-          REPOSITORY_PASSWORD: ${{ secrets.PYPI_API_KEY }}
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

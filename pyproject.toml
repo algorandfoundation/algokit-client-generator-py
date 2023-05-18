@@ -19,6 +19,7 @@ mypy = "*"
 pytest = "*"
 pytest-cov = "*"
 pip-audit = "^2.5.5"
+python-semantic-release = "^7.33.4"
 
 [build-system]
 requires = ["poetry-core"]
