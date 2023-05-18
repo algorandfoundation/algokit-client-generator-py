@@ -32,6 +32,9 @@ jobs:
     name: Release Library
     needs: ci-build-python
     runs-on: ubuntu-latest
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
 
     steps:
       - uses: actions/checkout@v3
