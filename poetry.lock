@@ -141,7 +141,7 @@ py-algorand-sdk = "^2"
 type = "git"
 url = "https://github.com/algorandfoundation/algokit-utils-py.git"
 reference = "type-refactor"
-resolved_reference = "839ef72a9ff4bde8654e5d9429830385fd34dd27"
+resolved_reference = "5f8356c1b783e4043c5f8e2c5c8ee6b8f7e91b77"
 
 [[package]]
 name = "async-timeout"
