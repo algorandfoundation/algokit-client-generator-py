@@ -91,7 +91,8 @@ ignore = [
 ]
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
-  "docs"
+  "docs",
+  "examples"
 ]
 # Assume Python 3.10.
 target-version = "py310"
