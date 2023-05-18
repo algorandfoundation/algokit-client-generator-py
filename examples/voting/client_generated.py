@@ -319,7 +319,7 @@ class CloseArgs(_ArgsBase[None]):
 
 @dataclasses.dataclass(kw_only=True)
 class GetPreconditionsArgs(_ArgsBase[tuple[int, int, int, int]]):
-    signature: list[int]
+    signature: bytes
 
     @staticmethod
     def method() -> str:
@@ -329,7 +329,7 @@ class GetPreconditionsArgs(_ArgsBase[tuple[int, int, int, int]]):
 @dataclasses.dataclass(kw_only=True)
 class VoteArgs(_ArgsBase[None]):
     fund_min_bal_req: TransactionWithSigner
-    signature: list[int]
+    signature: bytes
     answer_ids: list[int]
 
     @staticmethod
@@ -340,7 +340,7 @@ class VoteArgs(_ArgsBase[None]):
 @dataclasses.dataclass(kw_only=True)
 class CreateArgs(_ArgsBase[None]):
     vote_id: str
-    snapshot_public_key: list[int]
+    snapshot_public_key: bytes
     metadata_ipfs_cid: str
     start_time: int
     end_time: int
@@ -499,7 +499,7 @@ class VotingRoundAppClient:
     def get_preconditions(
         self,
         *,
-        signature: list[int],
+        signature: bytes,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[tuple[int, int, int, int]]:
         args = GetPreconditionsArgs(
@@ -515,7 +515,7 @@ class VotingRoundAppClient:
         self,
         *,
         fund_min_bal_req: TransactionWithSigner,
-        signature: list[int],
+        signature: bytes,
         answer_ids: list[int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:

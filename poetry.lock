@@ -173,7 +173,7 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 name = "beaker-pyteal"
 version = "1.0.0"
 description = "A Framework for building PyTeal Applications"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
@@ -646,7 +646,7 @@ files = [
 name = "docstring-parser"
 version = "0.14.1"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6,<4.0"
 files = [
@@ -1583,7 +1583,7 @@ diagrams = ["jinja2", "railroad-diagrams"]
 name = "pyteal"
 version = "0.23.0"
 description = "Algorand Smart Contracts in Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.10"
 files = [
@@ -1637,21 +1637,6 @@ pytest = ">=4.6"
 
 [package.extras]
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
-
-[[package]]
-name = "python-dotenv"
-version = "1.0.0"
-description = "Read key-value pairs from a .env file and set them as environment variables"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "python-dotenv-1.0.0.tar.gz", hash = "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba"},
-    {file = "python_dotenv-1.0.0-py3-none-any.whl", hash = "sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a"},
-]
-
-[package.extras]
-cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-gitlab"
@@ -1905,7 +1890,7 @@ jeepney = ">=0.6"
 name = "semantic-version"
 version = "2.10.0"
 description = "A library implementing the 'SemVer' scheme."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7"
 files = [
@@ -2247,4 +2232,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "790dd08c3a696acb3a6166c64aab1b410502a40035519952a00fc6977032d37c"
+content-hash = "cd7362740ec5eb26fdc57845bf738654b2a421a877f69c615c3e300b4cbcd46e"
