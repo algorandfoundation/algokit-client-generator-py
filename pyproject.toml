@@ -60,7 +60,7 @@ select = [
   # "G",    # flake8-logging-format
   # "INP",  # flake8-no-pep420
   "PIE",    # flake8-pie
-  "T20",    # flake8-print
+  # "T20",    # flake8-print
   "PYI",    # flake8-pyi
   "PT",     # flake8-pytest-style
   "Q",      # flake8-quotes
