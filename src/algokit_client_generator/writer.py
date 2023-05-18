@@ -14,6 +14,7 @@ def generate_client(input_path: Path, output_path: Path, settings: GenerationSet
         context.settings = settings
     output = render(generate(context), context.settings)
     output_path.write_text(output)
+    print(f"Output typed client for {app_spec.contract.name} to {output_path}")
 
 
 def render(parts: DocumentParts, settings: GenerationSettings) -> str:

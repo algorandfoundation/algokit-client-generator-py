@@ -4,6 +4,8 @@ from pathlib import Path
 from algokit_client_generator.generator import GenerationSettings
 from algokit_client_generator.writer import generate_client
 
+DEFAULT_CLIENT = "client_generated.py"
+
 
 def walk_dir(path: Path, output_name: str, settings: GenerationSettings) -> None:
     for child in path.iterdir():
@@ -15,23 +17,30 @@ def walk_dir(path: Path, output_name: str, settings: GenerationSettings) -> None
 
 def main() -> None:
     # TODO: proper CLI parsing
-    args = dict(enumerate(sys.argv))
-    input_path = Path(args.get(1, ".")).absolute()
-    output = args.get(2, "client_generated.py")
-
     settings = GenerationSettings(max_line_length=120)
 
-    if not input_path.exists():
-        raise Exception(f"{input_path} not found")
-
-    if input_path.is_dir():
-        walk_dir(input_path, output, settings)
-    else:
-        output_path = Path(output)
-        if not output_path.is_absolute():
-            output_path = input_path.parent / output
+    if "--scan" in sys.argv:
+        walk_dir(Path(".").absolute(), DEFAULT_CLIENT, settings)
+    elif len(sys.argv) > 1:
+        input_path = Path(sys.argv[1]).absolute()
+        if not input_path.exists():
+            print(f"{input_path} not found", file=sys.stderr)
+            return
+        elif input_path.is_dir():
+            print(f"{input_path} is not a file", file=sys.stderr)
+            return
+        if len(sys.argv) > 2:
+            output_path = Path(sys.argv[2])
+        else:
+            output_path = input_path.parent / DEFAULT_CLIENT
         generate_client(input_path, output_path, settings)
-
-
-if __name__ == "__main__":
-    main()
+    else:
+        print("usage: algokit-client-generator --scan")
+        print("       Scans current directory recursively and outputs a typed client for each application.json found")
+        print()
+        print("usage: algokit-client-generator path/to/application.json")
+        print(f"       Outputs a typed client to path/to/{DEFAULT_CLIENT}")
+        print()
+        print("usage: algokit-client-generator path/to/application.json my_client.py")
+        print("       Outputs a typed client to my_client.py")
+        return

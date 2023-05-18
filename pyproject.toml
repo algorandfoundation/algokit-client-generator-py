@@ -25,6 +25,9 @@ python-semantic-release = "^7.33.4"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+algokit-client-generator = "algokit_client_generator.cli:main"
+
 [tool.ruff]
 line-length = 120
 select = [
