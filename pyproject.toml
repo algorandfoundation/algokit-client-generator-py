@@ -20,6 +20,7 @@ pytest = "*"
 pytest-cov = "*"
 pip-audit = "^2.5.5"
 python-semantic-release = "^7.33.4"
+pre-commit = "^3.3.2"
 
 [build-system]
 requires = ["poetry-core"]
