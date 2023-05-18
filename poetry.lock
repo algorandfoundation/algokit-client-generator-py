@@ -126,22 +126,17 @@ frozenlist = ">=1.1.0"
 
 [[package]]
 name = "algokit-utils"
-version = "1.1.1"
+version = "1.2.0b2"
 description = "Utilities for Algorand development for use by AlgoKit"
 category = "main"
 optional = false
-python-versions = "^3.10"
-files = []
-develop = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "algokit_utils-1.2.0b2-py3-none-any.whl", hash = "sha256:23e1ebf481a8ce16ea6c05006d4b62eed03df3804cf904d5149d4596f3a5f367"},
+]
 
 [package.dependencies]
-py-algorand-sdk = "^2"
-
-[package.source]
-type = "git"
-url = "https://github.com/algorandfoundation/algokit-utils-py.git"
-reference = "type-refactor"
-resolved_reference = "5f8356c1b783e4043c5f8e2c5c8ee6b8f7e91b77"
+py-algorand-sdk = ">=2,<3"
 
 [[package]]
 name = "async-timeout"
@@ -1602,4 +1597,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9a73d18e85c0aa0c2ea7751700eb3f910b29d408910e9f4d4858492aa1db9d8c"
+content-hash = "fc3c47afe9f408b4238cff77066c9e622db1d2fcf89bd6533d2976a34928b8bc"

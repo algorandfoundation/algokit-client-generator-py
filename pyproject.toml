@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 beaker-pyteal = "^1.0.0"
-algokit-utils = { git = "https://github.com/algorandfoundation/algokit-utils-py.git", branch = "type-refactor"}
+algokit-utils = {version = "^1.2.0b2", allow-prereleases = true}
 python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
