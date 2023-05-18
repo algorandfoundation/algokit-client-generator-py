@@ -8,9 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-beaker-pyteal = "^1.0.0"
 algokit-utils = {version = "^1.2.0b2", allow-prereleases = true}
-python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["d"], version = "*"}
@@ -21,6 +19,7 @@ pytest-cov = "*"
 pip-audit = "^2.5.5"
 python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
+beaker-pyteal = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -112,7 +111,7 @@ pythonpath = ["src", "tests"]
 
 [tool.mypy]
 files = ["src", "tests"]
-exclude = ["dist"]
+exclude = ["dist", "examples"]
 python_version = "3.10"
 warn_unused_ignores = true
 warn_redundant_casts = true
