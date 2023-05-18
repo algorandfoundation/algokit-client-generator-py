@@ -37,6 +37,8 @@ def map_abi_type_to_python(abi_type: str) -> str:
             return tuple_type
         else:
             abi_type = abi_type[:-2]
+            if abi_type == "byte":
+                return "bytes"
             return f"list[{map_abi_type_to_python(abi_type)}]"
     if abi_type.startswith("(") and abi_type.endswith(")"):
         abi_type = abi_type[1:-1]
