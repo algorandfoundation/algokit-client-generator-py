@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "algokit-client-generator"
-version = "0.1.0"
+version = "0.0.0"
 description = "Algorand typed client Generator"
-authors = ["Daniel McGregor <daniel.mcgregor@makerx.com.au>"]
+authors = ["Algorand Foundation <contact@algorand.foundation>"]
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -22,30 +23,110 @@ pytest-cov = "*"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 120
-
 [tool.ruff]
 line-length = 120
-select = ["E", "F", "ANN", "UP", "N", "C4", "B", "A", "YTT", "W", "FBT", "Q", "RUF", "I"]
+select = [
+  # all possible codes as of this ruff version are listed here,
+  # ones we don't want/need are commented out to make it clear
+  # which have been omitted on purpose vs which ones get added
+  # in new ruff releases and should be considered for enabling
+  "F",      # pyflakes
+  "E", "W", # pycodestyle
+  "C90",    # mccabe
+  "I",      # isort
+  "N",      # PEP8 naming
+  "UP",     # pyupgrade
+  "YTT",    # flake8-2020
+  "ANN",    # flake8-annotations
+  # "S",    # flake8-bandit
+  # "BLE",  # flake8-blind-except
+  "FBT",    # flake8-boolean-trap
+  "B",      # flake8-bugbear
+  "A",      # flake8-builtins
+  # "COM",  # flake8-commas
+  "C4",     # flake8-comprehensions
+  "DTZ",    # flake8-datetimez
+  "T10",    # flake8-debugger
+  # "DJ",   # flake8-django
+  # "EM",   # flake8-errmsg
+  # "EXE",  # flake8-executable
+  "ISC",    # flake8-implicit-str-concat
+  "ICN",    # flake8-import-conventions
+  # "G",    # flake8-logging-format
+  # "INP",  # flake8-no-pep420
+  "PIE",    # flake8-pie
+  "T20",    # flake8-print
+  "PYI",    # flake8-pyi
+  "PT",     # flake8-pytest-style
+  "Q",      # flake8-quotes
+  "RSE",    # flake8-raise
+  "RET",    # flake8-return
+  "SLF",    # flake8-self
+  "SIM",    # flake8-simplify
+  "TID",    # flake8-tidy-imports
+  "TCH",    # flake8-type-checking
+  "ARG",    # flake8-unused-arguments
+  "PTH",    # flake8-use-pathlib
+  "ERA",    # eradicate
+  # "PD",   # pandas-vet
+  "PGH",    # pygrep-hooks
+  "PL",     # pylint
+  # "TRY",  # tryceratops
+  # "NPY",  # NumPy-specific rules
+  "RUF",    # Ruff-specific rules
+]
 ignore = [
   "ANN101", # no type for self
   "ANN102", # no type for cls
+  "SIM108", # allow if-else in place of ternary
+  "RET505", # allow else after return
+  "PLR0911", # TODO: re-enable
+  "PLR2004", # TODO: re-enable
+  "ARG001", # TODO: re-enable
 ]
-unfixable = ["B", "RUF"]
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+  "docs"
+]
+# Assume Python 3.10.
+target-version = "py310"
 
 [tool.ruff.flake8-annotations]
 allow-star-arg-any = true
 suppress-none-returning = true
 
+[tool.black]
+line-length = 120
+
+[tool.poe.tasks]
+docs = "sphinx-build docs/source docs/html"
+
 [tool.pytest.ini_options]
-pythonpath = ["smart_contracts"]
+pythonpath = ["src", "tests"]
 
 [tool.mypy]
-files = ["smart_contracts/"]
+files = ["src", "tests"]
+exclude = ["dist"]
 python_version = "3.10"
-check_untyped_defs = true
-warn_redundant_casts = true
 warn_unused_ignores = true
-allow_untyped_defs = false
-strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+warn_return_any = true
+strict = true
+disallow_untyped_decorators = true
+disallow_any_generics = false
+implicit_reexport = false
+show_error_codes = true
+
+[tool.semantic_release]
+version_toml = "pyproject.toml:tool.poetry.version"
+remove_dist = false
+build_command = "poetry build --format wheel"
+version_source = "tag"
+major_on_zero = true
+upload_to_repository = false
+tag_commit = true
+branch = "main"
+commit_message = "{version}\n\nskip-checks: true"
+
