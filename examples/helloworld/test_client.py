@@ -4,7 +4,7 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.helloworld.client_generated import HelloWorldAppClient
+from examples.helloworld.client import HelloWorldAppClient
 
 
 @pytest.fixture(scope="session")

@@ -7,7 +7,7 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.lifecycle.client_generated import (
+from examples.lifecycle.client import (
     CreateStringArgs,
     CreateVoidArgs,
     DeployCreate_CreateStringArgs,
