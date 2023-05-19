@@ -162,7 +162,7 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
 """
     )
     yield Part.Gap2
