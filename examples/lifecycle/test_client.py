@@ -17,7 +17,7 @@ from examples.lifecycle.client import (
 
 
 @pytest.fixture(scope="session")
-def lifecycle_client(algod_client: AlgodClient, indexer_client: IndexerClient) -> LifeCycleAppClient:
+def lifecycle_client(algod_client: AlgodClient) -> LifeCycleAppClient:
     account = get_localnet_default_account(algod_client)
     signer = AccountTransactionSigner(account.private_key)
 

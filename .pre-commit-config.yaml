@@ -19,7 +19,6 @@ repos:
         require_serial: false
         additional_dependencies: []
         minimum_pre_commit_version: '0'
-        files: '^(src|tests)/'
       - id: mypy
         name: mypy
         description: '`mypy` will check Python types for correctness'
@@ -29,4 +28,3 @@ repos:
         require_serial: true
         additional_dependencies: [ ]
         minimum_pre_commit_version: '2.9.2'
-        files: '^(src|tests)/'
