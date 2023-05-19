@@ -8,10 +8,10 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
 from examples.lifecycle.client import (
-    CreateStringArgs,
-    CreateVoidArgs,
-    DeployCreate_CreateStringArgs,
-    DeployCreate_CreateVoidArgs,
+    CreateStringStringArgs,
+    CreateStringUint32VoidArgs,
+    DeployCreate_CreateStringStringArgs,
+    DeployCreate_CreateStringUint32VoidArgs,
     LifeCycleAppClient,
 )
 
@@ -27,23 +27,23 @@ def lifecycle_client(algod_client: AlgodClient) -> LifeCycleAppClient:
 def test_create_bare(lifecycle_client: LifeCycleAppClient) -> None:
     create_response = lifecycle_client.create(args=None)
     assert create_response
-    response = lifecycle_client.hello_1_args(name="Bare")
+    response = lifecycle_client.hello_string_string(name="Bare")
 
     assert response.return_value == "Hello, Bare\n"
 
 
 def test_create_1arg(lifecycle_client: LifeCycleAppClient) -> None:
-    create_response = lifecycle_client.create(args=CreateStringArgs(greeting="Greetings"))
+    create_response = lifecycle_client.create(args=CreateStringStringArgs(greeting="Greetings"))
     assert create_response.return_value == "Greetings_1"
-    response = lifecycle_client.hello_1_args(name="1 Arg")
+    response = lifecycle_client.hello_string_string(name="1 Arg")
 
     assert response.return_value == "Greetings, 1 Arg\n"
 
 
 def test_create_2arg(lifecycle_client: LifeCycleAppClient) -> None:
-    create_response = lifecycle_client.create(args=CreateVoidArgs(greeting="Greetings", times=2))
+    create_response = lifecycle_client.create(args=CreateStringUint32VoidArgs(greeting="Greetings", times=2))
     assert create_response.return_value is None
-    response = lifecycle_client.hello_1_args(name="2 Arg")
+    response = lifecycle_client.hello_string_string(name="2 Arg")
 
     assert response.return_value == "Greetings, 2 Arg\nGreetings, 2 Arg\n"
 
@@ -63,7 +63,7 @@ def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(allow_update=True, create_args=None)
     assert deploy_lifecycle_client.app_client.app_id
 
-    response = deploy_lifecycle_client.hello_1_args(name="Deploy Bare")
+    response = deploy_lifecycle_client.hello_string_string(name="Deploy Bare")
 
     assert response.return_value == "Hello, Deploy Bare\n"
 
@@ -71,11 +71,11 @@ def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
 def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(
         allow_update=True,
-        create_args=DeployCreate_CreateStringArgs(args=CreateStringArgs(greeting="Deploy Greetings")),
+        create_args=DeployCreate_CreateStringStringArgs(args=CreateStringStringArgs(greeting="Deploy Greetings")),
     )
     assert deploy_lifecycle_client.app_client.app_id
 
-    response = deploy_lifecycle_client.hello_1_args(name="1 Arg")
+    response = deploy_lifecycle_client.hello_string_string(name="1 Arg")
 
     assert response.return_value == "Deploy Greetings, 1 Arg\n"
 
@@ -83,12 +83,12 @@ def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None
 def test_deploy_create_2arg(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(
         allow_update=True,
-        create_args=DeployCreate_CreateVoidArgs(
-            args=CreateVoidArgs(greeting="Deploy Greetings", times=2),
+        create_args=DeployCreate_CreateStringUint32VoidArgs(
+            args=CreateStringUint32VoidArgs(greeting="Deploy Greetings", times=2),
         ),
     )
     assert deploy_lifecycle_client.app_client.app_id
 
-    response = deploy_lifecycle_client.hello_1_args(name="2 Arg")
+    response = deploy_lifecycle_client.hello_string_string(name="2 Arg")
 
     assert response.return_value == "Deploy Greetings, 2 Arg\nDeploy Greetings, 2 Arg\n"

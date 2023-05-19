@@ -97,24 +97,13 @@ def use_method_name(method: Method) -> str:
     return method.name
 
 
-def use_method_name_and_return(method: Method) -> str:
-    return f"{method.name}_{method.returns}"
-
-
-def use_method_name_and_arg_count(method: Method) -> str:
-    return f"{method.name}_{len(method.args)}_args"
-
-
 def use_method_signature(method: Method) -> str:
     return method.get_signature().replace("(", "_").replace(")", "_").replace(",", "_")
 
 
 def find_naming_strategy(methods: list[Method]) -> Callable[[Method], str]:
-    for strategy in (use_method_name, use_method_name_and_return, use_method_name_and_arg_count):
-        transformed = set(map(strategy, methods))
-        if len(transformed) == len(methods):  # unique mappings found
-            return strategy
-    # fall back to full signature
+    if len(methods) == 1:
+        return use_method_name
     return use_method_signature
 
 
