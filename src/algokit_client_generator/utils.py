@@ -23,7 +23,7 @@ def get_method_name(name: str, string_suffix: str = "") -> str:
     return "_".join(p for p in parts)
 
 
-def map_abi_type_to_python(abi_type: str) -> str:
+def map_abi_type_to_python(abi_type: str) -> str:  # noqa: ignore[PLR0911]
     match = re.match(r".*\[([0-9]*)]$", abi_type)
     if match:
         array_size = match.group(1)
