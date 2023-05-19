@@ -16,6 +16,7 @@ class Part(Enum):
 
 DocumentPart = str | Part
 DocumentParts = DocumentPart | Iterable["DocumentParts"]
+_MINIMUM_RENDERED_LENGTH = 5
 
 
 class RenderContext:
@@ -32,7 +33,7 @@ class RenderContext:
         return self.line_mode_stack[-1]
 
 
-def convert_part_inner(part: DocumentPart, context: RenderContext) -> str | None:
+def convert_part_inner(part: DocumentPart, context: RenderContext) -> str | None:  # noqa: ignore[PLR0911]
     match part:
         case Part.IncIndent:
             context.indent += context.indent_inc
@@ -89,7 +90,7 @@ def convert_part(parts: DocumentParts, context: RenderContext) -> list[str]:
         result = convert_part_inner(part, context)
         context.last_part = part
         if result is not None:
-            if len(result) > 5:
+            if len(result) > _MINIMUM_RENDERED_LENGTH:
                 context.last_rendered_part = result
             else:  # if last render was small then combine
                 context.last_rendered_part += result
