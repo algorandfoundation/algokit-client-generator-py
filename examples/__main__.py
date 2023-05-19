@@ -13,7 +13,7 @@ root_path = Path(__file__).parent
 
 @contextmanager
 def cwd(path: Path) -> Generator[None, None, None]:
-    old_pwd = os.getcwd()
+    old_pwd = Path.cwd()
     os.chdir(path)
     try:
         yield
