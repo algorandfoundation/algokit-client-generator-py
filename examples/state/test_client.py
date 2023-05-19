@@ -6,7 +6,7 @@ from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.state.client_generated import (
+from examples.state.client import (
     CreateAbiArgs,
     DeleteAbiArgs,
     Deploy_DeleteAbiArgs,

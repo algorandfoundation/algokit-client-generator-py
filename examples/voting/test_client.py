@@ -11,7 +11,7 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
-from examples.voting.client_generated import CreateArgs, DeployCreate_CreateArgs, VotingRoundAppClient
+from examples.voting.client import CreateArgs, DeployCreate_CreateArgs, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 

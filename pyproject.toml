@@ -20,6 +20,7 @@ pip-audit = "^2.5.5"
 python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
 beaker-pyteal = "^1.0.0"
+poethepoet = "^0.20.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -105,7 +106,7 @@ suppress-none-returning = true
 line-length = 120
 
 [tool.poe.tasks]
-docs = "sphinx-build docs/source docs/html"
+update-approvals = "poetry run python -m scripts.update_approvals"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
