@@ -90,6 +90,20 @@ def error() -> pt.Expr:
     return pt.Assert(pt.Int(0), comment="Deliberate error")
 
 
+@app.external(read_only=True)
+def default_value(
+    arg_with_default: pt.abi.String = "default value", *, output: pt.abi.String  # type: ignore[assignment]
+) -> pt.Expr:
+    return output.set(arg_with_default.get())
+
+
+@app.external(read_only=True)
+def default_value_from_abi(
+    arg_with_default: pt.abi.String = default_value, *, output: pt.abi.String  # type: ignore[assignment]
+) -> pt.Expr:
+    return output.set(pt.Concat(pt.Bytes("ABI, "), arg_with_default.get()))
+
+
 @app.external(
     authorize=beaker.Authorize.only_creator(),
     bare=True,

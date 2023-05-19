@@ -124,6 +124,16 @@ def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
     assert response.confirmed_round
 
 
+def test_default_arg(deployed_state_app_client: StateAppClient) -> None:
+    assert deployed_state_app_client.default_value(arg_with_default="test").return_value == "test"
+    assert deployed_state_app_client.default_value().return_value == "default value"
+
+
+def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:
+    assert deployed_state_app_client.default_value_from_abi(arg_with_default="test").return_value == "ABI, test"
+    assert deployed_state_app_client.default_value_from_abi().return_value == "ABI, default value"
+
+
 def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
     response = deployed_state_app_client.opt_in(args=OptInArgs())
     assert response.confirmed_round
