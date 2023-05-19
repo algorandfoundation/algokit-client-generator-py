@@ -104,7 +104,7 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
 
 
 def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
@@ -159,7 +159,8 @@ class HelloWorldAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     @typing.overload
@@ -174,7 +175,8 @@ class HelloWorldAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     def __init__(
@@ -189,7 +191,8 @@ class HelloWorldAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         self.app_spec = APP_SPEC
 
         # calling full __init__ signature, so ignoring mypy warning about overloads
@@ -204,6 +207,7 @@ class HelloWorldAppClient:
             sender=sender,
             suggested_params=suggested_params,
             template_values=template_values,
+            app_name=app_name,
         )
 
     def hello(

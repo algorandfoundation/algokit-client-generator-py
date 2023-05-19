@@ -169,3 +169,5 @@ cython_debug/
 node_modules
 
 smart_contracts/coverage/
+
+examples/*/client_generated.py

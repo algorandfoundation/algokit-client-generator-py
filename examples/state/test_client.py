@@ -7,6 +7,7 @@ from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
+from examples.conftest import get_unique_name
 from examples.state.client import (
     CreateAbiArgs,
     DeleteAbiArgs,
@@ -20,137 +21,122 @@ from examples.state.client import (
 
 
 @pytest.fixture()
-def state_app_client(algod_client: AlgodClient, indexer_client: IndexerClient, new_account: Account) -> StateAppClient:
+def state_app_client(
+    algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: Account
+) -> StateAppClient:
     return StateAppClient(
         algod_client=algod_client,
         indexer_client=indexer_client,
-        creator=new_account,
+        creator=funded_account,
+        app_name=get_unique_name(),
+        template_values={"VALUE": 1},
     )
 
 
-def test_call_abi(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    response = state_app_client.call_abi(value="there")
+@pytest.fixture()
+def deployed_state_app_client(state_app_client: StateAppClient) -> StateAppClient:
+    state_app_client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
+    return state_app_client
+
+
+def test_call_abi(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.call_abi(value="there")
 
     assert response.return_value == "Hello, there"
     assert response.confirmed_round is None
 
 
-def test_call_abi_txn(state_app_client: StateAppClient, algod_client: AlgodClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
+def test_call_abi_txn(deployed_state_app_client: StateAppClient, algod_client: AlgodClient) -> None:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
-        receiver=state_app_client.app_client.app_address,
+        receiver=deployed_state_app_client.app_client.app_address,
         amt=200_000,
         note=b"Bootstrap payment",
         sp=algod_client.suggested_params(),
     )
     pay = TransactionWithSigner(payment, from_account.signer)
-    response = state_app_client.call_abi_txn(txn=pay, value="there")
+    response = deployed_state_app_client.call_abi_txn(txn=pay, value="there")
 
     assert response.return_value == "Sent 200000. there"
     assert response.confirmed_round is None
 
 
-def test_set_global(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
+def test_set_global(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.set_global(
+        int1=1, int2=2, bytes1="test", bytes2=bytes("test", encoding="utf8")
     )
-    response = state_app_client.set_global(int1=1, int2=2, bytes1="test", bytes2=bytes("test", encoding="utf8"))
 
     assert response.return_value is None
 
 
-def test_set_local(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    state_app_client.opt_in(args=OptInArgs())
-    response = state_app_client.set_local(int1=1, int2=2, bytes1="test", bytes2=b"test")
+def test_set_local(deployed_state_app_client: StateAppClient) -> None:
+    deployed_state_app_client.opt_in(args=OptInArgs())
+    response = deployed_state_app_client.set_local(int1=1, int2=2, bytes1="test", bytes2=b"test")
 
     assert response.return_value is None
 
 
-def test_set_box(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
+def test_set_box(deployed_state_app_client: StateAppClient) -> None:
     algokit_utils.transfer(
-        state_app_client.app_client.algod_client,
+        deployed_state_app_client.app_client.algod_client,
         algokit_utils.TransferParameters(
-            from_account=algokit_utils.get_localnet_default_account(state_app_client.app_client.algod_client),
-            to_address=state_app_client.app_client.app_address,
+            from_account=algokit_utils.get_localnet_default_account(deployed_state_app_client.app_client.algod_client),
+            to_address=deployed_state_app_client.app_client.app_address,
             micro_algos=120000,
         ),
     )
-    response = state_app_client.set_box(
+    response = deployed_state_app_client.set_box(
         name=b"test", value="test", transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, b"test")])
     )
 
     assert response.return_value is None
 
 
-def test_error(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    with pytest.raises(Exception):  # noqa: ignore[B017]
-        state_app_client.error()
+def test_error(deployed_state_app_client: StateAppClient) -> None:
+    with pytest.raises(algokit_utils.LogicError):
+        deployed_state_app_client.error()
 
 
-def test_create_abi(algod_client: AlgodClient, indexer_client: IndexerClient, new_account: Account) -> None:
-    state_app_client = StateAppClient(
-        algod_client=algod_client,
-        indexer_client=indexer_client,
-        creator=new_account,
-        template_values={"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1},
-    )
+def test_create_abi(state_app_client: StateAppClient) -> None:
+    state_app_client.app_client.template_values = {"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1}
 
     response = state_app_client.create(args=CreateAbiArgs(input="test"))
 
     assert response.return_value == "test"
 
 
-def test_update_abi(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    response = state_app_client.update(args=UpdateAbiArgs(input="test"))
+def test_update_abi(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.update(args=UpdateAbiArgs(input="test"))
 
     assert response.return_value == "test"
 
 
-def test_delete_abi(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    response = state_app_client.delete(args=DeleteAbiArgs(input="test"))
+def test_delete_abi(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.delete(args=DeleteAbiArgs(input="test"))
 
     assert response.return_value == "test"
 
 
-def test_opt_in(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
-    response = state_app_client.opt_in(args=OptInArgs())
+def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.opt_in(args=OptInArgs())
 
     assert response.confirmed_round
 
 
-def test_get_global_state(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
+def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.opt_in(args=OptInArgs())
+    assert response.confirmed_round
+
+    clear_response = deployed_state_app_client.clear_state()
+    assert clear_response.confirmed_round
+
+
+def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
     int1_expected = 1
     int2_expected = 2
-    state_app_client.set_global(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
-    response = state_app_client.get_global_state()
+    deployed_state_app_client.set_global(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
+    response = deployed_state_app_client.get_global_state()
 
     assert response.bytes1.as_bytes == b"test"
     assert response.bytes2.as_str == "test"
@@ -159,15 +145,12 @@ def test_get_global_state(state_app_client: StateAppClient) -> None:
     assert response.value == 1
 
 
-def test_get_local_state(state_app_client: StateAppClient) -> None:
-    state_app_client.deploy(
-        template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
-    )
+def test_get_local_state(deployed_state_app_client: StateAppClient) -> None:
     int1_expected = 1
     int2_expected = 2
-    state_app_client.opt_in(args=OptInArgs())
-    state_app_client.set_local(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
-    response = state_app_client.get_local_state(account=None)
+    deployed_state_app_client.opt_in(args=OptInArgs())
+    deployed_state_app_client.set_local(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
+    response = deployed_state_app_client.get_local_state(account=None)
 
     assert response.local_bytes1.as_str == "test"
     assert response.local_bytes2.as_str == "test"
