@@ -179,7 +179,7 @@ def _convert_deploy_args(
 
 
 @dataclasses.dataclass(kw_only=True)
-class Hello1ArgsArgs(_ArgsBase[str]):
+class HelloStringStringArgs(_ArgsBase[str]):
     name: str
 
     @staticmethod
@@ -188,14 +188,14 @@ class Hello1ArgsArgs(_ArgsBase[str]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class Hello0ArgsArgs(_ArgsBase[str]):
+class HelloStringArgs(_ArgsBase[str]):
     @staticmethod
     def method() -> str:
         return "hello()string"
 
 
 @dataclasses.dataclass(kw_only=True)
-class CreateStringArgs(_ArgsBase[str]):
+class CreateStringStringArgs(_ArgsBase[str]):
     """ABI create method with 1 argument"""
 
     greeting: str
@@ -206,7 +206,7 @@ class CreateStringArgs(_ArgsBase[str]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class CreateVoidArgs(_ArgsBase[None]):
+class CreateStringUint32VoidArgs(_ArgsBase[None]):
     """ABI create method with 2 arguments"""
 
     greeting: str
@@ -217,8 +217,8 @@ class CreateVoidArgs(_ArgsBase[None]):
         return "create(string,uint32)void"
 
 
-DeployCreate_CreateStringArgs = _TypedDeployCreateArgs[CreateStringArgs]
-DeployCreate_CreateVoidArgs = _TypedDeployCreateArgs[CreateVoidArgs]
+DeployCreate_CreateStringStringArgs = _TypedDeployCreateArgs[CreateStringStringArgs]
+DeployCreate_CreateStringUint32VoidArgs = _TypedDeployCreateArgs[CreateStringUint32VoidArgs]
 
 
 class ByteReader:
@@ -310,13 +310,13 @@ class LifeCycleAppClient:
         state = self.app_client.get_global_state(raw=True)
         return GlobalState(state)
 
-    def hello_1_args(
+    def hello_string_string(
         self,
         *,
         name: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
-        args = Hello1ArgsArgs(
+        args = HelloStringStringArgs(
             name=name,
         )
         return self.app_client.call(
@@ -325,12 +325,12 @@ class LifeCycleAppClient:
             **_as_dict(args),
         )
 
-    def hello_0_args(
+    def hello_string(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
-        args = Hello0ArgsArgs()
+        args = HelloStringArgs()
         return self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_as_dict(transaction_parameters),
@@ -351,7 +351,7 @@ class LifeCycleAppClient:
     def create(
         self,
         *,
-        args: CreateStringArgs,
+        args: CreateStringStringArgs,
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
@@ -361,7 +361,7 @@ class LifeCycleAppClient:
     def create(
         self,
         *,
-        args: CreateVoidArgs,
+        args: CreateStringUint32VoidArgs,
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
@@ -370,7 +370,7 @@ class LifeCycleAppClient:
     def create(
         self,
         *,
-        args: CreateStringArgs | CreateVoidArgs | None = None,
+        args: CreateStringStringArgs | CreateStringUint32VoidArgs | None = None,
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> (
@@ -412,7 +412,7 @@ class LifeCycleAppClient:
         on_update: algokit_utils.OnUpdate = algokit_utils.OnUpdate.Fail,
         on_schema_break: algokit_utils.OnSchemaBreak = algokit_utils.OnSchemaBreak.Fail,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-        create_args: DeployCreate_CreateStringArgs | DeployCreate_CreateVoidArgs | algokit_utils.DeployCallArgs | None = None,
+        create_args: DeployCreate_CreateStringStringArgs | DeployCreate_CreateStringUint32VoidArgs | algokit_utils.DeployCallArgs | None = None,
         update_args: algokit_utils.DeployCallArgs | None = None,
         delete_args: algokit_utils.DeployCallArgs | None = None,
     ) -> algokit_utils.DeployResponse:
