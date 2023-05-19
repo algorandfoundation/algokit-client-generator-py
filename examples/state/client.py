@@ -494,7 +494,8 @@ class StateAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     @typing.overload
@@ -509,7 +510,8 @@ class StateAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     def __init__(
@@ -524,7 +526,8 @@ class StateAppClient:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         self.app_spec = APP_SPEC
 
         # calling full __init__ signature, so ignoring mypy warning about overloads
@@ -539,6 +542,7 @@ class StateAppClient:
             sender=sender,
             suggested_params=suggested_params,
             template_values=template_values,
+            app_name=app_name,
         )
 
     def get_global_state(self) -> GlobalState:

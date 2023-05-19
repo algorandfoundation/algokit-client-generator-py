@@ -126,13 +126,13 @@ frozenlist = ">=1.1.0"
 
 [[package]]
 name = "algokit-utils"
-version = "1.2.0b2"
+version = "1.2.0b3"
 description = "Utilities for Algorand development for use by AlgoKit"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "algokit_utils-1.2.0b2-py3-none-any.whl", hash = "sha256:23e1ebf481a8ce16ea6c05006d4b62eed03df3804cf904d5149d4596f3a5f367"},
+    {file = "algokit_utils-1.2.0b3-py3-none-any.whl", hash = "sha256:d48a7a80b1fc7c996ca2c772372c3ad3fb484232be1308f42158c8e356dd8bf6"},
 ]
 
 [package.dependencies]
@@ -2263,4 +2263,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "70ad28aeb405c555f66cd3a19d7edaf46a9875284ed66be77474b133b46326f2"
+content-hash = "3be8685e6db5a5a8edfc7fd738dfff96cf3c9abba13dfd4a3b6ddec206e53fb1"

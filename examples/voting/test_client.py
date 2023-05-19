@@ -12,13 +12,14 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
+from examples.conftest import get_unique_name
 from examples.voting.client import CreateArgs, DeployCreate_CreateArgs, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 
 
-@pytest.fixture()
-def create_args(algod_client: AlgodClient, voter: tuple[Account, bytes]) -> CreateArgs:
+@pytest.fixture(scope="session")
+def create_args(algod_client: AlgodClient, voter: Account) -> CreateArgs:
     quorum = math.ceil(random.randint(1, 9) * 1000)
     question_counts = [1] * NUM_QUESTIONS
 
@@ -35,7 +36,7 @@ def create_args(algod_client: AlgodClient, voter: tuple[Account, bytes]) -> Crea
         start_time=int(block_ts),
         end_time=int(block_ts) + 1000,
         quorum=quorum,
-        snapshot_public_key=algosdk.encoding.decode_address(voter[0].address),
+        snapshot_public_key=voter.public_key,
         nft_image_url="ipfs://cid",
         option_counts=question_counts,
     )
@@ -53,33 +54,30 @@ def deploy_create_args(algod_client: AlgodClient, create_args: CreateArgs) -> De
 def deploy_voting_client(
     algod_client: AlgodClient,
     indexer_client: IndexerClient,
-    new_account: Account,
+    funded_account: Account,
     deploy_create_args: DeployCreate_CreateArgs,
 ) -> VotingRoundAppClient:
     algokit_utils.transfer(
         client=algod_client,
         parameters=algokit_utils.TransferParameters(
             from_account=algokit_utils.get_localnet_default_account(algod_client),
-            to_address=new_account.address,
-            micro_algos=algosdk.util.algos_to_microalgos(100000),
+            to_address=funded_account.address,
+            micro_algos=algosdk.util.algos_to_microalgos(1),
         ),
     )
 
-    client = VotingRoundAppClient(algod_client=algod_client, indexer_client=indexer_client, creator=new_account)
+    client = VotingRoundAppClient(
+        algod_client=algod_client, indexer_client=indexer_client, creator=funded_account, app_name=get_unique_name()
+    )
     client.deploy(allow_delete=True, create_args=deploy_create_args)
 
     return client
 
 
-@pytest.fixture()
-def voter(algod_client: AlgodClient) -> tuple[Account, bytes]:
+@pytest.fixture(scope="session")
+def voter(algod_client: AlgodClient) -> Account:
     voter = algosdk.account.generate_account()
     voter_account = Account(private_key=voter[0], address=voter[1])
-    public_key = algosdk.encoding.decode_address(voter[1])
-    private_key = base64.b64decode(voter[0])
-    signing_key = SigningKey(private_key[: algosdk.constants.key_len_bytes])
-    signed = signing_key.sign(public_key)
-    signature = signed.signature
     algokit_utils.transfer(
         client=algod_client,
         parameters=algokit_utils.TransferParameters(
@@ -88,33 +86,21 @@ def voter(algod_client: AlgodClient) -> tuple[Account, bytes]:
             micro_algos=algosdk.util.algos_to_microalgos(10),
         ),
     )
-    return voter_account, signature
+    return voter_account
 
 
-def test_get_preconditions(
-    deploy_voting_client: VotingRoundAppClient, algod_client: AlgodClient, voter: tuple[Account, bytes]
-) -> None:
-    signature = voter[1]
-    sp = algod_client.suggested_params()
-    sp.fee = 12000
-    sp.flat_fee = True
-    response = deploy_voting_client.get_preconditions(
-        signature=signature,
-        transaction_parameters=algokit_utils.TransactionParameters(
-            boxes=[(0, algosdk.encoding.decode_address(voter[0].address))],
-            suggested_params=sp,
-            sender=voter[0].address,
-            signer=AccountTransactionSigner(voter[0].private_key),
-        ),
-    )
-    expected_length = 4
-    assert len(response.return_value) == expected_length
+@pytest.fixture(scope="session")
+def voter_signature(voter: Account) -> bytes:
+    private_key = base64.b64decode(voter.private_key)
+    signing_key = SigningKey(private_key[: algosdk.constants.key_len_bytes])
+    signed = signing_key.sign(voter.public_key)
+    return signed.signature
 
 
 @pytest.fixture()
 def bootstrap_response(
     deploy_voting_client: VotingRoundAppClient, algod_client: AlgodClient
-) -> algokit_utils.ABITransactionResponse:
+) -> algokit_utils.ABITransactionResponse[None]:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
@@ -131,11 +117,31 @@ def bootstrap_response(
     )
 
 
+def test_get_preconditions(
+    deploy_voting_client: VotingRoundAppClient, algod_client: AlgodClient, voter: Account, voter_signature: bytes
+) -> None:
+    sp = algod_client.suggested_params()
+    sp.fee = 12000
+    sp.flat_fee = True
+    response = deploy_voting_client.get_preconditions(
+        signature=voter_signature,
+        transaction_parameters=algokit_utils.TransactionParameters(
+            boxes=[(0, voter.public_key)],
+            suggested_params=sp,
+            sender=voter.address,
+            signer=AccountTransactionSigner(voter.private_key),
+        ),
+    )
+    expected_length = 4
+    assert len(response.return_value) == expected_length
+
+
 def test_vote(
     deploy_voting_client: VotingRoundAppClient,
     algod_client: AlgodClient,
-    voter: tuple[Account, bytes],
-    bootstrap_response: algokit_utils.ABITransactionResponse,
+    voter: Account,
+    voter_signature: bytes,
+    bootstrap_response: algokit_utils.ABITransactionResponse[None],
 ) -> None:
     # bootstrap app
     assert bootstrap_response.confirmed_round
@@ -143,15 +149,12 @@ def test_vote(
     # vote payment
     question_counts = [0] * NUM_QUESTIONS
     payment = algosdk.transaction.PaymentTxn(
-        sender=voter[0].address,
+        sender=voter.address,
         receiver=deploy_voting_client.app_client.app_address,
         amt=400 * (32 + 2 + len(question_counts) * 1) + 2500,
         sp=deploy_voting_client.app_client.algod_client.suggested_params(),
     )
-    voter_signer = AccountTransactionSigner(voter[0].private_key)
-    voter_public_key = algosdk.encoding.decode_address(voter[0].address)
-    fund_min_bal_req = TransactionWithSigner(payment, voter_signer)
-    signature = voter[1]
+    fund_min_bal_req = TransactionWithSigner(payment, voter.signer)
 
     # vote fee
     sp = algod_client.suggested_params()
@@ -159,25 +162,22 @@ def test_vote(
     sp.flat_fee = True
     response = deploy_voting_client.vote(
         fund_min_bal_req=fund_min_bal_req,
-        signature=signature,
+        signature=voter_signature,
         answer_ids=question_counts,
         transaction_parameters=algokit_utils.TransactionParameters(
             suggested_params=sp,
-            boxes=[(0, "V"), (0, voter_public_key)],
-            sender=voter[0].address,
-            signer=voter_signer,
+            boxes=[(0, "V"), (0, voter.public_key)],
+            sender=voter.address,
+            signer=voter.signer,
         ),
     )
     assert response.return_value is None
 
 
-def test_create(
-    algod_client: AlgodClient, indexer_client: IndexerClient, new_account: Account, create_args: CreateArgs
-) -> None:
+def test_create(algod_client: AlgodClient, funded_account: Account, create_args: CreateArgs) -> None:
     voting_round_app_client = VotingRoundAppClient(
         algod_client=algod_client,
-        indexer_client=indexer_client,
-        creator=new_account,
+        signer=funded_account,
         template_values={"VALUE": 1, "DELETABLE": 1},
     )
 
@@ -185,16 +185,16 @@ def test_create(
     sp.fee = algosdk.util.algos_to_microalgos(4)
     sp.flat_fee = True
 
-    voting_round_app_client.create(
+    response = voting_round_app_client.create(
         args=create_args,
         transaction_parameters=algokit_utils.CreateTransactionParameters(suggested_params=sp),
     )
 
-    # assert response.return_value voting_round_app_client== "Hello, World"
+    assert response.confirmed_round
 
 
 def test_boostrap(
-    bootstrap_response: algokit_utils.ABITransactionResponse,
+    bootstrap_response: algokit_utils.ABITransactionResponse[None],
 ) -> None:
     # bootstrap app
     assert bootstrap_response.confirmed_round
@@ -202,7 +202,7 @@ def test_boostrap(
 
 def test_close(
     deploy_voting_client: VotingRoundAppClient,
-    bootstrap_response: algokit_utils.ABITransactionResponse,
+    bootstrap_response: algokit_utils.ABITransactionResponse[None],
 ) -> None:
     # bootstrap app
     assert bootstrap_response.confirmed_round

@@ -1,12 +1,9 @@
+import algokit_utils
 import pytest
-from algokit_utils import (
-    Account,
-    get_localnet_default_account,
-)
-from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
+from examples.conftest import get_unique_name
 from examples.lifecycle.client import (
     CreateStringStringArgs,
     CreateStringUint32VoidArgs,
@@ -17,11 +14,20 @@ from examples.lifecycle.client import (
 
 
 @pytest.fixture(scope="session")
-def lifecycle_client(algod_client: AlgodClient) -> LifeCycleAppClient:
-    account = get_localnet_default_account(algod_client)
-    signer = AccountTransactionSigner(account.private_key)
+def lifecycle_client(algod_client: AlgodClient, funded_account: algokit_utils.Account) -> LifeCycleAppClient:
+    return LifeCycleAppClient(algod_client=algod_client, signer=funded_account.signer, template_values={"UPDATABLE": 1})
 
-    return LifeCycleAppClient(algod_client=algod_client, signer=signer, template_values={"UPDATABLE": 1})
+
+@pytest.fixture()
+def deploy_lifecycle_client(
+    algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: algokit_utils.Account
+) -> LifeCycleAppClient:
+    return LifeCycleAppClient(
+        algod_client=algod_client,
+        indexer_client=indexer_client,
+        creator=funded_account,
+        app_name=get_unique_name(),
+    )
 
 
 def test_create_bare(lifecycle_client: LifeCycleAppClient) -> None:
@@ -48,17 +54,6 @@ def test_create_2arg(lifecycle_client: LifeCycleAppClient) -> None:
     assert response.return_value == "Greetings, 2 Arg\nGreetings, 2 Arg\n"
 
 
-@pytest.fixture()
-def deploy_lifecycle_client(
-    algod_client: AlgodClient, indexer_client: IndexerClient, new_account: Account
-) -> LifeCycleAppClient:
-    return LifeCycleAppClient(
-        algod_client=algod_client,
-        indexer_client=indexer_client,
-        creator=new_account,
-    )
-
-
 def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(allow_update=True, create_args=None)
     assert deploy_lifecycle_client.app_client.app_id
@@ -69,11 +64,13 @@ def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
 
 
 def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None:
-    deploy_lifecycle_client.deploy(
+    deploy_response = deploy_lifecycle_client.deploy(
         allow_update=True,
         create_args=DeployCreate_CreateStringStringArgs(args=CreateStringStringArgs(greeting="Deploy Greetings")),
     )
     assert deploy_lifecycle_client.app_client.app_id
+    assert isinstance(deploy_response.create_response, algokit_utils.ABITransactionResponse)
+    assert deploy_response.create_response.return_value == "Deploy Greetings_1"
 
     response = deploy_lifecycle_client.hello_string_string(name="1 Arg")
 

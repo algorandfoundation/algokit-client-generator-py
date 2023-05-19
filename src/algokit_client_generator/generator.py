@@ -292,7 +292,8 @@ class {context.client_name}:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     @typing.overload
@@ -307,7 +308,8 @@ class {context.client_name}:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         ...
 
     def __init__(
@@ -322,7 +324,8 @@ class {context.client_name}:
         sender: str | None = None,
         suggested_params: algosdk.transaction.SuggestedParams | None = None,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-    ):
+        app_name: str | None = None,
+    ) -> None:
         self.app_spec = APP_SPEC
 
         # calling full __init__ signature, so ignoring mypy warning about overloads
@@ -337,6 +340,7 @@ class {context.client_name}:
             sender=sender,
             suggested_params=suggested_params,
             template_values=template_values,
+            app_name=app_name,
         )"""
     )
     yield Part.Gap1
