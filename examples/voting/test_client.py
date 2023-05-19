@@ -1,3 +1,4 @@
+# mypy: disable-error-code="no-untyped-call"
 import base64
 import math
 import random
@@ -106,7 +107,8 @@ def test_get_preconditions(
             signer=AccountTransactionSigner(voter[0].private_key),
         ),
     )
-    assert len(response.return_value) == 4
+    expected_length = 4
+    assert len(response.return_value) == expected_length
 
 
 @pytest.fixture()

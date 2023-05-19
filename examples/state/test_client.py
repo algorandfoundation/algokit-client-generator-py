@@ -1,3 +1,4 @@
+# mypy: disable-error-code="no-untyped-call"
 import algokit_utils
 import algosdk
 import pytest
@@ -146,13 +147,15 @@ def test_get_global_state(state_app_client: StateAppClient) -> None:
     state_app_client.deploy(
         template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
     )
-    state_app_client.set_global(int1=1, int2=2, bytes1="test", bytes2=b"test")
+    int1_expected = 1
+    int2_expected = 2
+    state_app_client.set_global(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
     response = state_app_client.get_global_state()
 
     assert response.bytes1.as_bytes == b"test"
     assert response.bytes2.as_str == "test"
-    assert response.int1 == 1
-    assert response.int2 == 2
+    assert response.int1 == int1_expected
+    assert response.int2 == int2_expected
     assert response.value == 1
 
 
@@ -160,14 +163,16 @@ def test_get_local_state(state_app_client: StateAppClient) -> None:
     state_app_client.deploy(
         template_values={"VALUE": 1}, allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp
     )
+    int1_expected = 1
+    int2_expected = 2
     state_app_client.opt_in(args=OptInArgs())
-    state_app_client.set_local(int1=1, int2=2, bytes1="test", bytes2=b"test")
+    state_app_client.set_local(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
     response = state_app_client.get_local_state(account=None)
 
     assert response.local_bytes1.as_str == "test"
     assert response.local_bytes2.as_str == "test"
-    assert response.local_int1 == 1
-    assert response.local_int2 == 2
+    assert response.local_int1 == int1_expected
+    assert response.local_int2 == int2_expected
 
 
 def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:

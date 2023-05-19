@@ -210,7 +210,7 @@ app = beaker.Application("VotingRoundApp", state=VotingState()).apply(
 
 
 @app.create()
-def create(
+def create(  # noqa: PLR0913
     vote_id: pt.abi.String,
     snapshot_public_key: pt.abi.DynamicBytes,
     metadata_ipfs_cid: pt.abi.String,
@@ -297,7 +297,7 @@ def close() -> pt.Expr:
         app.state.close_time.set(pt.Global.latest_timestamp()),
         (note := StringScratchVar()).store(
             pt.Concat(
-                pt.Bytes('{"standard":"arc69","description":"This is a voting result NFT' " for voting round with ID "),
+                pt.Bytes('{"standard":"arc69","description":"This is a voting result NFT for voting round with ID '),
                 app.state.vote_id.get(),
                 pt.Bytes('.","properties":{"metadata":"ipfs://'),
                 app.state.metadata_ipfs_cid.get(),

@@ -71,6 +71,7 @@ def generated_comment(context: GenerateContext) -> DocumentParts:
 def disable_linting(context: GenerateContext) -> DocumentParts:
     yield "# flake8: noqa"  # this works for flake8 and ruff
     yield "# fmt: off"  # disable formatting
+    yield '# mypy: disable-error-code="no-any-return, no-untyped-call"'  # disable common type warnings
 
 
 def imports(context: GenerateContext) -> DocumentParts:
