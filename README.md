@@ -4,6 +4,11 @@ This project generates a type-safe smart contract client in Python for the Algor
 [application client](https://algorandfoundation.github.io/algokit-utils-py/html/apidocs/algokit_utils/algokit_utils.html#algokit_utils.ApplicationClient) in 
 [AlgoKit Utils](https://github.com/algorandfoundation/algokit-utils-py). It does this by reading an [ARC-0032](https://github.com/algorandfoundation/ARCs/blob/main/ARCs/arc-0032.md) application spec file.
 
+
+> **Note**
+> There is also an equivalent [TypeScript client generator](https://github.com/algorandfoundation/algokit-client-generator-ts).
+
+
 ## Usage
 
 ### Prerequisites
@@ -25,7 +30,7 @@ pipx install algokit-client-generator
 Then to use it
 
 ```
-algokit-client-generator path/to/application.json path/to/output/client_generated.py
+algokitgen-py path/to/application.json path/to/output/client_generated.py
 ```
 
 ## Examples
