@@ -134,14 +134,23 @@ class _ArgsBase(ABC, typing.Generic[_TReturn]):
         )
     yield Part.Gap2
     if has_abi_create or has_abi_update or has_abi_delete:
-        yield '_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase)'
+        yield '_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])'
         yield Part.Gap2
+        yield utils.indented(
+            """
+@dataclasses.dataclass(kw_only=True)
+class _TArgsHolder(typing.Generic[_TArgs]):
+    args: _TArgs
+"""
+        )
+        yield Part.Gap2
+
     if has_abi_create:
         yield utils.indented(
             """
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, typing.Generic[_TArgs]):
-    args: _TArgs
+class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+    pass
 """
         )
         yield Part.Gap2
@@ -149,8 +158,8 @@ class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, typing.Generic[
         yield utils.indented(
             """
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployArgs(algokit_utils.DeployCallArgs, typing.Generic[_TArgs]):
-    args: _TArgs"""
+class _TypedDeployArgs(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+    pass"""
         )
         yield Part.Gap2
 

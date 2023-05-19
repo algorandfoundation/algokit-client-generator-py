@@ -365,17 +365,22 @@ class _ArgsBase(ABC, typing.Generic[_TReturn]):
         ...
 
 
-_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase)
+_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])
 
 
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, typing.Generic[_TArgs]):
+class _TArgsHolder(typing.Generic[_TArgs]):
     args: _TArgs
 
 
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployArgs(algokit_utils.DeployCallArgs, typing.Generic[_TArgs]):
-    args: _TArgs
+class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+    pass
+
+
+@dataclasses.dataclass(kw_only=True)
+class _TypedDeployArgs(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+    pass
 
 
 def _as_dict(data: _T | None) -> dict[str, typing.Any]:
