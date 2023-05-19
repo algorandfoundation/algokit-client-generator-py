@@ -677,10 +677,7 @@ class StateAppClient:
         args: CreateAbiArgs | None = None,
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
+    ) -> algokit_utils.TransactionResponse | algokit_utils.ABITransactionResponse[str]:
         return self.app_client.create(
             call_abi_method=args.method() if args else False,
             transaction_parameters=_as_dict(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
@@ -710,10 +707,7 @@ class StateAppClient:
         *,
         args: UpdateAbiArgs | None = None,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
+    ) -> algokit_utils.TransactionResponse | algokit_utils.ABITransactionResponse[str]:
         return self.app_client.update(
             call_abi_method=args.method() if args else False,
             transaction_parameters=_as_dict(transaction_parameters),
@@ -743,10 +737,7 @@ class StateAppClient:
         *,
         args: DeleteAbiArgs | None = None,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
+    ) -> algokit_utils.TransactionResponse | algokit_utils.ABITransactionResponse[str]:
         return self.app_client.delete(
             call_abi_method=args.method() if args else False,
             transaction_parameters=_as_dict(transaction_parameters),
