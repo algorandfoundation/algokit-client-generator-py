@@ -13,6 +13,7 @@ from examples.state.client import (
     DeleteAbiArgs,
     Deploy,
     DeployCreate,
+    Input,
     StateAppClient,
     UpdateAbiArgs,
 )
@@ -212,7 +213,7 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
 
 def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
     age = 42
-    response = deployed_state_app_client.structs(name_age=("World", age))
+    response = deployed_state_app_client.structs(name_age=Input(name="World", age=age))
 
-    assert response.return_value[0] == "Hello, World"
-    assert response.return_value[1] == age * 2
+    assert response.return_value.message == "Hello, World"
+    assert response.return_value.result == age * 2

@@ -427,12 +427,22 @@ class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[
     pass
 
 
-def _as_dict(data: object | None) -> dict[str, typing.Any]:
+def _filter_none(value: dict | typing.Any) -> dict | typing.Any:
+    if isinstance(value, dict):
+        return {k: _filter_none(v) for k, v in value.items() if v is not None}
+    return value
+
+
+def _as_dict(data: typing.Any, *, convert_all: bool = True) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
+    if convert_all:
+        result = dataclasses.asdict(data)
+    else:
+        result = {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return _filter_none(result)
 
 
 def _convert_transaction_parameters(
@@ -550,8 +560,20 @@ class DefaultValueFromAbiArgs(_ArgsBase[str]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class StructsArgs(_ArgsBase[tuple[str, int]]):
-    name_age: tuple[str, int]
+class Input:
+    name: str
+    age: int
+
+
+@dataclasses.dataclass(kw_only=True)
+class Output:
+    message: str
+    result: int
+
+
+@dataclasses.dataclass(kw_only=True)
+class StructsArgs(_ArgsBase[Output]):
+    name_age: Input
 
     @staticmethod
     def method() -> str:
@@ -709,11 +731,12 @@ class StateAppClient:
         args = CallAbiArgs(
             value=value,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def call_abi_txn(
         self,
@@ -726,11 +749,12 @@ class StateAppClient:
             txn=txn,
             value=value,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def set_global(
         self,
@@ -747,11 +771,12 @@ class StateAppClient:
             bytes1=bytes1,
             bytes2=bytes2,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def set_local(
         self,
@@ -768,11 +793,12 @@ class StateAppClient:
             bytes1=bytes1,
             bytes2=bytes2,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def set_box(
         self,
@@ -785,11 +811,12 @@ class StateAppClient:
             name=name,
             value=value,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def error(
         self,
@@ -797,11 +824,12 @@ class StateAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
         args = ErrorArgs()
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def default_value(
         self,
@@ -812,11 +840,12 @@ class StateAppClient:
         args = DefaultValueArgs(
             arg_with_default=arg_with_default,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def default_value_from_abi(
         self,
@@ -827,26 +856,31 @@ class StateAppClient:
         args = DefaultValueFromAbiArgs(
             arg_with_default=arg_with_default,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def structs(
         self,
         *,
-        name_age: tuple[str, int],
+        name_age: Input,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> algokit_utils.ABITransactionResponse[tuple[str, int]]:
+    ) -> algokit_utils.ABITransactionResponse[Output]:
         args = StructsArgs(
             name_age=name_age,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        elements = self.app_spec.hints[args.method()].structs["output"]["elements"]
+        result_dict = {element[0]: value for element, value in zip(elements, result.return_value)}
+        result.return_value = Output(**result_dict)
+        return result
 
     def create_bare(
         self,
@@ -854,10 +888,11 @@ class StateAppClient:
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=False,
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
         )
+        return result
 
     def create_create_abi(
         self,
@@ -869,21 +904,23 @@ class StateAppClient:
         args = CreateAbiArgs(
             input=input,
         )
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=args.method(),
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def update_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.update(
+        result = self.app_client.update(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
+        return result
 
     def update_update_abi(
         self,
@@ -894,21 +931,23 @@ class StateAppClient:
         args = UpdateAbiArgs(
             input=input,
         )
-        return self.app_client.update(
+        result = self.app_client.update(
             call_abi_method=args.method(),
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def delete_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.delete(
+        result = self.app_client.delete(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
+        return result
 
     def delete_delete_abi(
         self,
@@ -919,11 +958,12 @@ class StateAppClient:
         args = DeleteAbiArgs(
             input=input,
         )
-        return self.app_client.delete(
+        result = self.app_client.delete(
             call_abi_method=args.method(),
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def opt_in_opt_in(
         self,
@@ -931,11 +971,12 @@ class StateAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
         args = OptInArgs()
-        return self.app_client.opt_in(
+        result = self.app_client.opt_in(
             call_abi_method=args.method(),
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def clear_state(
         self,

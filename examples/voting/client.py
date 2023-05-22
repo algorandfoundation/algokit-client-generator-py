@@ -279,12 +279,22 @@ class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typ
     pass
 
 
-def _as_dict(data: object | None) -> dict[str, typing.Any]:
+def _filter_none(value: dict | typing.Any) -> dict | typing.Any:
+    if isinstance(value, dict):
+        return {k: _filter_none(v) for k, v in value.items() if v is not None}
+    return value
+
+
+def _as_dict(data: typing.Any, *, convert_all: bool = True) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
+    if convert_all:
+        result = dataclasses.asdict(data)
+    else:
+        result = {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return _filter_none(result)
 
 
 def _convert_transaction_parameters(
@@ -340,7 +350,15 @@ class CloseArgs(_ArgsBase[None]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class GetPreconditionsArgs(_ArgsBase[tuple[int, int, int, int]]):
+class VotingPreconditions:
+    is_voting_open: int
+    is_allowed_to_vote: int
+    has_already_voted: int
+    current_time: int
+
+
+@dataclasses.dataclass(kw_only=True)
+class GetPreconditionsArgs(_ArgsBase[VotingPreconditions]):
     signature: bytes
 
     @staticmethod
@@ -501,11 +519,12 @@ class VotingRoundAppClient:
         args = BootstrapArgs(
             fund_min_bal_req=fund_min_bal_req,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def close(
         self,
@@ -513,26 +532,31 @@ class VotingRoundAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
         args = CloseArgs()
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def get_preconditions(
         self,
         *,
         signature: bytes,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> algokit_utils.ABITransactionResponse[tuple[int, int, int, int]]:
+    ) -> algokit_utils.ABITransactionResponse[VotingPreconditions]:
         args = GetPreconditionsArgs(
             signature=signature,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        elements = self.app_spec.hints[args.method()].structs["output"]["elements"]
+        result_dict = {element[0]: value for element, value in zip(elements, result.return_value)}
+        result.return_value = VotingPreconditions(**result_dict)
+        return result
 
     def vote(
         self,
@@ -547,11 +571,12 @@ class VotingRoundAppClient:
             signature=signature,
             answer_ids=answer_ids,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def create_create(
         self,
@@ -577,21 +602,23 @@ class VotingRoundAppClient:
             quorum=quorum,
             nft_image_url=nft_image_url,
         )
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=args.method(),
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def delete_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.delete(
+        result = self.app_client.delete(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
+        return result
 
     def clear_state(
         self,

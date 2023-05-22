@@ -12,14 +12,14 @@ def get_parts(value: str) -> list[str]:
 def get_class_name(name: str, string_suffix: str = "") -> str:
     parts = [p.title() for p in get_parts(name)]
     if string_suffix:
-        parts.append(string_suffix)
+        parts.append(string_suffix.title())
     return "".join(p for p in parts)
 
 
 def get_method_name(name: str, string_suffix: str = "") -> str:
     parts = [p.lower() for p in get_parts(name)]
     if string_suffix:
-        parts.append(string_suffix)
+        parts.append(string_suffix.lower())
     return "_".join(p for p in parts)
 
 

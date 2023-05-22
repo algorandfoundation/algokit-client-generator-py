@@ -13,7 +13,7 @@ from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
 from examples.conftest import get_unique_name
-from examples.voting.client import CreateArgs, DeployCreate, VotingRoundAppClient
+from examples.voting.client import CreateArgs, DeployCreate, VotingPreconditions, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 
@@ -132,8 +132,11 @@ def test_get_preconditions(
             signer=AccountTransactionSigner(voter.private_key),
         ),
     )
-    expected_length = 4
-    assert len(response.return_value) == expected_length
+
+    assert isinstance(response.return_value, VotingPreconditions)
+    assert response.return_value.is_voting_open == 0
+    assert response.return_value.has_already_voted == 0
+    assert response.return_value.is_allowed_to_vote == 1
 
 
 def test_vote(

@@ -18,12 +18,28 @@ class ContractArg:
 
 
 @dataclasses.dataclass(kw_only=True)
+class ABIStructField:
+    name: str
+    abi_type: str
+    python_type: str
+
+
+@dataclasses.dataclass(kw_only=True)
+class ABIStruct:
+    abi_name: str
+    struct_class_name: str
+    fields: list[ABIStructField]
+
+
+@dataclasses.dataclass(kw_only=True)
 class ABIContractMethod:
     method: Method
     hints: MethodHints
     abi_type: str
     python_type: str
+    result_struct: ABIStruct | None
     args: list[ContractArg]
+    structs: list[ABIStruct]
     args_class_name: str
     client_method_name: str
     deploy_args_class_name: str
@@ -113,6 +129,7 @@ def get_contract_methods(
     result = ContractMethods()
     result.add_method(None, app_spec.bare_call_config)
 
+    structs: dict[str, ABIStruct] = {}
     for methods in group_by_overloads(app_spec.contract.methods):
         naming_strategy = find_naming_strategy(methods)
         for method in methods:
@@ -120,32 +137,61 @@ def get_contract_methods(
             hints = app_spec.hints[method.get_signature()]
             args_class_name = utils.get_unique_symbol_by_incrementing(
                 used_module_symbols,
-                utils.get_class_name(f"{method_name}_args"),
+                utils.get_class_name(method_name, "args"),
             )
+
+            parameter_type_map: dict[str, str] = {}
+            method_structs: list[ABIStruct] = []
+            result_struct: ABIStruct | None = None
+            for parameter, struct in hints.structs.items():
+                abi_name = struct["name"]
+                abi_struct = structs.get(abi_name)
+                if not abi_struct:
+                    # TODO: check for collisions where the same name refers to different structures
+                    struct_class_name = utils.get_unique_symbol_by_incrementing(
+                        used_module_symbols, utils.get_class_name(abi_name)
+                    )
+                    abi_struct = ABIStruct(
+                        abi_name=abi_name,
+                        struct_class_name=struct_class_name,
+                        fields=[
+                            ABIStructField(
+                                name=name, abi_type=abi_type, python_type=utils.map_abi_type_to_python(abi_type)
+                            )
+                            # TODO: nested structs?!
+                            for name, abi_type in struct["elements"]
+                        ],
+                    )
+                structs[abi_name] = abi_struct
+                if parameter == "output":  # TODO: check return signature
+                    result_struct = abi_struct
+                parameter_type_map[parameter] = abi_struct.struct_class_name
+                method_structs.append(abi_struct)
+
             abi = ABIContractMethod(
                 method=method,
                 hints=hints,
                 abi_type=str(method.returns),
-                python_type=utils.map_abi_type_to_python(str(method.returns)),
+                python_type=result_struct.struct_class_name
+                if result_struct
+                else utils.map_abi_type_to_python(str(method.returns)),
+                result_struct=result_struct,
+                structs=method_structs,
                 args=[
                     ContractArg(
                         name=arg.name or f"arg{idx}",
                         abi_type=str(arg.type),
-                        python_type=utils.map_abi_type_to_python(str(arg.type)),
+                        python_type=parameter_type_map[arg.name]
+                        if arg.name in parameter_type_map
+                        else utils.map_abi_type_to_python(str(arg.type)),
                         desc=arg.desc,
                         has_default=arg.name in hints.default_arguments,
                     )
                     for idx, arg in enumerate(method.args)
                 ],
                 args_class_name=args_class_name,
-                deploy_args_class_name=utils.get_unique_symbol_by_incrementing(
-                    used_module_symbols,
-                    f"Deploy[{args_class_name}]",
-                ),
-                deploy_create_args_class_name=utils.get_unique_symbol_by_incrementing(
-                    used_module_symbols,
-                    f"DeployCreate[{args_class_name}]",
-                ),
+                deploy_args_class_name=f"Deploy[{args_class_name}]",
+                deploy_create_args_class_name=f"DeployCreate[{args_class_name}]",
                 client_method_name=utils.get_unique_symbol_by_incrementing(
                     used_client_symbols, utils.get_method_name(method_name)
                 ),
