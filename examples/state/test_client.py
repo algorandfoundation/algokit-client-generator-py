@@ -11,9 +11,8 @@ from examples.conftest import get_unique_name
 from examples.state.client import (
     CreateAbiArgs,
     DeleteAbiArgs,
-    Deploy_DeleteAbiArgs,
-    Deploy_UpdateAbiArgs,
-    DeployCreate_CreateAbiArgs,
+    Deploy,
+    DeployCreate,
     OptInArgs,
     StateAppClient,
     UpdateAbiArgs,
@@ -173,9 +172,9 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
         allow_update=True,
         allow_delete=True,
         template_values={"VALUE": 1},
-        create_args=DeployCreate_CreateAbiArgs(args=CreateAbiArgs(input="Deploy Greetings")),
-        update_args=Deploy_UpdateAbiArgs(args=UpdateAbiArgs(input="Deploy Update")),
-        delete_args=Deploy_DeleteAbiArgs(args=DeleteAbiArgs(input="Deploy Delete")),
+        create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
+        update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
+        delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
     )
     assert state_app_client.app_client.app_id
     assert isinstance(response.create_response, algokit_utils.ABITransactionResponse)
@@ -188,9 +187,9 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
         allow_delete=True,
         on_update=OnUpdate.UpdateApp,
         template_values={"VALUE": 2},
-        create_args=DeployCreate_CreateAbiArgs(args=CreateAbiArgs(input="Deploy Greetings")),
-        update_args=Deploy_UpdateAbiArgs(args=UpdateAbiArgs(input="Deploy Update")),
-        delete_args=Deploy_DeleteAbiArgs(args=DeleteAbiArgs(input="Deploy Delete")),
+        create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
+        update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
+        delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
     )
     assert state_app_client.app_client.app_id
     assert isinstance(response.update_response, algokit_utils.ABITransactionResponse)
@@ -203,9 +202,9 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
         allow_delete=True,
         on_update=OnUpdate.ReplaceApp,
         template_values={"VALUE": 3},
-        create_args=DeployCreate_CreateAbiArgs(args=CreateAbiArgs(input="Deploy Greetings")),
-        update_args=Deploy_UpdateAbiArgs(args=UpdateAbiArgs(input="Deploy Update")),
-        delete_args=Deploy_DeleteAbiArgs(args=DeleteAbiArgs(input="Deploy Delete")),
+        create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
+        update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
+        delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
     )
     assert state_app_client.app_client.app_id
     assert isinstance(response.delete_response, algokit_utils.ABITransactionResponse)

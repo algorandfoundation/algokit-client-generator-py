@@ -276,7 +276,7 @@ class _TArgsHolder(typing.Generic[_TArgs]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
     pass
 
 
@@ -288,6 +288,12 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
     return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
 
 
+def _convert_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CreateCallParametersDict:
+    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
+
+
 def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
     return getattr(algosdk.transaction.OnComplete, on_complete_enum)
@@ -295,12 +301,12 @@ def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> alg
 
 def _convert_deploy_args(
     deploy_args: algokit_utils.DeployCallArgs | None,
-) -> dict[str, typing.Any] | None:
+) -> algokit_utils.ABICreateCallArgsDict | None:
     if deploy_args is None:
         return None
 
-    deploy_args_dict = _as_dict(deploy_args)
-    if hasattr(deploy_args, "args") and hasattr(deploy_args.args, "method"):
+    deploy_args_dict = typing.cast(algokit_utils.ABICreateCallArgsDict, _as_dict(deploy_args))
+    if isinstance(deploy_args, _TArgsHolder):
         deploy_args_dict["args"] = _as_dict(deploy_args.args)
         deploy_args_dict["method"] = deploy_args.args.method()
 
@@ -357,9 +363,6 @@ class CreateArgs(_ArgsBase[None]):
     @staticmethod
     def method() -> str:
         return "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"
-
-
-DeployCreate_CreateArgs = _TypedDeployCreateArgs[CreateArgs]
 
 
 class ByteReader:
@@ -476,7 +479,7 @@ class VotingRoundAppClient:
         )
 
     def get_global_state(self) -> GlobalState:
-        state = self.app_client.get_global_state(raw=True)
+        state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)
 
     def bootstrap(
@@ -490,7 +493,7 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -502,7 +505,7 @@ class VotingRoundAppClient:
         args = CloseArgs()
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -517,7 +520,7 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -536,7 +539,7 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -549,7 +552,7 @@ class VotingRoundAppClient:
     ) -> algokit_utils.ABITransactionResponse[None]:
         return self.app_client.create(
             call_abi_method=args.method() if args else False,
-            transaction_parameters=_as_dict(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
             **_as_dict(args),
         )
 
@@ -560,7 +563,7 @@ class VotingRoundAppClient:
     ) -> algokit_utils.TransactionResponse:
         return self.app_client.delete(
             call_abi_method=False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
 
     def clear_state(
@@ -568,7 +571,7 @@ class VotingRoundAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
         app_args: list[bytes] | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.clear_state(_as_dict(transaction_parameters), app_args)
+        return self.app_client.clear_state(_convert_transaction_parameters(transaction_parameters), app_args)
 
     def deploy(
         self,
@@ -581,7 +584,7 @@ class VotingRoundAppClient:
         on_update: algokit_utils.OnUpdate = algokit_utils.OnUpdate.Fail,
         on_schema_break: algokit_utils.OnSchemaBreak = algokit_utils.OnSchemaBreak.Fail,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-        create_args: DeployCreate_CreateArgs,
+        create_args: DeployCreate[CreateArgs],
         update_args: algokit_utils.DeployCallArgs | None = None,
         delete_args: algokit_utils.DeployCallArgs | None = None,
     ) -> algokit_utils.DeployResponse:

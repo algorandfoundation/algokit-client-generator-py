@@ -374,12 +374,12 @@ class _TArgsHolder(typing.Generic[_TArgs]):
 
 
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
     pass
 
 
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployArgs(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
     pass
 
 
@@ -391,6 +391,12 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
     return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
 
 
+def _convert_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CreateCallParametersDict:
+    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
+
+
 def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
     return getattr(algosdk.transaction.OnComplete, on_complete_enum)
@@ -398,12 +404,12 @@ def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> alg
 
 def _convert_deploy_args(
     deploy_args: algokit_utils.DeployCallArgs | None,
-) -> dict[str, typing.Any] | None:
+) -> algokit_utils.ABICreateCallArgsDict | None:
     if deploy_args is None:
         return None
 
-    deploy_args_dict = _as_dict(deploy_args)
-    if hasattr(deploy_args, "args") and hasattr(deploy_args.args, "method"):
+    deploy_args_dict = typing.cast(algokit_utils.ABICreateCallArgsDict, _as_dict(deploy_args))
+    if isinstance(deploy_args, _TArgsHolder):
         deploy_args_dict["args"] = _as_dict(deploy_args.args)
         deploy_args_dict["method"] = deploy_args.args.method()
 
@@ -522,11 +528,6 @@ class OptInArgs(_ArgsBase[None]):
         return "opt_in()void"
 
 
-DeployCreate_CreateAbiArgs = _TypedDeployCreateArgs[CreateAbiArgs]
-Deploy_UpdateAbiArgs = _TypedDeployArgs[UpdateAbiArgs]
-Deploy_DeleteAbiArgs = _TypedDeployArgs[DeleteAbiArgs]
-
-
 class ByteReader:
     def __init__(self, data: bytes):
         self._data = data
@@ -628,11 +629,11 @@ class StateAppClient:
         )
 
     def get_global_state(self) -> GlobalState:
-        state = self.app_client.get_global_state(raw=True)
+        state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)
 
     def get_local_state(self, account: str | None = None) -> LocalState:
-        state = self.app_client.get_local_state(account, raw=True)
+        state = typing.cast(dict[bytes, bytes | int], self.app_client.get_local_state(account, raw=True))
         return LocalState(state)
 
     def call_abi(
@@ -646,7 +647,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -663,7 +664,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -684,7 +685,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -705,7 +706,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -722,7 +723,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -734,7 +735,7 @@ class StateAppClient:
         args = ErrorArgs()
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -749,7 +750,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -764,7 +765,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -800,7 +801,7 @@ class StateAppClient:
     ):
         return self.app_client.create(
             call_abi_method=args.method() if args else False,
-            transaction_parameters=_as_dict(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
             **_as_dict(args),
         )
 
@@ -833,7 +834,7 @@ class StateAppClient:
     ):
         return self.app_client.update(
             call_abi_method=args.method() if args else False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -866,7 +867,7 @@ class StateAppClient:
     ):
         return self.app_client.delete(
             call_abi_method=args.method() if args else False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -878,7 +879,7 @@ class StateAppClient:
     ) -> algokit_utils.ABITransactionResponse[None]:
         return self.app_client.opt_in(
             call_abi_method=args.method() if args else False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -887,7 +888,7 @@ class StateAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
         app_args: list[bytes] | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.clear_state(_as_dict(transaction_parameters), app_args)
+        return self.app_client.clear_state(_convert_transaction_parameters(transaction_parameters), app_args)
 
     def deploy(
         self,
@@ -900,9 +901,9 @@ class StateAppClient:
         on_update: algokit_utils.OnUpdate = algokit_utils.OnUpdate.Fail,
         on_schema_break: algokit_utils.OnSchemaBreak = algokit_utils.OnSchemaBreak.Fail,
         template_values: algokit_utils.TemplateValueMapping | None = None,
-        create_args: DeployCreate_CreateAbiArgs | algokit_utils.DeployCallArgs | None = None,
-        update_args: Deploy_UpdateAbiArgs | algokit_utils.DeployCallArgs | None = None,
-        delete_args: Deploy_DeleteAbiArgs | algokit_utils.DeployCallArgs | None = None,
+        create_args: DeployCreate[CreateAbiArgs] | algokit_utils.DeployCallArgs | None = None,
+        update_args: Deploy[UpdateAbiArgs] | algokit_utils.DeployCallArgs | None = None,
+        delete_args: Deploy[DeleteAbiArgs] | algokit_utils.DeployCallArgs | None = None,
     ) -> algokit_utils.DeployResponse:
         return self.app_client.deploy(
             version,

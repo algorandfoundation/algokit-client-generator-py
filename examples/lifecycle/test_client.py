@@ -7,8 +7,7 @@ from examples.conftest import get_unique_name
 from examples.lifecycle.client import (
     CreateStringStringArgs,
     CreateStringUint32VoidArgs,
-    DeployCreate_CreateStringStringArgs,
-    DeployCreate_CreateStringUint32VoidArgs,
+    DeployCreate,
     LifeCycleAppClient,
 )
 
@@ -66,7 +65,7 @@ def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
 def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_response = deploy_lifecycle_client.deploy(
         allow_update=True,
-        create_args=DeployCreate_CreateStringStringArgs(args=CreateStringStringArgs(greeting="Deploy Greetings")),
+        create_args=DeployCreate(args=CreateStringStringArgs(greeting="Deploy Greetings")),
     )
     assert deploy_lifecycle_client.app_client.app_id
     assert isinstance(deploy_response.create_response, algokit_utils.ABITransactionResponse)
@@ -80,7 +79,7 @@ def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None
 def test_deploy_create_2arg(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(
         allow_update=True,
-        create_args=DeployCreate_CreateStringUint32VoidArgs(
+        create_args=DeployCreate(
             args=CreateStringUint32VoidArgs(greeting="Deploy Greetings", times=2),
         ),
     )
