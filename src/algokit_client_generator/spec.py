@@ -156,7 +156,9 @@ def get_contract_methods(
                         struct_class_name=struct_class_name,
                         fields=[
                             ABIStructField(
-                                name=name, abi_type=abi_type, python_type=utils.map_abi_type_to_python(abi_type)
+                                name=name,
+                                abi_type=abi_type,
+                                python_type=utils.map_abi_type_to_python(abi_type),
                             )
                             # TODO: nested structs?!
                             for name, abi_type in struct["elements"]

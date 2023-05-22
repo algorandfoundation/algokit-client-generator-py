@@ -5,6 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 import base64
 import dataclasses
+import decimal
 import typing
 from abc import ABC, abstractmethod
 
@@ -505,7 +506,7 @@ class SetGlobalArgs(_ArgsBase[None]):
     int1: int
     int2: int
     bytes1: str
-    bytes2: bytes | tuple[int, int, int, int]
+    bytes2: bytes | bytearray | tuple[int, int, int, int]
 
     @staticmethod
     def method() -> str:
@@ -517,7 +518,7 @@ class SetLocalArgs(_ArgsBase[None]):
     int1: int
     int2: int
     bytes1: str
-    bytes2: bytes | tuple[int, int, int, int]
+    bytes2: bytes | bytearray | tuple[int, int, int, int]
 
     @staticmethod
     def method() -> str:
@@ -526,7 +527,7 @@ class SetLocalArgs(_ArgsBase[None]):
 
 @dataclasses.dataclass(kw_only=True)
 class SetBoxArgs(_ArgsBase[None]):
-    name: bytes | tuple[int, int, int, int]
+    name: bytes | bytearray | tuple[int, int, int, int]
     value: str
 
     @staticmethod
@@ -802,7 +803,7 @@ class StateAppClient:
         int1: int,
         int2: int,
         bytes1: str,
-        bytes2: bytes | tuple[int, int, int, int],
+        bytes2: bytes | bytearray | tuple[int, int, int, int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
         args = SetGlobalArgs(
@@ -824,7 +825,7 @@ class StateAppClient:
         int1: int,
         int2: int,
         bytes1: str,
-        bytes2: bytes | tuple[int, int, int, int],
+        bytes2: bytes | bytearray | tuple[int, int, int, int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
         args = SetLocalArgs(
@@ -843,7 +844,7 @@ class StateAppClient:
     def set_box(
         self,
         *,
-        name: bytes | tuple[int, int, int, int],
+        name: bytes | bytearray | tuple[int, int, int, int],
         value: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:

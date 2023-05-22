@@ -1,6 +1,8 @@
 import re
 from collections.abc import Iterable
 
+from algosdk import abi
+
 from algokit_client_generator.document import DocumentParts, Part
 
 
@@ -23,41 +25,45 @@ def get_method_name(name: str, string_suffix: str = "") -> str:
     return "_".join(p for p in parts)
 
 
-def map_abi_type_to_python(abi_type: str) -> str:  # noqa: ignore[PLR0911]
-    match = re.match(r".*\[([0-9]*)]$", abi_type)
-    if match:
-        array_size = match.group(1)
-        if array_size:
-            abi_type = abi_type[: -2 - len(array_size)]
-            array_size = int(array_size)
-            inner_type = ", ".join([map_abi_type_to_python(abi_type)] * array_size)
-            tuple_type = f"tuple[{inner_type}]"
-            if abi_type == "byte":
-                return f"bytes | {tuple_type}"
-            return tuple_type
-        else:
-            abi_type = abi_type[:-2]
-            if abi_type == "byte":
-                return "bytes"
-            return f"list[{map_abi_type_to_python(abi_type)}]"
-    if abi_type.startswith("(") and abi_type.endswith(")"):
-        abi_type = abi_type[1:-1]
-        inner_types = [map_abi_type_to_python(t) for t in abi_type.split(",")]
-        return f"tuple[{', '.join(inner_types)}]"
-    # TODO validate or annotate ints
-    python_type = {
-        "string": "str",
-        "uint8": "int",  # < 256
-        "uint32": "int",  # < 2^32
-        "uint64": "int",  # < 2^64
-        "void": "None",
-        "byte[]": "bytes",
-        "byte": "int",  # length 1
-        "pay": "TransactionWithSigner",
-    }.get(abi_type)
-    if python_type:
-        return python_type
-    return abi_type
+def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: ignore[PLR0911]
+    match abi_type:
+        case abi.UintType():
+            return "int"
+        case abi.ArrayDynamicType() as array:
+            child = array.child_type
+            if isinstance(child, abi.ByteType):
+                return "bytes | bytearray"
+            return f"list[{abi_type_to_python(child)}]"
+        case abi.ArrayStaticType() as array:
+            child = array.child_type
+            if isinstance(child, abi.ByteType):
+                return f"bytes | bytearray | tuple[{', '.join('int' for _ in range(array.static_length))}]"
+            inner_type = abi_type_to_python(child)
+            return f"list[{inner_type}] | tuple[{', '.join(inner_type for _ in range(array.static_length))}]"
+        case abi.AddressType():
+            return "str"
+        case abi.BoolType():
+            return "bool"
+        case abi.UfixedType():
+            return "decimal.Decimal"
+        case abi.TupleType() as tuple_type:
+            return f"tuple[{', '.join(abi_type_to_python(t) for t in tuple_type.child_types)}]"
+        case abi.ByteType():
+            return "int"
+        case abi.StringType():
+            return "str"
+        case _:
+            return "typing.Any"
+
+
+def map_abi_type_to_python(abi_type_str: str) -> str:
+    if abi_type_str == "void":
+        return "None"
+    if abi.is_abi_transaction_type(abi_type_str):
+        # TODO: generic TransactionWithSigner and/or allow unsigned types signed with signer used in transaction
+        return "TransactionWithSigner"
+    abi_type = abi.ABIType.from_string(abi_type_str)
+    return abi_type_to_python(abi_type)
 
 
 def get_unique_symbol_by_incrementing(existing_symbols: set[str], base_name: str) -> str:
