@@ -32,11 +32,11 @@ class GenerateContext:
             "_TArgs",
             "_TResult",
             "_ArgsBase",
-            "_TypedDeployCreateArgs",
-            "_TypedDeployArgs",
             "_as_dict",
             "_convert_on_complete",
             "_convert_deploy_args",
+            "DeployCreate",
+            "Deploy",
             "GlobalState",
             "LocalState",
         }
@@ -133,23 +133,22 @@ class _ArgsBase(ABC, typing.Generic[_TReturn]):
         ..."""
         )
     yield Part.Gap2
-    if has_abi_create or has_abi_update or has_abi_delete:
-        yield '_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])'
-        yield Part.Gap2
-        yield utils.indented(
-            """
+    yield '_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])'
+    yield Part.Gap2
+    yield utils.indented(
+        """
 @dataclasses.dataclass(kw_only=True)
 class _TArgsHolder(typing.Generic[_TArgs]):
     args: _TArgs
 """
-        )
-        yield Part.Gap2
+    )
+    yield Part.Gap2
 
     if has_abi_create:
         yield utils.indented(
             """
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
     pass
 """
         )
@@ -158,7 +157,7 @@ class _TypedDeployCreateArgs(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_T
         yield utils.indented(
             """
 @dataclasses.dataclass(kw_only=True)
-class _TypedDeployArgs(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
+class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[_TArgs]):
     pass"""
         )
         yield Part.Gap2
@@ -171,8 +170,15 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
-"""
+    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}"""
+    )
+    yield Part.Gap2
+    yield utils.indented(
+        """
+def _convert_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CreateCallParametersDict:
+    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))"""
     )
     yield Part.Gap2
     yield utils.indented(
@@ -186,12 +192,12 @@ def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> alg
         """
 def _convert_deploy_args(
     deploy_args: algokit_utils.DeployCallArgs | None,
-) -> dict[str, typing.Any] | None:
+) -> algokit_utils.ABICreateCallArgsDict | None:
     if deploy_args is None:
         return None
 
-    deploy_args_dict = _as_dict(deploy_args)
-    if hasattr(deploy_args, "args") and hasattr(deploy_args.args, "method"):
+    deploy_args_dict = typing.cast(algokit_utils.ABICreateCallArgsDict, _as_dict(deploy_args))
+    if isinstance(deploy_args, _TArgsHolder):
         deploy_args_dict["args"] = _as_dict(deploy_args.args)
         deploy_args_dict["method"] = deploy_args.args.method()
 
@@ -212,22 +218,6 @@ def typed_arguments(context: GenerateContext) -> DocumentParts:
         processed_abi_signatures.add(abi_signature)
         yield typed_argument_class(abi)
         yield Part.Gap2
-
-    # typed deploy args
-    for method in context.methods.create:
-        if not method.abi:
-            continue
-        yield f"{method.abi.deploy_create_args_class_name} = _TypedDeployCreateArgs[{method.abi.args_class_name}]"
-
-    processed_abi_signatures.clear()
-    for method in (m for m in context.methods.update_application + context.methods.delete_application if m.abi):
-        abi = method.abi
-        assert abi
-        abi_signature = abi.method.get_signature()
-        if abi_signature in processed_abi_signatures:
-            continue
-        processed_abi_signatures.add(abi_signature)
-        yield f"{abi.deploy_args_class_name} = _TypedDeployArgs[{abi.args_class_name}]"
 
     yield Part.Gap2
 
@@ -414,7 +404,7 @@ def call_method(context: GenerateContext, contract_method: ABIContractMethod) ->
         """
 return self.app_client.call(
     call_abi_method=args.method(),
-    transaction_parameters=_as_dict(transaction_parameters),
+    transaction_parameters=_convert_transaction_parameters(transaction_parameters),
     **_as_dict(args),
 )"""
     )
@@ -434,7 +424,7 @@ def no_op(
 ) -> algokit_utils.TransactionResponse:
     return self.app_client.call(
         call_abi_method=False,
-        transaction_parameters=_as_dict(transaction_parameters),
+        transaction_parameters=_convert_transaction_parameters(transaction_parameters),
     )"""
             )
         yield Part.Gap1
@@ -564,11 +554,11 @@ def special_method(
         yield "call_abi_method=args.method() if args else False,"
     if is_create:
         yield (
-            "transaction_parameters=_as_dict(transaction_parameters) | "
+            "transaction_parameters=_convert_transaction_parameters(transaction_parameters) | "
             '{"on_complete": _convert_on_complete(on_complete)},'
         )
     else:
-        yield "transaction_parameters=_as_dict(transaction_parameters),"
+        yield "transaction_parameters=_convert_transaction_parameters(transaction_parameters),"
     if not bare_only:
         yield "**_as_dict(args),"
     yield Part.DecIndent
@@ -584,18 +574,18 @@ def clear_state(
     transaction_parameters: algokit_utils.TransactionParameters | None = None,
     app_args: list[bytes] | None = None,
 ) -> algokit_utils.TransactionResponse:
-    return self.app_client.clear_state(_as_dict(transaction_parameters), app_args)"""
+    return self.app_client.clear_state(_convert_transaction_parameters(transaction_parameters), app_args)"""
     )
 
 
 def deploy_method_args(context: GenerateContext, arg_name: str, methods: list[ContractMethod]) -> DocumentParts:
     yield Part.InlineMode
     has_bare = any(not m.abi for m in methods) or not methods
-    args = [
-        m.abi.deploy_create_args_class_name if m.call_config == "create" else m.abi.deploy_args_class_name
-        for m in methods
-        if m.abi
-    ]
+    typed_args = [m.abi.args_class_name for m in methods if m.abi]
+    args = []
+    if typed_args:
+        deploy_type = "DeployCreate" if arg_name == "create_args" else "Deploy"
+        args.append(f"{deploy_type}[{' | '.join(typed_args)}]")
     if has_bare:
         args.append("algokit_utils.DeployCallArgs")
         args.append("None")
@@ -648,8 +638,7 @@ def get_global_state_method(context: GenerateContext) -> DocumentParts:
         return
     yield "def get_global_state(self) -> GlobalState:"
     yield Part.IncIndent
-    # TODO: what if the key can't be decoded to utf8
-    yield "state = self.app_client.get_global_state(raw=True)"
+    yield "state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))"
     yield "return GlobalState(state)"
     yield Part.DecIndent
 
@@ -659,8 +648,7 @@ def get_local_state_method(context: GenerateContext) -> DocumentParts:
         return
     yield "def get_local_state(self, account: str | None = None) -> LocalState:"
     yield Part.IncIndent
-    # TODO: what if the key can't be decoded to utf8
-    yield "state = self.app_client.get_local_state(account, raw=True)"
+    yield "state = typing.cast(dict[bytes, bytes | int], self.app_client.get_local_state(account, raw=True))"
     yield "return LocalState(state)"
     yield Part.DecIndent
 

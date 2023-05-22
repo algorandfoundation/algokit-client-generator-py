@@ -99,12 +99,26 @@ class _ArgsBase(ABC, typing.Generic[_TReturn]):
         ...
 
 
+_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])
+
+
+@dataclasses.dataclass(kw_only=True)
+class _TArgsHolder(typing.Generic[_TArgs]):
+    args: _TArgs
+
+
 def _as_dict(data: _T | None) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
     return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
+
+
+def _convert_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CreateCallParametersDict:
+    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
 
 
 def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
@@ -114,12 +128,12 @@ def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> alg
 
 def _convert_deploy_args(
     deploy_args: algokit_utils.DeployCallArgs | None,
-) -> dict[str, typing.Any] | None:
+) -> algokit_utils.ABICreateCallArgsDict | None:
     if deploy_args is None:
         return None
 
-    deploy_args_dict = _as_dict(deploy_args)
-    if hasattr(deploy_args, "args") and hasattr(deploy_args.args, "method"):
+    deploy_args_dict = typing.cast(algokit_utils.ABICreateCallArgsDict, _as_dict(deploy_args))
+    if isinstance(deploy_args, _TArgsHolder):
         deploy_args_dict["args"] = _as_dict(deploy_args.args)
         deploy_args_dict["method"] = deploy_args.args.method()
 
@@ -221,7 +235,7 @@ class HelloWorldAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -236,7 +250,7 @@ class HelloWorldAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -248,7 +262,7 @@ class HelloWorldAppClient:
     ) -> algokit_utils.TransactionResponse:
         return self.app_client.create(
             call_abi_method=False,
-            transaction_parameters=_as_dict(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
         )
 
     def update(
@@ -258,7 +272,7 @@ class HelloWorldAppClient:
     ) -> algokit_utils.TransactionResponse:
         return self.app_client.update(
             call_abi_method=False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
 
     def delete(
@@ -268,7 +282,7 @@ class HelloWorldAppClient:
     ) -> algokit_utils.TransactionResponse:
         return self.app_client.delete(
             call_abi_method=False,
-            transaction_parameters=_as_dict(transaction_parameters),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
 
     def clear_state(
@@ -276,7 +290,7 @@ class HelloWorldAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
         app_args: list[bytes] | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.clear_state(_as_dict(transaction_parameters), app_args)
+        return self.app_client.clear_state(_convert_transaction_parameters(transaction_parameters), app_args)
 
     def deploy(
         self,

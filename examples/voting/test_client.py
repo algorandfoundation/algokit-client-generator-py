@@ -13,7 +13,7 @@ from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
 from examples.conftest import get_unique_name
-from examples.voting.client import CreateArgs, DeployCreate_CreateArgs, VotingRoundAppClient
+from examples.voting.client import CreateArgs, DeployCreate, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 
@@ -43,11 +43,11 @@ def create_args(algod_client: AlgodClient, voter: Account) -> CreateArgs:
 
 
 @pytest.fixture()
-def deploy_create_args(algod_client: AlgodClient, create_args: CreateArgs) -> DeployCreate_CreateArgs:
+def deploy_create_args(algod_client: AlgodClient, create_args: CreateArgs) -> DeployCreate[CreateArgs]:
     sp = algod_client.suggested_params()
     sp.fee = algosdk.util.algos_to_microalgos(4)
     sp.flat_fee = True
-    return DeployCreate_CreateArgs(args=create_args, suggested_params=sp)
+    return DeployCreate(args=create_args, suggested_params=sp)
 
 
 @pytest.fixture()
@@ -55,7 +55,7 @@ def deploy_voting_client(
     algod_client: AlgodClient,
     indexer_client: IndexerClient,
     funded_account: Account,
-    deploy_create_args: DeployCreate_CreateArgs,
+    deploy_create_args: DeployCreate[CreateArgs],
 ) -> VotingRoundAppClient:
     algokit_utils.transfer(
         client=algod_client,

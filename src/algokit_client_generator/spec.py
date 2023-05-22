@@ -140,11 +140,11 @@ def get_contract_methods(
                 args_class_name=args_class_name,
                 deploy_args_class_name=utils.get_unique_symbol_by_incrementing(
                     used_module_symbols,
-                    f"Deploy_{args_class_name}",
+                    f"Deploy[{args_class_name}]",
                 ),
                 deploy_create_args_class_name=utils.get_unique_symbol_by_incrementing(
                     used_module_symbols,
-                    f"DeployCreate_{args_class_name}",
+                    f"DeployCreate[{args_class_name}]",
                 ),
                 client_method_name=utils.get_unique_symbol_by_incrementing(
                     used_client_symbols, utils.get_method_name(method_name)
