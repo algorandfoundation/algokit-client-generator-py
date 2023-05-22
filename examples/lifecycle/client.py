@@ -337,6 +337,46 @@ class LifeCycleAppClient:
             app_name=app_name,
         )
 
+    @property
+    def algod_client(self) -> algosdk.v2client.algod.AlgodClient:
+        return self.app_client.algod_client
+    
+    @property
+    def app_id(self) -> int:
+        return self.app_client.app_id
+    
+    @app_id.setter
+    def app_id(self, value: int) -> None:
+        self.app_client.app_id = value
+    
+    @property
+    def app_address(self) -> str:
+        return self.app_client.app_address
+    
+    @property
+    def sender(self) -> str | None:
+        return self.app_client.sender
+    
+    @sender.setter
+    def sender(self, value: str) -> None:
+        self.app_client.sender = value
+    
+    @property
+    def signer(self) -> TransactionSigner | None:
+        return self.app_client.signer
+    
+    @signer.setter
+    def signer(self, value: TransactionSigner) -> None:
+        self.app_client.signer = value
+    
+    @property
+    def suggested_params(self) -> algosdk.transaction.SuggestedParams | None:
+        return self.app_client.suggested_params
+    
+    @suggested_params.setter
+    def suggested_params(self, value: algosdk.transaction.SuggestedParams | None) -> None:
+        self.app_client.suggested_params = value
+
     def get_global_state(self) -> GlobalState:
         state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)

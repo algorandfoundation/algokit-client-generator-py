@@ -104,7 +104,7 @@ def bootstrap_response(
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
-        receiver=deploy_voting_client.app_client.app_address,
+        receiver=deploy_voting_client.app_address,
         amt=(100000 * 2) + 1000 + 2500 + 400 * (1 + 8 * NUM_QUESTIONS),
         note=b"Bootstrap payment",
         sp=algod_client.suggested_params(),
@@ -153,9 +153,9 @@ def test_vote(
     question_counts = [0] * NUM_QUESTIONS
     payment = algosdk.transaction.PaymentTxn(
         sender=voter.address,
-        receiver=deploy_voting_client.app_client.app_address,
+        receiver=deploy_voting_client.app_address,
         amt=400 * (32 + 2 + len(question_counts) * 1) + 2500,
-        sp=deploy_voting_client.app_client.algod_client.suggested_params(),
+        sp=deploy_voting_client.algod_client.suggested_params(),
     )
     fund_min_bal_req = TransactionWithSigner(payment, voter.signer)
 

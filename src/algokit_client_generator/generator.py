@@ -45,6 +45,12 @@ class GenerateContext:
             "__init__",
             "app_spec",
             "app_client",
+            "algod_client",
+            "app_id",
+            "app_address",
+            "sender",
+            "signer",
+            "suggested_params",
             "no_op",
             "clear_state",
             "deploy",
@@ -381,6 +387,8 @@ class {context.client_name}:
     )
     yield Part.Gap1
     yield Part.IncIndent
+    yield forwarded_client_properties(context)
+    yield Part.Gap1
     yield get_global_state_method(context)
     yield Part.Gap1
     yield get_local_state_method(context)
@@ -400,6 +408,51 @@ class {context.client_name}:
     yield clear_method(context)
     yield Part.Gap1
     yield deploy_method(context)
+
+
+def forwarded_client_properties(context: GenerateContext) -> DocumentParts:
+    yield utils.indented(
+        """
+@property
+def algod_client(self) -> algosdk.v2client.algod.AlgodClient:
+    return self.app_client.algod_client
+
+@property
+def app_id(self) -> int:
+    return self.app_client.app_id
+
+@app_id.setter
+def app_id(self, value: int) -> None:
+    self.app_client.app_id = value
+
+@property
+def app_address(self) -> str:
+    return self.app_client.app_address
+
+@property
+def sender(self) -> str | None:
+    return self.app_client.sender
+
+@sender.setter
+def sender(self, value: str) -> None:
+    self.app_client.sender = value
+
+@property
+def signer(self) -> TransactionSigner | None:
+    return self.app_client.signer
+
+@signer.setter
+def signer(self, value: TransactionSigner) -> None:
+    self.app_client.signer = value
+
+@property
+def suggested_params(self) -> algosdk.transaction.SuggestedParams | None:
+    return self.app_client.suggested_params
+
+@suggested_params.setter
+def suggested_params(self, value: algosdk.transaction.SuggestedParams | None) -> None:
+    self.app_client.suggested_params = value"""
+    )
 
 
 def embed_app_spec(context: GenerateContext) -> DocumentParts:
@@ -499,7 +552,7 @@ def methods_by_side_effect(
             if contract_method:  # an ABI method with no_op=CALL method
                 full_method_name = contract_method.client_method_name
             else:
-                full_method_name = "no_op_bare"
+                full_method_name = "no_op"
         elif contract_method:  # an ABI method with a side effect
             full_method_name = f"{side_effect}_{contract_method.client_method_name}"
         else:  # a bare method
