@@ -208,3 +208,11 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
     assert state_app_client.app_client.app_id
     assert isinstance(response.delete_response, algokit_utils.ABITransactionResponse)
     assert response.delete_response.return_value == "Deploy Delete"
+
+
+def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
+    age = 42
+    response = deployed_state_app_client.structs(name_age=("World", age))
+
+    assert response.return_value[0] == "Hello, World"
+    assert response.return_value[1] == age * 2
