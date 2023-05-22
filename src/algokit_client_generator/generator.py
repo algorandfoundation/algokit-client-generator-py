@@ -1,5 +1,5 @@
 import dataclasses
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from typing import Literal
 
 from algokit_utils import ApplicationSpecification, OnCompleteActionName
@@ -28,8 +28,8 @@ class GenerateContext:
         self.used_module_symbols = {
             "_APP_SPEC_JSON",
             "APP_SPEC",
-            "_T",
             "_TArgs",
+            "_TArgsHolder",
             "_TResult",
             "_ArgsBase",
             "_as_dict",
@@ -45,11 +45,6 @@ class GenerateContext:
             "app_spec",
             "app_client",
             "no_op",
-            "create",
-            "update",
-            "delete",
-            "opt_in",
-            "close_out",
             "clear_state",
             "deploy",
             "get_global_state",
@@ -117,7 +112,6 @@ def typed_argument_class(abi: ABIContractMethod) -> DocumentParts:
 
 
 def helpers(context: GenerateContext) -> DocumentParts:
-    yield '_T = typing.TypeVar("_T")'
     has_abi_create = any(m.abi for m in context.methods.create)
     has_abi_update = any(m.abi for m in context.methods.update_application)
     has_abi_delete = any(m.abi for m in context.methods.delete_application)
@@ -165,7 +159,7 @@ class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[
     yield Part.Gap2
     yield utils.indented(
         """
-def _as_dict(data: _T | None) -> dict[str, typing.Any]:
+def _as_dict(data: object | None) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
@@ -177,15 +171,29 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
         """
 def _convert_transaction_parameters(
     transaction_parameters: algokit_utils.TransactionParameters | None,
-) -> algokit_utils.CreateCallParametersDict:
-    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))"""
+) -> algokit_utils.CommonCallParametersDict:
+    return typing.cast(algokit_utils.CommonCallParametersDict, _as_dict(transaction_parameters))"""
     )
     yield Part.Gap2
     yield utils.indented(
         """
-def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
+def _convert_call_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.OnCompleteCallParametersDict:
+    return typing.cast(algokit_utils.OnCompleteCallParametersDict, _as_dict(transaction_parameters))"""
+    )
+    yield Part.Gap2
+    yield utils.indented(
+        """
+def _convert_create_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+    on_complete: algokit_utils.OnCompleteActionName,
+) -> algokit_utils.CreateCallParametersDict:
+    result = typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
-    return getattr(algosdk.transaction.OnComplete, on_complete_enum)"""
+    result["on_complete"] = getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    return result
+    """
     )
     yield Part.Gap2
     yield utils.indented(
@@ -348,17 +356,17 @@ class {context.client_name}:
     yield Part.Gap1
     yield get_local_state_method(context)
     yield Part.Gap1
-    yield call_methods(context)
+    yield methods_by_side_effect(context, "none", context.methods.no_op)
     yield Part.Gap1
-    yield special_method(context, "create", context.methods.create)
+    yield methods_by_side_effect(context, "create", context.methods.create)
     yield Part.Gap1
-    yield special_method(context, "update", context.methods.update_application)
+    yield methods_by_side_effect(context, "update", context.methods.update_application)
     yield Part.Gap1
-    yield special_method(context, "delete", context.methods.delete_application)
+    yield methods_by_side_effect(context, "delete", context.methods.delete_application)
     yield Part.Gap1
-    yield special_method(context, "opt_in", context.methods.opt_in)
+    yield methods_by_side_effect(context, "opt_in", context.methods.opt_in)
     yield Part.Gap1
-    yield special_method(context, "close_out", context.methods.close_out)
+    yield methods_by_side_effect(context, "close_out", context.methods.close_out)
     yield Part.Gap1
     yield clear_method(context)
     yield Part.Gap1
@@ -374,90 +382,61 @@ def embed_app_spec(context: GenerateContext) -> DocumentParts:
     yield "APP_SPEC = algokit_utils.ApplicationSpecification.from_json(_APP_SPEC_JSON)"
 
 
-def call_method(context: GenerateContext, contract_method: ABIContractMethod) -> DocumentParts:
-    yield f"def {contract_method.client_method_name}("
+def signature(context: GenerateContext, name: str, method: ContractMethod) -> DocumentParts:
+    yield f"def {name}("
     yield Part.IncIndent
     yield "self,"
     yield "*,"
-    for arg in contract_method.args:
-        yield Part.InlineMode
-        yield f"{arg.name}: {arg.python_type}"
-        if arg.has_default:
-            yield " | None = None"
-        yield ","
-        yield Part.RestoreLineMode
-    yield "transaction_parameters: algokit_utils.TransactionParameters | None = None,"
-    yield Part.DecIndent
-    yield f") -> algokit_utils.ABITransactionResponse[{contract_method.python_type}]:"
-    yield Part.IncIndent
-    # TODO: yield doc
-
-    if not contract_method.args:
-        yield f"args = {contract_method.args_class_name}()"
+    abi = method.abi
+    if abi:
+        for arg in abi.args:
+            if arg.has_default:
+                yield f"{arg.name}: {arg.python_type} | None = None,"
+            else:
+                yield f"{arg.name}: {arg.python_type},"
+    if method.call_config == "create":
+        yield on_complete_literals(method.on_complete)
+        yield "transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,"
     else:
+        yield "transaction_parameters: algokit_utils.TransactionParameters | None = None,"
+    yield Part.DecIndent
+    if abi:
+        yield f") -> algokit_utils.ABITransactionResponse[{abi.python_type}]:"
+    else:
+        yield ") -> algokit_utils.TransactionResponse:"
+    # TODO: docstring
+
+
+def instantiate_args(contract_method: ABIContractMethod | None) -> DocumentParts:
+    if contract_method and not contract_method.args:
+        yield f"args = {contract_method.args_class_name}()"
+    elif contract_method:
         yield f"args = {contract_method.args_class_name}(", Part.IncIndent
         for arg in contract_method.args:
             yield f"{arg.name}={arg.name},"
         yield Part.DecIndent, ")"
 
-    yield utils.indented(
-        """
-return self.app_client.call(
-    call_abi_method=args.method(),
-    transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-    **_as_dict(args),
-)"""
-    )
-    yield Part.DecIndent
 
-
-def call_methods(context: GenerateContext) -> DocumentParts:
-    for method in context.methods.no_op:
-        if method.abi:
-            yield call_method(context, method.abi)
-        else:
-            yield utils.indented(
-                """
-def no_op(
-    self,
-    transaction_parameters: algokit_utils.TransactionParameters | None = None
-) -> algokit_utils.TransactionResponse:
-    return self.app_client.call(
-        call_abi_method=False,
-        transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-    )"""
-            )
-        yield Part.Gap1
-
-
-def signature(
-    context: GenerateContext, name: str, args: "Sequence[str | DocumentParts]", return_types: list[str]
+def app_client_call(
+    app_client_method: Literal["call", "create", "update", "delete", "opt_in", "close_out"],
+    contract_method: ContractMethod,
 ) -> DocumentParts:
-    yield f"def {name}("
+    yield f"return self.app_client.{app_client_method}("
     yield Part.IncIndent
-    for arg in args:
-        yield Part.InlineMode
-        if isinstance(arg, str):
-            yield arg
-        else:
-            yield arg
-        yield ","
-        yield Part.RestoreLineMode
-
-    return_signature = f") -> {' | '.join(return_types)}:"
-
-    if context.settings.indent_length + len(return_signature) < context.settings.max_line_length:
-        yield Part.DecIndent, return_signature
+    if contract_method.abi:
+        yield "call_abi_method=args.method(),"
     else:
-        yield Part.DecIndent, ") -> ("
-        yield Part.IncIndent
-        for idx, return_type in enumerate(return_types):
-            yield Part.InlineMode
-            if idx:
-                yield "| "
-            yield return_type
-            yield Part.RestoreLineMode
-        yield Part.DecIndent, "):"
+        yield "call_abi_method=False,"
+    if contract_method.call_config == "create":
+        yield "transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),"
+    elif "no_op" in contract_method.on_complete:
+        yield "transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),"
+    else:
+        yield "transaction_parameters=_convert_transaction_parameters(transaction_parameters),"
+    if contract_method.abi:
+        yield "**_as_dict(args),"
+    yield Part.DecIndent
+    yield ")"
 
 
 def on_complete_literals(on_completes: Iterable[OnCompleteActionName]) -> DocumentParts:
@@ -467,103 +446,36 @@ def on_complete_literals(on_completes: Iterable[OnCompleteActionName]) -> Docume
     yield '"]'
     if "no_op" in on_completes:
         yield ' = "no_op"'
+    yield ","
     yield Part.RestoreLineMode
 
 
-def multi_typed_arg(arg_name: str, arg_types: list[str], *, include_none_default: bool) -> DocumentParts:
-    yield Part.InlineMode
-    yield f"{arg_name}: "
-    yield utils.join(" | ", arg_types)
-    if include_none_default:
-        yield " = None"
-    yield Part.RestoreLineMode
-
-
-def special_typed_args(methods: list[ContractMethod]) -> DocumentParts:
-    has_bare = any(not m.abi for m in methods)
-    args = [m.abi.args_class_name for m in methods if m.abi]
-    if has_bare:
-        args.append("None")
-    yield multi_typed_arg("args", args, include_none_default=has_bare)
-
-
-def special_overload(
+def methods_by_side_effect(
     context: GenerateContext,
-    method_name: Literal["create", "update", "delete", "opt_in", "close_out"],
-    method: ContractMethod,
-) -> DocumentParts:
-    yield "@typing.overload"
-    args: list[str | DocumentParts] = ["self", "*"]
-
-    if method.abi:
-        args.append(f"args: {method.abi.args_class_name}")
-        return_type = f"algokit_utils.ABITransactionResponse[{method.abi.python_type}]"
-    else:
-        args.append("args: typing.Literal[None] = None")
-        return_type = "algokit_utils.TransactionResponse"
-    if method_name == "create":
-        args.append(on_complete_literals(method.on_complete))
-        args.append("transaction_parameters: algokit_utils.CreateTransactionParameters | None = None")
-    else:
-        args.append("transaction_parameters: algokit_utils.TransactionParameters | None = None")
-    yield signature(context, method_name, args, [return_type])
-    yield Part.IncIndent, "...", Part.DecIndent
-
-
-def special_method(
-    context: GenerateContext,
-    method_name: Literal["create", "update", "delete", "opt_in", "close_out"],
+    side_effect: Literal["none", "create", "update", "delete", "opt_in", "close_out"],
     methods: list[ContractMethod],
 ) -> DocumentParts:
     if not methods:
         return
-    is_create = method_name == "create"
-    has_bare = any(not m.abi for m in methods)
-    bare_only = all(not m.abi for m in methods)
-    # typed overloads
-    if len(methods) > 1:
-        for method in methods:
-            yield special_overload(context, method_name, method)
-            yield Part.Gap1
 
-    # signature
-    args: list[str | DocumentParts] = ["self", "*"]
-    if not bare_only:
-        args.append(special_typed_args(methods))
-    if is_create:
-        args.append(on_complete_literals(sorted({c for m in methods for c in m.on_complete})))
-        args.append("transaction_parameters: algokit_utils.CreateTransactionParameters | None = None")
-    else:
-        args.append("transaction_parameters: algokit_utils.TransactionParameters | None = None")
+    for method in methods:
+        contract_method = method.abi
 
-    return_types = []
-    if has_bare:
-        return_types.append("algokit_utils.TransactionResponse")
-
-    return_types.extend(sorted(f"algokit_utils.ABITransactionResponse[{m.abi.python_type}]" for m in methods if m.abi))
-    yield signature(context, method_name, args, return_types)
-
-    # implementation
-    yield Part.IncIndent
-
-    yield f"return self.app_client.{method_name}("
-    yield Part.IncIndent
-    if bare_only:
-        yield "call_abi_method=False,"
-    else:
-        yield "call_abi_method=args.method() if args else False,"
-    if is_create:
-        yield (
-            "transaction_parameters=_convert_transaction_parameters(transaction_parameters) | "
-            '{"on_complete": _convert_on_complete(on_complete)},'
-        )
-    else:
-        yield "transaction_parameters=_convert_transaction_parameters(transaction_parameters),"
-    if not bare_only:
-        yield "**_as_dict(args),"
-    yield Part.DecIndent
-    yield ")"
-    yield Part.DecIndent
+        if side_effect == "none":
+            if contract_method:  # an ABI method with no_op=CALL method
+                full_method_name = contract_method.client_method_name
+            else:
+                full_method_name = "no_op_bare"
+        elif contract_method:  # an ABI method with a side effect
+            full_method_name = f"{side_effect}_{contract_method.client_method_name}"
+        else:  # a bare method
+            full_method_name = f"{side_effect}_bare"
+        yield signature(context, full_method_name, method)
+        yield Part.IncIndent
+        yield instantiate_args(contract_method)
+        yield app_client_call("call" if side_effect == "none" else side_effect, method)
+        yield Part.DecIndent
+        yield Part.Gap1
 
 
 def clear_method(context: GenerateContext) -> DocumentParts:
@@ -589,7 +501,11 @@ def deploy_method_args(context: GenerateContext, arg_name: str, methods: list[Co
     if has_bare:
         args.append("algokit_utils.DeployCallArgs")
         args.append("None")
-    yield multi_typed_arg(arg_name, args, include_none_default=has_bare)
+
+    yield f"{arg_name}: "
+    yield utils.join(" | ", args)
+    if has_bare:
+        yield " = None"
     yield ","
     yield Part.RestoreLineMode
 

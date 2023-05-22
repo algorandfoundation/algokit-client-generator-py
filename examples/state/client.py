@@ -354,7 +354,6 @@ _APP_SPEC_JSON = r"""{
     }
 }"""
 APP_SPEC = algokit_utils.ApplicationSpecification.from_json(_APP_SPEC_JSON)
-_T = typing.TypeVar("_T")
 _TReturn = typing.TypeVar("_TReturn")
 
 
@@ -383,7 +382,7 @@ class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[
     pass
 
 
-def _as_dict(data: _T | None) -> dict[str, typing.Any]:
+def _as_dict(data: object | None) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
@@ -393,13 +392,24 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
 
 def _convert_transaction_parameters(
     transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CommonCallParametersDict:
+    return typing.cast(algokit_utils.CommonCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_call_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.OnCompleteCallParametersDict:
+    return typing.cast(algokit_utils.OnCompleteCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_create_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+    on_complete: algokit_utils.OnCompleteActionName,
 ) -> algokit_utils.CreateCallParametersDict:
-    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
-
-
-def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
+    result = typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
-    return getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    result["on_complete"] = getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    return result
 
 
 def _convert_deploy_args(
@@ -647,7 +657,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -664,7 +674,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -685,7 +695,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -706,7 +716,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -723,7 +733,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -735,7 +745,7 @@ class StateAppClient:
         args = ErrorArgs()
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -750,7 +760,7 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -765,120 +775,95 @@ class StateAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
-    @typing.overload
-    def create(
+    def create_bare(
         self,
         *,
-        args: typing.Literal[None] = None,
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        ...
+        return self.app_client.create(
+            call_abi_method=False,
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
+        )
 
-    @typing.overload
-    def create(
+    def create_create_abi(
         self,
         *,
-        args: CreateAbiArgs,
+        input: str,
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
-        ...
-
-    def create(
-        self,
-        *,
-        args: CreateAbiArgs | None = None,
-        on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
-        transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
+        args = CreateAbiArgs(
+            input=input,
+        )
         return self.app_client.create(
-            call_abi_method=args.method() if args else False,
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
             **_as_dict(args),
         )
 
-    @typing.overload
-    def update(
+    def update_bare(
         self,
         *,
-        args: typing.Literal[None] = None,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        ...
-
-    @typing.overload
-    def update(
-        self,
-        *,
-        args: UpdateAbiArgs,
-        transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> algokit_utils.ABITransactionResponse[str]:
-        ...
-
-    def update(
-        self,
-        *,
-        args: UpdateAbiArgs | None = None,
-        transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
         return self.app_client.update(
-            call_abi_method=args.method() if args else False,
+            call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
         )
 
-    @typing.overload
-    def delete(
+    def update_update_abi(
         self,
         *,
-        args: typing.Literal[None] = None,
-        transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> algokit_utils.TransactionResponse:
-        ...
-
-    @typing.overload
-    def delete(
-        self,
-        *,
-        args: DeleteAbiArgs,
+        input: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
-        ...
-
-    def delete(
-        self,
-        *,
-        args: DeleteAbiArgs | None = None,
-        transaction_parameters: algokit_utils.TransactionParameters | None = None,
-    ) -> (
-        algokit_utils.TransactionResponse
-        | algokit_utils.ABITransactionResponse[str]
-    ):
-        return self.app_client.delete(
-            call_abi_method=args.method() if args else False,
+        args = UpdateAbiArgs(
+            input=input,
+        )
+        return self.app_client.update(
+            call_abi_method=args.method(),
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
-    def opt_in(
+    def delete_bare(
         self,
         *,
-        args: OptInArgs,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> algokit_utils.TransactionResponse:
+        return self.app_client.delete(
+            call_abi_method=False,
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+        )
+
+    def delete_delete_abi(
+        self,
+        *,
+        input: str,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> algokit_utils.ABITransactionResponse[str]:
+        args = DeleteAbiArgs(
+            input=input,
+        )
+        return self.app_client.delete(
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            **_as_dict(args),
+        )
+
+    def opt_in_opt_in(
+        self,
+        *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        args = OptInArgs()
         return self.app_client.opt_in(
-            call_abi_method=args.method() if args else False,
+            call_abi_method=args.method(),
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
