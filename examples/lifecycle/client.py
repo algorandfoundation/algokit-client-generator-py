@@ -155,12 +155,22 @@ class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typ
     pass
 
 
-def _as_dict(data: object | None) -> dict[str, typing.Any]:
+def _filter_none(value: dict | typing.Any) -> dict | typing.Any:
+    if isinstance(value, dict):
+        return {k: _filter_none(v) for k, v in value.items() if v is not None}
+    return value
+
+
+def _as_dict(data: typing.Any, *, convert_all: bool = True) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}
+    if convert_all:
+        result = dataclasses.asdict(data)
+    else:
+        result = {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return _filter_none(result)
 
 
 def _convert_transaction_parameters(
@@ -340,11 +350,12 @@ class LifeCycleAppClient:
         args = HelloStringStringArgs(
             name=name,
         )
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def hello_string(
         self,
@@ -352,11 +363,12 @@ class LifeCycleAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
         args = HelloStringArgs()
-        return self.app_client.call(
+        result = self.app_client.call(
             call_abi_method=args.method(),
             transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def create_bare(
         self,
@@ -364,10 +376,11 @@ class LifeCycleAppClient:
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=False,
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
         )
+        return result
 
     def create_create_string_string(
         self,
@@ -379,11 +392,12 @@ class LifeCycleAppClient:
         args = CreateStringStringArgs(
             greeting=greeting,
         )
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=args.method(),
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def create_create_string_uint32_void(
         self,
@@ -397,21 +411,23 @@ class LifeCycleAppClient:
             greeting=greeting,
             times=times,
         )
-        return self.app_client.create(
+        result = self.app_client.create(
             call_abi_method=args.method(),
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
-            **_as_dict(args),
+            **_as_dict(args, convert_all=True),
         )
+        return result
 
     def update_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
-        return self.app_client.update(
+        result = self.app_client.update(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
+        return result
 
     def clear_state(
         self,

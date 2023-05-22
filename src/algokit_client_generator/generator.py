@@ -6,7 +6,7 @@ from algokit_utils import ApplicationSpecification, OnCompleteActionName
 
 from algokit_client_generator import utils
 from algokit_client_generator.document import DocumentParts, Part
-from algokit_client_generator.spec import ABIContractMethod, ContractMethod, get_contract_methods
+from algokit_client_generator.spec import ABIContractMethod, ABIStruct, ContractMethod, get_contract_methods
 
 ESCAPED_QUOTE = r"\""
 
@@ -33,6 +33,7 @@ class GenerateContext:
             "_TResult",
             "_ArgsBase",
             "_as_dict",
+            "_filter_none",
             "_convert_on_complete",
             "_convert_deploy_args",
             "DeployCreate",
@@ -51,7 +52,7 @@ class GenerateContext:
             "get_local_state",
         }
         self.client_name = utils.get_unique_symbol_by_incrementing(
-            self.used_module_symbols, utils.get_class_name(f"{self.app_spec.contract.name}_client")
+            self.used_module_symbols, utils.get_class_name(self.app_spec.contract.name, "client")
         )
         self.methods = get_contract_methods(app_spec, self.used_module_symbols, self.used_client_symbols)
         self.disable_linting = True
@@ -159,12 +160,24 @@ class Deploy(algokit_utils.DeployCallArgs, _TArgsHolder[_TArgs], typing.Generic[
     yield Part.Gap2
     yield utils.indented(
         """
-def _as_dict(data: object | None) -> dict[str, typing.Any]:
+def _filter_none(value: dict | typing.Any) -> dict | typing.Any:
+    if isinstance(value, dict):
+        return {k: _filter_none(v) for k, v in value.items() if v is not None}
+    return value"""
+    )
+    yield Part.Gap2
+    yield utils.indented(
+        """
+def _as_dict(data: typing.Any, *, convert_all: bool = True) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
         raise TypeError(f"{data} must be a dataclass")
-    return {f.name: getattr(data, f.name) for f in dataclasses.fields(data) if getattr(data, f.name) is not None}"""
+    if convert_all:
+        result = dataclasses.asdict(data)
+    else:
+        result = {f.name: getattr(data, f.name) for f in dataclasses.fields(data)}
+    return _filter_none(result)"""
     )
     yield Part.Gap2
     yield utils.indented(
@@ -214,15 +227,31 @@ def _convert_deploy_args(
     yield Part.Gap2
 
 
+def named_struct(context: GenerateContext, struct: ABIStruct) -> DocumentParts:
+    yield "@dataclasses.dataclass(kw_only=True)"
+    yield f"class {struct.struct_class_name}:"
+    yield Part.IncIndent
+    for field in struct.fields:
+        yield f"{field.name}: {field.python_type}"
+    yield Part.DecIndent
+
+
 def typed_arguments(context: GenerateContext) -> DocumentParts:
     # typed args classes
     processed_abi_signatures: set[str] = set()
+    processed_abi_structs: set[str] = set()
     for method in context.methods.all_abi_methods:
         abi = method.abi
         assert abi
         abi_signature = abi.method.get_signature()
         if abi_signature in processed_abi_signatures:
             continue
+        for struct in abi.structs:
+            if struct.struct_class_name not in processed_abi_structs:
+                yield named_struct(context, struct)
+                yield Part.Gap2
+                processed_abi_structs.add(struct.struct_class_name)
+
         processed_abi_signatures.add(abi_signature)
         yield typed_argument_class(abi)
         yield Part.Gap2
@@ -421,7 +450,7 @@ def app_client_call(
     app_client_method: Literal["call", "create", "update", "delete", "opt_in", "close_out"],
     contract_method: ContractMethod,
 ) -> DocumentParts:
-    yield f"return self.app_client.{app_client_method}("
+    yield f"result = self.app_client.{app_client_method}("
     yield Part.IncIndent
     if contract_method.abi:
         yield "call_abi_method=args.method(),"
@@ -434,9 +463,14 @@ def app_client_call(
     else:
         yield "transaction_parameters=_convert_transaction_parameters(transaction_parameters),"
     if contract_method.abi:
-        yield "**_as_dict(args),"
+        yield "**_as_dict(args, convert_all=True),"
     yield Part.DecIndent
     yield ")"
+    if contract_method.abi and contract_method.abi.result_struct:
+        yield 'elements = self.app_spec.hints[args.method()].structs["output"]["elements"]'
+        yield "result_dict = {element[0]: value for element, value in zip(elements, result.return_value)}"
+        yield f"result.return_value = {contract_method.abi.python_type}(**result_dict)"
+    yield "return result"
 
 
 def on_complete_literals(on_completes: Iterable[OnCompleteActionName]) -> DocumentParts:
