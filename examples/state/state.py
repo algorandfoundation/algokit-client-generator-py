@@ -145,3 +145,27 @@ def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # no
 @app.opt_in
 def opt_in() -> pt.Expr:
     return pt.Approve()
+
+
+class Input(pt.abi.NamedTuple):
+    name: pt.abi.Field[pt.abi.String]
+    age: pt.abi.Field[pt.abi.Uint64]
+
+
+class Output(pt.abi.NamedTuple):
+    message: pt.abi.Field[pt.abi.String]
+    result: pt.abi.Field[pt.abi.Uint64]
+
+
+@app.external()
+def structs(name_age: Input, *, output: Output) -> pt.Expr:
+    return pt.Seq(
+        (name := pt.abi.String()).set(name_age.name),
+        (age := pt.abi.Uint64()).set(name_age.age),
+        (message := pt.abi.String()).set(pt.Concat(pt.Bytes("Hello, "), name.get())),
+        (result := pt.abi.Uint64()).set(pt.Mul(age.get(), pt.Int(2))),
+        output.set(
+            message,
+            result,
+        ),
+    )
