@@ -55,7 +55,7 @@ def test_create_2arg(lifecycle_client: LifeCycleAppClient) -> None:
 
 def test_deploy_bare(deploy_lifecycle_client: LifeCycleAppClient) -> None:
     deploy_lifecycle_client.deploy(allow_update=True, create_args=None)
-    assert deploy_lifecycle_client.app_client.app_id
+    assert deploy_lifecycle_client.app_id
 
     response = deploy_lifecycle_client.hello_string_string(name="Deploy Bare")
 
@@ -67,7 +67,7 @@ def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleAppClient) -> None
         allow_update=True,
         create_args=DeployCreate(args=CreateStringStringArgs(greeting="Deploy Greetings")),
     )
-    assert deploy_lifecycle_client.app_client.app_id
+    assert deploy_lifecycle_client.app_id
     assert isinstance(deploy_response.create_response, algokit_utils.ABITransactionResponse)
     assert deploy_response.create_response.return_value == "Deploy Greetings_1"
 
@@ -83,7 +83,7 @@ def test_deploy_create_2arg(deploy_lifecycle_client: LifeCycleAppClient) -> None
             args=CreateStringUint32VoidArgs(greeting="Deploy Greetings", times=2),
         ),
     )
-    assert deploy_lifecycle_client.app_client.app_id
+    assert deploy_lifecycle_client.app_id
 
     response = deploy_lifecycle_client.hello_string_string(name="2 Arg")
 

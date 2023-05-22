@@ -49,7 +49,7 @@ def test_call_abi_txn(deployed_state_app_client: StateAppClient, algod_client: A
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
-        receiver=deployed_state_app_client.app_client.app_address,
+        receiver=deployed_state_app_client.app_address,
         amt=200_000,
         note=b"Bootstrap payment",
         sp=algod_client.suggested_params(),
@@ -78,10 +78,10 @@ def test_set_local(deployed_state_app_client: StateAppClient) -> None:
 
 def test_set_box(deployed_state_app_client: StateAppClient) -> None:
     algokit_utils.transfer(
-        deployed_state_app_client.app_client.algod_client,
+        deployed_state_app_client.algod_client,
         algokit_utils.TransferParameters(
-            from_account=algokit_utils.get_localnet_default_account(deployed_state_app_client.app_client.algod_client),
-            to_address=deployed_state_app_client.app_client.app_address,
+            from_account=algokit_utils.get_localnet_default_account(deployed_state_app_client.algod_client),
+            to_address=deployed_state_app_client.app_address,
             micro_algos=120000,
         ),
     )
