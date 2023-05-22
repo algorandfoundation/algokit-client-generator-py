@@ -5,6 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 import base64
 import dataclasses
+import decimal
 import typing
 from abc import ABC, abstractmethod
 
@@ -359,7 +360,7 @@ class VotingPreconditions:
 
 @dataclasses.dataclass(kw_only=True)
 class GetPreconditionsArgs(_ArgsBase[VotingPreconditions]):
-    signature: bytes
+    signature: bytes | bytearray
 
     @staticmethod
     def method() -> str:
@@ -369,7 +370,7 @@ class GetPreconditionsArgs(_ArgsBase[VotingPreconditions]):
 @dataclasses.dataclass(kw_only=True)
 class VoteArgs(_ArgsBase[None]):
     fund_min_bal_req: TransactionWithSigner
-    signature: bytes
+    signature: bytes | bytearray
     answer_ids: list[int]
 
     @staticmethod
@@ -380,7 +381,7 @@ class VoteArgs(_ArgsBase[None]):
 @dataclasses.dataclass(kw_only=True)
 class CreateArgs(_ArgsBase[None]):
     vote_id: str
-    snapshot_public_key: bytes
+    snapshot_public_key: bytes | bytearray
     metadata_ipfs_cid: str
     start_time: int
     end_time: int
@@ -582,7 +583,7 @@ class VotingRoundAppClient:
     def get_preconditions(
         self,
         *,
-        signature: bytes,
+        signature: bytes | bytearray,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[VotingPreconditions]:
         args = GetPreconditionsArgs(
@@ -602,7 +603,7 @@ class VotingRoundAppClient:
         self,
         *,
         fund_min_bal_req: TransactionWithSigner,
-        signature: bytes,
+        signature: bytes | bytearray,
         answer_ids: list[int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
@@ -622,7 +623,7 @@ class VotingRoundAppClient:
         self,
         *,
         vote_id: str,
-        snapshot_public_key: bytes,
+        snapshot_public_key: bytes | bytearray,
         metadata_ipfs_cid: str,
         start_time: int,
         end_time: int,

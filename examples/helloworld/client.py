@@ -5,6 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 import base64
 import dataclasses
+import decimal
 import typing
 from abc import ABC, abstractmethod
 

@@ -80,6 +80,7 @@ def imports(context: GenerateContext) -> DocumentParts:
     yield utils.lines(
         """import base64
 import dataclasses
+import decimal
 import typing
 from abc import ABC, abstractmethod
 
