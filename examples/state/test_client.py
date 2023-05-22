@@ -13,7 +13,6 @@ from examples.state.client import (
     DeleteAbiArgs,
     Deploy,
     DeployCreate,
-    OptInArgs,
     StateAppClient,
     UpdateAbiArgs,
 )
@@ -70,7 +69,7 @@ def test_set_global(deployed_state_app_client: StateAppClient) -> None:
 
 
 def test_set_local(deployed_state_app_client: StateAppClient) -> None:
-    deployed_state_app_client.opt_in(args=OptInArgs())
+    deployed_state_app_client.opt_in_opt_in()
     response = deployed_state_app_client.set_local(int1=1, int2=2, bytes1="test", bytes2=b"test")
 
     assert response.return_value is None
@@ -100,25 +99,25 @@ def test_error(deployed_state_app_client: StateAppClient) -> None:
 def test_create_abi(state_app_client: StateAppClient) -> None:
     state_app_client.app_client.template_values = {"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1}
 
-    response = state_app_client.create(args=CreateAbiArgs(input="test"))
+    response = state_app_client.create_create_abi(input="test")
 
     assert response.return_value == "test"
 
 
 def test_update_abi(deployed_state_app_client: StateAppClient) -> None:
-    response = deployed_state_app_client.update(args=UpdateAbiArgs(input="test"))
+    response = deployed_state_app_client.update_update_abi(input="test")
 
     assert response.return_value == "test"
 
 
 def test_delete_abi(deployed_state_app_client: StateAppClient) -> None:
-    response = deployed_state_app_client.delete(args=DeleteAbiArgs(input="test"))
+    response = deployed_state_app_client.delete_delete_abi(input="test")
 
     assert response.return_value == "test"
 
 
 def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
-    response = deployed_state_app_client.opt_in(args=OptInArgs())
+    response = deployed_state_app_client.opt_in_opt_in()
 
     assert response.confirmed_round
 
@@ -134,7 +133,7 @@ def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:
 
 
 def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
-    response = deployed_state_app_client.opt_in(args=OptInArgs())
+    response = deployed_state_app_client.opt_in_opt_in()
     assert response.confirmed_round
 
     clear_response = deployed_state_app_client.clear_state()
@@ -157,7 +156,7 @@ def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
 def test_get_local_state(deployed_state_app_client: StateAppClient) -> None:
     int1_expected = 1
     int2_expected = 2
-    deployed_state_app_client.opt_in(args=OptInArgs())
+    deployed_state_app_client.opt_in_opt_in()
     deployed_state_app_client.set_local(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
     response = deployed_state_app_client.get_local_state(account=None)
 

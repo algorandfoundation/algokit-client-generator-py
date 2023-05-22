@@ -30,7 +30,7 @@ def deploy_lifecycle_client(
 
 
 def test_create_bare(lifecycle_client: LifeCycleAppClient) -> None:
-    create_response = lifecycle_client.create(args=None)
+    create_response = lifecycle_client.create_bare()
     assert create_response
     response = lifecycle_client.hello_string_string(name="Bare")
 
@@ -38,7 +38,7 @@ def test_create_bare(lifecycle_client: LifeCycleAppClient) -> None:
 
 
 def test_create_1arg(lifecycle_client: LifeCycleAppClient) -> None:
-    create_response = lifecycle_client.create(args=CreateStringStringArgs(greeting="Greetings"))
+    create_response = lifecycle_client.create_create_string_string(greeting="Greetings")
     assert create_response.return_value == "Greetings_1"
     response = lifecycle_client.hello_string_string(name="1 Arg")
 
@@ -46,7 +46,7 @@ def test_create_1arg(lifecycle_client: LifeCycleAppClient) -> None:
 
 
 def test_create_2arg(lifecycle_client: LifeCycleAppClient) -> None:
-    create_response = lifecycle_client.create(args=CreateStringUint32VoidArgs(greeting="Greetings", times=2))
+    create_response = lifecycle_client.create_create_string_uint32_void(greeting="Greetings", times=2)
     assert create_response.return_value is None
     response = lifecycle_client.hello_string_string(name="2 Arg")
 

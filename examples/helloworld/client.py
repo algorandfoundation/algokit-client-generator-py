@@ -88,7 +88,6 @@ _APP_SPEC_JSON = r"""{
     }
 }"""
 APP_SPEC = algokit_utils.ApplicationSpecification.from_json(_APP_SPEC_JSON)
-_T = typing.TypeVar("_T")
 _TReturn = typing.TypeVar("_TReturn")
 
 
@@ -107,7 +106,7 @@ class _TArgsHolder(typing.Generic[_TArgs]):
     args: _TArgs
 
 
-def _as_dict(data: _T | None) -> dict[str, typing.Any]:
+def _as_dict(data: object | None) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
@@ -117,13 +116,24 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
 
 def _convert_transaction_parameters(
     transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CommonCallParametersDict:
+    return typing.cast(algokit_utils.CommonCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_call_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.OnCompleteCallParametersDict:
+    return typing.cast(algokit_utils.OnCompleteCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_create_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+    on_complete: algokit_utils.OnCompleteActionName,
 ) -> algokit_utils.CreateCallParametersDict:
-    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
-
-
-def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
+    result = typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
-    return getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    result["on_complete"] = getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    return result
 
 
 def _convert_deploy_args(
@@ -235,7 +245,7 @@ class HelloWorldAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -250,11 +260,11 @@ class HelloWorldAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
-    def create(
+    def create_bare(
         self,
         *,
         on_complete: typing.Literal["no_op"] = "no_op",
@@ -262,10 +272,10 @@ class HelloWorldAppClient:
     ) -> algokit_utils.TransactionResponse:
         return self.app_client.create(
             call_abi_method=False,
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
         )
 
-    def update(
+    def update_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
@@ -275,7 +285,7 @@ class HelloWorldAppClient:
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
         )
 
-    def delete(
+    def delete_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,

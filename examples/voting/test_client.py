@@ -185,8 +185,15 @@ def test_create(algod_client: AlgodClient, funded_account: Account, create_args:
     sp.fee = algosdk.util.algos_to_microalgos(4)
     sp.flat_fee = True
 
-    response = voting_round_app_client.create(
-        args=create_args,
+    response = voting_round_app_client.create_create(
+        vote_id=create_args.vote_id,
+        snapshot_public_key=create_args.snapshot_public_key,
+        metadata_ipfs_cid=create_args.metadata_ipfs_cid,
+        start_time=create_args.start_time,
+        end_time=create_args.end_time,
+        option_counts=create_args.option_counts,
+        quorum=create_args.quorum,
+        nft_image_url=create_args.nft_image_url,
         transaction_parameters=algokit_utils.CreateTransactionParameters(suggested_params=sp),
     )
 

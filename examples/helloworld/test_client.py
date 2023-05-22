@@ -38,11 +38,11 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
         algod_client=algod_client, signer=signer, template_values={"UPDATABLE": 1, "DELETABLE": 1}
     )
 
-    assert helloworld_client.create()
-    assert helloworld_client.update()
+    assert helloworld_client.create_bare()
+    assert helloworld_client.update_bare()
 
     response = helloworld_client.hello(name="World")
 
     assert response.return_value == "Hello, World"
 
-    assert helloworld_client.delete()
+    assert helloworld_client.delete_bare()

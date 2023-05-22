@@ -256,7 +256,6 @@ _APP_SPEC_JSON = r"""{
     }
 }"""
 APP_SPEC = algokit_utils.ApplicationSpecification.from_json(_APP_SPEC_JSON)
-_T = typing.TypeVar("_T")
 _TReturn = typing.TypeVar("_TReturn")
 
 
@@ -280,7 +279,7 @@ class DeployCreate(algokit_utils.DeployCreateCallArgs, _TArgsHolder[_TArgs], typ
     pass
 
 
-def _as_dict(data: _T | None) -> dict[str, typing.Any]:
+def _as_dict(data: object | None) -> dict[str, typing.Any]:
     if data is None:
         return {}
     if not dataclasses.is_dataclass(data):
@@ -290,13 +289,24 @@ def _as_dict(data: _T | None) -> dict[str, typing.Any]:
 
 def _convert_transaction_parameters(
     transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.CommonCallParametersDict:
+    return typing.cast(algokit_utils.CommonCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_call_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+) -> algokit_utils.OnCompleteCallParametersDict:
+    return typing.cast(algokit_utils.OnCompleteCallParametersDict, _as_dict(transaction_parameters))
+
+
+def _convert_create_transaction_parameters(
+    transaction_parameters: algokit_utils.TransactionParameters | None,
+    on_complete: algokit_utils.OnCompleteActionName,
 ) -> algokit_utils.CreateCallParametersDict:
-    return typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
-
-
-def _convert_on_complete(on_complete: algokit_utils.OnCompleteActionName) -> algosdk.transaction.OnComplete:
+    result = typing.cast(algokit_utils.CreateCallParametersDict, _as_dict(transaction_parameters))
     on_complete_enum = on_complete.replace("_", " ").title().replace(" ", "") + "OC"
-    return getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    result["on_complete"] = getattr(algosdk.transaction.OnComplete, on_complete_enum)
+    return result
 
 
 def _convert_deploy_args(
@@ -493,7 +503,7 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -505,7 +515,7 @@ class VotingRoundAppClient:
         args = CloseArgs()
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -520,7 +530,7 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
@@ -539,24 +549,41 @@ class VotingRoundAppClient:
         )
         return self.app_client.call(
             call_abi_method=args.method(),
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
             **_as_dict(args),
         )
 
-    def create(
+    def create_create(
         self,
         *,
-        args: CreateArgs,
+        vote_id: str,
+        snapshot_public_key: bytes,
+        metadata_ipfs_cid: str,
+        start_time: int,
+        end_time: int,
+        option_counts: list[int],
+        quorum: int,
+        nft_image_url: str,
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        args = CreateArgs(
+            vote_id=vote_id,
+            snapshot_public_key=snapshot_public_key,
+            metadata_ipfs_cid=metadata_ipfs_cid,
+            start_time=start_time,
+            end_time=end_time,
+            option_counts=option_counts,
+            quorum=quorum,
+            nft_image_url=nft_image_url,
+        )
         return self.app_client.create(
-            call_abi_method=args.method() if args else False,
-            transaction_parameters=_convert_transaction_parameters(transaction_parameters) | {"on_complete": _convert_on_complete(on_complete)},
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
             **_as_dict(args),
         )
 
-    def delete(
+    def delete_bare(
         self,
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
