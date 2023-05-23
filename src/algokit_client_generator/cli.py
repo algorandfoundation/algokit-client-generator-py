@@ -2,7 +2,6 @@ import argparse
 import sys
 from pathlib import Path
 
-from algokit_client_generator.generator import GenerationSettings
 from algokit_client_generator.writer import generate_client
 
 parser = argparse.ArgumentParser(
@@ -30,16 +29,15 @@ args = parser.parse_args()
 DEFAULT_CLIENT = "client_generated.py"
 
 
-def walk_dir(path: Path, output: Path, settings: GenerationSettings) -> None:
+def walk_dir(path: Path, output: Path) -> None:
     for child in path.iterdir():
         if child.is_dir():
-            walk_dir(child, output, settings)
+            walk_dir(child, output)
         elif child.name.lower() == "application.json":
-            generate_client(child, child.parent / output, settings)
+            generate_client(child, child.parent / output)
 
 
 def main() -> None:
-    settings = GenerationSettings(max_line_length=120)
     app_spec: Path = args.app_spec
     output: Path = args.output
     if not app_spec.exists():
@@ -53,11 +51,11 @@ def main() -> None:
         if output.is_absolute():
             print(f"{output} must be a relative path, when using the --walk option", file=sys.stderr)
             return
-        walk_dir(args.app_spec, args.output, settings)
+        walk_dir(args.app_spec, args.output)
     elif len(sys.argv) == 1:  # if user invokes with no arguments display help
         parser.print_usage()
     else:
         if not app_spec.is_file():
             print(f"{app_spec} must be a path to an application.json", file=sys.stderr)
             return
-        generate_client(app_spec, output, settings)
+        generate_client(app_spec, output)
