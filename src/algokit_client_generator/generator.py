@@ -1,8 +1,9 @@
 import dataclasses
+import typing
 from collections.abc import Iterable
 from typing import Literal
 
-from algokit_utils import ApplicationSpecification, OnCompleteActionName
+import algokit_utils
 
 from algokit_client_generator import utils
 from algokit_client_generator.document import DocumentParts, Part
@@ -22,7 +23,7 @@ class GenerationSettings:
 
 
 class GenerateContext:
-    def __init__(self, app_spec: ApplicationSpecification):
+    def __init__(self, app_spec: algokit_utils.ApplicationSpecification):
         self.app_spec = app_spec
         # TODO: track these as they are emitted?
         self.used_module_symbols = {
@@ -287,10 +288,17 @@ def state_type(context: GenerateContext, class_name: str, schema: dict[str, dict
     yield Part.Gap2
 
 
+def _get_declared_schema(
+    app_spec: algokit_utils.ApplicationSpecification, schema_name: Literal["global", "local"]
+) -> dict[str, dict[str, typing.Any]]:
+    schema = app_spec.schema.get(schema_name) or {}
+    return schema.get("declared") or {}
+
+
 def state_types(context: GenerateContext) -> DocumentParts:
     app_spec = context.app_spec
-    global_schema = app_spec.schema.get("global", {}).get("declared", {})
-    local_schema = app_spec.schema.get("local", {}).get("declared", {})
+    global_schema = _get_declared_schema(app_spec, "global")
+    local_schema = _get_declared_schema(app_spec, "local")
     has_bytes = any(i.get("type") == "bytes" for i in [*global_schema.values(), *local_schema.values()])
     if has_bytes:
         yield utils.indented(
@@ -389,10 +397,12 @@ class {context.client_name}:
     yield Part.IncIndent
     yield forwarded_client_properties(context)
     yield Part.Gap1
-    yield get_global_state_method(context)
-    yield Part.Gap1
-    yield get_local_state_method(context)
-    yield Part.Gap1
+    if _get_declared_schema(context.app_spec, "global"):
+        yield get_global_state_method(context)
+        yield Part.Gap1
+    if _get_declared_schema(context.app_spec, "local"):
+        yield get_local_state_method(context)
+        yield Part.Gap1
     yield methods_by_side_effect(context, "none", context.methods.no_op)
     yield Part.Gap1
     yield methods_by_side_effect(context, "create", context.methods.create)
@@ -464,6 +474,58 @@ def embed_app_spec(context: GenerateContext) -> DocumentParts:
     yield "APP_SPEC = algokit_utils.ApplicationSpecification.from_json(_APP_SPEC_JSON)"
 
 
+def create_method_doc_string(method: ContractMethod) -> Iterable[str]:
+    if method.abi:
+        if method.abi.method.desc:
+            yield method.abi.method.desc
+            yield ""
+        yield f"Calls `{method.abi.method.get_signature()}` ABI method"
+        yield ""
+        for arg in method.abi.args:
+            desc = f":param {arg.python_type} {arg.name}: "
+            desc += "(optional) " if arg.has_default else ""
+            desc += arg.desc or f"The `{arg.name}` ABI parameter"
+            yield desc
+        if method.call_config == "create":
+            on_completes = method.on_complete
+            yield f":param typing.Literal[{', '.join(on_completes)}] on_complete: On completion type to use"
+            yield (
+                ":param algokit_utils.CreateTransactionParameters transaction_parameters: "
+                "(optional) Additional transaction parameters"
+            )
+        else:
+            yield (
+                ":param algokit_utils.TransactionParameters transaction_parameters: "
+                "(optional) Additional transaction parameters"
+            )
+        yield (
+            f":returns algokit_utils.ABITransactionResponse[{method.abi.python_type}]: "
+            f"{method.abi.method.returns.desc or 'The result of the transaction'}"
+        )
+    else:
+        if method.call_config == "create":
+            if len(method.on_complete) > 1:
+                yield f"Creates an application using one of the {', '.join(method.on_complete)} bare methods"
+            else:
+                yield f"Creates an application using the {method.on_complete[0]} bare method"
+            yield ""
+            on_completes = method.on_complete
+            yield f":param typing.Literal[{', '.join(on_completes)}] on_complete: On completion type to use"
+            yield (
+                ":param algokit_utils.CreateTransactionParameters transaction_parameters: "
+                "(optional) Additional transaction parameters"
+            )
+        else:
+            yield f"Calls the {method.on_complete[0]} bare method"
+            yield ""
+            yield (
+                ":param algokit_utils.TransactionParameters transaction_parameters: "
+                "(optional) Additional transaction parameters"
+            )
+
+        yield ":returns algokit_utils.TransactionResponse: The result of the transaction"
+
+
 def signature(context: GenerateContext, name: str, method: ContractMethod) -> DocumentParts:
     yield f"def {name}("
     yield Part.IncIndent
@@ -486,7 +548,10 @@ def signature(context: GenerateContext, name: str, method: ContractMethod) -> Do
         yield f") -> algokit_utils.ABITransactionResponse[{abi.python_type}]:"
     else:
         yield ") -> algokit_utils.TransactionResponse:"
-    # TODO: docstring
+    yield Part.IncIndent
+    yield utils.docstring("\n".join(create_method_doc_string(method)))
+    yield Part.DecIndent
+    yield Part.Gap1
 
 
 def instantiate_args(contract_method: ABIContractMethod | None) -> DocumentParts:
@@ -526,7 +591,7 @@ def app_client_call(
     yield "return result"
 
 
-def on_complete_literals(on_completes: Iterable[OnCompleteActionName]) -> DocumentParts:
+def on_complete_literals(on_completes: Iterable[algokit_utils.OnCompleteActionName]) -> DocumentParts:
     yield Part.InlineMode
     yield 'on_complete: typing.Literal["'
     yield utils.join('", "', on_completes)
@@ -641,6 +706,11 @@ def get_global_state_method(context: GenerateContext) -> DocumentParts:
         return
     yield "def get_global_state(self) -> GlobalState:"
     yield Part.IncIndent
+    yield utils.docstring(
+        "Returns the application's global state wrapped in a strongly typed class"
+        " with options to format the stored value"
+    )
+    yield Part.Gap1
     yield "state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))"
     yield "return GlobalState(state)"
     yield Part.DecIndent
@@ -651,6 +721,11 @@ def get_local_state_method(context: GenerateContext) -> DocumentParts:
         return
     yield "def get_local_state(self, account: str | None = None) -> LocalState:"
     yield Part.IncIndent
+    yield utils.docstring(
+        "Returns the application's local state wrapped in a strongly typed class"
+        " with options to format the stored value"
+    )
+    yield Part.Gap1
     yield "state = typing.cast(dict[bytes, bytes | int], self.app_client.get_local_state(account, raw=True))"
     yield "return LocalState(state)"
     yield Part.DecIndent

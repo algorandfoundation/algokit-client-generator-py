@@ -80,7 +80,8 @@ _APP_SPEC_JSON = r"""{
                 "desc": "Asserts {name} is \"World\""
             }
         ],
-        "networks": {}
+        "networks": {},
+        "desc": "An app that says hello"
     },
     "bare_call_config": {
         "delete_application": "CALL",
@@ -291,6 +292,14 @@ class HelloWorldAppClient:
         name: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Returns Hello, {name}
+        
+        Calls `hello(string)string` ABI method
+        
+        :param str name: The `name` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = HelloArgs(
             name=name,
         )
@@ -307,6 +316,14 @@ class HelloWorldAppClient:
         name: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Asserts {name} is "World"
+        
+        Calls `hello_world_check(string)void` ABI method
+        
+        :param str name: The `name` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = HelloWorldCheckArgs(
             name=name,
         )
@@ -323,6 +340,12 @@ class HelloWorldAppClient:
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Creates an application using the no_op bare method
+        
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.create(
             call_abi_method=False,
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
@@ -334,6 +357,11 @@ class HelloWorldAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the update_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.update(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
@@ -345,6 +373,11 @@ class HelloWorldAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the delete_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.delete(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),

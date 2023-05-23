@@ -756,10 +756,14 @@ class StateAppClient:
         self.app_client.suggested_params = value
 
     def get_global_state(self) -> GlobalState:
+        """Returns the application's global state wrapped in a strongly typed class with options to format the stored value"""
+
         state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)
 
     def get_local_state(self, account: str | None = None) -> LocalState:
+        """Returns the application's local state wrapped in a strongly typed class with options to format the stored value"""
+
         state = typing.cast(dict[bytes, bytes | int], self.app_client.get_local_state(account, raw=True))
         return LocalState(state)
 
@@ -769,6 +773,12 @@ class StateAppClient:
         value: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `call_abi(string)string` ABI method
+        
+        :param str value: The `value` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = CallAbiArgs(
             value=value,
         )
@@ -786,6 +796,13 @@ class StateAppClient:
         value: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `call_abi_txn(pay,string)string` ABI method
+        
+        :param TransactionWithSigner txn: The `txn` ABI parameter
+        :param str value: The `value` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = CallAbiTxnArgs(
             txn=txn,
             value=value,
@@ -806,6 +823,15 @@ class StateAppClient:
         bytes2: bytes | bytearray | tuple[int, int, int, int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `set_global(uint64,uint64,string,byte[4])void` ABI method
+        
+        :param int int1: The `int1` ABI parameter
+        :param int int2: The `int2` ABI parameter
+        :param str bytes1: The `bytes1` ABI parameter
+        :param bytes | bytearray | tuple[int, int, int, int] bytes2: The `bytes2` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = SetGlobalArgs(
             int1=int1,
             int2=int2,
@@ -828,6 +854,15 @@ class StateAppClient:
         bytes2: bytes | bytearray | tuple[int, int, int, int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `set_local(uint64,uint64,string,byte[4])void` ABI method
+        
+        :param int int1: The `int1` ABI parameter
+        :param int int2: The `int2` ABI parameter
+        :param str bytes1: The `bytes1` ABI parameter
+        :param bytes | bytearray | tuple[int, int, int, int] bytes2: The `bytes2` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = SetLocalArgs(
             int1=int1,
             int2=int2,
@@ -848,6 +883,13 @@ class StateAppClient:
         value: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `set_box(byte[4],string)void` ABI method
+        
+        :param bytes | bytearray | tuple[int, int, int, int] name: The `name` ABI parameter
+        :param str value: The `value` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = SetBoxArgs(
             name=name,
             value=value,
@@ -864,6 +906,11 @@ class StateAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `error()void` ABI method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = ErrorArgs()
         result = self.app_client.call(
             call_abi_method=args.method(),
@@ -878,6 +925,12 @@ class StateAppClient:
         arg_with_default: str | None = None,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `default_value(string)string` ABI method
+        
+        :param str arg_with_default: (optional) The `arg_with_default` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = DefaultValueArgs(
             arg_with_default=arg_with_default,
         )
@@ -894,6 +947,12 @@ class StateAppClient:
         arg_with_default: str | None = None,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `default_value_from_abi(string)string` ABI method
+        
+        :param str arg_with_default: (optional) The `arg_with_default` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = DefaultValueFromAbiArgs(
             arg_with_default=arg_with_default,
         )
@@ -910,6 +969,12 @@ class StateAppClient:
         name_age: Input,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[Output]:
+        """Calls `structs((string,uint64))(string,uint64)` ABI method
+        
+        :param Input name_age: The `name_age` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[Output]: The result of the transaction"""
+
         args = StructsArgs(
             name_age=name_age,
         )
@@ -929,6 +994,12 @@ class StateAppClient:
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Creates an application using one of the no_op, opt_in bare methods
+        
+        :param typing.Literal[no_op, opt_in] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.create(
             call_abi_method=False,
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
@@ -942,6 +1013,13 @@ class StateAppClient:
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `create_abi(string)string` ABI method
+        
+        :param str input: The `input` ABI parameter
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = CreateAbiArgs(
             input=input,
         )
@@ -957,6 +1035,11 @@ class StateAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the update_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.update(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
@@ -969,6 +1052,12 @@ class StateAppClient:
         input: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `update_abi(string)string` ABI method
+        
+        :param str input: The `input` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = UpdateAbiArgs(
             input=input,
         )
@@ -984,6 +1073,11 @@ class StateAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the delete_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.delete(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
@@ -996,6 +1090,12 @@ class StateAppClient:
         input: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `delete_abi(string)string` ABI method
+        
+        :param str input: The `input` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = DeleteAbiArgs(
             input=input,
         )
@@ -1011,6 +1111,11 @@ class StateAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `opt_in()void` ABI method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = OptInArgs()
         result = self.app_client.opt_in(
             call_abi_method=args.method(),

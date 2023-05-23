@@ -548,6 +548,8 @@ class VotingRoundAppClient:
         self.app_client.suggested_params = value
 
     def get_global_state(self) -> GlobalState:
+        """Returns the application's global state wrapped in a strongly typed class with options to format the stored value"""
+
         state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)
 
@@ -557,6 +559,12 @@ class VotingRoundAppClient:
         fund_min_bal_req: TransactionWithSigner,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `bootstrap(pay)void` ABI method
+        
+        :param TransactionWithSigner fund_min_bal_req: The `fund_min_bal_req` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = BootstrapArgs(
             fund_min_bal_req=fund_min_bal_req,
         )
@@ -572,6 +580,11 @@ class VotingRoundAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `close()void` ABI method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = CloseArgs()
         result = self.app_client.call(
             call_abi_method=args.method(),
@@ -586,6 +599,12 @@ class VotingRoundAppClient:
         signature: bytes | bytearray,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[VotingPreconditions]:
+        """Calls `get_preconditions(byte[])(uint64,uint64,uint64,uint64)` ABI method
+        
+        :param bytes | bytearray signature: The `signature` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[VotingPreconditions]: The result of the transaction"""
+
         args = GetPreconditionsArgs(
             signature=signature,
         )
@@ -607,6 +626,14 @@ class VotingRoundAppClient:
         answer_ids: list[int],
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `vote(pay,byte[],uint8[])void` ABI method
+        
+        :param TransactionWithSigner fund_min_bal_req: The `fund_min_bal_req` ABI parameter
+        :param bytes | bytearray signature: The `signature` ABI parameter
+        :param list[int] answer_ids: The `answer_ids` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = VoteArgs(
             fund_min_bal_req=fund_min_bal_req,
             signature=signature,
@@ -633,6 +660,20 @@ class VotingRoundAppClient:
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """Calls `create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void` ABI method
+        
+        :param str vote_id: The `vote_id` ABI parameter
+        :param bytes | bytearray snapshot_public_key: The `snapshot_public_key` ABI parameter
+        :param str metadata_ipfs_cid: The `metadata_ipfs_cid` ABI parameter
+        :param int start_time: The `start_time` ABI parameter
+        :param int end_time: The `end_time` ABI parameter
+        :param list[int] option_counts: The `option_counts` ABI parameter
+        :param int quorum: The `quorum` ABI parameter
+        :param str nft_image_url: The `nft_image_url` ABI parameter
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = CreateArgs(
             vote_id=vote_id,
             snapshot_public_key=snapshot_public_key,
@@ -655,6 +696,11 @@ class VotingRoundAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the delete_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.delete(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),
