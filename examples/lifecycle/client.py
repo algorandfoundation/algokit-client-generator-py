@@ -379,6 +379,8 @@ class LifeCycleAppClient:
         self.app_client.suggested_params = value
 
     def get_global_state(self) -> GlobalState:
+        """Returns the application's global state wrapped in a strongly typed class with options to format the stored value"""
+
         state = typing.cast(dict[bytes, bytes | int], self.app_client.get_global_state(raw=True))
         return GlobalState(state)
 
@@ -388,6 +390,12 @@ class LifeCycleAppClient:
         name: str,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `hello(string)string` ABI method
+        
+        :param str name: The `name` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = HelloStringStringArgs(
             name=name,
         )
@@ -403,6 +411,11 @@ class LifeCycleAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """Calls `hello()string` ABI method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = HelloStringArgs()
         result = self.app_client.call(
             call_abi_method=args.method(),
@@ -417,6 +430,12 @@ class LifeCycleAppClient:
         on_complete: typing.Literal["no_op", "opt_in"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Creates an application using one of the no_op, opt_in bare methods
+        
+        :param typing.Literal[no_op, opt_in] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.create(
             call_abi_method=False,
             transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
@@ -430,6 +449,15 @@ class LifeCycleAppClient:
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[str]:
+        """ABI create method with 1 argument
+        
+        Calls `create(string)string` ABI method
+        
+        :param str greeting: The `greeting` ABI parameter
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[str]: The result of the transaction"""
+
         args = CreateStringStringArgs(
             greeting=greeting,
         )
@@ -448,6 +476,16 @@ class LifeCycleAppClient:
         on_complete: typing.Literal["no_op"] = "no_op",
         transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
     ) -> algokit_utils.ABITransactionResponse[None]:
+        """ABI create method with 2 arguments
+        
+        Calls `create(string,uint32)void` ABI method
+        
+        :param str greeting: The `greeting` ABI parameter
+        :param int times: The `times` ABI parameter
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.ABITransactionResponse[None]: The result of the transaction"""
+
         args = CreateStringUint32VoidArgs(
             greeting=greeting,
             times=times,
@@ -464,6 +502,11 @@ class LifeCycleAppClient:
         *,
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the update_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+
         result = self.app_client.update(
             call_abi_method=False,
             transaction_parameters=_convert_transaction_parameters(transaction_parameters),

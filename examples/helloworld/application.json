@@ -65,7 +65,8 @@
                 "desc": "Asserts {name} is \"World\""
             }
         ],
-        "networks": {}
+        "networks": {},
+        "desc": "An app that says hello"
     },
     "bare_call_config": {
         "delete_application": "CALL",
