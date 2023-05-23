@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 
 from algokit_utils import ApplicationSpecification
 
 from algokit_client_generator.document import DocumentParts, RenderContext, convert_part
 from algokit_client_generator.generator import GenerateContext, generate
+
+logger = logging.getLogger(__name__)
 
 
 def generate_client(input_path: Path, output_path: Path) -> None:
@@ -17,7 +20,7 @@ def generate_client(input_path: Path, output_path: Path) -> None:
     context = GenerateContext(app_spec)
     output = render(generate(context))
     output_path.write_text(output)
-    print(f"Output typed client for {app_spec.contract.name} to {output_path}")
+    logger.info(f"Output typed client for {app_spec.contract.name} to {output_path}")
 
 
 def render(parts: DocumentParts) -> str:
