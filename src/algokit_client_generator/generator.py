@@ -62,7 +62,6 @@ class GenerateContext:
         )
         self.methods = get_contract_methods(app_spec, self.used_module_symbols, self.used_client_symbols)
         self.disable_linting = True
-        self.settings = GenerationSettings()
 
 
 def generated_comment(context: GenerateContext) -> DocumentParts:
