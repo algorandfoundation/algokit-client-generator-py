@@ -446,6 +446,9 @@ class GlobalState:
 
 
 class VotingRoundAppClient:
+    """A class for interacting with the VotingRoundApp app providing high productivity and
+    strongly typed methods to deploy and call the app"""
+
     @typing.overload
     def __init__(
         self,
@@ -490,8 +493,29 @@ class VotingRoundAppClient:
         template_values: algokit_utils.TemplateValueMapping | None = None,
         app_name: str | None = None,
     ) -> None:
-        self.app_spec = APP_SPEC
+        """
+        VotingRoundAppClient can be created with an app_id to interact with an existing application, alternatively
+        it can be created with a creator and indexer_client specified to find existing applications by name and creator.
+        
+        :param AlgodClient algod_client: AlgoSDK algod client
+        :param int app_id: The app_id of an existing application, to instead find the application by creator and name
+        use the creator and indexer_client parameters
+        :param str | Account creator: The address or Account of the app creator to resolve the app_id
+        :param IndexerClient indexer_client: AlgoSDK indexer client, only required if deploying or finding app_id by
+        creator and app name
+        :param AppLookup existing_deployments:
+        :param TransactionSigner | Account signer: Account or signer to use to sign transactions, if not specified and
+        creator was passed as an Account will use that.
+        :param str sender: Address to use as the sender for all transactions, will use the address associated with the
+        signer if not specified.
+        :param TemplateValueMapping template_values: Values to use for TMPL_* template variables, dictionary keys should
+        *NOT* include the TMPL_ prefix
+        :param str | None app_name: Name of application to use when deploying, defaults to name defined on the
+        Application Specification
+            """
 
+        self.app_spec = APP_SPEC
+        
         # calling full __init__ signature, so ignoring mypy warning about overloads
         self.app_client = algokit_utils.ApplicationClient(  # type: ignore[call-overload, misc]
             algod_client=algod_client,
@@ -510,39 +534,39 @@ class VotingRoundAppClient:
     @property
     def algod_client(self) -> algosdk.v2client.algod.AlgodClient:
         return self.app_client.algod_client
-    
+
     @property
     def app_id(self) -> int:
         return self.app_client.app_id
-    
+
     @app_id.setter
     def app_id(self, value: int) -> None:
         self.app_client.app_id = value
-    
+
     @property
     def app_address(self) -> str:
         return self.app_client.app_address
-    
+
     @property
     def sender(self) -> str | None:
         return self.app_client.sender
-    
+
     @sender.setter
     def sender(self, value: str) -> None:
         self.app_client.sender = value
-    
+
     @property
     def signer(self) -> TransactionSigner | None:
         return self.app_client.signer
-    
+
     @signer.setter
     def signer(self, value: TransactionSigner) -> None:
         self.app_client.signer = value
-    
+
     @property
     def suggested_params(self) -> algosdk.transaction.SuggestedParams | None:
         return self.app_client.suggested_params
-    
+
     @suggested_params.setter
     def suggested_params(self, value: algosdk.transaction.SuggestedParams | None) -> None:
         self.app_client.suggested_params = value
@@ -712,6 +736,12 @@ class VotingRoundAppClient:
         transaction_parameters: algokit_utils.TransactionParameters | None = None,
         app_args: list[bytes] | None = None,
     ) -> algokit_utils.TransactionResponse:
+        """Calls the application with on completion set to ClearState
+    
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :param list[bytes] | None app_args: (optional) Application args to pass
+        :returns algokit_utils.TransactionResponse: The result of the transaction"""
+    
         return self.app_client.clear_state(_convert_transaction_parameters(transaction_parameters), app_args)
 
     def deploy(
@@ -729,6 +759,42 @@ class VotingRoundAppClient:
         update_args: algokit_utils.DeployCallArgs | None = None,
         delete_args: algokit_utils.DeployCallArgs | None = None,
     ) -> algokit_utils.DeployResponse:
+        """Deploy an application and update client to reference it.
+        
+        Idempotently deploy (create, update/delete if changed) an app against the given name via the given creator
+        account, including deploy-time template placeholder substitutions.
+        To understand the architecture decisions behind this functionality please see
+        <https://github.com/algorandfoundation/algokit-cli/blob/main/docs/architecture-decisions/2023-01-12_smart-contract-deployment.md>
+        
+        ```{note}
+        If there is a breaking state schema change to an existing app (and `on_schema_break` is set to
+        'ReplaceApp' the existing app will be deleted and re-created.
+        ```
+        
+        ```{note}
+        If there is an update (different TEAL code) to an existing app (and `on_update` is set to 'ReplaceApp')
+        the existing app will be deleted and re-created.
+        ```
+        
+        :param str version: version to use when creating or updating app, if None version will be auto incremented
+        :param algosdk.atomic_transaction_composer.TransactionSigner signer: signer to use when deploying app
+        , if None uses self.signer
+        :param str sender: sender address to use when deploying app, if None uses self.sender
+        :param bool allow_delete: Used to set the `TMPL_DELETABLE` template variable to conditionally control if an app
+        can be deleted
+        :param bool allow_update: Used to set the `TMPL_UPDATABLE` template variable to conditionally control if an app
+        can be updated
+        :param OnUpdate on_update: Determines what action to take if an application update is required
+        :param OnSchemaBreak on_schema_break: Determines what action to take if an application schema requirements
+        has increased beyond the current allocation
+        :param dict[str, int|str|bytes] template_values: Values to use for `TMPL_*` template variables, dictionary keys
+        should *NOT* include the TMPL_ prefix
+        :param DeployCreate[CreateArgs] create_args: Arguments used when creating an application
+        :param algokit_utils.DeployCallArgs | None update_args: Arguments used when updating an application
+        :param algokit_utils.DeployCallArgs | None delete_args: Arguments used when deleting an application
+        :return DeployResponse: details action taken and relevant transactions
+        :raises DeploymentError: If the deployment failed"""
+
         return self.app_client.deploy(
             version,
             signer=signer,
