@@ -11,7 +11,12 @@ from abc import ABC, abstractmethod
 
 import algokit_utils
 import algosdk
-from algosdk.atomic_transaction_composer import TransactionSigner, TransactionWithSigner
+from algosdk.atomic_transaction_composer import (
+    AtomicTransactionComposer,
+    AtomicTransactionResponse,
+    TransactionSigner,
+    TransactionWithSigner
+)
 
 _APP_SPEC_JSON = r"""{
     "hints": {
@@ -445,6 +450,189 @@ class GlobalState:
         """The minimum number of voters who have voted"""
 
 
+class Composer:
+
+    def __init__(self, app_client: algokit_utils.ApplicationClient, atc: AtomicTransactionComposer):
+        self.app_client = app_client
+        self.atc = atc
+
+    def build(self) -> AtomicTransactionComposer:
+        return self.atc
+
+    def execute(self) -> AtomicTransactionResponse:
+        return self.app_client.execute_atc(self.atc)
+
+    def bootstrap(
+        self,
+        *,
+        fund_min_bal_req: TransactionWithSigner,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to `bootstrap(pay)void` ABI method
+        
+        :param TransactionWithSigner fund_min_bal_req: The `fund_min_bal_req` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = BootstrapArgs(
+            fund_min_bal_req=fund_min_bal_req,
+        )
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def close(
+        self,
+        *,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to `close()void` ABI method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = CloseArgs()
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def get_preconditions(
+        self,
+        *,
+        signature: bytes | bytearray,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to `get_preconditions(byte[])(uint64,uint64,uint64,uint64)` ABI method
+        
+        :param bytes | bytearray signature: The `signature` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = GetPreconditionsArgs(
+            signature=signature,
+        )
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def vote(
+        self,
+        *,
+        fund_min_bal_req: TransactionWithSigner,
+        signature: bytes | bytearray,
+        answer_ids: list[int],
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to `vote(pay,byte[],uint8[])void` ABI method
+        
+        :param TransactionWithSigner fund_min_bal_req: The `fund_min_bal_req` ABI parameter
+        :param bytes | bytearray signature: The `signature` ABI parameter
+        :param list[int] answer_ids: The `answer_ids` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = VoteArgs(
+            fund_min_bal_req=fund_min_bal_req,
+            signature=signature,
+            answer_ids=answer_ids,
+        )
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def create_create(
+        self,
+        *,
+        vote_id: str,
+        snapshot_public_key: bytes | bytearray,
+        metadata_ipfs_cid: str,
+        start_time: int,
+        end_time: int,
+        option_counts: list[int],
+        quorum: int,
+        nft_image_url: str,
+        on_complete: typing.Literal["no_op"] = "no_op",
+        transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to `create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void` ABI method
+        
+        :param str vote_id: The `vote_id` ABI parameter
+        :param bytes | bytearray snapshot_public_key: The `snapshot_public_key` ABI parameter
+        :param str metadata_ipfs_cid: The `metadata_ipfs_cid` ABI parameter
+        :param int start_time: The `start_time` ABI parameter
+        :param int end_time: The `end_time` ABI parameter
+        :param list[int] option_counts: The `option_counts` ABI parameter
+        :param int quorum: The `quorum` ABI parameter
+        :param str nft_image_url: The `nft_image_url` ABI parameter
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = CreateArgs(
+            vote_id=vote_id,
+            snapshot_public_key=snapshot_public_key,
+            metadata_ipfs_cid=metadata_ipfs_cid,
+            start_time=start_time,
+            end_time=end_time,
+            option_counts=option_counts,
+            quorum=quorum,
+            nft_image_url=nft_image_url,
+        )
+        self.app_client.compose_create(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def delete_bare(
+        self,
+        *,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a calls to the delete_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        self.app_client.compose_delete(
+            self.atc,
+            call_abi_method=False,
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+        )
+        return self
+
+    def clear_state(
+        self,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+        app_args: list[bytes] | None = None,
+    ) -> "Composer":
+        """Adds a call to the application with on completion set to ClearState
+    
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :param list[bytes] | None app_args: (optional) Application args to pass"""
+    
+        self.app_client.compose_clear_state(self.atc, _convert_transaction_parameters(transaction_parameters), app_args)
+        return self
+
+
 class VotingRoundAppClient:
     """A class for interacting with the VotingRoundApp app providing high productivity and
     strongly typed methods to deploy and call the app"""
@@ -808,3 +996,6 @@ class VotingRoundAppClient:
             update_args=_convert_deploy_args(update_args),
             delete_args=_convert_deploy_args(delete_args),
         )
+
+    def compose(self, atc: AtomicTransactionComposer | None = None) -> Composer:
+        return Composer(self.app_client, atc or AtomicTransactionComposer())

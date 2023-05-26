@@ -11,7 +11,12 @@ from abc import ABC, abstractmethod
 
 import algokit_utils
 import algosdk
-from algosdk.atomic_transaction_composer import TransactionSigner, TransactionWithSigner
+from algosdk.atomic_transaction_composer import (
+    AtomicTransactionComposer,
+    AtomicTransactionResponse,
+    TransactionSigner,
+    TransactionWithSigner
+)
 
 _APP_SPEC_JSON = r"""{
     "hints": {
@@ -182,6 +187,135 @@ class HelloWorldCheckArgs(_ArgsBase[None]):
     @staticmethod
     def method() -> str:
         return "hello_world_check(string)void"
+
+
+class Composer:
+
+    def __init__(self, app_client: algokit_utils.ApplicationClient, atc: AtomicTransactionComposer):
+        self.app_client = app_client
+        self.atc = atc
+
+    def build(self) -> AtomicTransactionComposer:
+        return self.atc
+
+    def execute(self) -> AtomicTransactionResponse:
+        return self.app_client.execute_atc(self.atc)
+
+    def hello(
+        self,
+        *,
+        name: str,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Returns Hello, {name}
+        
+        Adds a call to `hello(string)string` ABI method
+        
+        :param str name: The `name` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = HelloArgs(
+            name=name,
+        )
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def hello_world_check(
+        self,
+        *,
+        name: str,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Asserts {name} is "World"
+        
+        Adds a call to `hello_world_check(string)void` ABI method
+        
+        :param str name: The `name` ABI parameter
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        args = HelloWorldCheckArgs(
+            name=name,
+        )
+        self.app_client.compose_call(
+            self.atc,
+            call_abi_method=args.method(),
+            transaction_parameters=_convert_call_transaction_parameters(transaction_parameters),
+            **_as_dict(args, convert_all=True),
+        )
+        return self
+
+    def create_bare(
+        self,
+        *,
+        on_complete: typing.Literal["no_op"] = "no_op",
+        transaction_parameters: algokit_utils.CreateTransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a call to create an application using the no_op bare method
+        
+        :param typing.Literal[no_op] on_complete: On completion type to use
+        :param algokit_utils.CreateTransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        self.app_client.compose_create(
+            self.atc,
+            call_abi_method=False,
+            transaction_parameters=_convert_create_transaction_parameters(transaction_parameters, on_complete),
+        )
+        return self
+
+    def update_bare(
+        self,
+        *,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a calls to the update_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        self.app_client.compose_update(
+            self.atc,
+            call_abi_method=False,
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+        )
+        return self
+
+    def delete_bare(
+        self,
+        *,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+    ) -> "Composer":
+        """Adds a calls to the delete_application bare method
+        
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :returns Composer: This Composer instance"""
+
+        self.app_client.compose_delete(
+            self.atc,
+            call_abi_method=False,
+            transaction_parameters=_convert_transaction_parameters(transaction_parameters),
+        )
+        return self
+
+    def clear_state(
+        self,
+        transaction_parameters: algokit_utils.TransactionParameters | None = None,
+        app_args: list[bytes] | None = None,
+    ) -> "Composer":
+        """Adds a call to the application with on completion set to ClearState
+    
+        :param algokit_utils.TransactionParameters transaction_parameters: (optional) Additional transaction parameters
+        :param list[bytes] | None app_args: (optional) Application args to pass"""
+    
+        self.app_client.compose_clear_state(self.atc, _convert_transaction_parameters(transaction_parameters), app_args)
+        return self
 
 
 class HelloWorldAppClient:
@@ -487,3 +621,6 @@ class HelloWorldAppClient:
             update_args=_convert_deploy_args(update_args),
             delete_args=_convert_deploy_args(delete_args),
         )
+
+    def compose(self, atc: AtomicTransactionComposer | None = None) -> Composer:
+        return Composer(self.app_client, atc or AtomicTransactionComposer())

@@ -217,3 +217,17 @@ def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
 
     assert response.return_value.message == "Hello, World"
     assert response.return_value.result == age * 2
+
+
+def test_compose(deployed_state_app_client: StateAppClient) -> None:
+    response = (
+        deployed_state_app_client.compose()
+        .opt_in_opt_in()
+        .call_abi(value="there")
+        .set_local(int1=1, int2=2, bytes1="1234", bytes2=(1, 2, 3, 4))
+    ).execute()
+
+    opt_in_response, call_abi_response, set_local_response = response.abi_results
+    assert opt_in_response.tx_id
+    assert call_abi_response.return_value == "Hello, there"
+    assert set_local_response.return_value is None

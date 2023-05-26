@@ -46,3 +46,11 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
     assert response.return_value == "Hello, World"
 
     assert helloworld_client.delete_bare()
+
+
+def test_compose(helloworld_client: HelloWorldAppClient) -> None:
+    response = (helloworld_client.compose().hello(name="there").hello_world_check(name="World")).execute()
+
+    hello_response, check_response = response.abi_results
+    assert hello_response.return_value == "Hello, there"
+    assert check_response.return_value is None
