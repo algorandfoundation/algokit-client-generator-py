@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.0 (2023-06-06)
+
+### Fix
+
+* Initial release ([`1cdd35a`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/1cdd35ac97560c9fe2c7e3fef7a0dd020fa093fd))
+* Initial release ([#11](https://github.com/algorandfoundation/algokit-client-generator-py/issues/11)) ([`8519a98`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/8519a98387bed0cc28feaf7eb6d39d64204bba84))
+
+### Breaking
+
+* initial release ([`1cdd35a`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/1cdd35ac97560c9fe2c7e3fef7a0dd020fa093fd))
+
 ## v0.1.0 (2023-06-06)
 
 ### Feature
