@@ -33,6 +33,12 @@ Then to use it
 algokitgen-py path/to/application.json path/to/output/client_generated.py
 ```
 
+Or if you have [AlgoKit](https://github.com/algorandfoundation/algokit-cli) 1.1+ installed
+
+```commandline
+algokit generate client path/to/application.json --output path/to/output/client_generated.py
+```
+
 ## Examples
 
 There are a range of [examples](./examples) that you can look at to see a source smart contract (`{contract.py}`), 
