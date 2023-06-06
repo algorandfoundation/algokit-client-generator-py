@@ -1,4 +1,4 @@
-# AlgoKit Python client generator (algokit-client-generator-py)
+# AlgoKit Python client generator
 
 This project generates a type-safe smart contract client in Python for the Algorand Blockchain that wraps the 
 [application client](https://algorandfoundation.github.io/algokit-utils-py/html/apidocs/algokit_utils/algokit_utils.html#algokit_utils.ApplicationClient) in 
