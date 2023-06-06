@@ -16,7 +16,7 @@ This project generates a type-safe smart contract client in Python for the Algor
 To be able to consume the generated file you need to include it in a Python project that has (at least) the following package installed:
 
 ```
-poetry add algokit-utils@1.2.0b2
+poetry add algokit-utils@^1.2
 ```
 
 ### Use
