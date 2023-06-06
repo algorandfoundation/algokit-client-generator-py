@@ -98,9 +98,7 @@ def voter_signature(voter: Account) -> bytes:
 
 
 @pytest.fixture()
-def bootstrap_response(
-    deploy_voting_client: VotingRoundAppClient, algod_client: AlgodClient
-) -> algokit_utils.ABITransactionResponse[None]:
+def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoundAppClient) -> TransactionWithSigner:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
@@ -109,10 +107,16 @@ def bootstrap_response(
         note=b"Bootstrap payment",
         sp=algod_client.suggested_params(),
     )
-    default_signer = AccountTransactionSigner(from_account.private_key)
+    return TransactionWithSigner(txn=payment, signer=from_account.signer)
 
+
+@pytest.fixture()
+def bootstrap_response(
+    deploy_voting_client: VotingRoundAppClient,
+    fund_min_bal_req: TransactionWithSigner,
+) -> algokit_utils.ABITransactionResponse[None]:
     return deploy_voting_client.bootstrap(
-        fund_min_bal_req=TransactionWithSigner(txn=payment, signer=default_signer),
+        fund_min_bal_req=fund_min_bal_req,
         transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, "V")]),
     )
 
@@ -223,3 +227,37 @@ def test_close(
     deploy_voting_client.close(
         transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, "V")], suggested_params=sp)
     )
+
+
+def test_compose(
+    algod_client: AlgodClient,
+    deploy_voting_client: VotingRoundAppClient,
+    fund_min_bal_req: TransactionWithSigner,
+    voter: Account,
+    voter_signature: bytes,
+) -> None:
+    sp = algod_client.suggested_params()
+    sp.fee = 12000
+    sp.flat_fee = True
+
+    response = (
+        deploy_voting_client.compose()
+        .bootstrap(
+            fund_min_bal_req=fund_min_bal_req,
+            transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, "V")]),
+        )
+        .get_preconditions(
+            signature=voter_signature,
+            transaction_parameters=algokit_utils.TransactionParameters(
+                boxes=[(0, voter.public_key)],
+                suggested_params=sp,
+                sender=voter.address,
+                signer=AccountTransactionSigner(voter.private_key),
+            ),
+        )
+    ).execute()
+
+    bootstrap_response, get_preconditions = response.abi_results
+    assert bootstrap_response.tx_id
+
+    assert get_preconditions.return_value[:3] == [1, 1, 0]
