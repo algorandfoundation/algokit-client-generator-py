@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.1 (2023-06-13)
+
+### Fix
+
+* Add support for reference type aliases ([#12](https://github.com/algorandfoundation/algokit-client-generator-py/issues/12)) ([`0d5a5d8`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/0d5a5d844f2594f0da29749e56d9a64ed0bfc2c6))
+
 ## v1.0.0 (2023-06-06)
 
 ### Fix
