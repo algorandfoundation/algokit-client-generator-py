@@ -85,6 +85,14 @@ def set_box(name: pt.abi.StaticBytes[Literal[4]], value: pt.abi.String) -> pt.Ex
     return app.state.box[name.get()].set(value.get())
 
 
+@app.external()
+def call_with_asset(asset: pt.abi.Asset, *, output: pt.abi.Uint64) -> pt.Expr:
+    return pt.Seq(
+        pt.Assert(asset.asset_id(), comment="asset not provided"),
+        output.set(asset.asset_id()),
+    )
+
+
 @app.external(read_only=True)
 def error() -> pt.Expr:
     return pt.Assert(pt.Int(0), comment="Deliberate error")

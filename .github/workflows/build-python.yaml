@@ -30,8 +30,7 @@ jobs:
         run: |
           set -o pipefail
           pipx install algokit
-          algokit localnet start
-          sleep 5 # wait for before running tests          
+          algokit localnet start         
           poetry run pytest --junitxml=pytest-junit.xml --cov-report=term-missing:skip-covered --cov=src | tee pytest-coverage.txt
           algokit localnet stop
 

@@ -231,3 +231,12 @@ def test_compose(deployed_state_app_client: StateAppClient) -> None:
     assert opt_in_response.tx_id
     assert call_abi_response.return_value == "Hello, there"
     assert set_local_response.return_value is None
+
+
+def test_call_asset(deployed_state_app_client: StateAppClient) -> None:
+    asset_id = 1234
+    response = deployed_state_app_client.call_with_asset(
+        asset=asset_id,
+    )
+
+    assert response.return_value == asset_id
