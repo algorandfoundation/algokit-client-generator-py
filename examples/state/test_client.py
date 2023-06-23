@@ -233,10 +233,13 @@ def test_compose(deployed_state_app_client: StateAppClient) -> None:
     assert set_local_response.return_value is None
 
 
-def test_call_asset(deployed_state_app_client: StateAppClient) -> None:
+def test_call_references(deployed_state_app_client: StateAppClient) -> None:
     asset_id = 1234
-    response = deployed_state_app_client.call_with_asset(
+    _, account = deployed_state_app_client.app_client.resolve_signer_sender()
+    response = deployed_state_app_client.call_with_references(
         asset=asset_id,
+        account=account,
+        application=deployed_state_app_client.app_id,
     )
 
-    assert response.return_value == asset_id
+    assert response.return_value
