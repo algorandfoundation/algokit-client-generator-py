@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.2 (2023-06-23)
+
+### Fix
+
+* Fix account reference types ([#13](https://github.com/algorandfoundation/algokit-client-generator-py/issues/13)) ([`8cedcd9`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/8cedcd92cb81fa8be302940b195fe522be937c8a))
+
 ## v1.0.1 (2023-06-13)
 
 ### Fix
