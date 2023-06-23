@@ -57,13 +57,16 @@ def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: ignore[PLR0911]
 
 
 def map_abi_type_to_python(abi_type_str: str) -> str:
-    if abi_type_str == "void":
-        return "None"
+    match abi_type_str:
+        case "void":
+            return "None"
+        case abi.reference.ABIReferenceType.ASSET | abi.reference.ABIReferenceType.APPLICATION:
+            return "int"
+        case abi.reference.ABIReferenceType.ACCOUNT:
+            return "str | bytes"
     if abi.is_abi_transaction_type(abi_type_str):
         # TODO: generic TransactionWithSigner and/or allow unsigned types signed with signer used in transaction
         return "TransactionWithSigner"
-    if abi.is_abi_reference_type(abi_type_str):
-        return "int"
     abi_type = abi.ABIType.from_string(abi_type_str)
     return abi_type_to_python(abi_type)
 
