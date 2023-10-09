@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-algokit-utils = "^1.2.0"
+algokit-utils = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["d"], version = "*"}
@@ -19,7 +19,7 @@ pytest-cov = "*"
 pip-audit = "^2.5.5"
 python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
-beaker-pyteal = "^1.0.0"
+beaker-pyteal = "1.1.0b1"
 poethepoet = "^0.20.0"
 
 [build-system]
