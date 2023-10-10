@@ -25,7 +25,7 @@ def get_method_name(name: str, string_suffix: str = "") -> str:
     return "_".join(p for p in parts)
 
 
-def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: ignore[PLR0911]
+def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: PLR0911: ignore[PLR0911]
     match abi_type:
         case abi.UintType():
             return "int"

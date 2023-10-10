@@ -126,7 +126,7 @@ def create() -> pt.Expr:
 
 
 @app.create(authorize=beaker.Authorize.only_creator())
-def create_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
+def create_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
     return output.set(input.get())
 
 
@@ -136,7 +136,7 @@ def update() -> pt.Expr:
 
 
 @app.update(authorize=beaker.Authorize.only_creator())
-def update_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
+def update_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
     return pt.Seq(
         pt.Assert(pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable"), output.set(input.get())
     )
@@ -148,7 +148,7 @@ def delete() -> pt.Expr:
 
 
 @app.delete(authorize=beaker.Authorize.only_creator())
-def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
+def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
     return pt.Seq(
         pt.Assert(pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable"), output.set(input.get())
     )
