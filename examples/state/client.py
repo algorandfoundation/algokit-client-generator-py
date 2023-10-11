@@ -479,8 +479,8 @@ def _as_dict(data: typing.Any, *, convert_all: bool = True) -> dict[str, typing.
 
 def _convert_transaction_parameters(
     transaction_parameters: algokit_utils.TransactionParameters | None,
-) -> algokit_utils.CommonCallParametersDict:
-    return typing.cast(algokit_utils.CommonCallParametersDict, _as_dict(transaction_parameters))
+) -> algokit_utils.TransactionParametersDict:
+    return typing.cast(algokit_utils.TransactionParametersDict, _as_dict(transaction_parameters))
 
 
 def _convert_call_transaction_parameters(
