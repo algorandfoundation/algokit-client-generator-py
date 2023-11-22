@@ -11,8 +11,7 @@ python = "^3.10"
 algokit-utils = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
-black = {extras = ["d"], version = "*"}
-ruff = ">=0.0.260"
+ruff = "^0.1.6"
 mypy = "*"
 pytest = "*"
 pytest-cov = "*"
@@ -84,8 +83,18 @@ select = [
 ignore = [
   "ANN101", # no type for self
   "ANN102", # no type for cls
-  "SIM108", # allow if-else in place of ternary
   "RET505", # allow else after return
+  "SIM108", # allow if-else in place of ternary
+  # To avoid conflict with ruff formatter. More details on https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+  "E111", # indentation is not a multiple of four
+  "E117", # over-indented
+  "ISC001", # single line implicit string concatenation
+  "ISC002", # multi line implicit string concatenation
+  "Q000", # bad quotes inline string
+  "Q001", # bad quotes multiline string
+  "Q002", # bad quotes docstring
+  "Q003", # avoidable escaped quotes
+  "W191", # indentation contains tabs
 ]
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
