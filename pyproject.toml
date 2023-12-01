@@ -20,6 +20,7 @@ python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
 beaker-pyteal = "^1.1.1"
 poethepoet = "^0.20.0"
+pytest-xdist = "^3.5.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -98,7 +99,9 @@ ignore = [
 ]
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
-  "docs"
+  "docs",
+  # Exclude examples as it deals with pregenerated code.
+  "examples"
 ]
 # Assume Python 3.10.
 target-version = "py310"
