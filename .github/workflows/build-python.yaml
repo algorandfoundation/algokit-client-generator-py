@@ -28,9 +28,9 @@ jobs:
               uses: actions/cache@v2
               with:
                   path: ~/.local/share/pipx/venvs/poetry
-                  key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+                  key: ${{ runner.os }}-poetry-${{ matrix.python }}-${{ hashFiles('**/poetry.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-poetry-
+                      ${{ runner.os }}-poetry-${{ matrix.python }}-
 
             - name: Install poetry
               run: pipx install poetry
