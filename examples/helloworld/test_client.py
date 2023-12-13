@@ -18,6 +18,13 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
     return client
 
 
+def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
+    response = helloworld_client.compose().hello(name="World").simulate()
+
+    assert response.abi_results[0].return_value == "Hello, World"
+    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
+
+
 def test_hello(helloworld_client: HelloWorldAppClient) -> None:
     response = helloworld_client.hello(name="World")
 
@@ -54,9 +61,3 @@ def test_compose(helloworld_client: HelloWorldAppClient) -> None:
     hello_response, check_response = response.abi_results
     assert hello_response.return_value == "Hello, there"
     assert check_response.return_value is None
-
-def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.compose().hello(name="World").simulate()
-
-    assert response.abi_results[0].return_value == "Hello, World"
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
