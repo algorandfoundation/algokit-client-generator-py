@@ -15,6 +15,7 @@ import algosdk
 from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AtomicTransactionResponse,
+    SimulateAtomicTransactionResponse,
     TransactionSigner,
     TransactionWithSigner
 )
@@ -198,6 +199,10 @@ class Composer:
 
     def build(self) -> AtomicTransactionComposer:
         return self.atc
+
+    def simulate(self) -> SimulateAtomicTransactionResponse:
+        result = self.atc.simulate(self.app_client.algod_client)
+        return result
 
     def execute(self) -> AtomicTransactionResponse:
         return self.app_client.execute_atc(self.atc)
