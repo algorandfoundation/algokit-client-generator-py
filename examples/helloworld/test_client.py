@@ -19,9 +19,9 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
 
 
 def test_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.hello(name="World")
+    response = helloworld_client.hello(name="friend")
 
-    assert response.return_value == "Hello, World"
+    assert response.return_value == "Hello, friend"
 
 
 def test_hello_check_args(helloworld_client: HelloWorldAppClient) -> None:
@@ -41,9 +41,9 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
     assert helloworld_client.create_bare()
     assert helloworld_client.update_bare()
 
-    response = helloworld_client.hello(name="World")
+    response = helloworld_client.hello(name="Jane")
 
-    assert response.return_value == "Hello, World"
+    assert response.return_value == "Hello, Jane"
 
     assert helloworld_client.delete_bare()
 
