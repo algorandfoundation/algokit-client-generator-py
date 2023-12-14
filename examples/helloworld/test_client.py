@@ -1,5 +1,5 @@
 import pytest
-from algokit_utils import OnUpdate, get_localnet_default_account
+from algokit_utils import OnUpdate, TransactionParameters, get_localnet_default_account
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
@@ -19,13 +19,13 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
 
 
 def test_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.hello(name="friend")
+    response = helloworld_client.hello(name="friend", transaction_parameters = TransactionParameters(note="test_hello"))
 
     assert response.return_value == "Hello, friend"
 
 
 def test_hello_check_args(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.hello_world_check(name="World")
+    response = helloworld_client.hello_world_check(name="World", transaction_parameters = TransactionParameters(note="test_hello_check_args"))
 
     assert response.return_value is None
 
@@ -41,7 +41,7 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
     assert helloworld_client.create_bare()
     assert helloworld_client.update_bare()
 
-    response = helloworld_client.hello(name="Jane")
+    response = helloworld_client.hello(name="Jane", transaction_parameters = TransactionParameters(note="test_lifecycle"))
 
     assert response.return_value == "Hello, Jane"
 
@@ -49,14 +49,14 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
 
 
 def test_compose(helloworld_client: HelloWorldAppClient) -> None:
-    response = (helloworld_client.compose().hello(name="there").hello_world_check(name="World")).execute()
+    response = (helloworld_client.compose().hello(name="there", transaction_parameters = TransactionParameters(note="test_compose")).hello_world_check(name="World", transaction_parameters = TransactionParameters(note="test_compose"))).execute()
 
     hello_response, check_response = response.abi_results
     assert hello_response.return_value == "Hello, there"
     assert check_response.return_value is None
 
 def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.compose().hello(name="mate").simulate()
+    response = helloworld_client.compose().hello(name="mate", transaction_parameters = TransactionParameters(note="test_simulate_hello")).simulate()
 
     assert response.abi_results[0].return_value == "Hello, mate"
     assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
