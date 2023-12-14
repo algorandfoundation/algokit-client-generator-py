@@ -17,7 +17,8 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
 
     try:
         client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
-    except Exception:
+    except Exception as ex:
+        print(ex)
         pass
 
     return client
