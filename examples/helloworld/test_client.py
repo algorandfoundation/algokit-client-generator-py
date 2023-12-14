@@ -49,7 +49,9 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
 
 
 def test_compose(helloworld_client: HelloWorldAppClient) -> None:
-    response = (helloworld_client.compose().hello(name="there", transaction_parameters = TransactionParameters(note="test_compose")).hello_world_check(name="World", transaction_parameters = TransactionParameters(note="test_compose"))).execute()
+    response = (helloworld_client.compose()
+                .hello(name="there", transaction_parameters = TransactionParameters(note="test_compose_1"))
+                .hello_world_check(name="World", transaction_parameters = TransactionParameters(note="test_compose_2"))).execute()
 
     hello_response, check_response = response.abi_results
     assert hello_response.return_value == "Hello, there"
