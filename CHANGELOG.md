@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.0 (2023-12-14)
+
+### Feature
+
+* Add support for simulating an atc ([#17](https://github.com/algorandfoundation/algokit-client-generator-py/issues/17)) ([`6135632`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/6135632ec18cd9ec8652838031afc05c1e84528e))
+
+### Fix
+
+* Adjust client tests ([#18](https://github.com/algorandfoundation/algokit-client-generator-py/issues/18)) ([`76d36b1`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/76d36b1dd414bac27c2d672d1534475b0181ac9b))
+
 ## v1.0.3 (2023-10-17)
 
 
