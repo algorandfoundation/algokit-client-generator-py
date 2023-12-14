@@ -3,6 +3,7 @@ from algokit_utils import OnSchemaBreak, OnUpdate, TransactionParameters, get_lo
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
+from algosdk.error import AlgodHTTPError
 
 from examples.helloworld.client import HelloWorldAppClient
 
@@ -15,11 +16,7 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
         creator=get_localnet_default_account(algod_client),
     )
 
-    try:
-        client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
-    except Exception as ex:
-        print(ex)
-        pass
+    client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
 
     return client
 
