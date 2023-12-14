@@ -14,6 +14,7 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
         indexer_client=indexer_client,
         creator=get_localnet_default_account(algod_client),
     )
+
     client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
     return client
 

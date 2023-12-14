@@ -47,7 +47,7 @@ jobs:
 
             - name: pytest + coverage
               shell: bash
-              run: poetry run pytest -n auto --junitxml=pytest-junit.xml --cov-report=term-missing:skip-covered --cov=src | tee pytest-coverage.txt
+              run: poetry run pytest --junitxml=pytest-junit.xml --cov-report=term-missing:skip-covered --cov=src | tee pytest-coverage.txt
 
             - name: Stop LocalNet
               shell: bash
