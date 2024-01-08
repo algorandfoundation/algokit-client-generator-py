@@ -289,7 +289,7 @@ def state_type(context: GenerateContext, class_name: str, schema: dict[str, dict
             yield f'self.{field} = ByteReader(typing.cast(bytes, data.get(b"{key}")))'
         else:
             yield f'self.{field} = typing.cast(int, data.get(b"{key}"))'
-        desc = value["descr"]
+        desc = value.get("descr")
         if desc:
             yield utils.docstring(desc)
     yield Part.DecIndent

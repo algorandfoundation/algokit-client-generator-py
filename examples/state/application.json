@@ -146,28 +146,23 @@
             "declared": {
                 "bytes1": {
                     "type": "bytes",
-                    "key": "bytes1",
-                    "descr": ""
+                    "key": "bytes1"
                 },
                 "bytes2": {
                     "type": "bytes",
-                    "key": "bytes2",
-                    "descr": ""
+                    "key": "bytes2"
                 },
                 "int1": {
                     "type": "uint64",
-                    "key": "int1",
-                    "descr": ""
+                    "key": "int1"
                 },
                 "int2": {
                     "type": "uint64",
-                    "key": "int2",
-                    "descr": ""
+                    "key": "int2"
                 },
                 "value": {
                     "type": "uint64",
-                    "key": "value",
-                    "descr": ""
+                    "key": "value"
                 }
             },
             "reserved": {}
@@ -176,23 +171,19 @@
             "declared": {
                 "local_bytes1": {
                     "type": "bytes",
-                    "key": "local_bytes1",
-                    "descr": ""
+                    "key": "local_bytes1"
                 },
                 "local_bytes2": {
                     "type": "bytes",
-                    "key": "local_bytes2",
-                    "descr": ""
+                    "key": "local_bytes2"
                 },
                 "local_int1": {
                     "type": "uint64",
-                    "key": "local_int1",
-                    "descr": ""
+                    "key": "local_int1"
                 },
                 "local_int2": {
                     "type": "uint64",
-                    "key": "local_int2",
-                    "descr": ""
+                    "key": "local_int2"
                 }
             },
             "reserved": {}
