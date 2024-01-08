@@ -61,13 +61,11 @@ _APP_SPEC_JSON = r"""{
             "declared": {
                 "greeting": {
                     "type": "bytes",
-                    "key": "greeting",
-                    "descr": ""
+                    "key": "greeting"
                 },
                 "times": {
                     "type": "uint64",
-                    "key": "times",
-                    "descr": ""
+                    "key": "times"
                 }
             },
             "reserved": {}
