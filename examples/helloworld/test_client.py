@@ -56,6 +56,7 @@ def test_compose(helloworld_client: HelloWorldAppClient) -> None:
     assert hello_response.return_value == "Hello, there"
     assert check_response.return_value is None
 
+
 def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
     response = helloworld_client.compose().hello(name="mate").simulate()
 
