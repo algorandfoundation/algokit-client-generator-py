@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-algokit-utils = "^2.0.1"
+algokit-utils = "2.2.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
@@ -86,6 +86,7 @@ ignore = [
   "ANN102", # no type for cls
   "RET505", # allow else after return
   "SIM108", # allow if-else in place of ternary
+  "PLR2004", # magic values... can't configure to ignore simple low value ints like 2
   # To avoid conflict with ruff formatter. More details on https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
   "E111", # indentation is not a multiple of four
   "E117", # over-indented
