@@ -89,6 +89,7 @@ from abc import ABC, abstractmethod
 
 import algokit_utils
 import algosdk
+from algosdk.v2client import models
 from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AtomicTransactionResponse,
@@ -337,7 +338,24 @@ class ByteReader:
     yield state_type(context, "LocalState", local_schema)
 
 
+def simulate_options() -> DocumentParts:
+    yield utils.indented(
+        """
+@dataclasses.dataclass(kw_only=True)
+class SimulateOptions:
+    allow_more_logs: bool = dataclasses.field(default=False)
+    allow_empty_signatures: bool = dataclasses.field(default=False)
+    extra_opcode_budget: int = dataclasses.field(default=0)
+    exec_trace_config: models.SimulateTraceConfig | None \
+        = dataclasses.field(default=None)
+        """
+    )
+
+
 def composer(context: GenerateContext) -> DocumentParts:
+    yield simulate_options()
+    yield Part.Gap2
+
     yield utils.indented(
         """
 class Composer:
@@ -349,8 +367,15 @@ class Composer:
     def build(self) -> AtomicTransactionComposer:
         return self.atc
 
-    def simulate(self) -> SimulateAtomicTransactionResponse:
-        result = self.atc.simulate(self.app_client.algod_client)
+    def simulate(self, options: SimulateOptions | None = None) -> SimulateAtomicTransactionResponse:
+        request = models.SimulateRequest(
+            allow_more_logs=options.allow_more_logs,
+            allow_empty_signatures=options.allow_empty_signatures,
+            extra_opcode_budget=options.extra_opcode_budget,
+            exec_trace_config=options.exec_trace_config,
+            txn_groups=[]
+        ) if options else None
+        result = self.atc.simulate(self.app_client.algod_client, request)
         return result
 
     def execute(self) -> AtomicTransactionResponse:
