@@ -346,7 +346,7 @@ class SimulateOptions:
     allow_more_logs: bool = dataclasses.field(default=False)
     allow_empty_signatures: bool = dataclasses.field(default=False)
     extra_opcode_budget: int = dataclasses.field(default=0)
-    exec_trace_config: typing.Optional[models.SimulateTraceConfig] \
+    exec_trace_config: models.SimulateTraceConfig | None \
         = dataclasses.field(default=None)
         """
     )
@@ -367,7 +367,7 @@ class Composer:
     def build(self) -> AtomicTransactionComposer:
         return self.atc
 
-    def simulate(self, options: typing.Optional[SimulateOptions] = None) -> SimulateAtomicTransactionResponse:
+    def simulate(self, options: SimulateOptions | None = None) -> SimulateAtomicTransactionResponse:
         request = models.SimulateRequest(
             allow_more_logs=options.allow_more_logs,
             allow_empty_signatures=options.allow_empty_signatures,
