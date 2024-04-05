@@ -133,17 +133,16 @@ def helpers(context: GenerateContext) -> DocumentParts:
     has_abi_create = any(m.abi for m in context.methods.create)
     has_abi_update = any(m.abi for m in context.methods.update_application)
     has_abi_delete = any(m.abi for m in context.methods.delete_application)
-    if context.methods.has_abi_methods:
-        yield '_TReturn = typing.TypeVar("_TReturn")'
-        yield Part.Gap2
-        yield utils.indented(
-            """
+    yield '_TReturn = typing.TypeVar("_TReturn")'
+    yield Part.Gap2
+    yield utils.indented(
+        """
 class _ArgsBase(ABC, typing.Generic[_TReturn]):
     @staticmethod
     @abstractmethod
     def method() -> str:
         ..."""
-        )
+    )
     yield Part.Gap2
     yield '_TArgs = typing.TypeVar("_TArgs", bound=_ArgsBase[typing.Any])'
     yield Part.Gap2
