@@ -4,7 +4,7 @@ import pytest
 from algokit_client_generator import generate_client
 
 
-@pytest.mark.parametrize("app", ["helloworld", "lifecycle", "state", "voting"])
+@pytest.mark.parametrize("app", ["helloworld", "lifecycle", "minimal", "state", "voting"])
 def test_generate_clients(app: str) -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     app_path = examples / app
