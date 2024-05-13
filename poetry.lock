@@ -2,12 +2,12 @@
 
 [[package]]
 name = "algokit-utils"
-version = "2.2.2"
+version = "2.3.0"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "algokit_utils-2.2.2-py3-none-any.whl", hash = "sha256:377fa6e2692aac2bc39e1c817bbbfad336a9bdde61a2eec2dc50202f8df9baae"},
+    {file = "algokit_utils-2.3.0-py3-none-any.whl", hash = "sha256:551b7f5a082784d9a47d973749ca208936fd03f07f1cd08748085bd8bf249779"},
 ]
 
 [package.dependencies]
@@ -1828,13 +1828,13 @@ files = [
 
 [[package]]
 name = "tqdm"
-version = "4.66.1"
+version = "4.66.4"
 description = "Fast, Extensible Progress Meter"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "tqdm-4.66.1-py3-none-any.whl", hash = "sha256:d302b3c5b53d47bce91fea46679d9c3c6508cf6332229aa1e7d8653723793386"},
-    {file = "tqdm-4.66.1.tar.gz", hash = "sha256:d88e651f9db8d8551a62556d3cff9e3034274ca5d66e93197cf2490e2dcb69c7"},
+    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
+    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
 ]
 
 [package.dependencies]
@@ -2039,4 +2039,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "e63a125b7781552eea98a1e6f7a62cac18d9c9e85a3f6475f75d7c2b0cddcc05"
+content-hash = "fe3a8944c47fea6b58e485c9f4d30cabce196e8d580b0b709253206c94f6f035"
