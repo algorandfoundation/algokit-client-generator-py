@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.4 (2024-05-13)
+
+### Fix
+
+* Ensure clients generated for contracts with no abi methods are still valid python ([`a3e1c8b`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/a3e1c8b88669cd148d51d3856afd2e9fdf8a8c9b))
+
 ## v1.1.3 (2024-03-27)
 
 
