@@ -19,7 +19,7 @@ def generate_client(input_path: Path, output_path: Path) -> None:
 
     context = GenerateContext(app_spec)
     output = render(generate(context))
-    output_path.write_text(output)
+    output_path.write_text(output, encoding="utf-8")
     logger.info(f"Output typed client for {app_spec.contract.name} to {output_path}")
 
 
