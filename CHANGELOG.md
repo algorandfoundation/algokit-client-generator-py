@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.5 (2024-06-13)
+
+### Fix
+
+* Set explicit utf-8 encoding as part of writer invocation ([#27](https://github.com/algorandfoundation/algokit-client-generator-py/issues/27)) ([`002de46`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/002de46a4e1932b1bac45ffc90ca8f86129f6201))
+
 ## v1.1.4 (2024-05-13)
 
 ### Fix
