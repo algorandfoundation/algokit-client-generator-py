@@ -46,7 +46,7 @@ def main() -> None:
         logger.info(f"  Building app {app.name}")
         app_spec = app.build()
         logger.info(f"  Writing {example.name}/application.json")
-        (example / "application.json").write_text(to_json(app_spec))
+        (example / "application.json").write_text(to_json(app_spec), encoding="utf-8")
 
 
 if __name__ == "__main__":
