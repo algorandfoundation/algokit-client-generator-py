@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.6 (2024-08-01)
+
+### Fix
+
+* Additional changes to address mypy 'call-overload'; adding cron for ci ([#29](https://github.com/algorandfoundation/algokit-client-generator-py/issues/29)) ([`d3a64f7`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/d3a64f78792d003520ab4283390571de9502ad23))
+* Addressing mypy 'call-overload' warning with explicit typecast ([#28](https://github.com/algorandfoundation/algokit-client-generator-py/issues/28)) ([`ffa9f23`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/ffa9f23d072ed7fc354394a045bf7c2b9ce3a04a))
+
 ## v1.1.5 (2024-06-13)
 
 ### Fix
