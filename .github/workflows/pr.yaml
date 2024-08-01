@@ -1,17 +1,19 @@
 name: Pull Request validation
 
 on:
-    pull_request:
-      branches: [main]
-      paths-ignore:
-        - '**/*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+  schedule:
+    - cron: "0 8 * * 1" # Each monday 8 AM UTC
 
 jobs:
-    pr-check:
-        name: Check Python
-        uses: ./.github/workflows/check-python.yaml
+  pr-check:
+    name: Check Python
+    uses: ./.github/workflows/check-python.yaml
 
-    pr-build:
-        name: Build and Test Python
-        needs: pr-check
-        uses: ./.github/workflows/build-python.yaml
+  pr-build:
+    name: Build and Test Python
+    needs: pr-check
+    uses: ./.github/workflows/build-python.yaml
