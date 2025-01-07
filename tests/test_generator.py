@@ -1,6 +1,7 @@
 import pathlib
 
 import pytest
+
 from algokit_client_generator import generate_client
 
 
