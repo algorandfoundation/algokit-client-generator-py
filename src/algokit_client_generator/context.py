@@ -8,41 +8,34 @@ from algokit_client_generator.spec import get_contract_methods
 class GeneratorContext:
     def __init__(self, app_spec: algokit_utils.applications.Arc56Contract):
         self.app_spec = app_spec
-        # TODO: track these as they are emitted?
+
+        # Reserved module-level symbols to avoid naming conflicts
         self.used_module_symbols = {
-            "_APP_SPEC_JSON",
-            "APP_SPEC",
-            "_TArgs",
-            "_TArgsHolder",
-            "_TResult",
-            "_ArgsBase",
-            "_as_dict",
-            "_filter_none",
-            "_convert_on_complete",
-            "_convert_deploy_args",
-            "DeployCreate",
-            "Deploy",
-            "GlobalState",
-            "LocalState",
-            "Composer",
+            "_APP_SPEC_JSON",  # Used in app_spec.py to store raw JSON
+            "APP_SPEC",  # Used throughout as Arc56Contract instance
+            "DeployCreate",  # Used in typed_factory.py for deployment types
+            "Deploy",  # Used in typed_factory.py for deployment types
+            "Composer",  # Used in composer.py for transaction composition
         }
+
+        # Reserved client method/property names to avoid naming conflicts
         self.used_client_symbols = {
-            "__init__",
-            "app_spec",
-            "app_client",
-            "algod_client",
-            "app_id",
-            "app_address",
-            "sender",
-            "signer",
-            "suggested_params",
-            "no_op",
-            "clear_state",
-            "deploy",
-            "get_global_state",
-            "get_local_state",
-            "compose",
+            "__init__",  # Constructor in typed_client.py
+            "app_spec",  # Property in typed_client.py returning Arc56Contract
+            "app_client",  # Internal AppClient instance in typed_client.py
+            "app_id",  # Property in typed_client.py returning application ID
+            "app_address",  # Property in typed_client.py returning application address
+            "no_op",  # Used for no-op transaction methods
+            "clear_state",  # Used for clear state transaction methods in typed_client.py
+            "deploy",  # Used in typed_factory.py for deployment
+            "compose",  # Used for transaction composition in composer.py
+            "from_creator_and_name",  # Static factory method in typed_client.py
+            "from_network",  # Static factory method in typed_client.py
+            "clone",  # Method in typed_client.py for cloning client instance
+            "decode_return_value",  # Method in typed_client.py for ABI return value decoding
+            "new_group",  # Method in typed_client.py for creating transaction groups
         }
+
         self.client_name = utils.get_unique_symbol_by_incrementing(
             self.used_module_symbols, utils.get_class_name(self.app_spec.name, "client")
         )

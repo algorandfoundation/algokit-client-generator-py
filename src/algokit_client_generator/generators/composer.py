@@ -8,7 +8,7 @@ def generate_composer(context: GeneratorContext) -> DocumentParts:
     yield utils.indented(f"""
 class {context.client_name}Composer:
     \"\"\"Composer for creating transaction groups for {context.client_name} contract calls\"\"\"
-    
+
     def __init__(self, client: "{context.client_name}"):
         self.client = client
         self._composer = client.algorand.new_group()
@@ -36,7 +36,7 @@ def {method.abi.client_method_name}(self, params: {context.client_name}CallArgs.
         )
     )
     return self
-""")
+""")  # noqa: E501
 
     yield Part.Gap1
 

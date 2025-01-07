@@ -39,7 +39,7 @@ class {context.client_name}Factory(TypedAppFactoryProtocol):
     def app_spec(self) -> Arc56Contract:
         return self.app_factory.app_spec
 
-    @property 
+    @property
     def algorand(self) -> AlgorandClientProtocol:
         return self.app_factory.algorand
 

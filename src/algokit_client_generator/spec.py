@@ -59,7 +59,7 @@ class ContractMethod:
 
 def _map_enum_to_property(enum_value: str) -> str:
     """Maps Arc56 enum values to property names.
-    
+
     For example:
     - DeleteApplication -> delete_application
     - NoOp -> no_op
@@ -71,6 +71,7 @@ def _map_enum_to_property(enum_value: str) -> str:
             result += "_"
         result += char.lower()
     return result
+
 
 @dataclasses.dataclass(kw_only=True)
 class ContractMethods:
@@ -98,8 +99,10 @@ class ContractMethods:
     def has_abi_methods(self) -> bool:
         return any(self.all_abi_methods)
 
-    def add_method(self, abi: ABIContractMethod | None, call_actions: list[CallEnum], create_actions: list[CreateEnum]) -> None:
-         # Handle call actions
+    def add_method(
+        self, abi: ABIContractMethod | None, call_actions: list[CallEnum], create_actions: list[CreateEnum]
+    ) -> None:
+        # Handle call actions
         for action in call_actions:
             action_name = _map_enum_to_property(action.value)
             collection = getattr(self, action_name)
@@ -261,11 +264,7 @@ def get_contract_methods(
             )
 
             # Get method actions
-            result.add_method(
-                abi,
-                method.actions.call or [],
-                method.actions.create or []
-            )
+            result.add_method(abi, method.actions.call or [], method.actions.create or [])
 
     return result
 

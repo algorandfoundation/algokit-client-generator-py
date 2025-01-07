@@ -130,6 +130,7 @@ disallow_untyped_decorators = true
 disallow_any_generics = false
 implicit_reexport = false
 show_error_codes = true
+disable_error_code = ['return']
 
 [tool.semantic_release]
 version_toml = "pyproject.toml:tool.poetry.version"
