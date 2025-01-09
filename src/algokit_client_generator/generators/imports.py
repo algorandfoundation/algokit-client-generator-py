@@ -13,6 +13,8 @@ from typing import (
     Protocol,
     Union,
     overload,
+    Tuple,
+    TypedDict,
     runtime_checkable,
 )
 

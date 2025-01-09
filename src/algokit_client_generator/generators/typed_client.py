@@ -1,127 +1,8 @@
 # /generators/typed_client.py
+
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
-
-## Helpers
-
-
-def generate_call_args(context: GeneratorContext) -> DocumentParts:
-    """Generate call args classes for each method"""
-    yield utils.indented(f"""
-@dataclass
-class {context.client_name}CallArgs:
-    \"\"\"Arguments for {context.client_name} contract methods\"\"\"
-""")
-    yield Part.IncIndent
-
-    # Generate a nested class for each ABI method
-    first = True
-    for method in context.methods.all_abi_methods:
-        if not method.abi:
-            continue
-
-        if not first:
-            yield Part.Gap1
-        first = False
-
-        yield utils.indented(f"""
-@dataclass
-class {method.abi.client_method_name}:
-    \"\"\"Arguments for {method.abi.client_method_name} method\"\"\"
-""")
-        yield Part.IncIndent
-
-        # Add fields for each method argument
-        for arg in method.abi.args:
-            yield f"{arg.name}: {arg.python_type}"
-
-        # Add standard transaction parameter fields
-        yield utils.indented("""
-account_references: Optional[list[str]] = None
-app_references: Optional[list[int]] = None
-asset_references: Optional[list[int]] = None
-box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None
-extra_fee: Optional[AlgoAmount] = None
-first_valid_round: Optional[int] = None
-lease: Optional[bytes] = None
-max_fee: Optional[AlgoAmount] = None
-note: Optional[bytes] = None
-rekey_to: Optional[str] = None
-sender: Optional[str] = None
-signer: Optional[TransactionSigner] = None
-static_fee: Optional[AlgoAmount] = None
-validity_window: Optional[int] = None
-last_valid_round: Optional[int] = None
-""")
-        yield Part.DecIndent
-    yield Part.DecIndent
-
-
-def generate_params_factory(context: GeneratorContext) -> DocumentParts:
-    """Generate params factory class"""
-    yield utils.indented(f"""
-class {context.client_name}ParamsFactory:
-    \"\"\"Factory for creating parameters for {context.client_name} contract calls\"\"\"
-""")
-    yield Part.IncIndent
-
-    # Generate static method for each ABI method
-    for method in context.methods.all_abi_methods:
-        if not method.abi:
-            continue
-
-        yield utils.indented(f"""
-@staticmethod
-def {method.abi.client_method_name}(
-""")
-        yield Part.IncIndent
-
-        # Add method arguments
-        for arg in method.abi.args:
-            yield f"{arg.name}: {arg.python_type},"
-
-        # Add standard transaction parameters
-        yield utils.indented(f"""
-account_references: Optional[list[str]] = None,
-app_references: Optional[list[int]] = None,
-asset_references: Optional[list[int]] = None,
-box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-extra_fee: Optional[AlgoAmount] = None,
-first_valid_round: Optional[int] = None,
-lease: Optional[bytes] = None,
-max_fee: Optional[AlgoAmount] = None,
-note: Optional[bytes] = None,
-rekey_to: Optional[str] = None,
-sender: Optional[str] = None,
-signer: Optional[TransactionSigner] = None,
-static_fee: Optional[AlgoAmount] = None,
-validity_window: Optional[int] = None,
-last_valid_round: Optional[int] = None,
-) -> AppClientMethodCallWithSendParams:
-    return AppClientMethodCallWithSendParams(
-        method="{method.abi.method.get_signature()}",
-        args=[{', '.join(arg.name for arg in method.abi.args)}],
-        account_references=account_references,
-        app_references=app_references,
-        asset_references=asset_references,
-        box_references=box_references,
-        extra_fee=extra_fee,
-        first_valid_round=first_valid_round,
-        lease=lease,
-        max_fee=max_fee,
-        note=note,
-        rekey_to=rekey_to,
-        sender=sender,
-        signer=signer,
-        static_fee=static_fee,
-        validity_window=validity_window,
-        last_valid_round=last_valid_round,
-    )
-""")
-        yield Part.Gap1
-        yield Part.DecIndent
-    yield Part.DecIndent
 
 
 def generate_params(context: GeneratorContext) -> DocumentParts:
@@ -144,12 +25,61 @@ class {context.client_name}Params:
             yield Part.Gap1
         first = False
 
+        # Generate the type annotation for args parameter
+        args_type = "Any"  # Default fallback
+        if method.abi.args:
+            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+
         yield utils.indented(f"""
-def {method.abi.client_method_name}(self, **kwargs: Any) -> AppCallMethodCallParams:
-    return AppCallMethodCallParams(**kwargs)
+def {method.abi.client_method_name}(
+    self,
+    args: {args_type},
+    *,
+    account_references: Optional[list[str]] = None,
+    app_references: Optional[list[int]] = None,
+    asset_references: Optional[list[int]] = None,
+    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+    extra_fee: Optional[AlgoAmount] = None,
+    first_valid_round: Optional[int] = None,
+    lease: Optional[bytes] = None,
+    max_fee: Optional[AlgoAmount] = None,
+    note: Optional[bytes] = None,
+    rekey_to: Optional[str] = None,
+    sender: Optional[str] = None,
+    signer: Optional[TransactionSigner] = None,
+    static_fee: Optional[AlgoAmount] = None,
+    validity_window: Optional[int] = None,
+    last_valid_round: Optional[int] = None,
+) -> AppCallMethodCallParams:
+    if isinstance(args, tuple):
+        method_args = list(args)
+    else:
+        method_args = list(args.values())
+    arc56_method = self.app_client.app_spec.get_arc56_method("{method.abi.method.get_signature()}").to_abi_method()
+
+    return AppCallMethodCallParams(
+        method=arc56_method,
+        args=method_args,
+        app_id=self.app_client.app_id,
+        account_references=account_references,
+        app_references=app_references,
+        asset_references=asset_references,
+        box_references=box_references,
+        extra_fee=extra_fee,
+        first_valid_round=first_valid_round,
+        lease=lease,
+        max_fee=max_fee,
+        note=note,
+        rekey_to=rekey_to,
+        sender=sender,
+        signer=signer,
+        static_fee=static_fee,
+        validity_window=validity_window,
+        last_valid_round=last_valid_round,
+    )
 """)
 
-    # Add gap before clear_state
     yield Part.Gap1
 
     # Add clear state method
@@ -180,10 +110,58 @@ class {context.client_name}CreateTransactionParams:
             yield Part.Gap1
         first = False
 
+        # Generate the type annotation for args parameter
+        args_type = "Any"  # Default fallback
+        if method.abi.args:
+            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+
         yield utils.indented(f"""
-def {method.abi.client_method_name}(self, **kwargs: Any) -> BuiltTransactions:
+def {method.abi.client_method_name}(
+    self,
+    args: {args_type},
+    *,
+    account_references: Optional[list[str]] = None,
+    app_references: Optional[list[int]] = None,
+    asset_references: Optional[list[int]] = None,
+    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+    extra_fee: Optional[AlgoAmount] = None,
+    first_valid_round: Optional[int] = None,
+    lease: Optional[bytes] = None,
+    max_fee: Optional[AlgoAmount] = None,
+    note: Optional[bytes] = None,
+    rekey_to: Optional[str] = None,
+    sender: Optional[str] = None,
+    signer: Optional[TransactionSigner] = None,
+    static_fee: Optional[AlgoAmount] = None,
+    validity_window: Optional[int] = None,
+    last_valid_round: Optional[int] = None,
+) -> BuiltTransactions:
+    if isinstance(args, tuple):
+        method_args = list(args)
+    else:
+        method_args = list(args.values())
+
     return self.app_client.create_transaction.call(
-        {context.client_name}ParamsFactory.{method.abi.client_method_name}(**kwargs)
+        AppClientMethodCallWithSendParams(
+            method="{method.abi.method.get_signature()}",
+            args=method_args,
+            account_references=account_references,
+            app_references=app_references,
+            asset_references=asset_references,
+            box_references=box_references,
+            extra_fee=extra_fee,
+            first_valid_round=first_valid_round,
+            lease=lease,
+            max_fee=max_fee,
+            note=note,
+            rekey_to=rekey_to,
+            sender=sender,
+            signer=signer,
+            static_fee=static_fee,
+            validity_window=validity_window,
+            last_valid_round=last_valid_round,
+        )
     )
 """)
 
@@ -195,6 +173,32 @@ def clear_state(self, params: AppClientBareCallWithSendParams) -> Transaction:
     return self.app_client.create_transaction.bare.clear_state(params)
 """)
     yield Part.DecIndent
+
+
+def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
+    """Generate TypedDict classes for each method's arguments"""
+    first = True
+    for method in context.methods.all_abi_methods:
+        if not method.abi or not method.abi.args:
+            continue
+
+        if not first:
+            yield Part.Gap1
+        first = False
+
+        # Convert to camelcase using utility function
+        typed_dict_name = f"{utils.to_camel_case(method.abi.client_method_name)}Args"
+
+        yield utils.indented(f"""
+class {typed_dict_name}(TypedDict):
+    \"\"\"TypedDict for {method.abi.client_method_name} arguments\"\"\"
+""")
+        yield Part.IncIndent
+
+        for arg in method.abi.args:
+            yield f"{arg.name}: {arg.python_type}"
+
+        yield Part.DecIndent
 
 
 def generate_send(context: GeneratorContext) -> DocumentParts:
@@ -217,9 +221,60 @@ class {context.client_name}Send:
             yield Part.Gap1
         first = False
 
+        # Generate the type annotation for args parameter
+        args_type = "Any"  # Default fallback
+        if method.abi.args:
+            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+
+        # Generate the method with typed args parameter
         yield utils.indented(f"""
-def {method.abi.client_method_name}(self, **kwargs: Any) -> SendAppTransactionResult:
-    return self.app_client.send.call({context.client_name}ParamsFactory.{method.abi.client_method_name}(**kwargs))
+def {method.abi.client_method_name}(
+    self,
+    args: {args_type},
+    *,
+    account_references: Optional[list[str]] = None,
+    app_references: Optional[list[int]] = None,
+    asset_references: Optional[list[int]] = None,
+    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+    extra_fee: Optional[AlgoAmount] = None,
+    first_valid_round: Optional[int] = None,
+    lease: Optional[bytes] = None,
+    max_fee: Optional[AlgoAmount] = None,
+    note: Optional[bytes] = None,
+    rekey_to: Optional[str] = None,
+    sender: Optional[str] = None,
+    signer: Optional[TransactionSigner] = None,
+    static_fee: Optional[AlgoAmount] = None,
+    validity_window: Optional[int] = None,
+    last_valid_round: Optional[int] = None,
+) -> SendAppTransactionResult:
+    if isinstance(args, tuple):
+        method_args = list(args)
+    else:
+        method_args = list(args.values())
+
+    return self.app_client.send.call(
+        AppClientMethodCallWithSendParams(
+            method="{method.abi.method.get_signature()}",
+            args=method_args,
+            account_references=account_references,
+            app_references=app_references,
+            asset_references=asset_references,
+            box_references=box_references,
+            extra_fee=extra_fee,
+            first_valid_round=first_valid_round,
+            lease=lease,
+            max_fee=max_fee,
+            note=note,
+            rekey_to=rekey_to,
+            sender=sender,
+            signer=signer,
+            static_fee=static_fee,
+            validity_window=validity_window,
+            last_valid_round=last_valid_round,
+        )
+    )
 """)
 
     yield Part.Gap1
@@ -432,9 +487,8 @@ def generate_typed_client(context: GeneratorContext) -> DocumentParts:
     """Generate the complete typed client class"""
 
     # Generate supporting classes first
-    yield generate_call_args(context)
     yield Part.Gap2
-    yield generate_params_factory(context)
+    yield generate_method_typed_dict(context)
     yield Part.Gap2
     yield generate_params(context)
     yield Part.Gap2

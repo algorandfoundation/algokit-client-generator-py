@@ -27,25 +27,110 @@ class {context.client_name}Composer:
             yield Part.Gap1
         first = False
 
+        # Generate the type annotation for args parameter
+        args_type = "Any"  # Default fallback
+        if method.abi.args:
+            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+
         yield utils.indented(f"""
-def {method.abi.client_method_name}(self, params: {context.client_name}CallArgs.{method.abi.client_method_name}) -> "{context.client_name}Composer":
-    self._composer.add_app_call_method_call(self.client.params.{method.abi.client_method_name}(**vars(params)))
+def {method.abi.client_method_name}(
+    self,
+    args: {args_type},
+    *,
+    account_references: Optional[list[str]] = None,
+    app_references: Optional[list[int]] = None,
+    asset_references: Optional[list[int]] = None,
+    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+    extra_fee: Optional[AlgoAmount] = None,
+    first_valid_round: Optional[int] = None,
+    lease: Optional[bytes] = None,
+    max_fee: Optional[AlgoAmount] = None,
+    note: Optional[bytes] = None,
+    rekey_to: Optional[str] = None,
+    sender: Optional[str] = None,
+    signer: Optional[TransactionSigner] = None,
+    static_fee: Optional[AlgoAmount] = None,
+    validity_window: Optional[int] = None,
+    last_valid_round: Optional[int] = None,
+) -> "{context.client_name}Composer":
+    if isinstance(args, tuple):
+        method_args = args
+    else:
+        method_args = tuple(args.values())
+
+    self._composer.add_app_call_method_call(
+        self.client.params.{method.abi.client_method_name}(
+            args=method_args,
+            account_references=account_references,
+            app_references=app_references,
+            asset_references=asset_references,
+            box_references=box_references,
+            extra_fee=extra_fee,
+            first_valid_round=first_valid_round,
+            lease=lease,
+            max_fee=max_fee,
+            note=note,
+            rekey_to=rekey_to,
+            sender=sender,
+            signer=signer,
+            static_fee=static_fee,
+            validity_window=validity_window,
+            last_valid_round=last_valid_round,
+        )
+    )
     self._result_mappers.append(
         lambda v: self.client.decode_return_value(
             "{method.abi.method.get_signature()}", v
         )
     )
     return self
-""")  # noqa: E501
+""")
 
     yield Part.Gap1
 
     # Add clear state method
     yield utils.indented(f"""
 def clear_state(
-    self, params: AppClientBareCallWithSendParams
+    self,
+    *,
+    account_references: Optional[list[str]] = None,
+    app_references: Optional[list[int]] = None,
+    asset_references: Optional[list[int]] = None,
+    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+    extra_fee: Optional[AlgoAmount] = None,
+    first_valid_round: Optional[int] = None,
+    lease: Optional[bytes] = None,
+    max_fee: Optional[AlgoAmount] = None,
+    note: Optional[bytes] = None,
+    rekey_to: Optional[str] = None,
+    sender: Optional[str] = None,
+    signer: Optional[TransactionSigner] = None,
+    static_fee: Optional[AlgoAmount] = None,
+    validity_window: Optional[int] = None,
+    last_valid_round: Optional[int] = None,
 ) -> "{context.client_name}Composer":
-    self._composer.add_app_call(self.client.params.clear_state(params))
+    self._composer.add_app_call(
+        self.client.params.clear_state(
+            AppClientBareCallWithSendParams(
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+    )
     return self
 
 def add_transaction(

@@ -134,3 +134,9 @@ def indented(code_block: str) -> DocumentParts:
     while current_indents > 0:
         yield Part.DecIndent
         current_indents -= 1
+
+
+def to_camel_case(snake_str: str) -> str:
+    """Convert snake_case to CamelCase"""
+    components = snake_str.split("_")
+    return "".join(x.title() for x in components)
