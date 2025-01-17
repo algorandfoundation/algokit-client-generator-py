@@ -9,7 +9,10 @@ def update_approvals() -> None:
         app_path = examples / app
         app_spec = app_path / "application.json"
         approved_path = app_path / "client.py"
-        generate_client(app_spec, approved_path)
+        try:
+            generate_client(app_spec, approved_path)
+        except Exception as e:
+            print(f"Error generating client for {app}: {e}")
 
 
 if __name__ == "__main__":

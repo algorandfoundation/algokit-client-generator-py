@@ -5,7 +5,7 @@ from algokit_client_generator.document import DocumentParts
 
 def generate_imports(context: GeneratorContext) -> DocumentParts:
     yield utils.lines("""
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict, replace
 from typing import (
     Any,
     Callable,
@@ -13,20 +13,36 @@ from typing import (
     Protocol,
     Union,
     overload,
+    Generic,
     Tuple,
     TypedDict,
     runtime_checkable,
+    cast,
+    Literal,
 )
-
+import algosdk
+from algosdk.transaction import OnComplete
+from algokit_utils.applications import AppFactoryCreateParams, AppFactoryCreateMethodCallResult, AppFactoryCreateWithSendParams, AppFactoryCreateMethodCallParams
 from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
     AppFactoryParams,
     Arc56Contract,
+    AppClientBareCallWithCompilationAndSendParams,
+    AppClientBareCallParams,
+    AppClientCreateSchema,
+    BaseOnCompleteParams,
+    AppClientMethodCallParams,
+    AppClientBareCallParams,
+    AppClientBareCallCreateParams,
+    AppClientMethodCallCreateParams,
+    BaseAppClientMethodCallParams,
 )
+from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
 from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate

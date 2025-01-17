@@ -1,64 +1,85 @@
+import algokit_utils
 import pytest
-from algokit_utils import OnUpdate, get_localnet_default_account
-from algosdk.atomic_transaction_composer import AccountTransactionSigner
-from algosdk.v2client.algod import AlgodClient
-from algosdk.v2client.indexer import IndexerClient
+from algokit_utils.applications import OnUpdate
+from algokit_utils.models import AlgoAmount
+from algokit_utils.protocols import AlgorandClientProtocol
 
-from examples.helloworld.client import HelloWorldAppClient
+from examples.helloworld.client import HelloWorldAppClient, HelloWorldAppFactory
 
 
-@pytest.fixture(scope="session")
-def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) -> HelloWorldAppClient:
-    client = HelloWorldAppClient(
-        algod_client=algod_client,
-        indexer_client=indexer_client,
-        creator=get_localnet_default_account(algod_client),
+@pytest.fixture
+def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+    account = algorand.account.random()
+    algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
+    return account
+
+
+@pytest.fixture
+def helloworld_factory(
+    algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+) -> HelloWorldAppFactory:
+    return algorand.client.get_typed_app_factory(HelloWorldAppFactory, default_sender=default_deployer.address)
+
+
+def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
+    client, _ = helloworld_factory.deploy(deletable=True, updatable=True, on_update=OnUpdate.UpdateApp)
+
+    # Test with dict args
+    response = client.send.hello(args={"name": "World"})
+    assert response.abi_return == "Hello, World"
+
+    # Test with tuple args
+    response_2 = client.send.hello(args=("World!",))
+    assert response_2.abi_return == "Hello, World!"
+
+    # Test void return
+    response_3 = client.send.hello_world_check(args={"name": "World"})
+    assert response_3.abi_return is None
+
+
+def test_composer_with_manual_transaction(
+    helloworld_factory: HelloWorldAppFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+) -> None:
+    client, _ = helloworld_factory.deploy()
+
+    # Create transactions to add manually
+    transactions = client.create_transaction.hello_world_check(args={"name": "World"})
+
+    # Get client from creator and name
+    client2 = algorand.client.get_typed_app_client_by_creator_and_name(
+        HelloWorldAppClient, creator_address=default_deployer.address, app_name=client.app_name
     )
 
-    client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
-    return client
+    transactions2 = client2.create_transaction.hello(args={"name": "Bananas"}, sender=default_deployer.address)
 
-
-def test_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.hello(name="friend")
-
-    assert response.return_value == "Hello, friend"
-
-
-def test_hello_check_args(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.hello_world_check(name="World")
-
-    assert response.return_value is None
-
-
-def test_lifecycle(algod_client: AlgodClient) -> None:
-    account = get_localnet_default_account(algod_client)
-    signer = AccountTransactionSigner(account.private_key)
-
-    helloworld_client = HelloWorldAppClient(
-        algod_client=algod_client, signer=signer, template_values={"UPDATABLE": 1, "DELETABLE": 1}
+    # Test composition with manual transactions
+    result = (
+        client.new_group()
+        .hello(args=("World",))
+        .add_transaction(transactions.transactions[0], transactions.signers[0])
+        .add_transaction(transactions2.transactions[0])
+        .hello(args={"name": "World!"})
+        .send()
     )
 
-    assert helloworld_client.create_bare()
-    assert helloworld_client.update_bare()
-
-    response = helloworld_client.hello(name="Jane")
-
-    assert response.return_value == "Hello, Jane"
-
-    assert helloworld_client.delete_bare()
+    # Check returns
+    assert result.returns[0].value == "Hello, World"
+    assert result.returns[1].value == "Hello, World!"
+    assert len(result.tx_ids) == 4
 
 
-def test_compose(helloworld_client: HelloWorldAppClient) -> None:
-    response = (helloworld_client.compose().hello(name="there").hello_world_check(name="World")).execute()
+def test_simulate_hello(helloworld_factory: HelloWorldAppFactory) -> None:
+    client, _ = helloworld_factory.deploy()
 
-    hello_response, check_response = response.abi_results
-    assert hello_response.return_value == "Hello, there"
-    assert check_response.return_value is None
+    response = client.new_group().hello(args={"name": "mate"}).simulate()
+
+    assert response.returns[0].value == "Hello, mate"
+    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  # type: ignore
 
 
-def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
-    response = helloworld_client.compose().hello(name="mate").simulate()
+def test_can_be_cloned(helloworld_factory: HelloWorldAppFactory) -> None:
+    client, _ = helloworld_factory.deploy()
+    cloned_client = client.clone(app_name="overridden")
 
-    assert response.abi_results[0].return_value == "Hello, mate"
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
+    assert client.app_name == "HelloWorldApp"
+    assert cloned_client.app_name == "overridden"

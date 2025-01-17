@@ -42,7 +42,7 @@ def create_args(algod_client: AlgodClient, voter: Account) -> CreateArgs:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def deploy_create_args(algod_client: AlgodClient, create_args: CreateArgs) -> DeployCreate[CreateArgs]:
     sp = algod_client.suggested_params()
     sp.fee = algosdk.util.algos_to_microalgos(4)
@@ -50,7 +50,7 @@ def deploy_create_args(algod_client: AlgodClient, create_args: CreateArgs) -> De
     return DeployCreate(args=create_args, suggested_params=sp)
 
 
-@pytest.fixture()
+@pytest.fixture
 def deploy_voting_client(
     algod_client: AlgodClient,
     indexer_client: IndexerClient,
@@ -97,7 +97,7 @@ def voter_signature(voter: Account) -> bytes:
     return signed.signature
 
 
-@pytest.fixture()
+@pytest.fixture
 def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoundAppClient) -> TransactionWithSigner:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
@@ -110,7 +110,7 @@ def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoun
     return TransactionWithSigner(txn=payment, signer=from_account.signer)
 
 
-@pytest.fixture()
+@pytest.fixture
 def bootstrap_response(
     deploy_voting_client: VotingRoundAppClient,
     fund_min_bal_req: TransactionWithSigner,

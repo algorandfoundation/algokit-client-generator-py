@@ -36,8 +36,9 @@ class GeneratorContext:
             "new_group",  # Method in typed_client.py for creating transaction groups
         }
 
-        self.client_name = utils.get_unique_symbol_by_incrementing(
-            self.used_module_symbols, utils.get_class_name(self.app_spec.name, "client")
+        self.contract_name = utils.get_unique_symbol_by_incrementing(
+            self.used_module_symbols, utils.get_class_name(self.app_spec.name)
         )
+
         self.methods = get_contract_methods(app_spec, self.used_module_symbols, self.used_client_symbols)
         self.disable_linting = True

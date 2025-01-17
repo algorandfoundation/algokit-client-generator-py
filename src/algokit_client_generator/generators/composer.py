@@ -6,10 +6,10 @@ from algokit_client_generator.document import DocumentParts, Part
 def generate_composer(context: GeneratorContext) -> DocumentParts:
     """Generate the composer class for creating transaction groups"""
     yield utils.indented(f"""
-class {context.client_name}Composer:
-    \"\"\"Composer for creating transaction groups for {context.client_name} contract calls\"\"\"
+class {context.contract_name}Composer:
+    \"\"\"Composer for creating transaction groups for {context.contract_name} contract calls\"\"\"
 
-    def __init__(self, client: "{context.client_name}"):
+    def __init__(self, client: "{context.contract_name}Client"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
@@ -20,7 +20,7 @@ class {context.client_name}Composer:
     # Generate method for each ABI method
     first = True
     for method in context.methods.all_abi_methods:
-        if not method.abi:
+        if not method.abi or method.call_config == "create":
             continue
 
         if not first:
@@ -53,7 +53,7 @@ def {method.abi.client_method_name}(
     static_fee: Optional[AlgoAmount] = None,
     validity_window: Optional[int] = None,
     last_valid_round: Optional[int] = None,
-) -> "{context.client_name}Composer":
+) -> "{context.contract_name}Composer":
     if isinstance(args, tuple):
         method_args = args
     else:
@@ -61,7 +61,7 @@ def {method.abi.client_method_name}(
 
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
-            args=method_args,
+            args=method_args, # type: ignore
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,
@@ -109,7 +109,7 @@ def clear_state(
     static_fee: Optional[AlgoAmount] = None,
     validity_window: Optional[int] = None,
     last_valid_round: Optional[int] = None,
-) -> "{context.client_name}Composer":
+) -> "{context.contract_name}Composer":
     self._composer.add_app_call(
         self.client.params.clear_state(
             AppClientBareCallWithSendParams(
@@ -135,7 +135,7 @@ def clear_state(
 
 def add_transaction(
     self, txn: Transaction, signer: Optional[TransactionSigner] = None
-) -> "{context.client_name}Composer":
+) -> "{context.contract_name}Composer":
     self._composer.add_transaction(txn, signer)
     return self
 

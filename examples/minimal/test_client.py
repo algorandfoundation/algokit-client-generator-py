@@ -1,22 +1,24 @@
+import algokit_utils
 import pytest
-from algokit_utils import OnUpdate, get_localnet_default_account
-from algosdk.v2client.algod import AlgodClient
-from algosdk.v2client.indexer import IndexerClient
+from algokit_utils.models import AlgoAmount
+from algokit_utils.protocols import AlgorandClientProtocol
 
-from examples.minimal.client import MinimalAppClient
-
-
-@pytest.fixture(scope="session")
-def minimal_client(algod_client: AlgodClient, indexer_client: IndexerClient) -> MinimalAppClient:
-    client = MinimalAppClient(
-        algod_client=algod_client,
-        indexer_client=indexer_client,
-        creator=get_localnet_default_account(algod_client),
-    )
-
-    client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
-    return client
+from examples.minimal.client import MinimalAppFactory
 
 
-def test_delete(minimal_client: MinimalAppClient) -> None:
-    minimal_client.delete_bare()
+@pytest.fixture
+def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+    account = algorand.account.random()
+    algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
+    return account
+
+
+@pytest.fixture
+def minimal_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> MinimalAppFactory:
+    return algorand.client.get_typed_app_factory(MinimalAppFactory, default_sender=default_deployer.address)
+
+
+def test_delete(minimal_factory: MinimalAppFactory) -> None:
+    client, _ = minimal_factory.deploy()
+    
+    client.send.delete_bare()

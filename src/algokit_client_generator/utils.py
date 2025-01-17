@@ -56,10 +56,16 @@ def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: PLR0911, C901: ig
             return "typing.Any"
 
 
-def map_abi_type_to_python(abi_type_str: str) -> str:
+def map_abi_type_to_python(abi_type_str: str) -> str:  # noqa: PLR0911
     match abi_type_str:
         case "void":
             return "None"
+        case "AVMBytes":
+            return "bytes"
+        case "AVMUint64":
+            return "int"
+        case "AVMString":
+            return "str"
         case abi.ABIReferenceType.ASSET | abi.ABIReferenceType.APPLICATION:
             return "int"
         case abi.ABIReferenceType.ACCOUNT:
@@ -118,10 +124,10 @@ def docstring(value: str) -> DocumentParts:
     yield Part.RestoreLineMode
 
 
-def indented(code_block: str) -> DocumentParts:
+def indented(code_block: str, indent_size: int = 4) -> DocumentParts:
     code_block = code_block.strip()
     current_indents = 0
-    source_indent_size = 4
+    source_indent_size = indent_size
     for line in code_block.splitlines():
         indents = (len(line) - len(line.lstrip(" "))) / source_indent_size
         while indents > current_indents:
@@ -140,3 +146,18 @@ def to_camel_case(snake_str: str) -> str:
     """Convert snake_case to CamelCase"""
     components = snake_str.split("_")
     return "".join(x.title() for x in components)
+
+
+def to_snake_case(text: str) -> str:
+    """Convert CamelCase to snake_case"""
+    if not text:
+        return text
+
+    chars = []
+    for i, char in enumerate(text):
+        if i > 0 and (char.isupper() or not char.isalnum()):
+            chars.append("_")
+        if char.isalnum():
+            chars.append(char.lower())
+
+    return "".join(chars).strip("_")
