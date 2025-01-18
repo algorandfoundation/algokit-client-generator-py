@@ -42,7 +42,7 @@ from algokit_utils.applications import (
     AppClientMethodCallCreateParams,
     BaseAppClientMethodCallParams,
 )
-from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams
+from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams, AppCreateMethodCallParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
 from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate
@@ -564,604 +564,22 @@ class DeleteAbiArgs(TypedDict):
     input: str
 
 
-class StateAppParams:
-    def __init__(self, app_client: AppClient):
+class _StateAppUpdate:
+    def __init__(self, app_client: AppClient, context: str):
         self.app_client = app_client
+        self._context = context
 
-    def call_abi(
-        self,
-        args: Tuple[str] | CallAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="call_abi(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def call_abi_txn(
-        self,
-        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="call_abi_txn(pay,string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def set_global(
-        self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="set_global(uint64,uint64,string,byte[4])void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def set_local(
-        self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="set_local(uint64,uint64,string,byte[4])void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def set_box(
-        self,
-        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="set_box(byte[4],string)void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def call_with_references(
-        self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="call_with_references(asset,account,application)uint64",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def error(
-        self,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="error()void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def default_value(
-        self,
-        args: Tuple[str] | DefaultValueArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="default_value(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def default_value_from_abi(
-        self,
-        args: Tuple[str] | DefaultValueFromAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="default_value_from_abi(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def structs(
-        self,
-        args: Tuple[Input] | StructsArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="structs((string,uint64))(string,uint64)",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
+        if self._context == "params":
+            return self.app_client.params.bare.update(params)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.bare.update(params)
+        else:  # send
+            return self.app_client.send.bare.update(params)
 
     def update_abi(
         self,
         args: Tuple[str] | UpdateAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="update_abi(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def delete_abi(
-        self,
-        args: Tuple[str] | DeleteAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="delete_abi(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
-
-    def opt_in(
-        self,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1177,30 +595,719 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> AppCallMethodCallParams:
+        last_valid_round: Optional[int] = None
+    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[str]]:
+    
         method_args = None
         
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        params_to_call = AppClientMethodCallWithSendParams(
+                method="update_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.UpdateApplicationOC,
+            )
+        if self._context == "params":
+            return self.app_client.params.call(params_to_call)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.call(params_to_call)
+        else:  # send
+            response = self.app_client.send.call(params_to_call)
+            return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
+class _StateAppDelete:
+    def __init__(self, app_client: AppClient, context: str):
+        self.app_client = app_client
+        self._context = context
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Union[AppCallParams, Transaction, SendAppTransactionResult]:
+        if self._context == "params":
+            return self.app_client.params.bare.delete(params)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.bare.delete(params)
+        else:  # send
+            return self.app_client.send.bare.delete(params)
+
+    def delete_abi(
+        self,
+        args: Tuple[str] | DeleteAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[str]]:
     
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="opt_in()void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        params_to_call = AppClientMethodCallWithSendParams(
+                method="delete_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.DeleteApplicationOC,
+            )
+        if self._context == "params":
+            return self.app_client.params.call(params_to_call)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.call(params_to_call)
+        else:  # send
+            response = self.app_client.send.call(params_to_call)
+            return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
+class _StateAppOptin:
+    def __init__(self, app_client: AppClient, context: str):
+        self.app_client = app_client
+        self._context = context
+
+    def opt_in(
+        self,
+            *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[None]]:
+    
+        method_args = None
+        
+        
+        params_to_call = AppClientMethodCallWithSendParams(
+                method="opt_in()void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.OptInOC,
+            )
+        if self._context == "params":
+            return self.app_client.params.call(params_to_call)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.call(params_to_call)
+        else:  # send
+            response = self.app_client.send.call(params_to_call)
+            return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
+class StateAppParams:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+    @property
+    def update(self) -> "_StateAppUpdate":
+        return _StateAppUpdate(self.app_client, "params")
+
+    @property
+    def delete(self) -> "_StateAppDelete":
+        return _StateAppDelete(self.app_client, "params")
+
+    @property
+    def opt_in(self) -> "_StateAppOptin":
+        return _StateAppOptin(self.app_client, "params")
+    def call_abi(
+        self,
+        args: Tuple[str] | CallAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def call_abi_txn(
+        self,
+        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi_txn(pay,string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def set_global(
+        self,
+        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="set_global(uint64,uint64,string,byte[4])void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def set_local(
+        self,
+        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="set_local(uint64,uint64,string,byte[4])void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def set_box(
+        self,
+        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="set_box(byte[4],string)void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def call_with_references(
+        self,
+        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_with_references(asset,account,application)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def error(
+        self,
+            *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="error()void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def default_value(
+        self,
+        args: Tuple[str] | DefaultValueArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="default_value(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def default_value_from_abi(
+        self,
+        args: Tuple[str] | DefaultValueFromAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="default_value_from_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def structs(
+        self,
+        args: Tuple[Input] | StructsArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="structs((string,uint64))(string,uint64)",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
+
+    def create_abi(
+        self,
+        args: Tuple[str] | CreateAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="create_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -1209,11 +1316,21 @@ class StateAppParams:
 class StateAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
+    @property
+    def update(self) -> "_StateAppUpdate":
+        return _StateAppUpdate(self.app_client, "create_transaction")
 
+    @property
+    def delete(self) -> "_StateAppDelete":
+        return _StateAppDelete(self.app_client, "create_transaction")
+
+    @property
+    def opt_in(self) -> "_StateAppOptin":
+        return _StateAppOptin(self.app_client, "create_transaction")
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1228,20 +1345,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1259,13 +1373,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def call_abi_txn(
         self,
         args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1280,20 +1394,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1311,13 +1422,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def set_global(
         self,
         args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1332,20 +1443,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1363,13 +1471,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def set_local(
         self,
         args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1384,20 +1492,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1415,13 +1520,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def set_box(
         self,
         args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1436,20 +1541,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1467,13 +1569,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def call_with_references(
         self,
         args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1488,20 +1590,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1519,12 +1618,12 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def error(
         self,
-        *,
+            *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1539,13 +1638,13 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="error()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1563,13 +1662,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def default_value(
         self,
         args: Tuple[str] | DefaultValueArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1584,20 +1683,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1615,13 +1711,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def default_value_from_abi(
         self,
         args: Tuple[str] | DefaultValueFromAbiArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1636,20 +1732,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1667,13 +1760,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def structs(
         self,
         args: Tuple[Input] | StructsArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1688,20 +1781,17 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="structs((string,uint64))(string,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1719,115 +1809,12 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
-    def update_abi(
+    def create_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> BuiltTransactions:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
-                method="update_abi(string)string",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-
-    def delete_abi(
-        self,
-        args: Tuple[str] | DeleteAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> BuiltTransactions:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
-                method="delete_abi(string)string",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-
-    def opt_in(
-        self,
+        args: Tuple[str] | CreateAbiArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1843,14 +1830,18 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
-                method="opt_in()void",
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="create_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1867,21 +1858,31 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+        return self.app_client.params.bare.clear_state(params)
 
 
 class StateAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
+    @property
+    def update(self) -> "_StateAppUpdate":
+        return _StateAppUpdate(self.app_client, "send")
 
+    @property
+    def delete(self) -> "_StateAppDelete":
+        return _StateAppDelete(self.app_client, "send")
+
+    @property
+    def opt_in(self) -> "_StateAppOptin":
+        return _StateAppOptin(self.app_client, "send")
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1896,20 +1897,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1927,15 +1925,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def call_abi_txn(
         self,
         args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1950,20 +1947,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1981,15 +1975,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_global(
         self,
         args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2004,20 +1997,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[None]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2035,15 +2025,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_local(
         self,
         args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2058,20 +2047,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[None]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2089,15 +2075,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_box(
         self,
         args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2112,20 +2097,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[None]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2143,15 +2125,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def call_with_references(
         self,
         args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2166,20 +2147,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[int]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2197,15 +2175,13 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[int](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def error(
         self,
-        args: Any,
-    *,
+            *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2220,20 +2196,13 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[None]:
+    
         method_args = None
         
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="error()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2251,15 +2220,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def default_value(
         self,
         args: Tuple[str] | DefaultValueArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2274,20 +2242,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2305,15 +2270,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def default_value_from_abi(
         self,
         args: Tuple[str] | DefaultValueFromAbiArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2328,20 +2292,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2359,15 +2320,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def structs(
         self,
         args: Tuple[Input] | StructsArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2382,20 +2342,17 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[Output]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="structs((string,uint64))(string,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2413,15 +2370,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[Output](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def update_abi(
+    def create_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
-    *,
+        args: Tuple[str] | CreateAbiArgs,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2436,21 +2392,18 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
-                method="update_abi(string)string",
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="create_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -2467,153 +2420,12 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def delete_abi(
-        self,
-        args: Tuple[str] | DeleteAbiArgs,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> SendAppTransactionResult[str]:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
-                method="delete_abi(string)string",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-    
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
-
-    def opt_in(
-        self,
-        args: Any,
-    *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> SendAppTransactionResult[None]:
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        else:
-            method_args = args
-        
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
-                method="opt_in()void",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-    
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
-
-    def delete_bare(
-        self,
-        *,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        **kwargs
-    ) -> SendAppTransactionResult:
-        """Delete the application using a bare call"""
-        return self.app_client.send.bare.delete(
-            AppClientBareCallWithSendParams(
-                sender=sender,
-                signer=signer,
-                **kwargs
-            )
-        )
-
-    def update_bare(
-        self,
-        *,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        **kwargs
-    ) -> SendAppTransactionResult:
-        """Update the application using a bare call"""
-        return self.app_client.send.bare.update(
-            AppClientBareCallWithCompilationAndSendParams(
-                sender=sender,
-                signer=signer,
-                **kwargs
-            )
-        )
-
-    def clear_state_bare(self, params: AppClientBareCallWithSendParams) -> SendAppTransactionResult:
-        return self.app_client.send.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+        return self.app_client.params.bare.clear_state(params)
 
 
 class StateAppState:
@@ -2847,23 +2659,24 @@ class StateAppMethodCallCreateParams(
     AppClientCreateSchema, BaseAppClientMethodCallParams[
         Tuple[str] | CreateAbiArgs,
         Literal["create_abi(string)string"],
-        Literal[algosdk.transaction.OnComplete.NoOpOC]
+        Literal[OnComplete.NoOpOC]
     ]
 ):
-    """Parameters for creating StateApp contract"""
+    """Parameters for creating StateApp contract using ABI"""
+
     def to_algokit_utils_params(self) -> AppClientMethodCallCreateParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
         return AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
-                "method": APP_SPEC.get_arc56_method(self.method).to_abi_method(),
-                }
-            )
+            }
+        )
 
 @dataclass(frozen=True)
 class StateAppBareCallCreateParams(AppClientCreateSchema, AppClientBareCallParams, BaseOnCompleteParams[Literal[OnComplete.NoOpOC, OnComplete.OptInOC]]):
     """Parameters for creating StateApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallCreateParams:
         return AppClientBareCallCreateParams(**self.__dict__)
 
@@ -2872,23 +2685,24 @@ class StateAppMethodCallUpdateParams(
     BaseAppClientMethodCallParams[
         Tuple[str] | UpdateAbiArgs,
         Literal["update_abi(string)string"],
-        Literal[algosdk.transaction.OnComplete.UpdateApplicationOC]
+        Literal[OnComplete.UpdateApplicationOC]
     ]
 ):
-    """Parameters for calling StateApp contract"""
+    """Parameters for calling StateApp contract using ABI"""
+
     def to_algokit_utils_params(self) -> AppClientMethodCallParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
         return AppClientMethodCallParams(
             **{
                 **self.__dict__,
                 "args": method_args,
-                "method": APP_SPEC.get_arc56_method(self.method).to_abi_method(),
-                }
-            )
+            }
+        )
 
 @dataclass(frozen=True)
 class StateAppBareCallUpdateParams(AppClientBareCallParams):
     """Parameters for calling StateApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
 
@@ -2897,25 +2711,27 @@ class StateAppMethodCallDeleteParams(
     BaseAppClientMethodCallParams[
         Tuple[str] | DeleteAbiArgs,
         Literal["delete_abi(string)string"],
-        Literal[algosdk.transaction.OnComplete.DeleteApplicationOC]
+        Literal[OnComplete.DeleteApplicationOC]
     ]
 ):
-    """Parameters for calling StateApp contract"""
+    """Parameters for calling StateApp contract using ABI"""
+
     def to_algokit_utils_params(self) -> AppClientMethodCallParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
         return AppClientMethodCallParams(
             **{
                 **self.__dict__,
                 "args": method_args,
-                "method": APP_SPEC.get_arc56_method(self.method).to_abi_method(),
-                }
-            )
+            }
+        )
 
 @dataclass(frozen=True)
 class StateAppBareCallDeleteParams(AppClientBareCallParams):
     """Parameters for calling StateApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
+
 class StateAppFactory(TypedAppFactoryProtocol):
     """Factory for deploying and managing StateAppClient smart contracts"""
 
@@ -2960,50 +2776,6 @@ class StateAppFactory(TypedAppFactoryProtocol):
     def algorand(self) -> AlgorandClientProtocol:
         return self.app_factory.algorand
 
-    def get_app_client_by_creator_and_name(
-        self,
-        creator_address: str,
-        app_name: str,
-        default_sender: str | bytes | None = None,
-        default_signer: TransactionSigner | None = None,
-        ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
-        approval_source_map: SourceMap | None = None,
-        clear_source_map: SourceMap | None = None,
-    ) -> StateAppClient:
-        return StateAppClient(
-            self.app_factory.get_app_client_by_creator_and_name(
-                creator_address,
-                app_name,
-                default_sender,
-                default_signer,
-                ignore_cache,
-                app_lookup_cache,
-                approval_source_map,
-                clear_source_map,
-            )
-        )
-
-    def get_app_client_by_id(
-        self,
-        app_id: int,
-        app_name: str | None = None,
-        default_sender: str | bytes | None = None,
-        default_signer: TransactionSigner | None = None,
-        approval_source_map: SourceMap | None = None,
-        clear_source_map: SourceMap | None = None,
-    ) -> StateAppClient:
-        return StateAppClient(
-            self.app_factory.get_app_client_by_id(
-                app_id,
-                app_name,
-                default_sender,
-                default_signer,
-                approval_source_map,
-                clear_source_map,
-            )
-        )
-
     def deploy(
         self,
         *,
@@ -3041,6 +2813,52 @@ class StateAppFactory(TypedAppFactoryProtocol):
 
         return StateAppClient(deploy_response[0]), deploy_response[1]
 
+    def get_app_client_by_creator_and_name(
+        self,
+        creator_address: str,
+        app_name: str,
+        default_sender: str | bytes | None = None,
+        default_signer: TransactionSigner | None = None,
+        ignore_cache: bool | None = None,
+        app_lookup_cache: AppLookup | None = None,
+        approval_source_map: SourceMap | None = None,
+        clear_source_map: SourceMap | None = None,
+    ) -> StateAppClient:
+        """Get an app client by creator address and name"""
+        return StateAppClient(
+            self.app_factory.get_app_client_by_creator_and_name(
+                creator_address,
+                app_name,
+                default_sender,
+                default_signer,
+                ignore_cache,
+                app_lookup_cache,
+                approval_source_map,
+                clear_source_map,
+            )
+        )
+
+    def get_app_client_by_id(
+        self,
+        app_id: int,
+        app_name: str | None = None,
+        default_sender: str | bytes | None = None,
+        default_signer: TransactionSigner | None = None,
+        approval_source_map: SourceMap | None = None,
+        clear_source_map: SourceMap | None = None,
+    ) -> StateAppClient:
+        """Get an app client by app ID"""
+        return StateAppClient(
+            self.app_factory.get_app_client_by_id(
+                app_id,
+                app_name,
+                default_sender,
+                default_signer,
+                approval_source_map,
+                clear_source_map,
+            )
+        )
+
 
 class StateAppFactoryParams:
     """Parameters for creating transactions for StateApp contract"""
@@ -3048,11 +2866,11 @@ class StateAppFactoryParams:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateParams(app_factory)
-        self.deploy_update = StateAppFactoryDeployUpdateParams(app_factory)
-        self.deploy_delete = StateAppFactoryDeployDeleteParams(app_factory)
+        self.deploy_update = StateAppFactoryUpdateParams(app_factory)
+        self.deploy_delete = StateAppFactoryDeleteParams(app_factory)
 
 class StateAppFactoryCreateParams:
-    """Parameters for creating new instances of StateApp contract"""
+    """Parameters for 'create' operations of StateApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -3060,60 +2878,40 @@ class StateAppFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-        ]
-        | None) = None,
+            ] | None) = None,
         **kwargs
     ) -> AppCreateParams:
-        """Creates a new instance of the StateApp contract using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            The parameters for a create call
-        """
-        return self.app_factory.params.bare.create(AppFactoryCreateParams(on_complete=on_complete, **kwargs))
-
+        """Creates an instance using a bare call"""
+        return self.app_factory.params.bare.create(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
     def call_abi(
             self,
             args: Tuple[str] | CallAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the call_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="call_abi(string)string",
@@ -3122,37 +2920,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def call_abi_txn(
             self,
             args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the call_abi_txn(pay,string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
@@ -3161,37 +2949,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def set_global(
             self,
             args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="set_global(uint64,uint64,string,byte[4])void",
@@ -3200,37 +2978,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def set_local(
             self,
             args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="set_local(uint64,uint64,string,byte[4])void",
@@ -3239,37 +3007,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def set_box(
             self,
             args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the set_box(byte[4],string)void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the set_box(byte[4],string)void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="set_box(byte[4],string)void",
@@ -3278,37 +3036,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def call_with_references(
             self,
             args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="call_with_references(asset,account,application)uint64",
@@ -3317,37 +3065,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def error(
             self,
             args: Any,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the error()void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the error()void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="error()void",
@@ -3356,37 +3094,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def default_value(
             self,
             args: Tuple[str] | DefaultValueArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the default_value(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the default_value(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="default_value(string)string",
@@ -3395,37 +3123,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def default_value_from_abi(
             self,
             args: Tuple[str] | DefaultValueFromAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the default_value_from_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the default_value_from_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="default_value_from_abi(string)string",
@@ -3434,37 +3152,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def structs(
             self,
             args: Tuple[Input] | StructsArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the structs((string,uint64))(string,uint64) ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the structs((string,uint64))(string,uint64) ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="structs((string,uint64))(string,uint64)",
@@ -3473,37 +3181,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def create_abi(
             self,
             args: Tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the create_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the create_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
@@ -3512,37 +3210,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def update_abi(
             self,
             args: Tuple[str] | UpdateAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the update_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the update_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="update_abi(string)string",
@@ -3551,37 +3239,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def delete_abi(
             self,
             args: Tuple[str] | DeleteAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the delete_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the delete_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="delete_abi(string)string",
@@ -3590,37 +3268,27 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def opt_in(
             self,
             args: Any,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the opt_in()void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the opt_in()void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="opt_in()void",
@@ -3629,39 +3297,52 @@ class StateAppFactoryCreateParams:
                     **kwargs
                 )
             )
-class StateAppFactoryDeployUpdateParams:
-    """Parameters for deploying updates to StateApp contract"""
+
+class StateAppFactoryUpdateParams:
+    """Parameters for 'update' operations of StateApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
 
-    def bare(self, **kwargs) -> AppUpdateParams:
-        """Updates an existing instance using a bare call
+    def bare(
+        self,
+        *,
+        on_complete: (Literal[
+                OnComplete.NoOpOC,
+                OnComplete.UpdateApplicationOC,
+                OnComplete.DeleteApplicationOC,
+                OnComplete.OptInOC,
+                OnComplete.CloseOutOC,
+            ] | None) = None,
+        **kwargs
+    ) -> AppUpdateParams:
+        """Updates an instance using a bare call"""
+        return self.app_factory.params.bare.deploy_update(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
-        Args:
-            **kwargs: Parameters for the call
-
-        Returns:
-            The parameters for an update call
-        """
-        return self.app_factory.params.bare.deploy_update(AppClientBareCallParams(**kwargs))
-
-class StateAppFactoryDeployDeleteParams:
-    """Parameters for deleting instances of StateApp contract"""
+class StateAppFactoryDeleteParams:
+    """Parameters for 'delete' operations of StateApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
 
-    def bare(self, **kwargs) -> AppDeleteParams:
-        """Deletes an existing instance using a bare call
-
-        Args:
-            **kwargs: Parameters for the call
-
-        Returns:
-            The parameters for a delete call
-        """
-        return self.app_factory.params.bare.deploy_delete(AppClientBareCallParams(**kwargs))
+    def bare(
+        self,
+        *,
+        on_complete: (Literal[
+                OnComplete.NoOpOC,
+                OnComplete.UpdateApplicationOC,
+                OnComplete.DeleteApplicationOC,
+                OnComplete.OptInOC,
+                OnComplete.CloseOutOC,
+            ] | None) = None,
+        **kwargs
+    ) -> AppDeleteParams:
+        """Deletes an instance using a bare call"""
+        return self.app_factory.params.bare.deploy_delete(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
 
 class StateAppFactoryCreateTransaction:
@@ -3670,6 +3351,413 @@ class StateAppFactoryCreateTransaction:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateTransactionCreate(app_factory)
+
+    def call_abi(
+            self,
+            args: Tuple[str] | CallAbiArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_txn(
+            self,
+            args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi_txn(pay,string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_txn(pay,string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def set_global(
+            self,
+            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the set_global(uint64,uint64,string,byte[4])void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="set_global(uint64,uint64,string,byte[4])void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def set_local(
+            self,
+            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the set_local(uint64,uint64,string,byte[4])void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="set_local(uint64,uint64,string,byte[4])void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def set_box(
+            self,
+            args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the set_box(byte[4],string)void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="set_box(byte[4],string)void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_with_references(
+            self,
+            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_with_references(asset,account,application)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def error(
+            self,
+            args: Any,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the error()void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="error()void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def default_value(
+            self,
+            args: Tuple[str] | DefaultValueArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the default_value(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def default_value_from_abi(
+            self,
+            args: Tuple[str] | DefaultValueFromAbiArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the default_value_from_abi(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value_from_abi(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def structs(
+            self,
+            args: Tuple[Input] | StructsArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the structs((string,uint64))(string,uint64) ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="structs((string,uint64))(string,uint64)",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def create_abi(
+            self,
+            args: Tuple[str] | CreateAbiArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the create_abi(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="create_abi(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def update_abi(
+            self,
+            args: Tuple[str] | UpdateAbiArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the update_abi(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="update_abi(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def delete_abi(
+            self,
+            args: Tuple[str] | DeleteAbiArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the delete_abi(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="delete_abi(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def opt_in(
+            self,
+            args: Any,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the opt_in()void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="opt_in()void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
 
 class StateAppFactoryCreateTransactionCreate:
     """Create new instances of StateApp contract"""
@@ -3680,578 +3768,19 @@ class StateAppFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-            ]
-            | None
-        ) = None,
+            ] | None) = None,
         **kwargs
     ) -> Transaction:
-        """Creates a new instance using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            The transaction for a create call
-        """
+        """Creates a new instance using a bare call"""
         return self.app_factory.create_transaction.bare.create(
             AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
-
-
-    def call_abi(
-            self,
-            args: Tuple[str] | CallAbiArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the call_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="call_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def call_abi_txn(
-            self,
-            args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the call_abi_txn(pay,string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="call_abi_txn(pay,string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def set_global(
-            self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="set_global(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def set_local(
-            self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="set_local(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def set_box(
-            self,
-            args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the set_box(byte[4],string)void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="set_box(byte[4],string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def call_with_references(
-            self,
-            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="call_with_references(asset,account,application)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def error(
-            self,
-            args: Any,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the error()void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="error()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def default_value(
-            self,
-            args: Tuple[str] | DefaultValueArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the default_value(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="default_value(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def default_value_from_abi(
-            self,
-            args: Tuple[str] | DefaultValueFromAbiArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the default_value_from_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="default_value_from_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def structs(
-            self,
-            args: Tuple[Input] | StructsArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the structs((string,uint64))(string,uint64) ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="structs((string,uint64))(string,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def create_abi(
-            self,
-            args: Tuple[str] | CreateAbiArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the create_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="create_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def update_abi(
-            self,
-            args: Tuple[str] | UpdateAbiArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the update_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="update_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def delete_abi(
-            self,
-            args: Tuple[str] | DeleteAbiArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the delete_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="delete_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def opt_in(
-            self,
-            args: Any,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the opt_in()void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="opt_in()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
 
 
 class StateAppFactorySend:
@@ -4260,6 +3789,49 @@ class StateAppFactorySend:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactorySendCreate(app_factory)
+
+def create(
+        self,
+        args: Tuple[str] | CreateAbiArgs,
+        *,
+        on_complete: (Literal[
+                OnComplete.NoOpOC,
+                OnComplete.UpdateApplicationOC,
+                OnComplete.DeleteApplicationOC,
+                OnComplete.OptInOC,
+                OnComplete.CloseOutOC,
+            ] | None) = None,
+        **kwargs
+    ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult[str]]:
+        """Creates and sends a transaction using the create_abi(string)string ABI method"""
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        else:
+            method_args = list(args.values())
+    
+        result = self.app_factory.send.create(
+            AppFactoryCreateMethodCallParams(
+                method="create_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
+            )
+        )
+        return_value = None if result[1].abi_return is None else cast(str, result[1].abi_return)
+
+        return StateAppClient(result[0]), AppFactoryCreateMethodCallResult[str](
+            app_id=result[1].app_id,
+            abi_return=return_value,
+            transaction=result[1].transaction,
+            confirmation=result[1].confirmation,
+            group_id=result[1].group_id,
+            tx_ids=result[1].tx_ids,
+            transactions=result[1].transactions,
+            confirmations=result[1].confirmations,
+            app_address=result[1].app_address,
+        )
+
 
 class StateAppFactorySendCreate:
     """Send create calls to StateApp contract"""
@@ -4270,64 +3842,41 @@ class StateAppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-            ]
-            | None
-        ) = None,
+            ] | None) = None,
         **kwargs
     ) -> tuple[StateAppClient, SendAppCreateTransactionResult]:
-        """Creates a new instance using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            A tuple of (client, deploy response)
-        """
+        """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
         return StateAppClient(result[0]), result[1]
 
-
     def create(
             self,
             args: Tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult]:
-            """Creates a new instance using the create_abi(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                A tuple of (client, deploy response) with the return value from the ABI call
-            """
+        ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult[str]]:
+            """Creates and sends a transaction using the create_abi(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             result = self.app_factory.send.create(
                 AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
@@ -4358,6 +3907,7 @@ class StateAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -4878,9 +4428,9 @@ class StateAppComposer:
         )
         return self
 
-    def update_abi(
+    def create_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
+        args: Tuple[str] | CreateAbiArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -4904,7 +4454,7 @@ class StateAppComposer:
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
-            self.client.params.update_abi(
+            self.client.params.create_abi(
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -4925,111 +4475,7 @@ class StateAppComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "update_abi(string)string", v
-            )
-        )
-        return self
-
-    def delete_abi(
-        self,
-        args: Tuple[str] | DeleteAbiArgs,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> "StateAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
-        self._composer.add_app_call_method_call(
-            self.client.params.delete_abi(
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "delete_abi(string)string", v
-            )
-        )
-        return self
-
-    def opt_in(
-        self,
-        args: Any,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> "StateAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
-        self._composer.add_app_call_method_call(
-            self.client.params.opt_in(
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "opt_in()void", v
+                "create_abi(string)string", v
             )
         )
         return self

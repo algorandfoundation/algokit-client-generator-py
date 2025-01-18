@@ -42,7 +42,7 @@ from algokit_utils.applications import (
     AppClientMethodCallCreateParams,
     BaseAppClientMethodCallParams,
 )
-from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams
+from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams, AppCreateMethodCallParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
 from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate

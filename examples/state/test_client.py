@@ -2,19 +2,15 @@
 import algokit_utils
 import pytest
 from algokit_utils.applications.app_deployer import OnUpdate
+from algokit_utils.models import AlgoAmount
+from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.transactions import PaymentParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 
 from examples.state.client import (
     StateAppClient,
+    StateAppFactory,
 )
-import algokit_utils
-import pytest
-from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
-from algokit_utils.transactions import PaymentParams
-from algokit_utils.models import AlgoAmount
-
-from examples.state.client import StateAppFactory
 
 
 @pytest.fixture
@@ -29,12 +25,11 @@ def state_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_ut
     return algorand.client.get_typed_app_factory(StateAppFactory, default_sender=default_deployer.address)
 
 
-
 @pytest.fixture
-def deployed_state_app_client(
-    state_factory: StateAppFactory
-) -> StateAppClient:
-    client, _ = state_factory.deploy(deploy_time_params={"VALUE": 1} , deletable=True, updatable=True, on_update=OnUpdate.UpdateApp)
+def deployed_state_app_client(state_factory: StateAppFactory) -> StateAppClient:
+    client, _ = state_factory.deploy(
+        deploy_time_params={"VALUE": 1}, deletable=True, updatable=True, on_update=OnUpdate.UpdateApp
+    )
     return client
 
 
@@ -44,14 +39,16 @@ def test_call_abi(deployed_state_app_client: StateAppClient) -> None:
     assert response.abi_return == "Hello, there"
 
 
-def test_call_abi_txn(deployed_state_app_client: StateAppClient ) -> None:
+def test_call_abi_txn(deployed_state_app_client: StateAppClient) -> None:
     from_account = deployed_state_app_client.algorand.account.localnet_dispenser()
-    payment = deployed_state_app_client.algorand.create_transaction.payment(PaymentParams(  sender=from_account.address,
-        receiver=deployed_state_app_client.app_address,
-        amount=AlgoAmount.from_micro_algo(200_000),
-        note=b"Bootstrap payment",
-    ))
-    
+    payment = deployed_state_app_client.algorand.create_transaction.payment(
+        PaymentParams(
+            sender=from_account.address,
+            receiver=deployed_state_app_client.app_address,
+            amount=AlgoAmount.from_micro_algo(200_000),
+            note=b"Bootstrap payment",
+        )
+    )
     pay = TransactionWithSigner(payment, from_account.signer)
     response = deployed_state_app_client.send.call_abi_txn(args={"txn": pay, "value": "there"})
     assert response.abi_return == "Sent 200000. there"
@@ -70,8 +67,10 @@ def test_set_global(deployed_state_app_client: StateAppClient) -> None:
 
 
 def test_set_local(deployed_state_app_client: StateAppClient, default_deployer: algokit_utils.Account) -> None:
-    deployed_state_app_client.send.opt_in()
-    response = deployed_state_app_client.send.set_local(args={'int1': 1, "int2": 2, "bytes1": "test", "bytes2": b"test"})
+    deployed_state_app_client.send.opt_in.opt_in()
+    response = deployed_state_app_client.send.set_local(
+        args={"int1": 1, "int2": 2, "bytes1": "test", "bytes2": b"test"}
+    )
 
     assert response.abi_return is None
     assert deployed_state_app_client.state.local_state(default_deployer.address).local_bytes1() == b"test"

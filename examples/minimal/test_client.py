@@ -20,5 +20,5 @@ def minimal_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_
 
 def test_delete(minimal_factory: MinimalAppFactory) -> None:
     client, _ = minimal_factory.deploy()
-    
-    client.send.delete_bare()
+
+    client.create_transaction.delete.bare()

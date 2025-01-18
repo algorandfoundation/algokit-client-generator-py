@@ -42,7 +42,7 @@ from algokit_utils.applications import (
     AppClientMethodCallCreateParams,
     BaseAppClientMethodCallParams,
 )
-from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams
+from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams, AppCreateMethodCallParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
 from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate
@@ -161,14 +161,48 @@ class HelloWorldCheckArgs(TypedDict):
     name: str
 
 
+class _HelloWorldAppUpdate:
+    def __init__(self, app_client: AppClient, context: str):
+        self.app_client = app_client
+        self._context = context
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
+        if self._context == "params":
+            return self.app_client.params.bare.update(params)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.bare.update(params)
+        else:  # send
+            return self.app_client.send.bare.update(params)
+
+
+class _HelloWorldAppDelete:
+    def __init__(self, app_client: AppClient, context: str):
+        self.app_client = app_client
+        self._context = context
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Union[AppCallParams, Transaction, SendAppTransactionResult]:
+        if self._context == "params":
+            return self.app_client.params.bare.delete(params)
+        elif self._context == "create_transaction":
+            return self.app_client.create_transaction.bare.delete(params)
+        else:  # send
+            return self.app_client.send.bare.delete(params)
+
+
 class HelloWorldAppParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
+    @property
+    def update(self) -> "_HelloWorldAppUpdate":
+        return _HelloWorldAppUpdate(self.app_client, "params")
 
+    @property
+    def delete(self) -> "_HelloWorldAppDelete":
+        return _HelloWorldAppDelete(self.app_client, "params")
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -183,42 +217,41 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> AppCallMethodCallParams:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="hello(string)string",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="hello(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def hello_world_check(
         self,
         args: Tuple[str] | HelloWorldCheckArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -233,37 +266,36 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> AppCallMethodCallParams:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.params.call(AppClientMethodCallParams(
-            method="hello_world_check(string)void",
-            args=method_args, # type: ignore
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-        ))
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="hello_world_check(string)void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -272,11 +304,17 @@ class HelloWorldAppParams:
 class HelloWorldAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
+    @property
+    def update(self) -> "_HelloWorldAppUpdate":
+        return _HelloWorldAppUpdate(self.app_client, "create_transaction")
 
+    @property
+    def delete(self) -> "_HelloWorldAppDelete":
+        return _HelloWorldAppDelete(self.app_client, "create_transaction")
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -291,20 +329,17 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -322,13 +357,13 @@ class HelloWorldAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
     def hello_world_check(
         self,
         args: Tuple[str] | HelloWorldCheckArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -343,20 +378,17 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> BuiltTransactions:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        return self.app_client.create_transaction.call(
-            AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -374,21 +406,27 @@ class HelloWorldAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
+                on_complete=OnComplete.NoOpOC,
+            ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+        return self.app_client.params.bare.clear_state(params)
 
 
 class HelloWorldAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
+    @property
+    def update(self) -> "_HelloWorldAppUpdate":
+        return _HelloWorldAppUpdate(self.app_client, "send")
 
+    @property
+    def delete(self) -> "_HelloWorldAppDelete":
+        return _HelloWorldAppDelete(self.app_client, "send")
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -403,20 +441,17 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[str]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -434,15 +469,14 @@ class HelloWorldAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def hello_world_check(
         self,
         args: Tuple[str] | HelloWorldCheckArgs,
-    *,
+        *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -457,20 +491,17 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        last_valid_round: Optional[int] = None
     ) -> SendAppTransactionResult[None]:
+    
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
         else:
-            method_args = args
+            method_args = list(args.values())
         
-    
-        response = self.app_client.send.call(
-            AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -488,45 +519,12 @@ class HelloWorldAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-            )
-        )
-    
+                on_complete=OnComplete.NoOpOC,
+            ))
         return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def delete_bare(
-        self,
-        *,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        **kwargs
-    ) -> SendAppTransactionResult:
-        """Delete the application using a bare call"""
-        return self.app_client.send.bare.delete(
-            AppClientBareCallWithSendParams(
-                sender=sender,
-                signer=signer,
-                **kwargs
-            )
-        )
-
-    def update_bare(
-        self,
-        *,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        **kwargs
-    ) -> SendAppTransactionResult:
-        """Update the application using a bare call"""
-        return self.app_client.send.bare.update(
-            AppClientBareCallWithCompilationAndSendParams(
-                sender=sender,
-                signer=signer,
-                **kwargs
-            )
-        )
-
-    def clear_state_bare(self, params: AppClientBareCallWithSendParams) -> SendAppTransactionResult:
-        return self.app_client.send.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+        return self.app_client.params.bare.clear_state(params)
 
 
 class HelloWorldAppState:
@@ -694,20 +692,24 @@ class HelloWorldAppClient:
 @dataclass(frozen=True)
 class HelloWorldAppBareCallCreateParams(AppClientCreateSchema, AppClientBareCallParams, BaseOnCompleteParams[Literal[OnComplete.NoOpOC]]):
     """Parameters for creating HelloWorldApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallCreateParams:
         return AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclass(frozen=True)
 class HelloWorldAppBareCallUpdateParams(AppClientBareCallParams):
     """Parameters for calling HelloWorldApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
 
 @dataclass(frozen=True)
 class HelloWorldAppBareCallDeleteParams(AppClientBareCallParams):
     """Parameters for calling HelloWorldApp contract using bare calls"""
+
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
+
 class HelloWorldAppFactory(TypedAppFactoryProtocol):
     """Factory for deploying and managing HelloWorldAppClient smart contracts"""
 
@@ -752,50 +754,6 @@ class HelloWorldAppFactory(TypedAppFactoryProtocol):
     def algorand(self) -> AlgorandClientProtocol:
         return self.app_factory.algorand
 
-    def get_app_client_by_creator_and_name(
-        self,
-        creator_address: str,
-        app_name: str,
-        default_sender: str | bytes | None = None,
-        default_signer: TransactionSigner | None = None,
-        ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
-        approval_source_map: SourceMap | None = None,
-        clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
-        return HelloWorldAppClient(
-            self.app_factory.get_app_client_by_creator_and_name(
-                creator_address,
-                app_name,
-                default_sender,
-                default_signer,
-                ignore_cache,
-                app_lookup_cache,
-                approval_source_map,
-                clear_source_map,
-            )
-        )
-
-    def get_app_client_by_id(
-        self,
-        app_id: int,
-        app_name: str | None = None,
-        default_sender: str | bytes | None = None,
-        default_signer: TransactionSigner | None = None,
-        approval_source_map: SourceMap | None = None,
-        clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
-        return HelloWorldAppClient(
-            self.app_factory.get_app_client_by_id(
-                app_id,
-                app_name,
-                default_sender,
-                default_signer,
-                approval_source_map,
-                clear_source_map,
-            )
-        )
-
     def deploy(
         self,
         *,
@@ -833,6 +791,52 @@ class HelloWorldAppFactory(TypedAppFactoryProtocol):
 
         return HelloWorldAppClient(deploy_response[0]), deploy_response[1]
 
+    def get_app_client_by_creator_and_name(
+        self,
+        creator_address: str,
+        app_name: str,
+        default_sender: str | bytes | None = None,
+        default_signer: TransactionSigner | None = None,
+        ignore_cache: bool | None = None,
+        app_lookup_cache: AppLookup | None = None,
+        approval_source_map: SourceMap | None = None,
+        clear_source_map: SourceMap | None = None,
+    ) -> HelloWorldAppClient:
+        """Get an app client by creator address and name"""
+        return HelloWorldAppClient(
+            self.app_factory.get_app_client_by_creator_and_name(
+                creator_address,
+                app_name,
+                default_sender,
+                default_signer,
+                ignore_cache,
+                app_lookup_cache,
+                approval_source_map,
+                clear_source_map,
+            )
+        )
+
+    def get_app_client_by_id(
+        self,
+        app_id: int,
+        app_name: str | None = None,
+        default_sender: str | bytes | None = None,
+        default_signer: TransactionSigner | None = None,
+        approval_source_map: SourceMap | None = None,
+        clear_source_map: SourceMap | None = None,
+    ) -> HelloWorldAppClient:
+        """Get an app client by app ID"""
+        return HelloWorldAppClient(
+            self.app_factory.get_app_client_by_id(
+                app_id,
+                app_name,
+                default_sender,
+                default_signer,
+                approval_source_map,
+                clear_source_map,
+            )
+        )
+
 
 class HelloWorldAppFactoryParams:
     """Parameters for creating transactions for HelloWorldApp contract"""
@@ -840,11 +844,11 @@ class HelloWorldAppFactoryParams:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = HelloWorldAppFactoryCreateParams(app_factory)
-        self.deploy_update = HelloWorldAppFactoryDeployUpdateParams(app_factory)
-        self.deploy_delete = HelloWorldAppFactoryDeployDeleteParams(app_factory)
+        self.deploy_update = HelloWorldAppFactoryUpdateParams(app_factory)
+        self.deploy_delete = HelloWorldAppFactoryDeleteParams(app_factory)
 
 class HelloWorldAppFactoryCreateParams:
-    """Parameters for creating new instances of HelloWorldApp contract"""
+    """Parameters for 'create' operations of HelloWorldApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -852,60 +856,40 @@ class HelloWorldAppFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-        ]
-        | None) = None,
+            ] | None) = None,
         **kwargs
     ) -> AppCreateParams:
-        """Creates a new instance of the HelloWorldApp contract using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            The parameters for a create call
-        """
-        return self.app_factory.params.bare.create(AppFactoryCreateParams(on_complete=on_complete, **kwargs))
-
+        """Creates an instance using a bare call"""
+        return self.app_factory.params.bare.create(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
     def hello(
             self,
             args: Tuple[str] | HelloArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the hello(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the hello(string)string ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="hello(string)string",
@@ -914,37 +898,27 @@ class HelloWorldAppFactoryCreateParams:
                     **kwargs
                 )
             )
+
     def hello_world_check(
             self,
             args: Tuple[str] | HelloWorldCheckArgs,
             *,
-            on_complete: (
-                Literal[
+            on_complete: (Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
                     OnComplete.OptInOC,
                     OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
+                ] | None) = None,
             **kwargs
-        ) -> AppCreateParams:
-            """Creates a new instance using the hello_world_check(string)void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The parameters for a create call using this ABI method
-            """
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the hello_world_check(string)void ABI method"""
+            
             if isinstance(args, tuple):
                 method_args = list(args)
             else:
                 method_args = list(args.values())
-    
+        
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="hello_world_check(string)void",
@@ -953,39 +927,52 @@ class HelloWorldAppFactoryCreateParams:
                     **kwargs
                 )
             )
-class HelloWorldAppFactoryDeployUpdateParams:
-    """Parameters for deploying updates to HelloWorldApp contract"""
+
+class HelloWorldAppFactoryUpdateParams:
+    """Parameters for 'update' operations of HelloWorldApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
 
-    def bare(self, **kwargs) -> AppUpdateParams:
-        """Updates an existing instance using a bare call
+    def bare(
+        self,
+        *,
+        on_complete: (Literal[
+                OnComplete.NoOpOC,
+                OnComplete.UpdateApplicationOC,
+                OnComplete.DeleteApplicationOC,
+                OnComplete.OptInOC,
+                OnComplete.CloseOutOC,
+            ] | None) = None,
+        **kwargs
+    ) -> AppUpdateParams:
+        """Updates an instance using a bare call"""
+        return self.app_factory.params.bare.deploy_update(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
-        Args:
-            **kwargs: Parameters for the call
-
-        Returns:
-            The parameters for an update call
-        """
-        return self.app_factory.params.bare.deploy_update(AppClientBareCallParams(**kwargs))
-
-class HelloWorldAppFactoryDeployDeleteParams:
-    """Parameters for deleting instances of HelloWorldApp contract"""
+class HelloWorldAppFactoryDeleteParams:
+    """Parameters for 'delete' operations of HelloWorldApp contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
 
-    def bare(self, **kwargs) -> AppDeleteParams:
-        """Deletes an existing instance using a bare call
-
-        Args:
-            **kwargs: Parameters for the call
-
-        Returns:
-            The parameters for a delete call
-        """
-        return self.app_factory.params.bare.deploy_delete(AppClientBareCallParams(**kwargs))
+    def bare(
+        self,
+        *,
+        on_complete: (Literal[
+                OnComplete.NoOpOC,
+                OnComplete.UpdateApplicationOC,
+                OnComplete.DeleteApplicationOC,
+                OnComplete.OptInOC,
+                OnComplete.CloseOutOC,
+            ] | None) = None,
+        **kwargs
+    ) -> AppDeleteParams:
+        """Deletes an instance using a bare call"""
+        return self.app_factory.params.bare.deploy_delete(
+            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+        )
 
 
 class HelloWorldAppFactoryCreateTransaction:
@@ -994,6 +981,65 @@ class HelloWorldAppFactoryCreateTransaction:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = HelloWorldAppFactoryCreateTransactionCreate(app_factory)
+
+    def hello(
+            self,
+            args: Tuple[str] | HelloArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the hello(string)string ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="hello(string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def hello_world_check(
+            self,
+            args: Tuple[str] | HelloWorldCheckArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the hello_world_check(string)void ABI method"""
+            
+            if isinstance(args, tuple):
+                method_args = list(args)
+            else:
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="hello_world_check(string)void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
 
 class HelloWorldAppFactoryCreateTransactionCreate:
     """Create new instances of HelloWorldApp contract"""
@@ -1004,110 +1050,19 @@ class HelloWorldAppFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-            ]
-            | None
-        ) = None,
+            ] | None) = None,
         **kwargs
     ) -> Transaction:
-        """Creates a new instance using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            The transaction for a create call
-        """
+        """Creates a new instance using a bare call"""
         return self.app_factory.create_transaction.bare.create(
             AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
-
-
-    def hello(
-            self,
-            args: Tuple[str] | HelloArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the hello(string)string ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="hello(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-    def hello_world_check(
-            self,
-            args: Tuple[str] | HelloWorldCheckArgs,
-            *,
-            on_complete: (
-                Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ]
-                | None
-            ) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a new instance using the hello_world_check(string)void ABI method
-    
-            Args:
-                args: The arguments for the method call
-                on_complete: On-completion action for the call
-                **kwargs: Additional parameters for the call
-    
-            Returns:
-                The transaction for a create call using this ABI method
-            """
-            if isinstance(args, tuple):
-                method_args = list(args)
-            else:
-                method_args = list(args.values())
-    
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="hello_world_check(string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
 
 
 class HelloWorldAppFactorySend:
@@ -1126,27 +1081,16 @@ class HelloWorldAppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (
-            Literal[
+        on_complete: (Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
                 OnComplete.OptInOC,
                 OnComplete.CloseOutOC,
-            ]
-            | None
-        ) = None,
+            ] | None) = None,
         **kwargs
     ) -> tuple[HelloWorldAppClient, SendAppCreateTransactionResult]:
-        """Creates a new instance using a bare call
-
-        Args:
-            on_complete: On-completion action for the call
-            **kwargs: Additional parameters for the call
-
-        Returns:
-            A tuple of (client, deploy response)
-        """
+        """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
@@ -1160,6 +1104,7 @@ class HelloWorldAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
