@@ -79,56 +79,58 @@ def test_set_local(deployed_state_app_client: StateAppClient, default_deployer: 
     assert deployed_state_app_client.state.local_state(default_deployer.address).local_int2() == 2
 
 
-# def test_set_box(deployed_state_app_client: StateAppClient) -> None:
-#     algokit_utils.transfer(
-#         deployed_state_app_client.algod_client,
-#         algokit_utils.TransferParameters(
-#             from_account=algokit_utils.get_localnet_default_account(deployed_state_app_client.algod_client),
-#             to_address=deployed_state_app_client.app_address,
-#             micro_algos=120000,
-#         ),
-#     )
-#     response = deployed_state_app_client.set_box(
-#         name=b"test", value="test", transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, b"test")])
-#     )
+def test_set_box(deployed_state_app_client: StateAppClient) -> None:
+    deployed_state_app_client.algorand.account.ensure_funded_from_environment(
+        account_to_fund=deployed_state_app_client.app_address,
+        min_spending_balance=AlgoAmount.from_micro_algo(120_000),
+    )
+    response = deployed_state_app_client.send.set_box(
+        args={"name": b"test", "value": "test"},
+        box_references=[b"test"],
+    )
 
-#     assert response.return_value is None
+    assert response.abi_return is None
 
-
-# def test_error(deployed_state_app_client: StateAppClient) -> None:
-#     with pytest.raises(algokit_utils.LogicError):
-#         deployed_state_app_client.error()
+def test_error(deployed_state_app_client: StateAppClient) -> None:
+    with pytest.raises(algokit_utils.LogicError):
+        deployed_state_app_client.send.error()
 
 
-# def test_create_abi(state_app_client: StateAppClient) -> None:
-#     state_app_client.app_client.template_values = {"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1}
-
-#     response = state_app_client.create_create_abi(input="test")
-
-#     assert response.return_value == "test"
-
-
-# def test_update_abi(deployed_state_app_client: StateAppClient) -> None:
-#     response = deployed_state_app_client.update_update_abi(input="test")
-
-#     assert response.return_value == "test"
+def test_create_abi(state_factory: StateAppFactory) -> None:
+    _, response = state_factory.send.create.create_abi(
+        deploy_time_params={"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1},
+        args={"input": "test"},
+    )
+    assert response.abi_return == "test"
 
 
-# def test_delete_abi(deployed_state_app_client: StateAppClient) -> None:
-#     response = deployed_state_app_client.delete_delete_abi(input="test")
+def test_update_abi(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.send.update.update_abi(
+        args={"input": "test"},
+        updatable=True,
+        deletable=True,
+        deploy_time_params={"VALUE": 1},
+    )
 
-#     assert response.return_value == "test"
+    assert response.abi_return == "test"
 
 
-# def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
-#     response = deployed_state_app_client.opt_in_opt_in()
+def test_delete_abi(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.send.delete.delete_abi(args={"input": "test"})
 
-#     assert response.confirmed_round
+    assert response.abi_return == "test"
 
 
-# def test_default_arg(deployed_state_app_client: StateAppClient) -> None:
-#     assert deployed_state_app_client.default_value(arg_with_default="test").return_value == "test"
-#     assert deployed_state_app_client.default_value().return_value == "default value"
+def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.send.opt_in.opt_in()
+
+    assert isinstance(response.confirmation, dict)
+    assert response.confirmation.get('confirmed-round', 0) > 0
+
+
+def test_default_arg(deployed_state_app_client: StateAppClient) -> None:
+    assert deployed_state_app_client.send.default_value(args={'arg_with_default': "test"}).abi_return == "test"
+    assert deployed_state_app_client.send.default_value(args=(None,)).abi_return == "default value"
 
 
 # def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:

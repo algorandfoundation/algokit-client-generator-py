@@ -21,7 +21,7 @@ def _generate_args_parser(*, include_args: bool = False) -> str:
     {'''
     if isinstance(args, tuple):
         method_args = list(args)
-    else:
+    elif isinstance(args, dict):
         method_args = list(args.values())''' if include_args else ''}
     """
 
@@ -29,8 +29,7 @@ def _generate_args_parser(*, include_args: bool = False) -> str:
 def _generate_common_method_params(
     method: ContractMethod,
     property_type: PropertyType,
-    *,
-    combine_types: bool = False,
+    operation: str | None = None,
 ) -> str:
     """Generate the common method parameters shared across different generator methods"""
     if not method.abi:  # Add early return if no ABI
@@ -38,8 +37,21 @@ def _generate_common_method_params(
 
     args_type = None
     if method.abi.args:
-        tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+        # Make tuple args optional if they have defaults
+        tuple_args = []
+        for arg in method.abi.args:
+            arg_type = arg.python_type
+            if arg.has_default:
+                arg_type = f"{arg_type} | None"
+            tuple_args.append(arg_type)
+
+        tuple_type = f"Tuple[{', '.join(tuple_args)}]"
         args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+
+    def algokit_extra_args(operation: str | None = None) -> str:
+        if operation == "update":
+            return "updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None"
+        return ""
 
     # Remove the extra_params parameter since we handle return type differently
     params = f"""
@@ -60,22 +72,18 @@ def {method.abi.client_method_name}(
     signer: Optional[TransactionSigner] = None,
     static_fee: Optional[AlgoAmount] = None,
     validity_window: Optional[int] = None,
-    last_valid_round: Optional[int] = None
+    last_valid_round: Optional[int] = None,
+    {algokit_extra_args(operation)}
 )"""
 
     # Add return type annotation if needed
-    if combine_types:
-        return_type = (
-            f"Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[{method.abi.python_type}]]"
-        )
-    else:
-        return_type = method.abi.python_type
-        if property_type == PropertyType.SEND:
-            return_type = f"SendAppTransactionResult[{return_type}]"
-        elif property_type == PropertyType.CREATE_TRANSACTION:
-            return_type = "BuiltTransactions"
-        elif property_type == PropertyType.PARAMS:
-            return_type = "AppCallMethodCallParams" if method.abi else "AppCallParams"
+    return_type = method.abi.python_type
+    if property_type == PropertyType.SEND:
+        return_type = f"SendAppTransactionResult[{return_type}]"
+    elif property_type == PropertyType.CREATE_TRANSACTION:
+        return_type = "BuiltTransactions"
+    elif property_type == PropertyType.PARAMS:
+        return_type = "AppCallMethodCallParams" if method.abi else "AppCallParams"
 
     params += f" -> {return_type}:"
 
@@ -86,24 +94,28 @@ def _generate_method_body(
     context: GeneratorContext,
     method: ContractMethod,
     property_type: PropertyType,
-    return_type: str | None = None,
-    *,
-    combine_types: bool = False,
+    operation: str = "call",
 ) -> str:
     """Generate the common method body shared across different generator methods"""
-    args_type = bool(method.abi and method.abi.args)
-
-    body = _generate_args_parser(include_args=args_type)
+    body = _generate_args_parser(include_args=bool(method.abi and method.abi.args))
     method_sig = method.abi.method.get_signature() if method.abi else ""
 
-    on_complete_map = {
-        "no_op": "OnComplete.NoOpOC",
-        "update_application": "OnComplete.UpdateApplicationOC",
-        "delete_application": "OnComplete.DeleteApplicationOC",
-        "opt_in": "OnComplete.OptInOC",
-        "close_out": "OnComplete.CloseOutOC",
-    }
-    call_params = f"""AppClientMethodCallWithSendParams(
+    def algokit_param_type(operation: str) -> str:
+        return (
+            "AppClientMethodCallWithCompilationAndSendParams"
+            if operation == "update"
+            else "AppClientMethodCallWithSendParams"
+        )
+
+    def alogkit_return_type(operation: str) -> str:
+        return "SendAppUpdateTransactionResult" if operation == "update" else "SendAppTransactionResult"
+
+    def algokit_extra_args(operation: str) -> str:
+        if operation == "update":
+            return "updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params"
+        return ""
+
+    call_params = f"""{algokit_param_type(operation)}(
             method="{method_sig}",
             args=method_args, # type: ignore
             account_references=account_references,
@@ -121,27 +133,17 @@ def _generate_method_body(
             static_fee=static_fee,
             validity_window=validity_window,
             last_valid_round=last_valid_round,
+            {algokit_extra_args(operation)}
         )"""
 
-    if combine_types:
-        return f"""{body}
-    params_to_call = {call_params}
-    if self._context == "params":
-        return self.app_client.params.call(params_to_call)
-    elif self._context == "create_transaction":
-        return self.app_client.create_transaction.call(params_to_call)
-    else:  # send
-        response = self.app_client.send.call(params_to_call)
-        return SendAppTransactionResult[{method.abi.python_type}](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]"""  # type: ignore  # noqa: PGH003
+    if property_type == PropertyType.PARAMS:
+        return f"{body}\n    return self.app_client.params.{operation}({call_params})"
+    elif property_type == PropertyType.CREATE_TRANSACTION:
+        return f"{body}\n    return self.app_client.create_transaction.{operation}({call_params})"
     else:
-        if property_type == PropertyType.PARAMS:
-            return f"{body}\n    return self.app_client.params.call({call_params})"
-        elif property_type == PropertyType.CREATE_TRANSACTION:
-            return f"{body}\n    return self.app_client.create_transaction.call({call_params})"
-        else:
-            response_code = f"""
-    response = self.app_client.send.call({call_params})
-    return SendAppTransactionResult[{return_type}](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        response_code = f"""
+    response = self.app_client.send.{operation}({call_params})
+    return {alogkit_return_type(operation)}(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 """
         return f"{body}{response_code}"
 
@@ -173,26 +175,35 @@ def generate_operation_class(
 
     # Generate the operation class with a unique name based on property_type
     class_name = f"_{context.contract_name}{utils.to_camel_case(operation).capitalize()}"
+    if property_type == PropertyType.CREATE_TRANSACTION:
+        class_name += "Transaction"
+    elif property_type == PropertyType.SEND:
+        class_name += "Send"
 
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
-    """)
+""")
     yield Part.IncIndent
 
     # Generate bare method if available
     if any(not method.abi for method in methods):
         yield Part.Gap1
-        yield utils.indented(f"""
-def bare(self, params: {operation_to_params_class[operation]} | None = None) -> Union[{operation_to_return_params_type[operation]}, Transaction, SendAppTransactionResult]:
-    if self._context == "params":
-        return self.app_client.params.bare.{operation}(params)
-    elif self._context == "create_transaction":
-        return self.app_client.create_transaction.bare.{operation}(params)
-    else:  # send
-        return self.app_client.send.bare.{operation}(params)
+        if property_type == PropertyType.PARAMS:
+            yield utils.indented(f"""
+def bare(self, params: {operation_to_params_class[operation]} | None = None) -> {operation_to_return_params_type[operation]}:
+    return self.app_client.params.bare.{operation}(params)
+""")
+        elif property_type == PropertyType.CREATE_TRANSACTION:
+            yield utils.indented(f"""
+def bare(self, params: {operation_to_params_class[operation]} | None = None) -> Transaction:
+    return self.app_client.create_transaction.bare.{operation}(params)
+""")
+        else:  # SEND
+            yield utils.indented(f"""
+def bare(self, params: {operation_to_params_class[operation]} | None = None) -> SendAppTransactionResult:
+    return self.app_client.send.bare.{operation}(params)
 """)
 
     # Generate ABI methods
@@ -201,13 +212,16 @@ def bare(self, params: {operation_to_params_class[operation]} | None = None) -> 
             continue
 
         yield Part.Gap1
-        method_params = _generate_common_method_params(method, property_type, combine_types=True)
+        method_params = _generate_common_method_params(
+            method,
+            property_type,
+            operation=operation,
+        )
         method_body = _generate_method_body(
             context,
             method,
             property_type,
-            return_type=method.abi.python_type if property_type == PropertyType.SEND else None,
-            combine_types=True,
+            operation=operation,
         )
         yield utils.indented(f"{method_params}\n{method_body}")
 
@@ -236,16 +250,16 @@ def _generate_class_methods(  # noqa: C901
         ],
     }
 
+    # Generate all operation classes first
     operation_class_names = {}
-    if property_type == PropertyType.PARAMS:
-        for operation, methods in operations.items():
-            if methods:
-                class_name_gen = generate_operation_class(context, property_type, operation, methods)
-                for part in class_name_gen:
-                    if isinstance(part, str):
-                        operation_class_names[operation] = part
-                    yield part
-                yield Part.Gap2
+    for operation, methods in operations.items():
+        if methods:
+            class_name_gen = generate_operation_class(context, property_type, operation, methods)
+            for part in class_name_gen:
+                if isinstance(part, str):
+                    operation_class_names[operation] = part
+                yield part
+            yield Part.Gap2
 
     # Then generate the main class with properties
     yield utils.indented(f"""
@@ -263,12 +277,20 @@ class {class_name}:
                 yield Part.Gap1
             first = False
             operation_class = operation_class_names.get(
-                operation, f"_{context.contract_name}{utils.to_camel_case(operation).capitalize()}"
+                operation,
+                f"_{context.contract_name}{utils.to_camel_case(operation).capitalize()}"
+                + (
+                    "Transaction"
+                    if property_type == PropertyType.CREATE_TRANSACTION
+                    else "Send"
+                    if property_type == PropertyType.SEND
+                    else ""
+                ),
             )
             yield utils.indented(f"""
 @property
 def {operation}(self) -> "{operation_class}":
-    return {operation_class}(self.app_client, "{property_type.value}")
+    return {operation_class}(self.app_client)
 """)
 
     # Generate method for each ABI method
@@ -290,12 +312,11 @@ def {operation}(self) -> "{operation_class}":
             context,
             method,
             property_type,
-            return_type=method.abi.python_type if property_type == PropertyType.SEND else None,
         )
 
         yield utils.indented(f"{method_params}\n{method_body}")
 
-    # Add common methods like clear_state
+    # Add clear_state method
     yield Part.Gap1
     yield utils.indented("""
 def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
@@ -325,7 +346,9 @@ class {typed_dict_name}(TypedDict):
         yield Part.IncIndent
 
         for arg in method.abi.args:
-            yield f"{arg.name}: {arg.python_type}"
+            # Use None as default for optional args
+            python_type = f"{arg.python_type} | None" if arg.has_default else arg.python_type
+            yield f"{arg.name}: {python_type}"
 
         yield Part.DecIndent
 

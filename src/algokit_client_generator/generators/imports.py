@@ -27,6 +27,7 @@ from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallWithCompilationAndSendParams,
     AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
@@ -56,6 +57,8 @@ from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import (
     AppCallMethodCallParams,
     AppCallParams,
+    SendAppUpdateTransactionResult,
+                      
     SendAppTransactionResult,
     SendAtomicTransactionComposerResults,
     TransactionComposer,

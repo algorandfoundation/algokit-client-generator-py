@@ -27,6 +27,7 @@ from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallWithCompilationAndSendParams,
     AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
@@ -56,6 +57,8 @@ from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import (
     AppCallMethodCallParams,
     AppCallParams,
+    SendAppUpdateTransactionResult,
+                      
     SendAppTransactionResult,
     SendAtomicTransactionComposerResults,
     TransactionComposer,
@@ -112,31 +115,19 @@ APP_SPEC = Arc56Contract.from_json(_APP_SPEC_JSON)
 
 
 class _MinimalAppUpdate:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.update(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.update(params)
-        else:  # send
-            return self.app_client.send.bare.update(params)
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> AppUpdateParams:
+        return self.app_client.params.bare.update(params)
 
 
 class _MinimalAppDelete:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Union[AppCallParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.delete(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.delete(params)
-        else:  # send
-            return self.app_client.send.bare.delete(params)
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+        return self.app_client.params.bare.delete(params)
 
 
 class MinimalAppParams:
@@ -144,41 +135,73 @@ class MinimalAppParams:
         self.app_client = app_client
     @property
     def update(self) -> "_MinimalAppUpdate":
-        return _MinimalAppUpdate(self.app_client, "params")
+        return _MinimalAppUpdate(self.app_client)
 
     @property
     def delete(self) -> "_MinimalAppDelete":
-        return _MinimalAppDelete(self.app_client, "params")
+        return _MinimalAppDelete(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
+
+
+class _MinimalAppUpdateTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.update(params)
+
+
+class _MinimalAppDeleteTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.delete(params)
 
 
 class MinimalAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_MinimalAppUpdate":
-        return _MinimalAppUpdate(self.app_client, "create_transaction")
+    def update(self) -> "_MinimalAppUpdateTransaction":
+        return _MinimalAppUpdateTransaction(self.app_client)
 
     @property
-    def delete(self) -> "_MinimalAppDelete":
-        return _MinimalAppDelete(self.app_client, "create_transaction")
+    def delete(self) -> "_MinimalAppDeleteTransaction":
+        return _MinimalAppDeleteTransaction(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
+
+
+class _MinimalAppUpdateSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.update(params)
+
+
+class _MinimalAppDeleteSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.delete(params)
 
 
 class MinimalAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_MinimalAppUpdate":
-        return _MinimalAppUpdate(self.app_client, "send")
+    def update(self) -> "_MinimalAppUpdateSend":
+        return _MinimalAppUpdateSend(self.app_client)
 
     @property
-    def delete(self) -> "_MinimalAppDelete":
-        return _MinimalAppDelete(self.app_client, "send")
+    def delete(self) -> "_MinimalAppDeleteSend":
+        return _MinimalAppDeleteSend(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -611,6 +634,7 @@ class MinimalAppFactorySend:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = MinimalAppFactorySendCreate(app_factory)
+
 
 class MinimalAppFactorySendCreate:
     """Send create calls to MinimalApp contract"""

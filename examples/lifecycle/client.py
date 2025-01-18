@@ -27,6 +27,7 @@ from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallWithCompilationAndSendParams,
     AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
@@ -56,6 +57,8 @@ from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import (
     AppCallMethodCallParams,
     AppCallParams,
+    SendAppUpdateTransactionResult,
+                      
     SendAppTransactionResult,
     SendAtomicTransactionComposerResults,
     TransactionComposer,
@@ -214,17 +217,11 @@ class CreateStringUint32VoidArgs(TypedDict):
 
 
 class _LifeCycleAppUpdate:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.update(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.update(params)
-        else:  # send
-            return self.app_client.send.bare.update(params)
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> AppUpdateParams:
+        return self.app_client.params.bare.update(params)
 
 
 class LifeCycleAppParams:
@@ -232,7 +229,7 @@ class LifeCycleAppParams:
         self.app_client = app_client
     @property
     def update(self) -> "_LifeCycleAppUpdate":
-        return _LifeCycleAppUpdate(self.app_client, "params")
+        return _LifeCycleAppUpdate(self.app_client)
     def hello_string_string(
         self,
         args: Tuple[str] | HelloStringStringArgs,
@@ -251,14 +248,15 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -279,7 +277,7 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def hello_string(
@@ -299,7 +297,8 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
@@ -323,7 +322,7 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_string_string(
@@ -344,14 +343,15 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -372,7 +372,7 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_string_uint32_void(
@@ -393,14 +393,15 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -421,19 +422,27 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
+
+
+class _LifeCycleAppUpdateTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.update(params)
 
 
 class LifeCycleAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_LifeCycleAppUpdate":
-        return _LifeCycleAppUpdate(self.app_client, "create_transaction")
+    def update(self) -> "_LifeCycleAppUpdateTransaction":
+        return _LifeCycleAppUpdateTransaction(self.app_client)
     def hello_string_string(
         self,
         args: Tuple[str] | HelloStringStringArgs,
@@ -452,14 +461,15 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -480,7 +490,7 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def hello_string(
@@ -500,7 +510,8 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
@@ -524,7 +535,7 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_string_string(
@@ -545,14 +556,15 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -573,7 +585,7 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_string_uint32_void(
@@ -594,14 +606,15 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -622,19 +635,27 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
+class _LifeCycleAppUpdateSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.update(params)
+
+
 class LifeCycleAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_LifeCycleAppUpdate":
-        return _LifeCycleAppUpdate(self.app_client, "send")
+    def update(self) -> "_LifeCycleAppUpdateSend":
+        return _LifeCycleAppUpdateSend(self.app_client)
     def hello_string_string(
         self,
         args: Tuple[str] | HelloStringStringArgs,
@@ -653,14 +674,15 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -681,9 +703,9 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def hello_string(
         self,
@@ -702,7 +724,8 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
@@ -726,9 +749,9 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def create_string_string(
         self,
@@ -748,14 +771,15 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -776,9 +800,9 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def create_string_uint32_void(
         self,
@@ -798,14 +822,15 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -826,9 +851,9 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -1225,9 +1250,10 @@ class LifeCycleAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the hello(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -1254,9 +1280,10 @@ class LifeCycleAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the hello()string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -1283,9 +1310,10 @@ class LifeCycleAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the create(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -1312,9 +1340,10 @@ class LifeCycleAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the create(string,uint32)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -1395,9 +1424,10 @@ class LifeCycleAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the hello(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1424,9 +1454,10 @@ class LifeCycleAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the hello()string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1453,9 +1484,10 @@ class LifeCycleAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the create(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1482,9 +1514,10 @@ class LifeCycleAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the create(string,uint32)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1528,90 +1561,6 @@ class LifeCycleAppFactorySend:
         self.app_factory = app_factory
         self.create = LifeCycleAppFactorySendCreate(app_factory)
 
-def create_string_string(
-        self,
-        args: Tuple[str] | CreateStringStringArgs,
-        *,
-        on_complete: (Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
-        **kwargs
-    ) -> tuple[LifeCycleAppClient, AppFactoryCreateMethodCallResult[str]]:
-        """Creates and sends a transaction using the create(string)string ABI method"""
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        else:
-            method_args = list(args.values())
-    
-        result = self.app_factory.send.create(
-            AppFactoryCreateMethodCallParams(
-                method="create(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
-            )
-        )
-        return_value = None if result[1].abi_return is None else cast(str, result[1].abi_return)
-
-        return LifeCycleAppClient(result[0]), AppFactoryCreateMethodCallResult[str](
-            app_id=result[1].app_id,
-            abi_return=return_value,
-            transaction=result[1].transaction,
-            confirmation=result[1].confirmation,
-            group_id=result[1].group_id,
-            tx_ids=result[1].tx_ids,
-            transactions=result[1].transactions,
-            confirmations=result[1].confirmations,
-            app_address=result[1].app_address,
-        )
-
-def create_string_uint32_void(
-        self,
-        args: Tuple[str, int] | CreateStringUint32VoidArgs,
-        *,
-        on_complete: (Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
-        **kwargs
-    ) -> tuple[LifeCycleAppClient, AppFactoryCreateMethodCallResult[None]]:
-        """Creates and sends a transaction using the create(string,uint32)void ABI method"""
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        else:
-            method_args = list(args.values())
-    
-        result = self.app_factory.send.create(
-            AppFactoryCreateMethodCallParams(
-                method="create(string,uint32)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
-            )
-        )
-        return_value = None if result[1].abi_return is None else cast(None, result[1].abi_return)
-
-        return LifeCycleAppClient(result[0]), AppFactoryCreateMethodCallResult[None](
-            app_id=result[1].app_id,
-            abi_return=return_value,
-            transaction=result[1].transaction,
-            confirmation=result[1].confirmation,
-            group_id=result[1].group_id,
-            tx_ids=result[1].tx_ids,
-            transactions=result[1].transactions,
-            confirmations=result[1].confirmations,
-            app_address=result[1].app_address,
-        )
-
 
 class LifeCycleAppFactorySendCreate:
     """Send create calls to LifeCycleApp contract"""
@@ -1652,9 +1601,10 @@ class LifeCycleAppFactorySendCreate:
         ) -> tuple[LifeCycleAppClient, AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             result = self.app_factory.send.create(
@@ -1694,9 +1644,10 @@ class LifeCycleAppFactorySendCreate:
         ) -> tuple[LifeCycleAppClient, AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             result = self.app_factory.send.create(

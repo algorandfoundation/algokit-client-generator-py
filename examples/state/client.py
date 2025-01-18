@@ -27,6 +27,7 @@ from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallWithCompilationAndSendParams,
     AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
@@ -56,6 +57,8 @@ from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import (
     AppCallMethodCallParams,
     AppCallParams,
+    SendAppUpdateTransactionResult,
+                      
     SendAppTransactionResult,
     SendAtomicTransactionComposerResults,
     TransactionComposer,
@@ -541,11 +544,11 @@ class CallWithReferencesArgs(TypedDict):
 
 class DefaultValueArgs(TypedDict):
     """TypedDict for default_value arguments"""
-    arg_with_default: str
+    arg_with_default: str | None
 
 class DefaultValueFromAbiArgs(TypedDict):
     """TypedDict for default_value_from_abi arguments"""
-    arg_with_default: str
+    arg_with_default: str | None
 
 class StructsArgs(TypedDict):
     """TypedDict for structs arguments"""
@@ -565,17 +568,11 @@ class DeleteAbiArgs(TypedDict):
 
 
 class _StateAppUpdate:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.update(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.update(params)
-        else:  # send
-            return self.app_client.send.bare.update(params)
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> AppUpdateParams:
+        return self.app_client.params.bare.update(params)
 
     def update_abi(
         self,
@@ -595,17 +592,18 @@ class _StateAppUpdate:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
-    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[str]]:
+        last_valid_round: Optional[int] = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
+    ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
-        params_to_call = AppClientMethodCallWithSendParams(
+        return self.app_client.params.update(AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -623,29 +621,16 @@ class _StateAppUpdate:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.UpdateApplicationOC,
-            )
-        if self._context == "params":
-            return self.app_client.params.call(params_to_call)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.call(params_to_call)
-        else:  # send
-            response = self.app_client.send.call(params_to_call)
-            return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
+            ))
 
 
 class _StateAppDelete:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Union[AppCallParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.delete(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.delete(params)
-        else:  # send
-            return self.app_client.send.bare.delete(params)
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+        return self.app_client.params.bare.delete(params)
 
     def delete_abi(
         self,
@@ -665,17 +650,18 @@ class _StateAppDelete:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
-    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[str]]:
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
-        params_to_call = AppClientMethodCallWithSendParams(
+        return self.app_client.params.delete(AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -693,21 +679,13 @@ class _StateAppDelete:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.DeleteApplicationOC,
-            )
-        if self._context == "params":
-            return self.app_client.params.call(params_to_call)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.call(params_to_call)
-        else:  # send
-            response = self.app_client.send.call(params_to_call)
-            return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+                
+            ))
 
 
 class _StateAppOptin:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
     def opt_in(
         self,
@@ -726,13 +704,14 @@ class _StateAppOptin:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
-    ) -> Union[AppCallMethodCallParams, BuiltTransactions, SendAppTransactionResult[None]]:
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
     
         method_args = None
         
         
-        params_to_call = AppClientMethodCallWithSendParams(
+        return self.app_client.params.opt_in(AppClientMethodCallWithSendParams(
                 method="opt_in()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -750,15 +729,8 @@ class _StateAppOptin:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.OptInOC,
-            )
-        if self._context == "params":
-            return self.app_client.params.call(params_to_call)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.call(params_to_call)
-        else:  # send
-            response = self.app_client.send.call(params_to_call)
-            return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+                
+            ))
 
 
 class StateAppParams:
@@ -766,15 +738,15 @@ class StateAppParams:
         self.app_client = app_client
     @property
     def update(self) -> "_StateAppUpdate":
-        return _StateAppUpdate(self.app_client, "params")
+        return _StateAppUpdate(self.app_client)
 
     @property
     def delete(self) -> "_StateAppDelete":
-        return _StateAppDelete(self.app_client, "params")
+        return _StateAppDelete(self.app_client)
 
     @property
     def opt_in(self) -> "_StateAppOptin":
-        return _StateAppOptin(self.app_client, "params")
+        return _StateAppOptin(self.app_client)
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -793,14 +765,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -821,7 +794,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def call_abi_txn(
@@ -842,14 +815,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -870,7 +844,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_global(
@@ -891,14 +865,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -919,7 +894,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_local(
@@ -940,14 +915,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -968,7 +944,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_box(
@@ -989,14 +965,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1017,7 +994,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def call_with_references(
@@ -1038,14 +1015,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1066,7 +1044,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def error(
@@ -1086,7 +1064,8 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
@@ -1110,12 +1089,12 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def default_value(
         self,
-        args: Tuple[str] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1131,14 +1110,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1159,12 +1139,12 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def default_value_from_abi(
         self,
-        args: Tuple[str] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1180,14 +1160,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1208,7 +1189,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def structs(
@@ -1229,14 +1210,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1257,7 +1239,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_abi(
@@ -1278,14 +1260,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -1306,27 +1289,193 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
+
+
+class _StateAppUpdateTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.update(params)
+
+    def update_abi(
+        self,
+        args: Tuple[str] | UpdateAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.update(AppClientMethodCallWithCompilationAndSendParams(
+                method="update_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
+            ))
+
+
+class _StateAppDeleteTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.delete(params)
+
+    def delete_abi(
+        self,
+        args: Tuple[str] | DeleteAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.delete(AppClientMethodCallWithSendParams(
+                method="delete_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+
+class _StateAppOptinTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def opt_in(
+        self,
+            *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        
+        return self.app_client.create_transaction.opt_in(AppClientMethodCallWithSendParams(
+                method="opt_in()void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
 
 
 class StateAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_StateAppUpdate":
-        return _StateAppUpdate(self.app_client, "create_transaction")
+    def update(self) -> "_StateAppUpdateTransaction":
+        return _StateAppUpdateTransaction(self.app_client)
 
     @property
-    def delete(self) -> "_StateAppDelete":
-        return _StateAppDelete(self.app_client, "create_transaction")
+    def delete(self) -> "_StateAppDeleteTransaction":
+        return _StateAppDeleteTransaction(self.app_client)
 
     @property
-    def opt_in(self) -> "_StateAppOptin":
-        return _StateAppOptin(self.app_client, "create_transaction")
+    def opt_in(self) -> "_StateAppOptinTransaction":
+        return _StateAppOptinTransaction(self.app_client)
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -1345,14 +1494,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1373,7 +1523,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def call_abi_txn(
@@ -1394,14 +1544,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1422,7 +1573,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_global(
@@ -1443,14 +1594,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1471,7 +1623,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_local(
@@ -1492,14 +1644,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1520,7 +1673,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def set_box(
@@ -1541,14 +1694,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1569,7 +1723,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def call_with_references(
@@ -1590,14 +1744,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1618,7 +1773,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def error(
@@ -1638,7 +1793,8 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
@@ -1662,12 +1818,12 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def default_value(
         self,
-        args: Tuple[str] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1683,14 +1839,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1711,12 +1868,12 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def default_value_from_abi(
         self,
-        args: Tuple[str] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1732,14 +1889,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1760,7 +1918,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def structs(
@@ -1781,14 +1939,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1809,7 +1968,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def create_abi(
@@ -1830,14 +1989,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -1858,27 +2018,196 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
+class _StateAppUpdateSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.update(params)
+
+    def update_abi(
+        self,
+        args: Tuple[str] | UpdateAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
+    ) -> SendAppTransactionResult[str]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.update(AppClientMethodCallWithCompilationAndSendParams(
+                method="update_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
+            ))
+        return SendAppUpdateTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
+class _StateAppDeleteSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.delete(params)
+
+    def delete_abi(
+        self,
+        args: Tuple[str] | DeleteAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[str]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.delete(AppClientMethodCallWithSendParams(
+                method="delete_abi(string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
+class _StateAppOptinSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def opt_in(
+        self,
+            *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[None]:
+    
+        method_args = None
+        
+        
+        response = self.app_client.send.opt_in(AppClientMethodCallWithSendParams(
+                method="opt_in()void",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+
 class StateAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_StateAppUpdate":
-        return _StateAppUpdate(self.app_client, "send")
+    def update(self) -> "_StateAppUpdateSend":
+        return _StateAppUpdateSend(self.app_client)
 
     @property
-    def delete(self) -> "_StateAppDelete":
-        return _StateAppDelete(self.app_client, "send")
+    def delete(self) -> "_StateAppDeleteSend":
+        return _StateAppDeleteSend(self.app_client)
 
     @property
-    def opt_in(self) -> "_StateAppOptin":
-        return _StateAppOptin(self.app_client, "send")
+    def opt_in(self) -> "_StateAppOptinSend":
+        return _StateAppOptinSend(self.app_client)
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -1897,14 +2226,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -1925,9 +2255,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def call_abi_txn(
         self,
@@ -1947,14 +2277,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -1975,9 +2306,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_global(
         self,
@@ -1997,14 +2328,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2025,9 +2357,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_local(
         self,
@@ -2047,14 +2379,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2075,9 +2408,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def set_box(
         self,
@@ -2097,14 +2430,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2125,9 +2459,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def call_with_references(
         self,
@@ -2147,14 +2481,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[int]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2175,9 +2510,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[int](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def error(
         self,
@@ -2196,7 +2531,8 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
@@ -2220,13 +2556,13 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def default_value(
         self,
-        args: Tuple[str] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -2242,14 +2578,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2270,13 +2607,13 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def default_value_from_abi(
         self,
-        args: Tuple[str] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -2292,14 +2629,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2320,9 +2658,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def structs(
         self,
@@ -2342,14 +2680,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[Output]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2370,9 +2709,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[Output](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def create_abi(
         self,
@@ -2392,14 +2731,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -2420,9 +2760,9 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -2907,9 +3247,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the call_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -2936,9 +3277,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -2965,9 +3307,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -2994,9 +3337,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3023,9 +3367,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the set_box(byte[4],string)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3052,9 +3397,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3081,9 +3427,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the error()void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3110,9 +3457,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the default_value(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3139,9 +3487,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3168,9 +3517,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the structs((string,uint64))(string,uint64) ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3197,9 +3547,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the create_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3226,9 +3577,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the update_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3255,9 +3607,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the delete_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3284,9 +3637,10 @@ class StateAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the opt_in()void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -3367,9 +3721,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the call_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3396,9 +3751,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the call_abi_txn(pay,string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3425,9 +3781,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the set_global(uint64,uint64,string,byte[4])void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3454,9 +3811,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the set_local(uint64,uint64,string,byte[4])void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3483,9 +3841,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the set_box(byte[4],string)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3512,9 +3871,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3541,9 +3901,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the error()void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3570,9 +3931,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the default_value(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3599,9 +3961,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the default_value_from_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3628,9 +3991,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the structs((string,uint64))(string,uint64) ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3657,9 +4021,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the create_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3686,9 +4051,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the update_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3715,9 +4081,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the delete_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3744,9 +4111,10 @@ class StateAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the opt_in()void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -3790,48 +4158,6 @@ class StateAppFactorySend:
         self.app_factory = app_factory
         self.create = StateAppFactorySendCreate(app_factory)
 
-def create(
-        self,
-        args: Tuple[str] | CreateAbiArgs,
-        *,
-        on_complete: (Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
-        **kwargs
-    ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult[str]]:
-        """Creates and sends a transaction using the create_abi(string)string ABI method"""
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        else:
-            method_args = list(args.values())
-    
-        result = self.app_factory.send.create(
-            AppFactoryCreateMethodCallParams(
-                method="create_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
-            )
-        )
-        return_value = None if result[1].abi_return is None else cast(str, result[1].abi_return)
-
-        return StateAppClient(result[0]), AppFactoryCreateMethodCallResult[str](
-            app_id=result[1].app_id,
-            abi_return=return_value,
-            transaction=result[1].transaction,
-            confirmation=result[1].confirmation,
-            group_id=result[1].group_id,
-            tx_ids=result[1].tx_ids,
-            transactions=result[1].transactions,
-            confirmations=result[1].confirmations,
-            app_address=result[1].app_address,
-        )
-
 
 class StateAppFactorySendCreate:
     """Send create calls to StateApp contract"""
@@ -3857,7 +4183,7 @@ class StateAppFactorySendCreate:
         )
         return StateAppClient(result[0]), result[1]
 
-    def create(
+    def create_abi(
             self,
             args: Tuple[str] | CreateAbiArgs,
             *,
@@ -3872,9 +4198,10 @@ class StateAppFactorySendCreate:
         ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             result = self.app_factory.send.create(

@@ -27,6 +27,7 @@ from algokit_utils.applications import (
     AppClient,
     AppClientBareCallWithSendParams,
     AppClientMethodCallWithSendParams,
+    AppClientMethodCallWithCompilationAndSendParams,
     AppClientMethodCallParams,
     AppClientParams,
     AppFactory,
@@ -56,6 +57,8 @@ from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import (
     AppCallMethodCallParams,
     AppCallParams,
+    SendAppUpdateTransactionResult,
+                      
     SendAppTransactionResult,
     SendAtomicTransactionComposerResults,
     TransactionComposer,
@@ -162,31 +165,19 @@ class HelloWorldCheckArgs(TypedDict):
 
 
 class _HelloWorldAppUpdate:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Union[AppUpdateParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.update(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.update(params)
-        else:  # send
-            return self.app_client.send.bare.update(params)
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> AppUpdateParams:
+        return self.app_client.params.bare.update(params)
 
 
 class _HelloWorldAppDelete:
-    def __init__(self, app_client: AppClient, context: str):
+    def __init__(self, app_client: AppClient):
         self.app_client = app_client
-        self._context = context
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Union[AppCallParams, Transaction, SendAppTransactionResult]:
-        if self._context == "params":
-            return self.app_client.params.bare.delete(params)
-        elif self._context == "create_transaction":
-            return self.app_client.create_transaction.bare.delete(params)
-        else:  # send
-            return self.app_client.send.bare.delete(params)
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+        return self.app_client.params.bare.delete(params)
 
 
 class HelloWorldAppParams:
@@ -194,11 +185,11 @@ class HelloWorldAppParams:
         self.app_client = app_client
     @property
     def update(self) -> "_HelloWorldAppUpdate":
-        return _HelloWorldAppUpdate(self.app_client, "params")
+        return _HelloWorldAppUpdate(self.app_client)
 
     @property
     def delete(self) -> "_HelloWorldAppDelete":
-        return _HelloWorldAppDelete(self.app_client, "params")
+        return _HelloWorldAppDelete(self.app_client)
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
@@ -217,14 +208,15 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -245,7 +237,7 @@ class HelloWorldAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def hello_world_check(
@@ -266,14 +258,15 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
@@ -294,23 +287,39 @@ class HelloWorldAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
+
+
+class _HelloWorldAppUpdateTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.update(params)
+
+
+class _HelloWorldAppDeleteTransaction:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.delete(params)
 
 
 class HelloWorldAppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_HelloWorldAppUpdate":
-        return _HelloWorldAppUpdate(self.app_client, "create_transaction")
+    def update(self) -> "_HelloWorldAppUpdateTransaction":
+        return _HelloWorldAppUpdateTransaction(self.app_client)
 
     @property
-    def delete(self) -> "_HelloWorldAppDelete":
-        return _HelloWorldAppDelete(self.app_client, "create_transaction")
+    def delete(self) -> "_HelloWorldAppDeleteTransaction":
+        return _HelloWorldAppDeleteTransaction(self.app_client)
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
@@ -329,14 +338,15 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -357,7 +367,7 @@ class HelloWorldAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def hello_world_check(
@@ -378,14 +388,15 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> BuiltTransactions:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
@@ -406,23 +417,39 @@ class HelloWorldAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
+class _HelloWorldAppUpdateSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.update(params)
+
+
+class _HelloWorldAppDeleteSend:
+    def __init__(self, app_client: AppClient):
+        self.app_client = app_client
+
+    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult:
+        return self.app_client.send.bare.delete(params)
+
+
 class HelloWorldAppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_HelloWorldAppUpdate":
-        return _HelloWorldAppUpdate(self.app_client, "send")
+    def update(self) -> "_HelloWorldAppUpdateSend":
+        return _HelloWorldAppUpdateSend(self.app_client)
 
     @property
-    def delete(self) -> "_HelloWorldAppDelete":
-        return _HelloWorldAppDelete(self.app_client, "send")
+    def delete(self) -> "_HelloWorldAppDeleteSend":
+        return _HelloWorldAppDeleteSend(self.app_client)
     def hello(
         self,
         args: Tuple[str] | HelloArgs,
@@ -441,14 +468,15 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -469,9 +497,9 @@ class HelloWorldAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[str](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def hello_world_check(
         self,
@@ -491,14 +519,15 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None
+        last_valid_round: Optional[int] = None,
+        
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
@@ -519,9 +548,9 @@ class HelloWorldAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
-                on_complete=OnComplete.NoOpOC,
+                
             ))
-        return SendAppTransactionResult[None](**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
     def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
@@ -885,9 +914,10 @@ class HelloWorldAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the hello(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -914,9 +944,10 @@ class HelloWorldAppFactoryCreateParams:
         ) -> AppCreateMethodCallParams:
             """Creates a new instance using the hello_world_check(string)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.params.create(
@@ -997,9 +1028,10 @@ class HelloWorldAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the hello(string)string ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1026,9 +1058,10 @@ class HelloWorldAppFactoryCreateTransaction:
         ) -> BuiltTransactions:
             """Creates a transaction using the hello_world_check(string)void ABI method"""
             
+            method_args = None
             if isinstance(args, tuple):
                 method_args = list(args)
-            else:
+            elif isinstance(args, dict):
                 method_args = list(args.values())
         
             return self.app_factory.create_transaction.create(
@@ -1071,6 +1104,7 @@ class HelloWorldAppFactorySend:
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
         self.create = HelloWorldAppFactorySendCreate(app_factory)
+
 
 class HelloWorldAppFactorySendCreate:
     """Send create calls to HelloWorldApp contract"""

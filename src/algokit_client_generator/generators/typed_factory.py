@@ -28,9 +28,10 @@ def _generate_method_args_type(method: ContractMethod) -> str:
 def _generate_method_args_parser() -> str:
     """Generate code to parse method arguments"""
     return """
+        method_args = None
         if isinstance(args, tuple):
             method_args = list(args)
-        else:
+        elif isinstance(args, dict):
             method_args = list(args.values())
     """
 
@@ -105,7 +106,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
 
     args_type = _generate_method_args_type(method)
     return_type = method.abi.python_type
-    method_name = "create"
+    method_name = method.abi.client_method_name
 
     # Handle multiple create methods case
     create_methods = [m for m in context.methods.all_abi_methods if m.call_config == "create"]
@@ -499,13 +500,6 @@ class {context.contract_name}FactorySend:
         self.app_factory = app_factory
         self.create = {context.contract_name}FactorySendCreate(app_factory)
 """)
-
-    yield Part.Gap1
-    for method in [m for m in context.methods.all_abi_methods if m.call_config == "create"]:
-        if not method.abi:
-            continue
-        yield Part.Gap1
-        yield _generate_abi_send_method(method, context)
 
 
 def _generate_create_transaction_class(context: GeneratorContext) -> DocumentParts:
