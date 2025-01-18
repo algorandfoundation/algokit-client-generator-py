@@ -3,19 +3,25 @@ from collections.abc import Generator
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
+from algokit_client_generator.generators.typed_client import PropertyType, _generate_common_method_params
 from algokit_client_generator.spec import ContractMethod
+
+
+def get_operation_composer_class_name(contract_name: str, operation: str) -> str:
+    """Get the class name for a specific operation composer"""
+    return f"_{contract_name}{operation.capitalize()}Composer"
 
 
 def generate_operation_composer(
     context: GeneratorContext,
     operation: str,
     methods: list[ContractMethod],
-) -> Generator[DocumentParts, None, str | None]:
+) -> Generator[DocumentParts, None, None]:
     """Generate a composer class for a specific operation"""
     if not methods:
-        return None
+        return
 
-    class_name = f"_{context.contract_name}{operation.capitalize()}Composer"
+    class_name = get_operation_composer_class_name(context.contract_name, operation)
 
     yield utils.indented(f"""
 class {class_name}:
@@ -29,40 +35,28 @@ class {class_name}:
         if not method.abi:
             continue
 
-        args_type = "Any"
+        # Reuse the common method params generator but strip the return type
+        method_params = _generate_common_method_params(method, PropertyType.PARAMS, operation=operation).rsplit(
+            " ->", 1
+        )[0]
+
+        method_params += f' -> "{context.contract_name}Composer":'
+
+        args_handling = ""
         if method.abi.args:
-            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
-            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+            args_handling = f"""
+    method_args = None
+    if {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, tuple):
+        method_args = args
+    elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
+        method_args = tuple(args.values())
+"""
 
         yield utils.indented(f"""
-def {method.abi.client_method_name}(
-    self,
-    args: {args_type},
-    *,
-    account_references: Optional[list[str]] = None,
-    app_references: Optional[list[int]] = None,
-    asset_references: Optional[list[int]] = None,
-    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-    extra_fee: Optional[AlgoAmount] = None,
-    first_valid_round: Optional[int] = None,
-    lease: Optional[bytes] = None,
-    max_fee: Optional[AlgoAmount] = None,
-    note: Optional[bytes] = None,
-    rekey_to: Optional[str] = None,
-    sender: Optional[str] = None,
-    signer: Optional[TransactionSigner] = None,
-    static_fee: Optional[AlgoAmount] = None,
-    validity_window: Optional[int] = None,
-    last_valid_round: Optional[int] = None,
-) -> \"{context.contract_name}Composer\":
-    if isinstance(args, tuple):
-        method_args = args
-    else:
-        method_args = tuple(args.values())
-
+{method_params}{args_handling}
     self.composer._composer.add_app_call_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
-            args=method_args, # type: ignore
+            {'args=method_args, # type: ignore' if method.abi.args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,
@@ -89,10 +83,9 @@ def {method.abi.client_method_name}(
 """)
 
     yield Part.DecIndent
-    return class_name
 
 
-def generate_composer(context: GeneratorContext) -> DocumentParts:  # noqa: C901
+def generate_composer(context: GeneratorContext) -> DocumentParts:
     """Generate the composer class for creating transaction groups"""
 
     # First generate operation classes
@@ -108,13 +101,14 @@ def generate_composer(context: GeneratorContext) -> DocumentParts:  # noqa: C901
 
     operation_class_names: dict[str, str] = {}
     for operation, methods in operations.items():
-        if methods and operation_class_names.get(operation):
+        if methods:
+            class_name = get_operation_composer_class_name(context.contract_name, operation)
+            operation_class_names[operation] = class_name
+
             class_name_gen = generate_operation_composer(context, operation, methods)
-            for part in class_name_gen:
-                if isinstance(part, str):
-                    operation_class_names[operation] = part
-                yield part
-            yield Part.Gap2
+            if class_name_gen:  # Only proceed if generator exists
+                yield from class_name_gen
+                yield Part.Gap2
 
     # Then generate main composer class
     yield utils.indented(f"""
@@ -129,17 +123,12 @@ class {context.contract_name}Composer:
     yield Part.IncIndent
 
     # Generate properties for operations
-    first = True
-    for operation, methods in operations.items():
-        if methods and operation_class_names.get(operation):
-            if not first:
-                yield Part.Gap1
-            first = False
-            operation_class = operation_class_names.get(operation)
-            yield utils.indented(f"""
+    for operation, class_name in operation_class_names.items():
+        yield Part.Gap1
+        yield utils.indented(f"""
 @property
-def {operation}(self) -> "{operation_class}":
-    return {operation_class}(self)
+def {operation}(self) -> "{class_name}":
+    return {class_name}(self)
 """)
 
     # Generate methods for no_op ABI calls
@@ -147,41 +136,26 @@ def {operation}(self) -> "{operation_class}":
         if not method.abi or "no_op" not in method.on_complete:
             continue
 
-        args_type = "Any"
+        method_params = _generate_common_method_params(method, PropertyType.PARAMS).rsplit(" ->", 1)[0]
+
+        method_params += f' -> "{context.contract_name}Composer":'
+
+        args_handling = ""
         if method.abi.args:
-            tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
-            args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+            args_handling = f"""
+    method_args = None
+    if {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, tuple):
+        method_args = args
+    elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
+        method_args = tuple(args.values())
+"""
 
         yield Part.Gap1
         yield utils.indented(f"""
-def {method.abi.client_method_name}(
-    self,
-    args: {args_type},
-    *,
-    account_references: Optional[list[str]] = None,
-    app_references: Optional[list[int]] = None,
-    asset_references: Optional[list[int]] = None,
-    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-    extra_fee: Optional[AlgoAmount] = None,
-    first_valid_round: Optional[int] = None,
-    lease: Optional[bytes] = None,
-    max_fee: Optional[AlgoAmount] = None,
-    note: Optional[bytes] = None,
-    rekey_to: Optional[str] = None,
-    sender: Optional[str] = None,
-    signer: Optional[TransactionSigner] = None,
-    static_fee: Optional[AlgoAmount] = None,
-    validity_window: Optional[int] = None,
-    last_valid_round: Optional[int] = None,
-) -> \"{context.contract_name}Composer\":
-    if isinstance(args, tuple):
-        method_args = args
-    else:
-        method_args = tuple(args.values())
-
+{method_params}{args_handling}
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
-            args=method_args, # type: ignore
+            {'args=method_args, # type: ignore' if method.abi.args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,

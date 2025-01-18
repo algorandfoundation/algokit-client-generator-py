@@ -141,7 +141,7 @@ class MinimalAppParams:
     def delete(self) -> "_MinimalAppDelete":
         return _MinimalAppDelete(self.app_client)
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -172,8 +172,8 @@ class MinimalAppCreateTransactionParams:
     def delete(self) -> "_MinimalAppDeleteTransaction":
         return _MinimalAppDeleteTransaction(self.app_client)
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _MinimalAppUpdateSend:
@@ -203,8 +203,8 @@ class MinimalAppSend:
     def delete(self) -> "_MinimalAppDeleteSend":
         return _MinimalAppDeleteSend(self.app_client)
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+        return self.app_client.send.bare.clear_state(params)
 
 
 class MinimalAppState:
@@ -212,7 +212,6 @@ class MinimalAppState:
 
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
-
 
 class MinimalAppClient:
     """Client for interacting with MinimalApp smart contract"""
@@ -661,6 +660,16 @@ class MinimalAppFactorySendCreate:
         return MinimalAppClient(result[0]), result[1]
 
 
+class _MinimalAppUpdateComposer:
+    def __init__(self, composer: "MinimalAppComposer"):
+        self.composer = composer
+
+
+class _MinimalAppDeleteComposer:
+    def __init__(self, composer: "MinimalAppComposer"):
+        self.composer = composer
+
+
 class MinimalAppComposer:
     """Composer for creating transaction groups for MinimalApp contract calls"""
 
@@ -668,6 +677,14 @@ class MinimalAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
+    @property
+    def update(self) -> "_MinimalAppUpdateComposer":
+        return _MinimalAppUpdateComposer(self)
+
+    @property
+    def delete(self) -> "_MinimalAppDeleteComposer":
+        return _MinimalAppDeleteComposer(self)
 
     def clear_state(
         self,

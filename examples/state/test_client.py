@@ -1,15 +1,20 @@
 # mypy: disable-error-code="no-untyped-call"
 import algokit_utils
+import algokit_utils.applications
 import pytest
-from algokit_utils.applications.app_deployer import OnUpdate
+from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
 from algokit_utils.protocols import AlgorandClientProtocol
 from algokit_utils.transactions import PaymentParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
 
 from examples.state.client import (
+    Input,
     StateAppClient,
     StateAppFactory,
+    StateAppMethodCallCreateParams,
+    StateAppMethodCallDeleteParams,
+    StateAppMethodCallUpdateParams,
 )
 
 
@@ -131,120 +136,121 @@ def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
 def test_default_arg(deployed_state_app_client: StateAppClient) -> None:
     assert deployed_state_app_client.send.default_value(args={'arg_with_default': "test"}).abi_return == "test"
     assert deployed_state_app_client.send.default_value(args=(None,)).abi_return == "default value"
+    assert deployed_state_app_client.send.default_value().abi_return == "default value"
 
 
-# def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:
-#     assert deployed_state_app_client.default_value_from_abi(arg_with_default="test").return_value == "ABI, test"
-#     assert deployed_state_app_client.default_value_from_abi().return_value == "ABI, default value"
+def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:
+    assert deployed_state_app_client.send.default_value_from_abi(args={"arg_with_default": "test"}).abi_return == "ABI, test"
+    assert deployed_state_app_client.send.default_value_from_abi().abi_return == "ABI, default value"
 
 
-# def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
-#     response = deployed_state_app_client.opt_in_opt_in()
-#     assert response.confirmed_round
+def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.send.opt_in.opt_in()
+    assert isinstance(response.confirmation, dict)
+    assert response.confirmation.get('confirmed-round', 0) > 0
 
-#     clear_response = deployed_state_app_client.clear_state()
-#     assert clear_response.confirmed_round
-
-
-# def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
-#     int1_expected = 1
-#     int2_expected = 2
-#     deployed_state_app_client.set_global(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
-#     response = deployed_state_app_client.get_global_state()
-
-#     assert response.bytes1.as_bytes == b"test"
-#     assert response.bytes2.as_str == "test"
-#     assert response.int1 == int1_expected
-#     assert response.int2 == int2_expected
-#     assert response.value == 1
+    clear_response = deployed_state_app_client.send.clear_state()
+    assert isinstance(clear_response.confirmation, dict)
+    assert clear_response.confirmation.get('confirmed-round', 0) > 0
 
 
-# def test_get_local_state(deployed_state_app_client: StateAppClient) -> None:
-#     int1_expected = 1
-#     int2_expected = 2
-#     deployed_state_app_client.opt_in_opt_in()
-#     deployed_state_app_client.set_local(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
-#     response = deployed_state_app_client.get_local_state(account=None)
+def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
+    int1_expected = 1
+    int2_expected = 2
+    deployed_state_app_client.send.set_global(args={"int1": int1_expected, "int2": int2_expected, "bytes1": "test", "bytes2": b"test"})
+    response = deployed_state_app_client.state.global_state.get_all()
 
-#     assert response.local_bytes1.as_str == "test"
-#     assert response.local_bytes2.as_str == "test"
-#     assert response.local_int1 == int1_expected
-#     assert response.local_int2 == int2_expected
-
-
-# def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
-#     response = state_app_client.deploy(
-#         allow_update=True,
-#         allow_delete=True,
-#         template_values={"VALUE": 1},
-#         create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
-#         update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
-#         delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
-#     )
-#     assert state_app_client.app_client.app_id
-#     assert isinstance(response.create_response, algokit_utils.ABITransactionResponse)
-#     assert response.create_response.return_value == "Deploy Greetings"
-
-#     state_app_client.app_client.app_id = 0
-
-#     response = state_app_client.deploy(
-#         allow_update=True,
-#         allow_delete=True,
-#         on_update=OnUpdate.UpdateApp,
-#         template_values={"VALUE": 2},
-#         create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
-#         update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
-#         delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
-#     )
-#     assert state_app_client.app_client.app_id
-#     assert isinstance(response.update_response, algokit_utils.ABITransactionResponse)
-#     assert response.update_response.return_value == "Deploy Update"
-
-#     state_app_client.app_client.app_id = 0
-
-#     response = state_app_client.deploy(
-#         allow_update=True,
-#         allow_delete=True,
-#         on_update=OnUpdate.ReplaceApp,
-#         template_values={"VALUE": 3},
-#         create_args=DeployCreate(args=CreateAbiArgs(input="Deploy Greetings")),
-#         update_args=Deploy(args=UpdateAbiArgs(input="Deploy Update")),
-#         delete_args=Deploy(args=DeleteAbiArgs(input="Deploy Delete")),
-#     )
-#     assert state_app_client.app_client.app_id
-#     assert isinstance(response.delete_response, algokit_utils.ABITransactionResponse)
-#     assert response.delete_response.return_value == "Deploy Delete"
+    assert response["bytes1"] == b"test"
+    assert response["bytes2"] == b"test"
+    assert response["int1"] == int1_expected
+    assert response["int2"] == int2_expected
+    assert response["value"] == 1
 
 
-# def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
-#     age = 42
-#     response = deployed_state_app_client.structs(name_age=Input(name="World", age=age))
+def test_get_local_state(deployed_state_app_client: StateAppClient, default_deployer: algokit_utils.Account) -> None:
+    int1_expected = 1
+    int2_expected = 2
+    deployed_state_app_client.send.opt_in.opt_in()
+    deployed_state_app_client.send.set_local(args={"int1": int1_expected, "int2": int2_expected, "bytes1": "test", "bytes2": b"test"})
+    response = deployed_state_app_client.state.local_state(default_deployer.address).get_all()
 
-#     assert response.return_value.message == "Hello, World"
-#     assert response.return_value.result == age * 2
-
-
-# def test_compose(deployed_state_app_client: StateAppClient) -> None:
-#     response = (
-#         deployed_state_app_client.compose()
-#         .opt_in_opt_in()
-#         .call_abi(value="there")
-#         .set_local(int1=1, int2=2, bytes1="1234", bytes2=(1, 2, 3, 4))
-#     ).execute()
-
-#     opt_in_response, call_abi_response, set_local_response = response.abi_results
-#     assert opt_in_response.tx_id
-#     assert call_abi_response.return_value == "Hello, there"
-#     assert set_local_response.return_value is None
+    assert response["local_bytes1"] == b"test"
+    assert response["local_bytes2"] == b"test"
+    assert response["local_int1"] == int1_expected
+    assert response["local_int2"] == int2_expected
 
 
-# def test_call_references(deployed_state_app_client: StateAppClient) -> None:
-#     asset_id = 1234
-#     _, account = deployed_state_app_client.app_client.resolve_signer_sender()
-#     response = deployed_state_app_client.call_with_references(
-#         asset=asset_id,
-#         account=account,
-#         application=deployed_state_app_client.app_id,
-#     )
+def test_deploy_create_1arg(state_factory: StateAppFactory) -> None:
+    client, response = state_factory.deploy(
+        deploy_time_params={"VALUE": 1},
+        updatable=True,
+        deletable=True,
+        on_update=OnUpdate.UpdateApp,
+        create_params=StateAppMethodCallCreateParams(args={'input': 'Deploy Greetings'}, method='create_abi(string)string'),
+        update_params=StateAppMethodCallUpdateParams(args={'input': 'Deploy Update'}, method='update_abi(string)string'),
+        delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
+    )
+    assert client.app_id > 0
+    assert response.create_response.abi_return == "Deploy Greetings"
+    assert not response.update_response
+    assert not response.delete_response
 
-#     assert response.return_value
+    client, response = state_factory.deploy(
+        updatable=True,
+        deletable=True,
+        on_update=OnUpdate.UpdateApp,
+        deploy_time_params={"VALUE": 2},
+        create_params=StateAppMethodCallCreateParams(args={'input': 'Deploy Greetings'}, method='create_abi(string)string'),
+        update_params=StateAppMethodCallUpdateParams(args={'input': 'Deploy Update'}, method='update_abi(string)string'),
+        delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
+    )
+    assert client.app_id > 0
+    assert response.update_response.abi_return == "Deploy Update"
+    assert not response.create_response
+    assert not response.delete_response
+
+    # state_app_client.app_client.app_id = 0
+
+    client, response = state_factory.deploy(
+        updatable=True,
+        deletable=True,
+        on_update=OnUpdate.ReplaceApp,
+        deploy_time_params={"VALUE": 3},
+        create_params=StateAppMethodCallCreateParams(args={'input': 'Deploy Greetings'}, method='create_abi(string)string'),
+        update_params=StateAppMethodCallUpdateParams(args={'input': 'Deploy Update'}, method='update_abi(string)string'),
+        delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
+    )
+    assert client.app_id > 0
+    assert response.create_response.abi_return == "Deploy Greetings"
+    assert response.delete_response.abi_return == "Deploy Delete"
+    assert not response.update_response
+
+
+
+def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
+    age = 42
+    response = deployed_state_app_client.send.structs(args={"name_age": Input(name="World", age=age)})
+
+    assert response.abi_return.message == "Hello, World"
+    assert response.abi_return.result == age * 2
+
+
+def test_compose(deployed_state_app_client: StateAppClient) -> None:
+    response = deployed_state_app_client.new_group().opt_in.opt_in().call_abi(args={"value": "there"}).set_local(args={"int1": 1, "int2": 2, "bytes1": "1234", "bytes2": (1, 2, 3, 4)}).send()
+
+    opt_in_response, call_abi_response, set_local_response = response.abi_results
+    assert opt_in_response.tx_id
+    assert call_abi_response.return_value == "Hello, there"
+    assert set_local_response.return_value is None
+
+
+def test_call_references(deployed_state_app_client: StateAppClient) -> None:
+    asset_id = 1234
+    _, account = deployed_state_app_client.app_client.resolve_signer_sender()
+    response = deployed_state_app_client.call_with_references(
+        asset=asset_id,
+        account=account,
+        application=deployed_state_app_client.app_id,
+    )
+
+    assert response.return_value

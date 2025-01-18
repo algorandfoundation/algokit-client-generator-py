@@ -425,7 +425,7 @@ class LifeCycleAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -638,8 +638,8 @@ class LifeCycleAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _LifeCycleAppUpdateSend:
@@ -855,9 +855,14 @@ class LifeCycleAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+        return self.app_client.send.bare.clear_state(params)
 
+
+class GlobalStateValue(TypedDict):
+    """Shape of global_state state key values"""
+    greeting: bytes
+    times: int
 
 class LifeCycleAppState:
     """Methods to access state for the current LifeCycleApp app"""
@@ -867,27 +872,26 @@ class LifeCycleAppState:
 
     @property
     def global_state(self) -> "_GlobalState":
-        """Methods to access global state for the current app"""
-        return _GlobalState(self.app_client)
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
 
 class _GlobalState:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
         
 
-    def get_all(self) -> dict[str, Any]:
+    def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return result
+        return cast(GlobalStateValue, result)
 
     def greeting(self) -> bytes:
-        """Get the current value of the greeting key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("greeting"))
+            """Get the current value of the greeting key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("greeting"))
 
     def times(self) -> int:
-        """Get the current value of the times key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("times"))
-
+            """Get the current value of the times key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("times"))
 
 class LifeCycleAppClient:
     """Client for interacting with LifeCycleApp smart contract"""
@@ -1673,6 +1677,11 @@ class LifeCycleAppFactorySendCreate:
             )
 
 
+class _LifeCycleAppUpdateComposer:
+    def __init__(self, composer: "LifeCycleAppComposer"):
+        self.composer = composer
+
+
 class LifeCycleAppComposer:
     """Composer for creating transaction groups for LifeCycleApp contract calls"""
 
@@ -1680,6 +1689,10 @@ class LifeCycleAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
+    @property
+    def update(self) -> "_LifeCycleAppUpdateComposer":
+        return _LifeCycleAppUpdateComposer(self)
 
     def hello_string_string(
         self,
@@ -1700,10 +1713,12 @@ class LifeCycleAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "LifeCycleAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -1735,8 +1750,7 @@ class LifeCycleAppComposer:
 
     def hello_string(
         self,
-        args: Any,
-        *,
+            *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -1752,15 +1766,11 @@ class LifeCycleAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "LifeCycleAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.hello_string(
-                args=method_args, # type: ignore
+                
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1804,10 +1814,12 @@ class LifeCycleAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "LifeCycleAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -1856,10 +1868,12 @@ class LifeCycleAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "LifeCycleAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(

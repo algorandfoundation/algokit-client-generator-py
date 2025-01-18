@@ -15,6 +15,27 @@ class PropertyType(Enum):
     SEND = "send"
 
 
+OPERATION_TO_PARAMS_CLASS = {
+    "update": "AppClientBareCallWithCompilationAndSendParams",
+    "delete": "AppClientBareCallWithSendParams",
+    "opt_in": "AppClientBareCallWithSendParams",
+    "close_out": "AppClientBareCallWithSendParams",
+}
+
+CLEAR_STATE_PROPERTY_TO_RETURN_CLASS = {
+    PropertyType.SEND: "SendAppTransactionResult[ABIReturn]",
+    PropertyType.CREATE_TRANSACTION: "Transaction",
+    PropertyType.PARAMS: "AppCallParams",
+}
+
+OPERATION_TO_RETURN_PARAMS_TYPE = {
+    "update": "AppUpdateParams",
+    "delete": "AppCallParams",
+    "opt_in": "AppCallParams",
+    "close_out": "AppCallParams",
+}
+
+
 def _generate_args_parser(*, include_args: bool = False) -> str:
     return f"""
     method_args = None
@@ -47,6 +68,9 @@ def _generate_common_method_params(
 
         tuple_type = f"Tuple[{', '.join(tuple_args)}]"
         args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+        # Make entire args parameter optional if all args have defaults
+        if all(arg.has_default for arg in method.abi.args):
+            args_type = f"{args_type} | None = None"
 
     def algokit_extra_args(operation: str | None = None) -> str:
         if operation == "update":
@@ -155,21 +179,6 @@ def generate_operation_class(
     methods: list[ContractMethod],
 ) -> Generator[DocumentParts, None, str | None]:
     """Generate a class for a specific operation (update, delete, etc)"""
-
-    operation_to_params_class = {
-        "update": "AppClientBareCallWithCompilationAndSendParams",
-        "delete": "AppClientBareCallWithSendParams",
-        "opt_in": "AppClientBareCallWithSendParams",
-        "close_out": "AppClientBareCallWithSendParams",
-    }
-
-    operation_to_return_params_type = {
-        "update": "AppUpdateParams",
-        "delete": "AppCallParams",
-        "opt_in": "AppCallParams",
-        "close_out": "AppCallParams",
-    }
-
     if not methods:
         return None
 
@@ -192,17 +201,17 @@ class {class_name}:
         yield Part.Gap1
         if property_type == PropertyType.PARAMS:
             yield utils.indented(f"""
-def bare(self, params: {operation_to_params_class[operation]} | None = None) -> {operation_to_return_params_type[operation]}:
+def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
     return self.app_client.params.bare.{operation}(params)
 """)
         elif property_type == PropertyType.CREATE_TRANSACTION:
             yield utils.indented(f"""
-def bare(self, params: {operation_to_params_class[operation]} | None = None) -> Transaction:
+def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> Transaction:
     return self.app_client.create_transaction.bare.{operation}(params)
 """)
         else:  # SEND
             yield utils.indented(f"""
-def bare(self, params: {operation_to_params_class[operation]} | None = None) -> SendAppTransactionResult:
+def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> SendAppTransactionResult:
     return self.app_client.send.bare.{operation}(params)
 """)
 
@@ -270,24 +279,28 @@ class {class_name}:
     yield Part.IncIndent
 
     # Generate properties for each operation
+    postfix = (
+        "Transaction"
+        if property_type == PropertyType.CREATE_TRANSACTION
+        else "Send"
+        if property_type == PropertyType.SEND
+        else ""
+    )
+
     first = True
     for operation, methods in operations.items():
-        if methods:
-            if not first:
-                yield Part.Gap1
-            first = False
-            operation_class = operation_class_names.get(
-                operation,
-                f"_{context.contract_name}{utils.to_camel_case(operation).capitalize()}"
-                + (
-                    "Transaction"
-                    if property_type == PropertyType.CREATE_TRANSACTION
-                    else "Send"
-                    if property_type == PropertyType.SEND
-                    else ""
-                ),
-            )
-            yield utils.indented(f"""
+        if not methods:
+            continue
+
+        if not first:
+            yield Part.Gap1
+
+        first = False
+
+        default_class_name = f"_{context.contract_name}{utils.to_camel_case(operation).capitalize()}{postfix}"
+        operation_class = operation_class_names.get(operation, default_class_name)
+
+        yield utils.indented(f"""
 @property
 def {operation}(self) -> "{operation_class}":
     return {operation_class}(self.app_client)
@@ -318,10 +331,11 @@ def {operation}(self) -> "{operation_class}":
 
     # Add clear_state method
     yield Part.Gap1
-    yield utils.indented("""
-def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-    return self.app_client.params.bare.clear_state(params)
+    yield utils.indented(f"""
+def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
+    return self.app_client.{property_type.value}.bare.clear_state(params)
 """)
+
     yield Part.DecIndent
 
 
@@ -580,14 +594,91 @@ class {struct.struct_class_name}:
             yield Part.DecIndent
 
 
-def generate_state_methods(context: GeneratorContext) -> DocumentParts:  # noqa: C901
-    """Generate state methods for accessing global, local and box state"""
+def _generate_state_typeddict(state_type: str, keys: dict, class_name: str) -> Iterator[DocumentParts]:
+    """Generate a TypedDict for a specific state type"""
+    if not keys:
+        return
 
-    # Skip if no state defined
+    yield utils.indented(f"""
+class {class_name}(TypedDict):
+    \"\"\"Shape of {state_type} state key values\"\"\"
+""")
+    yield Part.IncIndent
+    for key_name, key_info in keys.items():
+        python_type = utils.map_abi_type_to_python(key_info.value_type)
+        yield f"{key_name}: {python_type}"
+    yield Part.DecIndent
+
+
+def _generate_state_class(
+    state_type: str,
+    class_name: str,
+    keys: dict,
+    maps: dict,
+    value_type_name: str | None = None,
+    extra_params: str = "",
+) -> Iterator[DocumentParts]:
+    """Generate a state access class with typed methods"""
+    yield utils.indented(f"""
+class {class_name}:
+    def __init__(self, app_client: AppClient{extra_params}):
+        self.app_client = app_client
+        {'self.address = address' if extra_params else ''}
+
+    def get_all(self) -> {value_type_name or 'dict[str, Any]'}:
+        \"\"\"Get all current keyed values from {state_type} state\"\"\"
+        result = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_all()
+        return {'cast(' + value_type_name + ', result)' if value_type_name else 'result'}
+""")
+
+    # Generate methods for individual keys
+    if keys:
+        for key_name, key_info in keys.items():
+            python_type = utils.map_abi_type_to_python(key_info.value_type)
+            yield Part.Gap1
+            yield Part.IncIndent
+            yield utils.indented(f"""
+    def {utils.get_method_name(key_name)}(self) -> {python_type}:
+        \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
+        return cast({python_type}, self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}"))
+""")
+            yield Part.DecIndent
+
+    # Generate methods for maps
+    if maps:
+        for map_name, map_info in maps.items():
+            key_type = utils.map_abi_type_to_python(map_info.key_type)
+            value_type = utils.map_abi_type_to_python(map_info.value_type)
+            yield utils.indented(f"""
+    @property
+    def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_type}]":
+        \"\"\"Get values from the {map_name} map in {state_type} state\"\"\"
+        return _MapState(
+            self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}, 
+            "{map_name}"
+        )
+""")
+
+
+def generate_state_methods(context: GeneratorContext) -> DocumentParts:
+    """Generate state methods for accessing global, local and box state"""
     if not context.app_spec.state:
         return ""
 
-    # Generate state class
+    state_configs = [
+        ("global_state", "GlobalStateValue", "_GlobalState", ""),
+        ("local_state", "LocalStateValue", "_LocalState", ", address: str"),
+        ("box", "BoxStateValue", "_BoxState", ""),
+    ]
+
+    # Generate TypedDicts for state shapes
+    for state_type, value_type, _, _ in state_configs:
+        keys = getattr(context.app_spec.state.keys, state_type if state_type != "box" else "box")
+        if keys:
+            yield from _generate_state_typeddict(state_type, keys, value_type)
+            yield Part.Gap1
+
+    # Generate main state class
     yield utils.indented(f"""
 class {context.contract_name}State:
     \"\"\"Methods to access state for the current {context.app_spec.name} app\"\"\"
@@ -595,93 +686,51 @@ class {context.contract_name}State:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 """)
-    yield Part.Gap1
     yield Part.IncIndent
 
-    # Generate global state methods if any global state keys/maps defined
-    if context.app_spec.state.keys.global_state or context.app_spec.state.maps.global_state:
-        yield utils.indented("""
-@property
-def global_state(self) -> "_GlobalState":
-    \"\"\"Methods to access global state for the current app\"\"\"
-    return _GlobalState(self.app_client)
-""")
-
-    # Generate local state methods if any local state keys/maps defined
-    if context.app_spec.state.keys.local_state or context.app_spec.state.maps.local_state:
-        yield utils.indented("""
-def local_state(self, address: str) -> "_LocalState":
-    \"\"\"Methods to access local state for the current app\"\"\"
-    return _LocalState(self.app_client, address)
-""")
-
-    # Generate box state methods if any box state keys/maps defined
-    if context.app_spec.state.keys.box or context.app_spec.state.maps.box:
-        yield utils.indented("""
-@property
-def box(self) -> "_BoxState":
-    \"\"\"Methods to access box state for the current app\"\"\"
-    return _BoxState(self.app_client)
-""")
-
-    yield Part.DecIndent
-
-    # Generate helper classes for each state type
-    for state_type in ["global_state", "local_state", "box"]:
-        keys = getattr(context.app_spec.state.keys, f"{state_type}" if state_type != "box" else state_type)
-        maps = getattr(context.app_spec.state.maps, f"{state_type}" if state_type != "box" else state_type)
+    # Generate state accessors
+    for state_type, _, class_name, _ in state_configs:
+        keys = getattr(context.app_spec.state.keys, state_type if state_type != "box" else "box")
+        maps = getattr(context.app_spec.state.maps, state_type if state_type != "box" else "box")
 
         if not keys and not maps:
             continue
 
-        class_title = state_type if state_type != "box" else "box_state"
-        class_name = f"_{class_title.replace('_', ' ').title().replace(' ', '')}"
-
         yield Part.Gap1
+        decorator = "@property" if state_type != "local_state" else ""
         yield utils.indented(f"""
-class {class_name}:
-    def __init__(self, app_client: AppClient{', address: str' if state_type == 'local_state' else ''}):
-        self.app_client = app_client
-        {'self.address = address' if state_type == 'local_state' else ''}
-
-    def get_all(self) -> dict[str, Any]:
-        \"\"\"Get all current keyed values from {state_type} state\"\"\"
-        result = self.app_client.state.{state_type}{'(self.address)' if state_type == 'local_state' else ''}.get_all()
-        return result
+    {decorator}
+def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(self{', address: str' if state_type == 'local_state' else ''}) -> "{class_name}":
+        \"\"\"Methods to access {state_type} for the current app\"\"\"
+        return {class_name}(self.app_client{', address' if state_type == 'local_state' else ''})
 """)
 
-        # Generate methods for individual keys
-        for key_name, key_info in keys.items():
-            python_type = utils.map_abi_type_to_python(key_info.value_type)
-            yield Part.Gap1
-            yield Part.IncIndent
-            yield utils.indented(f"""
-    def {utils.get_method_name(key_name)}(self) -> {python_type}:
-    \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
-    return cast({python_type}, self.app_client.state.{state_type}{'(self.address)' if state_type == 'local_state' else ''}.get_value("{key_name}"))
-""")
-            yield Part.DecIndent
+    yield Part.DecIndent
+    yield Part.Gap1
 
-        # Generate methods for maps
-        if maps:
-            for map_name, map_info in maps.items():
-                yield utils.indented(f"""
-    @property
-    def {utils.get_method_name(map_name)}(self) -> "_MapState[{utils.map_abi_type_to_python(map_info.key_type)}, {utils.map_abi_type_to_python(map_info.value_type)}]":
-        \"\"\"Get values from the {map_name} map in {state_type} state\"\"\"
-        return _MapState(
-            self.app_client.state.{state_type}{'(self.address)' if state_type == 'local_state' else ''}, 
-            "{map_name}"
+    # Generate state helper classes
+    for state_type, value_type, class_name, extra_params in state_configs:
+        keys = getattr(context.app_spec.state.keys, state_type if state_type != "box" else "box")
+        maps = getattr(context.app_spec.state.maps, state_type if state_type != "box" else "box")
+
+        if not keys and not maps:
+            continue
+
+        yield from _generate_state_class(
+            state_type=state_type,
+            class_name=class_name,
+            keys=keys,
+            maps=maps,
+            value_type_name=value_type if keys else None,
+            extra_params=extra_params,
         )
-""")
+        yield Part.Gap1
 
-    # Only generate _MapState if there are any maps
-    has_maps = any(
-        bool(getattr(context.app_spec.state.maps, f"{state_type}" if state_type != "box" else state_type))
-        for state_type in ["global_state", "local_state", "box"]
-    )
-
-    if has_maps:
+    # Generate MapState class if needed
+    if any(
+        bool(getattr(context.app_spec.state.maps, t if t != "box" else "box"))
+        for t in ["global_state", "local_state", "box"]
+    ):
         yield utils.indented("""
 class _MapState(Generic[KeyType, ValueType]):
     \"\"\"Generic class for accessing state maps with strongly typed keys and values\"\"\"

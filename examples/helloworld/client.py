@@ -290,7 +290,7 @@ class HelloWorldAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -420,8 +420,8 @@ class HelloWorldAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _HelloWorldAppUpdateSend:
@@ -552,8 +552,8 @@ class HelloWorldAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+        return self.app_client.send.bare.clear_state(params)
 
 
 class HelloWorldAppState:
@@ -561,7 +561,6 @@ class HelloWorldAppState:
 
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
-
 
 class HelloWorldAppClient:
     """Client for interacting with HelloWorldApp smart contract"""
@@ -1131,6 +1130,16 @@ class HelloWorldAppFactorySendCreate:
         return HelloWorldAppClient(result[0]), result[1]
 
 
+class _HelloWorldAppUpdateComposer:
+    def __init__(self, composer: "HelloWorldAppComposer"):
+        self.composer = composer
+
+
+class _HelloWorldAppDeleteComposer:
+    def __init__(self, composer: "HelloWorldAppComposer"):
+        self.composer = composer
+
+
 class HelloWorldAppComposer:
     """Composer for creating transaction groups for HelloWorldApp contract calls"""
 
@@ -1138,6 +1147,14 @@ class HelloWorldAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
+    @property
+    def update(self) -> "_HelloWorldAppUpdateComposer":
+        return _HelloWorldAppUpdateComposer(self)
+
+    @property
+    def delete(self) -> "_HelloWorldAppDeleteComposer":
+        return _HelloWorldAppDeleteComposer(self)
 
     def hello(
         self,
@@ -1158,10 +1175,12 @@ class HelloWorldAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "HelloWorldAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -1210,10 +1229,12 @@ class HelloWorldAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "HelloWorldAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(

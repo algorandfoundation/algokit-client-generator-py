@@ -22,7 +22,11 @@ def _generate_method_args_type(method: ContractMethod) -> str:
     if not method.abi or not method.abi.args:
         return "Any"
     tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
-    return f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+    args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
+    # Make args optional if all arguments have defaults
+    if all(arg.has_default for arg in method.abi.args):
+        args_type = f"{args_type} | None = None"
+    return args_type
 
 
 def _generate_method_args_parser() -> str:

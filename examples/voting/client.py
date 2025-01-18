@@ -631,7 +631,7 @@ class VotingRoundAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -894,8 +894,8 @@ class VotingRoundAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _VotingRoundAppDeleteSend:
@@ -1162,9 +1162,25 @@ class VotingRoundAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+        return self.app_client.send.bare.clear_state(params)
 
+
+class GlobalStateValue(TypedDict):
+    """Shape of global_state state key values"""
+    close_time: int
+    end_time: int
+    is_bootstrapped: int
+    metadata_ipfs_cid: bytes
+    nft_asset_id: int
+    nft_image_url: bytes
+    option_counts: bytes
+    quorum: int
+    snapshot_public_key: bytes
+    start_time: int
+    total_options: int
+    vote_id: bytes
+    voter_count: int
 
 class VotingRoundAppState:
     """Methods to access state for the current VotingRoundApp app"""
@@ -1174,71 +1190,70 @@ class VotingRoundAppState:
 
     @property
     def global_state(self) -> "_GlobalState":
-        """Methods to access global state for the current app"""
-        return _GlobalState(self.app_client)
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
 
 class _GlobalState:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
         
 
-    def get_all(self) -> dict[str, Any]:
+    def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return result
+        return cast(GlobalStateValue, result)
 
     def close_time(self) -> int:
-        """Get the current value of the close_time key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("close_time"))
+            """Get the current value of the close_time key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("close_time"))
 
     def end_time(self) -> int:
-        """Get the current value of the end_time key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("end_time"))
+            """Get the current value of the end_time key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("end_time"))
 
     def is_bootstrapped(self) -> int:
-        """Get the current value of the is_bootstrapped key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("is_bootstrapped"))
+            """Get the current value of the is_bootstrapped key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("is_bootstrapped"))
 
     def metadata_ipfs_cid(self) -> bytes:
-        """Get the current value of the metadata_ipfs_cid key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("metadata_ipfs_cid"))
+            """Get the current value of the metadata_ipfs_cid key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("metadata_ipfs_cid"))
 
     def nft_asset_id(self) -> int:
-        """Get the current value of the nft_asset_id key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("nft_asset_id"))
+            """Get the current value of the nft_asset_id key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("nft_asset_id"))
 
     def nft_image_url(self) -> bytes:
-        """Get the current value of the nft_image_url key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("nft_image_url"))
+            """Get the current value of the nft_image_url key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("nft_image_url"))
 
     def option_counts(self) -> bytes:
-        """Get the current value of the option_counts key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("option_counts"))
+            """Get the current value of the option_counts key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("option_counts"))
 
     def quorum(self) -> int:
-        """Get the current value of the quorum key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("quorum"))
+            """Get the current value of the quorum key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("quorum"))
 
     def snapshot_public_key(self) -> bytes:
-        """Get the current value of the snapshot_public_key key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("snapshot_public_key"))
+            """Get the current value of the snapshot_public_key key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("snapshot_public_key"))
 
     def start_time(self) -> int:
-        """Get the current value of the start_time key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("start_time"))
+            """Get the current value of the start_time key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("start_time"))
 
     def total_options(self) -> int:
-        """Get the current value of the total_options key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("total_options"))
+            """Get the current value of the total_options key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("total_options"))
 
     def vote_id(self) -> bytes:
-        """Get the current value of the vote_id key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("vote_id"))
+            """Get the current value of the vote_id key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("vote_id"))
 
     def voter_count(self) -> int:
-        """Get the current value of the voter_count key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("voter_count"))
-
+            """Get the current value of the voter_count key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("voter_count"))
 
 class VotingRoundAppClient:
     """Client for interacting with VotingRoundApp smart contract"""
@@ -2034,6 +2049,11 @@ class VotingRoundAppFactorySendCreate:
             )
 
 
+class _VotingRoundAppDeleteComposer:
+    def __init__(self, composer: "VotingRoundAppComposer"):
+        self.composer = composer
+
+
 class VotingRoundAppComposer:
     """Composer for creating transaction groups for VotingRoundApp contract calls"""
 
@@ -2041,6 +2061,10 @@ class VotingRoundAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
+    @property
+    def delete(self) -> "_VotingRoundAppDeleteComposer":
+        return _VotingRoundAppDeleteComposer(self)
 
     def bootstrap(
         self,
@@ -2061,10 +2085,12 @@ class VotingRoundAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "VotingRoundAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -2096,8 +2122,7 @@ class VotingRoundAppComposer:
 
     def close(
         self,
-        args: Any,
-        *,
+            *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -2113,15 +2138,11 @@ class VotingRoundAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "VotingRoundAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.close(
-                args=method_args, # type: ignore
+                
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2165,10 +2186,12 @@ class VotingRoundAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "VotingRoundAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -2217,10 +2240,12 @@ class VotingRoundAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "VotingRoundAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -2269,10 +2294,12 @@ class VotingRoundAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "VotingRoundAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(

@@ -10,17 +10,13 @@ from typing import (
     Any,
     Callable,
     Optional,
-    Protocol,
     Union,
     overload,
-    Generic,
     Tuple,
     TypedDict,
-    runtime_checkable,
     cast,
     Literal,
 )
-import algosdk
 from algosdk.transaction import OnComplete
 from algokit_utils.applications import AppFactoryCreateParams, AppFactoryCreateMethodCallResult, AppFactoryCreateWithSendParams, AppFactoryCreateMethodCallParams
 from algokit_utils.applications import (
@@ -91,6 +87,84 @@ _APP_SPEC_JSON = r"""{
             },
             "args": [
                 {
+                    "type": "uint32",
+                    "name": "input"
+                }
+            ],
+            "name": "call_abi_uint32",
+            "returns": {
+                "type": "uint32"
+            },
+            "events": []
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "uint32",
+                    "name": "input"
+                }
+            ],
+            "name": "call_abi_uint32_readonly",
+            "returns": {
+                "type": "uint32"
+            },
+            "events": [],
+            "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "uint64",
+                    "name": "input"
+                }
+            ],
+            "name": "call_abi_uint64",
+            "returns": {
+                "type": "uint64"
+            },
+            "events": []
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "uint64",
+                    "name": "input"
+                }
+            ],
+            "name": "call_abi_uint64_readonly",
+            "returns": {
+                "type": "uint64"
+            },
+            "events": [],
+            "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
                     "type": "string",
                     "name": "value"
                 }
@@ -125,6 +199,33 @@ _APP_SPEC_JSON = r"""{
             },
             "events": [],
             "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "asset"
+                },
+                {
+                    "type": "account",
+                    "name": "account"
+                },
+                {
+                    "type": "application",
+                    "name": "application"
+                }
+            ],
+            "name": "call_with_references",
+            "returns": {
+                "type": "uint64"
+            },
+            "events": []
         },
         {
             "actions": {
@@ -218,33 +319,6 @@ _APP_SPEC_JSON = r"""{
                 ],
                 "create": []
             },
-            "args": [
-                {
-                    "type": "asset",
-                    "name": "asset"
-                },
-                {
-                    "type": "account",
-                    "name": "account"
-                },
-                {
-                    "type": "application",
-                    "name": "application"
-                }
-            ],
-            "name": "call_with_references",
-            "returns": {
-                "type": "uint64"
-            },
-            "events": []
-        },
-        {
-            "actions": {
-                "call": [
-                    "NoOp"
-                ],
-                "create": []
-            },
             "args": [],
             "name": "error",
             "returns": {
@@ -287,6 +361,31 @@ _APP_SPEC_JSON = r"""{
             },
             "args": [
                 {
+                    "type": "uint64",
+                    "defaultValue": {
+                        "data": "AAAAAAAAAHs=",
+                        "source": "literal",
+                        "type": "uint64"
+                    },
+                    "name": "arg_with_default"
+                }
+            ],
+            "name": "default_value_int",
+            "returns": {
+                "type": "uint64"
+            },
+            "events": [],
+            "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
                     "type": "string",
                     "defaultValue": {
                         "data": "default_value",
@@ -296,6 +395,56 @@ _APP_SPEC_JSON = r"""{
                 }
             ],
             "name": "default_value_from_abi",
+            "returns": {
+                "type": "string"
+            },
+            "events": [],
+            "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "uint64",
+                    "defaultValue": {
+                        "data": "aW50MQ==",
+                        "source": "global",
+                        "type": "uint64"
+                    },
+                    "name": "arg_with_default"
+                }
+            ],
+            "name": "default_value_from_global_state",
+            "returns": {
+                "type": "uint64"
+            },
+            "events": [],
+            "readonly": true
+        },
+        {
+            "actions": {
+                "call": [
+                    "NoOp"
+                ],
+                "create": []
+            },
+            "args": [
+                {
+                    "type": "string",
+                    "defaultValue": {
+                        "data": "bG9jYWxfYnl0ZXMx",
+                        "source": "local",
+                        "type": "AVMString"
+                    },
+                    "name": "arg_with_default"
+                }
+            ],
+            "name": "default_value_from_local_state",
             "returns": {
                 "type": "string"
             },
@@ -372,27 +521,6 @@ _APP_SPEC_JSON = r"""{
                 "type": "void"
             },
             "events": []
-        },
-        {
-            "actions": {
-                "call": [
-                    "NoOp"
-                ],
-                "create": []
-            },
-            "args": [
-                {
-                    "type": "(string,uint64)",
-                    "name": "name_age",
-                    "struct": "Input"
-                }
-            ],
-            "name": "structs",
-            "returns": {
-                "type": "(string,uint64)",
-                "struct": "Output"
-            },
-            "events": []
         }
     ],
     "name": "StateApp",
@@ -403,49 +531,58 @@ _APP_SPEC_JSON = r"""{
                 "bytes1": {
                     "key": "Ynl0ZXMx",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes"
+                    "valueType": "AVMBytes",
+                    "desc": ""
                 },
                 "bytes2": {
                     "key": "Ynl0ZXMy",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes"
+                    "valueType": "AVMBytes",
+                    "desc": ""
                 },
                 "int1": {
                     "key": "aW50MQ==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64"
+                    "valueType": "AVMUint64",
+                    "desc": ""
                 },
                 "int2": {
                     "key": "aW50Mg==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64"
+                    "valueType": "AVMUint64",
+                    "desc": ""
                 },
                 "value": {
                     "key": "dmFsdWU=",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64"
+                    "valueType": "AVMUint64",
+                    "desc": ""
                 }
             },
             "local": {
                 "local_bytes1": {
                     "key": "bG9jYWxfYnl0ZXMx",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes"
+                    "valueType": "AVMBytes",
+                    "desc": ""
                 },
                 "local_bytes2": {
                     "key": "bG9jYWxfYnl0ZXMy",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes"
+                    "valueType": "AVMBytes",
+                    "desc": ""
                 },
                 "local_int1": {
                     "key": "bG9jYWxfaW50MQ==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64"
+                    "valueType": "AVMUint64",
+                    "desc": ""
                 },
                 "local_int2": {
                     "key": "bG9jYWxfaW50Mg==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64"
+                    "valueType": "AVMUint64",
+                    "desc": ""
                 }
             }
         },
@@ -456,57 +593,39 @@ _APP_SPEC_JSON = r"""{
         },
         "schema": {
             "global": {
-                "bytes": 2,
+                "bytes": 3,
                 "ints": 3
             },
             "local": {
-                "bytes": 2,
+                "bytes": 3,
                 "ints": 2
             }
         }
     },
-    "structs": {
-        "Input": [
-            {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "age",
-                "type": "uint64"
-            }
-        ],
-        "Output": [
-            {
-                "name": "message",
-                "type": "string"
-            },
-            {
-                "name": "result",
-                "type": "uint64"
-            }
-        ]
-    },
+    "structs": {},
     "source": {
-        "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMSAxMCA1IFRNUExfVVBEQVRBQkxFIFRNUExfREVMRVRBQkxFCmJ5dGVjYmxvY2sgMHggMHgxNTFmN2M3NSAweDQ4NjU2YzZjNmYyYzIwCnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2wzMAp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweGYxN2U4MGE1IC8vICJjYWxsX2FiaShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjkKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgwYTkyYTgxZSAvLyAiY2FsbF9hYmlfdHhuKHBheSxzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjgKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhhNGNmOGRlYSAvLyAic2V0X2dsb2JhbCh1aW50NjQsdWludDY0LHN0cmluZyxieXRlWzRdKXZvaWQiCj09CmJueiBtYWluX2wyNwp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweGNlYzI4MzRhIC8vICJzZXRfbG9jYWwodWludDY0LHVpbnQ2NCxzdHJpbmcsYnl0ZVs0XSl2b2lkIgo9PQpibnogbWFpbl9sMjYKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhhNGI0YTIzMCAvLyAic2V0X2JveChieXRlWzRdLHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sMjUKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhmZWZkZjExZSAvLyAiY2FsbF93aXRoX3JlZmVyZW5jZXMoYXNzZXQsYWNjb3VudCxhcHBsaWNhdGlvbil1aW50NjQiCj09CmJueiBtYWluX2wyNAp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweDQ0ZDBkYTBkIC8vICJlcnJvcigpdm9pZCIKPT0KYm56IG1haW5fbDIzCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NTc0YjU1YzggLy8gImRlZmF1bHRfdmFsdWUoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDIyCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NDZkMjExYTMgLy8gImRlZmF1bHRfdmFsdWVfZnJvbV9hYmkoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDIxCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4OWQ1MjMwNDAgLy8gImNyZWF0ZV9hYmkoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDIwCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4M2NhNWNlYjcgLy8gInVwZGF0ZV9hYmkoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDE5CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MjcxYjRlZTkgLy8gImRlbGV0ZV9hYmkoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDE4CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MzBjNmQ1OGEgLy8gIm9wdF9pbigpdm9pZCIKPT0KYm56IG1haW5fbDE3CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MjQ2YmViODMgLy8gInN0cnVjdHMoKHN0cmluZyx1aW50NjQpKShzdHJpbmcsdWludDY0KSIKPT0KYm56IG1haW5fbDE2CmVycgptYWluX2wxNjoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBzdHJ1Y3RzY2FzdGVyXzMxCmludGNfMSAvLyAxCnJldHVybgptYWluX2wxNzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzEgLy8gT3B0SW4KPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgb3B0aW5jYXN0ZXJfMzAKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDE4Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMyAvLyBEZWxldGVBcHBsaWNhdGlvbgo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBkZWxldGVhYmljYXN0ZXJfMjkKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDE5Ogp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiB1cGRhdGVhYmljYXN0ZXJfMjgKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDIwOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CiYmCmFzc2VydApjYWxsc3ViIGNyZWF0ZWFiaWNhc3Rlcl8yNwppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjE6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgZGVmYXVsdHZhbHVlZnJvbWFiaWNhc3Rlcl8yNgppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjI6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgZGVmYXVsdHZhbHVlY2FzdGVyXzI1CmludGNfMSAvLyAxCnJldHVybgptYWluX2wyMzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBlcnJvcmNhc3Rlcl8yNAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjQ6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgY2FsbHdpdGhyZWZlcmVuY2VzY2FzdGVyXzIzCmludGNfMSAvLyAxCnJldHVybgptYWluX2wyNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBzZXRib3hjYXN0ZXJfMjIKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDI2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIHNldGxvY2FsY2FzdGVyXzIxCmludGNfMSAvLyAxCnJldHVybgptYWluX2wyNzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBzZXRnbG9iYWxjYXN0ZXJfMjAKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDI4Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGNhbGxhYml0eG5jYXN0ZXJfMTkKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDI5Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGNhbGxhYmljYXN0ZXJfMTgKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDMwOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wzOAp0eG4gT25Db21wbGV0aW9uCmludGNfMSAvLyBPcHRJbgo9PQpibnogbWFpbl9sMzcKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDQgLy8gVXBkYXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDM2CnR4biBPbkNvbXBsZXRpb24KaW50Y18zIC8vIERlbGV0ZUFwcGxpY2F0aW9uCj09CmJueiBtYWluX2wzNQplcnIKbWFpbl9sMzU6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIGRlbGV0ZV8xNAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzY6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIHVwZGF0ZV8xMgppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzc6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydApjYWxsc3ViIGNyZWF0ZV8xMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzg6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydApjYWxsc3ViIGNyZWF0ZV8xMAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIGNhbGxfYWJpCmNhbGxhYmlfMDoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKYnl0ZWNfMiAvLyAiSGVsbG8sICIKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmNvbmNhdApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGl0b2EKaXRvYV8xOgpwcm90byAxIDEKZnJhbWVfZGlnIC0xCmludGNfMCAvLyAwCj09CmJueiBpdG9hXzFfbDUKZnJhbWVfZGlnIC0xCmludGNfMiAvLyAxMAovCmludGNfMCAvLyAwCj4KYm56IGl0b2FfMV9sNApieXRlY18wIC8vICIiCml0b2FfMV9sMzoKcHVzaGJ5dGVzIDB4MzAzMTMyMzMzNDM1MzYzNzM4MzkgLy8gIjAxMjM0NTY3ODkiCmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKJQppbnRjXzEgLy8gMQpleHRyYWN0Mwpjb25jYXQKYiBpdG9hXzFfbDYKaXRvYV8xX2w0OgpmcmFtZV9kaWcgLTEKaW50Y18yIC8vIDEwCi8KY2FsbHN1YiBpdG9hXzEKYiBpdG9hXzFfbDMKaXRvYV8xX2w1OgpwdXNoYnl0ZXMgMHgzMCAvLyAiMCIKaXRvYV8xX2w2OgpyZXRzdWIKCi8vIGNhbGxfYWJpX3R4bgpjYWxsYWJpdHhuXzI6CnByb3RvIDIgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDUzNjU2ZTc0MjAgLy8gIlNlbnQgIgpmcmFtZV9kaWcgLTIKZ3R4bnMgQW1vdW50CmNhbGxzdWIgaXRvYV8xCmNvbmNhdApwdXNoYnl0ZXMgMHgyZTIwIC8vICIuICIKY29uY2F0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBzZXRfZ2xvYmFsCnNldGdsb2JhbF8zOgpwcm90byA0IDAKcHVzaGJ5dGVzIDB4Njk2ZTc0MzEgLy8gImludDEiCmZyYW1lX2RpZyAtNAphcHBfZ2xvYmFsX3B1dApwdXNoYnl0ZXMgMHg2OTZlNzQzMiAvLyAiaW50MiIKZnJhbWVfZGlnIC0zCmFwcF9nbG9iYWxfcHV0CnB1c2hieXRlcyAweDYyNzk3NDY1NzMzMSAvLyAiYnl0ZXMxIgpmcmFtZV9kaWcgLTIKZXh0cmFjdCAyIDAKYXBwX2dsb2JhbF9wdXQKcHVzaGJ5dGVzIDB4NjI3OTc0NjU3MzMyIC8vICJieXRlczIiCmZyYW1lX2RpZyAtMQphcHBfZ2xvYmFsX3B1dApyZXRzdWIKCi8vIHNldF9sb2NhbApzZXRsb2NhbF80Ogpwcm90byA0IDAKdHhuIFNlbmRlcgpwdXNoYnl0ZXMgMHg2YzZmNjM2MTZjNWY2OTZlNzQzMSAvLyAibG9jYWxfaW50MSIKZnJhbWVfZGlnIC00CmFwcF9sb2NhbF9wdXQKdHhuIFNlbmRlcgpwdXNoYnl0ZXMgMHg2YzZmNjM2MTZjNWY2OTZlNzQzMiAvLyAibG9jYWxfaW50MiIKZnJhbWVfZGlnIC0zCmFwcF9sb2NhbF9wdXQKdHhuIFNlbmRlcgpwdXNoYnl0ZXMgMHg2YzZmNjM2MTZjNWY2Mjc5NzQ2NTczMzEgLy8gImxvY2FsX2J5dGVzMSIKZnJhbWVfZGlnIC0yCmV4dHJhY3QgMiAwCmFwcF9sb2NhbF9wdXQKdHhuIFNlbmRlcgpwdXNoYnl0ZXMgMHg2YzZmNjM2MTZjNWY2Mjc5NzQ2NTczMzIgLy8gImxvY2FsX2J5dGVzMiIKZnJhbWVfZGlnIC0xCmFwcF9sb2NhbF9wdXQKcmV0c3ViCgovLyBzZXRfYm94CnNldGJveF81Ogpwcm90byAyIDAKZnJhbWVfZGlnIC0yCmJveF9kZWwKcG9wCmZyYW1lX2RpZyAtMgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKYm94X3B1dApyZXRzdWIKCi8vIGNhbGxfd2l0aF9yZWZlcmVuY2VzCmNhbGx3aXRocmVmZXJlbmNlc182Ogpwcm90byAzIDEKaW50Y18wIC8vIDAKZnJhbWVfZGlnIC0zCnR4bmFzIEFzc2V0cwovLyBhc3NldCBub3QgcHJvdmlkZWQKYXNzZXJ0CmZyYW1lX2RpZyAtMgp0eG5hcyBBY2NvdW50cwpsZW4KLy8gYWNjb3VudCBub3QgcHJvdmlkZWQKYXNzZXJ0CmZyYW1lX2RpZyAtMQp0eG5hcyBBcHBsaWNhdGlvbnMKLy8gYXBwbGljYXRpb24gbm90IHByb3ZpZGVkCmFzc2VydAppbnRjXzEgLy8gMQpmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBlcnJvcgplcnJvcl83Ogpwcm90byAwIDAKaW50Y18wIC8vIDAKLy8gRGVsaWJlcmF0ZSBlcnJvcgphc3NlcnQKcmV0c3ViCgovLyBkZWZhdWx0X3ZhbHVlCmRlZmF1bHR2YWx1ZV84Ogpwcm90byAxIDEKYnl0ZWNfMCAvLyAiIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBkZWZhdWx0X3ZhbHVlX2Zyb21fYWJpCmRlZmF1bHR2YWx1ZWZyb21hYmlfOToKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKcHVzaGJ5dGVzIDB4NDE0MjQ5MmMyMCAvLyAiQUJJLCAiCmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjcmVhdGUKY3JlYXRlXzEwOgpwcm90byAwIDAKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydApwdXNoYnl0ZXMgMHg3NjYxNmM3NTY1IC8vICJ2YWx1ZSIKcHVzaGludCBUTVBMX1ZBTFVFIC8vIFRNUExfVkFMVUUKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBjcmVhdGVfYWJpCmNyZWF0ZWFiaV8xMToKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyB1cGRhdGUKdXBkYXRlXzEyOgpwcm90byAwIDAKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydAppbnRjIDQgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKcmV0c3ViCgovLyB1cGRhdGVfYWJpCnVwZGF0ZWFiaV8xMzoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydAppbnRjIDQgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gZGVsZXRlCmRlbGV0ZV8xNDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKaW50YyA1IC8vIFRNUExfREVMRVRBQkxFCi8vIENoZWNrIGFwcCBpcyBkZWxldGFibGUKYXNzZXJ0CnJldHN1YgoKLy8gZGVsZXRlX2FiaQpkZWxldGVhYmlfMTU6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKaW50YyA1IC8vIFRNUExfREVMRVRBQkxFCi8vIENoZWNrIGFwcCBpcyBkZWxldGFibGUKYXNzZXJ0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIG9wdF9pbgpvcHRpbl8xNjoKcHJvdG8gMCAwCmludGNfMSAvLyAxCnJldHVybgoKLy8gc3RydWN0cwpzdHJ1Y3RzXzE3Ogpwcm90byAxIDEKYnl0ZWNfMCAvLyAiIgpkdXAKaW50Y18wIC8vIDAKYnl0ZWNfMCAvLyAiIgppbnRjXzAgLy8gMApkdXBuIDIKYnl0ZWNfMCAvLyAiIgpkdXAKZnJhbWVfZGlnIC0xCmZyYW1lX2RpZyAtMQppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQxNgpkaWcgMQpsZW4Kc3Vic3RyaW5nMwpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIC0xCnB1c2hpbnQgMiAvLyAyCmV4dHJhY3RfdWludDY0CmZyYW1lX2J1cnkgMgpieXRlY18yIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgMQpleHRyYWN0IDIgMApjb25jYXQKZnJhbWVfYnVyeSAzCmZyYW1lX2RpZyAzCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAzCmNvbmNhdApmcmFtZV9idXJ5IDMKZnJhbWVfZGlnIDIKcHVzaGludCAyIC8vIDIKKgpmcmFtZV9idXJ5IDQKZnJhbWVfZGlnIDMKZnJhbWVfYnVyeSA4CmZyYW1lX2RpZyA4CmZyYW1lX2J1cnkgNwppbnRjXzIgLy8gMTAKZnJhbWVfYnVyeSA1CmZyYW1lX2RpZyA1Cml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDQKaXRvYgpjb25jYXQKZnJhbWVfZGlnIDcKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGNhbGxfYWJpX2Nhc3RlcgpjYWxsYWJpY2FzdGVyXzE4Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBjYWxsYWJpXzAKZnJhbWVfYnVyeSAwCmJ5dGVjXzEgLy8gMHgxNTFmN2M3NQpmcmFtZV9kaWcgMApjb25jYXQKbG9nCnJldHN1YgoKLy8gY2FsbF9hYmlfdHhuX2Nhc3RlcgpjYWxsYWJpdHhuY2FzdGVyXzE5Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgppbnRjXzAgLy8gMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAyCnR4biBHcm91cEluZGV4CmludGNfMSAvLyAxCi0KZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmd0eG5zIFR5cGVFbnVtCmludGNfMSAvLyBwYXkKPT0KYXNzZXJ0CmZyYW1lX2RpZyAxCmZyYW1lX2RpZyAyCmNhbGxzdWIgY2FsbGFiaXR4bl8yCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIHNldF9nbG9iYWxfY2FzdGVyCnNldGdsb2JhbGNhc3Rlcl8yMDoKcHJvdG8gMCAwCmludGNfMCAvLyAwCmR1cApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmJ0b2kKZnJhbWVfYnVyeSAwCnR4bmEgQXBwbGljYXRpb25BcmdzIDIKYnRvaQpmcmFtZV9idXJ5IDEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwpmcmFtZV9idXJ5IDIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNApmcmFtZV9idXJ5IDMKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKZnJhbWVfZGlnIDIKZnJhbWVfZGlnIDMKY2FsbHN1YiBzZXRnbG9iYWxfMwpyZXRzdWIKCi8vIHNldF9sb2NhbF9jYXN0ZXIKc2V0bG9jYWxjYXN0ZXJfMjE6CnByb3RvIDAgMAppbnRjXzAgLy8gMApkdXAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpidG9pCmZyYW1lX2J1cnkgMAp0eG5hIEFwcGxpY2F0aW9uQXJncyAyCmJ0b2kKZnJhbWVfYnVyeSAxCnR4bmEgQXBwbGljYXRpb25BcmdzIDMKZnJhbWVfYnVyeSAyCnR4bmEgQXBwbGljYXRpb25BcmdzIDQKZnJhbWVfYnVyeSAzCmZyYW1lX2RpZyAwCmZyYW1lX2RpZyAxCmZyYW1lX2RpZyAyCmZyYW1lX2RpZyAzCmNhbGxzdWIgc2V0bG9jYWxfNApyZXRzdWIKCi8vIHNldF9ib3hfY2FzdGVyCnNldGJveGNhc3Rlcl8yMjoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCnR4bmEgQXBwbGljYXRpb25BcmdzIDIKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAwCmZyYW1lX2RpZyAxCmNhbGxzdWIgc2V0Ym94XzUKcmV0c3ViCgovLyBjYWxsX3dpdGhfcmVmZXJlbmNlc19jYXN0ZXIKY2FsbHdpdGhyZWZlcmVuY2VzY2FzdGVyXzIzOgpwcm90byAwIDAKaW50Y18wIC8vIDAKZHVwbiAzCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKaW50Y18wIC8vIDAKZ2V0Ynl0ZQpmcmFtZV9idXJ5IDEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgppbnRjXzAgLy8gMApnZXRieXRlCmZyYW1lX2J1cnkgMgp0eG5hIEFwcGxpY2F0aW9uQXJncyAzCmludGNfMCAvLyAwCmdldGJ5dGUKZnJhbWVfYnVyeSAzCmZyYW1lX2RpZyAxCmZyYW1lX2RpZyAyCmZyYW1lX2RpZyAzCmNhbGxzdWIgY2FsbHdpdGhyZWZlcmVuY2VzXzYKZnJhbWVfYnVyeSAwCmJ5dGVjXzEgLy8gMHgxNTFmN2M3NQpmcmFtZV9kaWcgMAppdG9iCmNvbmNhdApsb2cKcmV0c3ViCgovLyBlcnJvcl9jYXN0ZXIKZXJyb3JjYXN0ZXJfMjQ6CnByb3RvIDAgMApjYWxsc3ViIGVycm9yXzcKcmV0c3ViCgovLyBkZWZhdWx0X3ZhbHVlX2Nhc3RlcgpkZWZhdWx0dmFsdWVjYXN0ZXJfMjU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGRlZmF1bHR2YWx1ZV84CmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGRlZmF1bHRfdmFsdWVfZnJvbV9hYmlfY2FzdGVyCmRlZmF1bHR2YWx1ZWZyb21hYmljYXN0ZXJfMjY6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGRlZmF1bHR2YWx1ZWZyb21hYmlfOQpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBjcmVhdGVfYWJpX2Nhc3RlcgpjcmVhdGVhYmljYXN0ZXJfMjc6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGNyZWF0ZWFiaV8xMQpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyB1cGRhdGVfYWJpX2Nhc3Rlcgp1cGRhdGVhYmljYXN0ZXJfMjg6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIHVwZGF0ZWFiaV8xMwpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBkZWxldGVfYWJpX2Nhc3RlcgpkZWxldGVhYmljYXN0ZXJfMjk6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGRlbGV0ZWFiaV8xNQpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBvcHRfaW5fY2FzdGVyCm9wdGluY2FzdGVyXzMwOgpwcm90byAwIDAKY2FsbHN1YiBvcHRpbl8xNgpyZXRzdWIKCi8vIHN0cnVjdHNfY2FzdGVyCnN0cnVjdHNjYXN0ZXJfMzE6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIHN0cnVjdHNfMTcKZnJhbWVfYnVyeSAwCmJ5dGVjXzEgLy8gMHgxNTFmN2M3NQpmcmFtZV9kaWcgMApjb25jYXQKbG9nCnJldHN1Yg==",
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMSAxMCA1IDQyOTQ5NjcyOTYgVE1QTF9VUERBVEFCTEUgVE1QTF9ERUxFVEFCTEUKYnl0ZWNibG9jayAweCAweDE1MWY3Yzc1CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w0Mgp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweGUxNjU0ZjE2IC8vICJjYWxsX2FiaV91aW50MzIodWludDMyKXVpbnQzMiIKPT0KYm56IG1haW5fbDQxCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4ODU0MDRlZWUgLy8gImNhbGxfYWJpX3VpbnQzMl9yZWFkb25seSh1aW50MzIpdWludDMyIgo9PQpibnogbWFpbl9sNDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgyYmFjN2UwOCAvLyAiY2FsbF9hYmlfdWludDY0KHVpbnQ2NCl1aW50NjQiCj09CmJueiBtYWluX2wzOQp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweDAxMWE5NjRmIC8vICJjYWxsX2FiaV91aW50NjRfcmVhZG9ubHkodWludDY0KXVpbnQ2NCIKPT0KYm56IG1haW5fbDM4CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4ZjE3ZTgwYTUgLy8gImNhbGxfYWJpKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2wzNwp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweDBhOTJhODFlIC8vICJjYWxsX2FiaV90eG4ocGF5LHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2wzNgp0eG5hIEFwcGxpY2F0aW9uQXJncyAwCnB1c2hieXRlcyAweGZlZmRmMTFlIC8vICJjYWxsX3dpdGhfcmVmZXJlbmNlcyhhc3NldCxhY2NvdW50LGFwcGxpY2F0aW9uKXVpbnQ2NCIKPT0KYm56IG1haW5fbDM1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YTRjZjhkZWEgLy8gInNldF9nbG9iYWwodWludDY0LHVpbnQ2NCxzdHJpbmcsYnl0ZVs0XSl2b2lkIgo9PQpibnogbWFpbl9sMzQKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhjZWMyODM0YSAvLyAic2V0X2xvY2FsKHVpbnQ2NCx1aW50NjQsc3RyaW5nLGJ5dGVbNF0pdm9pZCIKPT0KYm56IG1haW5fbDMzCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YTRiNGEyMzAgLy8gInNldF9ib3goYnl0ZVs0XSxzdHJpbmcpdm9pZCIKPT0KYm56IG1haW5fbDMyCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NDRkMGRhMGQgLy8gImVycm9yKCl2b2lkIgo9PQpibnogbWFpbl9sMzEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg1NzRiNTVjOCAvLyAiZGVmYXVsdF92YWx1ZShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMzAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgzNjAzNjJlOSAvLyAiZGVmYXVsdF92YWx1ZV9pbnQodWludDY0KXVpbnQ2NCIKPT0KYm56IG1haW5fbDI5CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NDZkMjExYTMgLy8gImRlZmF1bHRfdmFsdWVfZnJvbV9hYmkoc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDI4CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MGNmY2JiMDAgLy8gImRlZmF1bHRfdmFsdWVfZnJvbV9nbG9iYWxfc3RhdGUodWludDY0KXVpbnQ2NCIKPT0KYm56IG1haW5fbDI3CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4ZDBmMGJhZjggLy8gImRlZmF1bHRfdmFsdWVfZnJvbV9sb2NhbF9zdGF0ZShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjYKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg5ZDUyMzA0MCAvLyAiY3JlYXRlX2FiaShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjUKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgzY2E1Y2ViNyAvLyAidXBkYXRlX2FiaShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjQKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgyNzFiNGVlOSAvLyAiZGVsZXRlX2FiaShzdHJpbmcpc3RyaW5nIgo9PQpibnogbWFpbl9sMjMKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgzMGM2ZDU4YSAvLyAib3B0X2luKCl2b2lkIgo9PQpibnogbWFpbl9sMjIKZXJyCm1haW5fbDIyOgp0eG4gT25Db21wbGV0aW9uCmludGNfMSAvLyBPcHRJbgo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBvcHRpbmNhc3Rlcl80MwppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjM6CnR4biBPbkNvbXBsZXRpb24KaW50Y18zIC8vIERlbGV0ZUFwcGxpY2F0aW9uCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGRlbGV0ZWFiaWNhc3Rlcl80MgppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjQ6CnR4biBPbkNvbXBsZXRpb24KcHVzaGludCA0IC8vIFVwZGF0ZUFwcGxpY2F0aW9uCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIHVwZGF0ZWFiaWNhc3Rlcl80MQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjU6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KJiYKYXNzZXJ0CmNhbGxzdWIgY3JlYXRlYWJpY2FzdGVyXzQwCmludGNfMSAvLyAxCnJldHVybgptYWluX2wyNjoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBkZWZhdWx0dmFsdWVmcm9tbG9jYWxzdGF0ZWNhc3Rlcl8zOQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMjc6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgZGVmYXVsdHZhbHVlZnJvbWdsb2JhbHN0YXRlY2FzdGVyXzM4CmludGNfMSAvLyAxCnJldHVybgptYWluX2wyODoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBkZWZhdWx0dmFsdWVmcm9tYWJpY2FzdGVyXzM3CmludGNfMSAvLyAxCnJldHVybgptYWluX2wyOToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBkZWZhdWx0dmFsdWVpbnRjYXN0ZXJfMzYKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDMwOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGRlZmF1bHR2YWx1ZWNhc3Rlcl8zNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzE6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgZXJyb3JjYXN0ZXJfMzQKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDMyOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIHNldGJveGNhc3Rlcl8zMwppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzM6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgc2V0bG9jYWxjYXN0ZXJfMzIKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDM0Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIHNldGdsb2JhbGNhc3Rlcl8zMQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMzU6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgY2FsbHdpdGhyZWZlcmVuY2VzY2FzdGVyXzMwCmludGNfMSAvLyAxCnJldHVybgptYWluX2wzNjoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBjYWxsYWJpdHhuY2FzdGVyXzI5CmludGNfMSAvLyAxCnJldHVybgptYWluX2wzNzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBjYWxsYWJpY2FzdGVyXzI4CmludGNfMSAvLyAxCnJldHVybgptYWluX2wzODoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBjYWxsYWJpdWludDY0cmVhZG9ubHljYXN0ZXJfMjcKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDM5Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGNhbGxhYml1aW50NjRjYXN0ZXJfMjYKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDQwOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGNhbGxhYml1aW50MzJyZWFkb25seWNhc3Rlcl8yNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNDE6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgY2FsbGFiaXVpbnQzMmNhc3Rlcl8yNAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNDI6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KYm56IG1haW5fbDUwCnR4biBPbkNvbXBsZXRpb24KaW50Y18xIC8vIE9wdEluCj09CmJueiBtYWluX2w0OQp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sNDgKdHhuIE9uQ29tcGxldGlvbgppbnRjXzMgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDQ3CmVycgptYWluX2w0NzoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzIxCmludGNfMSAvLyAxCnJldHVybgptYWluX2w0ODoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgdXBkYXRlXzE5CmludGNfMSAvLyAxCnJldHVybgptYWluX2w0OToKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgY3JlYXRlXzE3CmludGNfMSAvLyAxCnJldHVybgptYWluX2w1MDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgY3JlYXRlXzE3CmludGNfMSAvLyAxCnJldHVybgoKLy8gY2FsbF9hYmlfdWludDMyCmNhbGxhYml1aW50MzJfMDoKcHJvdG8gMSAxCmludGNfMCAvLyAwCmZyYW1lX2RpZyAtMQpmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKaW50YyA0IC8vIDQyOTQ5NjcyOTYKPAphc3NlcnQKcmV0c3ViCgovLyBjYWxsX2FiaV91aW50MzJfcmVhZG9ubHkKY2FsbGFiaXVpbnQzMnJlYWRvbmx5XzE6CnByb3RvIDEgMQppbnRjXzAgLy8gMApmcmFtZV9kaWcgLTEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmludGMgNCAvLyA0Mjk0OTY3Mjk2CjwKYXNzZXJ0CnJldHN1YgoKLy8gY2FsbF9hYmlfdWludDY0CmNhbGxhYml1aW50NjRfMjoKcHJvdG8gMSAxCmludGNfMCAvLyAwCmZyYW1lX2RpZyAtMQpmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjYWxsX2FiaV91aW50NjRfcmVhZG9ubHkKY2FsbGFiaXVpbnQ2NHJlYWRvbmx5XzM6CnByb3RvIDEgMQppbnRjXzAgLy8gMApmcmFtZV9kaWcgLTEKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gY2FsbF9hYmkKY2FsbGFiaV80Ogpwcm90byAxIDEKYnl0ZWNfMCAvLyAiIgpwdXNoYnl0ZXMgMHg0ODY1NmM2YzZmMmMyMCAvLyAiSGVsbG8sICIKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmNvbmNhdApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGl0b2EKaXRvYV81Ogpwcm90byAxIDEKZnJhbWVfZGlnIC0xCmludGNfMCAvLyAwCj09CmJueiBpdG9hXzVfbDUKZnJhbWVfZGlnIC0xCmludGNfMiAvLyAxMAovCmludGNfMCAvLyAwCj4KYm56IGl0b2FfNV9sNApieXRlY18wIC8vICIiCml0b2FfNV9sMzoKcHVzaGJ5dGVzIDB4MzAzMTMyMzMzNDM1MzYzNzM4MzkgLy8gIjAxMjM0NTY3ODkiCmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKJQppbnRjXzEgLy8gMQpleHRyYWN0Mwpjb25jYXQKYiBpdG9hXzVfbDYKaXRvYV81X2w0OgpmcmFtZV9kaWcgLTEKaW50Y18yIC8vIDEwCi8KY2FsbHN1YiBpdG9hXzUKYiBpdG9hXzVfbDMKaXRvYV81X2w1OgpwdXNoYnl0ZXMgMHgzMCAvLyAiMCIKaXRvYV81X2w2OgpyZXRzdWIKCi8vIGNhbGxfYWJpX3R4bgpjYWxsYWJpdHhuXzY6CnByb3RvIDIgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDUzNjU2ZTc0MjAgLy8gIlNlbnQgIgpmcmFtZV9kaWcgLTIKZ3R4bnMgQW1vdW50CmNhbGxzdWIgaXRvYV81CmNvbmNhdApwdXNoYnl0ZXMgMHgyZTIwIC8vICIuICIKY29uY2F0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjYWxsX3dpdGhfcmVmZXJlbmNlcwpjYWxsd2l0aHJlZmVyZW5jZXNfNzoKcHJvdG8gMyAxCmludGNfMCAvLyAwCmZyYW1lX2RpZyAtMwp0eG5hcyBBc3NldHMKLy8gYXNzZXQgbm90IHByb3ZpZGVkCmFzc2VydApmcmFtZV9kaWcgLTIKdHhuYXMgQWNjb3VudHMKbGVuCi8vIGFjY291bnQgbm90IHByb3ZpZGVkCmFzc2VydApmcmFtZV9kaWcgLTEKdHhuYXMgQXBwbGljYXRpb25zCi8vIGFwcGxpY2F0aW9uIG5vdCBwcm92aWRlZAphc3NlcnQKaW50Y18xIC8vIDEKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gc2V0X2dsb2JhbApzZXRnbG9iYWxfODoKcHJvdG8gNCAwCnB1c2hieXRlcyAweDY5NmU3NDMxIC8vICJpbnQxIgpmcmFtZV9kaWcgLTQKYXBwX2dsb2JhbF9wdXQKcHVzaGJ5dGVzIDB4Njk2ZTc0MzIgLy8gImludDIiCmZyYW1lX2RpZyAtMwphcHBfZ2xvYmFsX3B1dApwdXNoYnl0ZXMgMHg2Mjc5NzQ2NTczMzEgLy8gImJ5dGVzMSIKZnJhbWVfZGlnIC0yCmV4dHJhY3QgMiAwCmFwcF9nbG9iYWxfcHV0CnB1c2hieXRlcyAweDYyNzk3NDY1NzMzMiAvLyAiYnl0ZXMyIgpmcmFtZV9kaWcgLTEKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBzZXRfbG9jYWwKc2V0bG9jYWxfOToKcHJvdG8gNCAwCnR4biBTZW5kZXIKcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzVmNjk2ZTc0MzEgLy8gImxvY2FsX2ludDEiCmZyYW1lX2RpZyAtNAphcHBfbG9jYWxfcHV0CnR4biBTZW5kZXIKcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzVmNjk2ZTc0MzIgLy8gImxvY2FsX2ludDIiCmZyYW1lX2RpZyAtMwphcHBfbG9jYWxfcHV0CnR4biBTZW5kZXIKcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzVmNjI3OTc0NjU3MzMxIC8vICJsb2NhbF9ieXRlczEiCmZyYW1lX2RpZyAtMgpleHRyYWN0IDIgMAphcHBfbG9jYWxfcHV0CnR4biBTZW5kZXIKcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzVmNjI3OTc0NjU3MzMyIC8vICJsb2NhbF9ieXRlczIiCmZyYW1lX2RpZyAtMQphcHBfbG9jYWxfcHV0CnJldHN1YgoKLy8gc2V0X2JveApzZXRib3hfMTA6CnByb3RvIDIgMApmcmFtZV9kaWcgLTIKYm94X2RlbApwb3AKZnJhbWVfZGlnIC0yCmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApib3hfcHV0CnJldHN1YgoKLy8gZXJyb3IKZXJyb3JfMTE6CnByb3RvIDAgMAppbnRjXzAgLy8gMAovLyBEZWxpYmVyYXRlIGVycm9yCmFzc2VydApyZXRzdWIKCi8vIGRlZmF1bHRfdmFsdWUKZGVmYXVsdHZhbHVlXzEyOgpwcm90byAxIDEKYnl0ZWNfMCAvLyAiIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBkZWZhdWx0X3ZhbHVlX2ludApkZWZhdWx0dmFsdWVpbnRfMTM6CnByb3RvIDEgMQppbnRjXzAgLy8gMApmcmFtZV9kaWcgLTEKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gZGVmYXVsdF92YWx1ZV9mcm9tX2FiaQpkZWZhdWx0dmFsdWVmcm9tYWJpXzE0Ogpwcm90byAxIDEKYnl0ZWNfMCAvLyAiIgpwdXNoYnl0ZXMgMHg0MTQyNDkyYzIwIC8vICJBQkksICIKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmNvbmNhdApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGRlZmF1bHRfdmFsdWVfZnJvbV9nbG9iYWxfc3RhdGUKZGVmYXVsdHZhbHVlZnJvbWdsb2JhbHN0YXRlXzE1Ogpwcm90byAxIDEKaW50Y18wIC8vIDAKZnJhbWVfZGlnIC0xCmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGRlZmF1bHRfdmFsdWVfZnJvbV9sb2NhbF9zdGF0ZQpkZWZhdWx0dmFsdWVmcm9tbG9jYWxzdGF0ZV8xNjoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKcHVzaGJ5dGVzIDB4NGM2ZjYzNjE2YzIwNzM3NDYxNzQ2NTJjMjAgLy8gIkxvY2FsIHN0YXRlLCAiCmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjcmVhdGUKY3JlYXRlXzE3Ogpwcm90byAwIDAKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydApwdXNoYnl0ZXMgMHg3NjYxNmM3NTY1IC8vICJ2YWx1ZSIKcHVzaGludCBUTVBMX1ZBTFVFIC8vIFRNUExfVkFMVUUKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBjcmVhdGVfYWJpCmNyZWF0ZWFiaV8xODoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyB1cGRhdGUKdXBkYXRlXzE5Ogpwcm90byAwIDAKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydAppbnRjIDUgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKcmV0c3ViCgovLyB1cGRhdGVfYWJpCnVwZGF0ZWFiaV8yMDoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydAppbnRjIDUgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gZGVsZXRlCmRlbGV0ZV8yMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKaW50YyA2IC8vIFRNUExfREVMRVRBQkxFCi8vIENoZWNrIGFwcCBpcyBkZWxldGFibGUKYXNzZXJ0CnJldHN1YgoKLy8gZGVsZXRlX2FiaQpkZWxldGVhYmlfMjI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKaW50YyA2IC8vIFRNUExfREVMRVRBQkxFCi8vIENoZWNrIGFwcCBpcyBkZWxldGFibGUKYXNzZXJ0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIG9wdF9pbgpvcHRpbl8yMzoKcHJvdG8gMCAwCmludGNfMSAvLyAxCnJldHVybgoKLy8gY2FsbF9hYmlfdWludDMyX2Nhc3RlcgpjYWxsYWJpdWludDMyY2FzdGVyXzI0Ogpwcm90byAwIDAKaW50Y18wIC8vIDAKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKaW50Y18wIC8vIDAKZXh0cmFjdF91aW50MzIKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgY2FsbGFiaXVpbnQzMl8wCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKaXRvYgpleHRyYWN0IDQgMApjb25jYXQKbG9nCnJldHN1YgoKLy8gY2FsbF9hYmlfdWludDMyX3JlYWRvbmx5X2Nhc3RlcgpjYWxsYWJpdWludDMycmVhZG9ubHljYXN0ZXJfMjU6CnByb3RvIDAgMAppbnRjXzAgLy8gMApkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQzMgpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBjYWxsYWJpdWludDMycmVhZG9ubHlfMQpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCml0b2IKZXh0cmFjdCA0IDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGNhbGxfYWJpX3VpbnQ2NF9jYXN0ZXIKY2FsbGFiaXVpbnQ2NGNhc3Rlcl8yNjoKcHJvdG8gMCAwCmludGNfMCAvLyAwCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmJ0b2kKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgY2FsbGFiaXVpbnQ2NF8yCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKaXRvYgpjb25jYXQKbG9nCnJldHN1YgoKLy8gY2FsbF9hYmlfdWludDY0X3JlYWRvbmx5X2Nhc3RlcgpjYWxsYWJpdWludDY0cmVhZG9ubHljYXN0ZXJfMjc6CnByb3RvIDAgMAppbnRjXzAgLy8gMApkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpidG9pCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGNhbGxhYml1aW50NjRyZWFkb25seV8zCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKaXRvYgpjb25jYXQKbG9nCnJldHN1YgoKLy8gY2FsbF9hYmlfY2FzdGVyCmNhbGxhYmljYXN0ZXJfMjg6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGNhbGxhYmlfNApmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBjYWxsX2FiaV90eG5fY2FzdGVyCmNhbGxhYml0eG5jYXN0ZXJfMjk6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmludGNfMCAvLyAwCmJ5dGVjXzAgLy8gIiIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDIKdHhuIEdyb3VwSW5kZXgKaW50Y18xIC8vIDEKLQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKZ3R4bnMgVHlwZUVudW0KaW50Y18xIC8vIHBheQo9PQphc3NlcnQKZnJhbWVfZGlnIDEKZnJhbWVfZGlnIDIKY2FsbHN1YiBjYWxsYWJpdHhuXzYKZnJhbWVfYnVyeSAwCmJ5dGVjXzEgLy8gMHgxNTFmN2M3NQpmcmFtZV9kaWcgMApjb25jYXQKbG9nCnJldHN1YgoKLy8gY2FsbF93aXRoX3JlZmVyZW5jZXNfY2FzdGVyCmNhbGx3aXRocmVmZXJlbmNlc2Nhc3Rlcl8zMDoKcHJvdG8gMCAwCmludGNfMCAvLyAwCmR1cG4gMwp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmludGNfMCAvLyAwCmdldGJ5dGUKZnJhbWVfYnVyeSAxCnR4bmEgQXBwbGljYXRpb25BcmdzIDIKaW50Y18wIC8vIDAKZ2V0Ynl0ZQpmcmFtZV9idXJ5IDIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwppbnRjXzAgLy8gMApnZXRieXRlCmZyYW1lX2J1cnkgMwpmcmFtZV9kaWcgMQpmcmFtZV9kaWcgMgpmcmFtZV9kaWcgMwpjYWxsc3ViIGNhbGx3aXRocmVmZXJlbmNlc183CmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKaXRvYgpjb25jYXQKbG9nCnJldHN1YgoKLy8gc2V0X2dsb2JhbF9jYXN0ZXIKc2V0Z2xvYmFsY2FzdGVyXzMxOgpwcm90byAwIDAKaW50Y18wIC8vIDAKZHVwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKYnRvaQpmcmFtZV9idXJ5IDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgpidG9pCmZyYW1lX2J1cnkgMQp0eG5hIEFwcGxpY2F0aW9uQXJncyAzCmZyYW1lX2J1cnkgMgp0eG5hIEFwcGxpY2F0aW9uQXJncyA0CmZyYW1lX2J1cnkgMwpmcmFtZV9kaWcgMApmcmFtZV9kaWcgMQpmcmFtZV9kaWcgMgpmcmFtZV9kaWcgMwpjYWxsc3ViIHNldGdsb2JhbF84CnJldHN1YgoKLy8gc2V0X2xvY2FsX2Nhc3RlcgpzZXRsb2NhbGNhc3Rlcl8zMjoKcHJvdG8gMCAwCmludGNfMCAvLyAwCmR1cApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmJ0b2kKZnJhbWVfYnVyeSAwCnR4bmEgQXBwbGljYXRpb25BcmdzIDIKYnRvaQpmcmFtZV9idXJ5IDEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwpmcmFtZV9idXJ5IDIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNApmcmFtZV9idXJ5IDMKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKZnJhbWVfZGlnIDIKZnJhbWVfZGlnIDMKY2FsbHN1YiBzZXRsb2NhbF85CnJldHN1YgoKLy8gc2V0X2JveF9jYXN0ZXIKc2V0Ym94Y2FzdGVyXzMzOgpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKY2FsbHN1YiBzZXRib3hfMTAKcmV0c3ViCgovLyBlcnJvcl9jYXN0ZXIKZXJyb3JjYXN0ZXJfMzQ6CnByb3RvIDAgMApjYWxsc3ViIGVycm9yXzExCnJldHN1YgoKLy8gZGVmYXVsdF92YWx1ZV9jYXN0ZXIKZGVmYXVsdHZhbHVlY2FzdGVyXzM1Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBkZWZhdWx0dmFsdWVfMTIKZnJhbWVfYnVyeSAwCmJ5dGVjXzEgLy8gMHgxNTFmN2M3NQpmcmFtZV9kaWcgMApjb25jYXQKbG9nCnJldHN1YgoKLy8gZGVmYXVsdF92YWx1ZV9pbnRfY2FzdGVyCmRlZmF1bHR2YWx1ZWludGNhc3Rlcl8zNjoKcHJvdG8gMCAwCmludGNfMCAvLyAwCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmJ0b2kKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgZGVmYXVsdHZhbHVlaW50XzEzCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKaXRvYgpjb25jYXQKbG9nCnJldHN1YgoKLy8gZGVmYXVsdF92YWx1ZV9mcm9tX2FiaV9jYXN0ZXIKZGVmYXVsdHZhbHVlZnJvbWFiaWNhc3Rlcl8zNzoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgZGVmYXVsdHZhbHVlZnJvbWFiaV8xNApmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBkZWZhdWx0X3ZhbHVlX2Zyb21fZ2xvYmFsX3N0YXRlX2Nhc3RlcgpkZWZhdWx0dmFsdWVmcm9tZ2xvYmFsc3RhdGVjYXN0ZXJfMzg6CnByb3RvIDAgMAppbnRjXzAgLy8gMApkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpidG9pCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGRlZmF1bHR2YWx1ZWZyb21nbG9iYWxzdGF0ZV8xNQpmcmFtZV9idXJ5IDAKYnl0ZWNfMSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCml0b2IKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGRlZmF1bHRfdmFsdWVfZnJvbV9sb2NhbF9zdGF0ZV9jYXN0ZXIKZGVmYXVsdHZhbHVlZnJvbWxvY2Fsc3RhdGVjYXN0ZXJfMzk6CnByb3RvIDAgMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpjYWxsc3ViIGRlZmF1bHR2YWx1ZWZyb21sb2NhbHN0YXRlXzE2CmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGNyZWF0ZV9hYmlfY2FzdGVyCmNyZWF0ZWFiaWNhc3Rlcl80MDoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgY3JlYXRlYWJpXzE4CmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIHVwZGF0ZV9hYmlfY2FzdGVyCnVwZGF0ZWFiaWNhc3Rlcl80MToKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgdXBkYXRlYWJpXzIwCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGRlbGV0ZV9hYmlfY2FzdGVyCmRlbGV0ZWFiaWNhc3Rlcl80MjoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgZGVsZXRlYWJpXzIyCmZyYW1lX2J1cnkgMApieXRlY18xIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIG9wdF9pbl9jYXN0ZXIKb3B0aW5jYXN0ZXJfNDM6CnByb3RvIDAgMApjYWxsc3ViIG9wdGluXzIzCnJldHN1Yg==",
         "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"
     }
 }"""
 APP_SPEC = Arc56Contract.from_json(_APP_SPEC_JSON)
 
 
-@dataclass
-class Input:
-    """Struct for Input"""
-    name: str
-    age: int
+class CallAbiUint32Args(TypedDict):
+    """TypedDict for call_abi_uint32 arguments"""
+    input: int
 
-@dataclass
-class Output:
-    """Struct for Output"""
-    message: str
-    result: int
+class CallAbiUint32ReadonlyArgs(TypedDict):
+    """TypedDict for call_abi_uint32_readonly arguments"""
+    input: int
 
+class CallAbiUint64Args(TypedDict):
+    """TypedDict for call_abi_uint64 arguments"""
+    input: int
+
+class CallAbiUint64ReadonlyArgs(TypedDict):
+    """TypedDict for call_abi_uint64_readonly arguments"""
+    input: int
 
 class CallAbiArgs(TypedDict):
     """TypedDict for call_abi arguments"""
@@ -516,6 +635,12 @@ class CallAbiTxnArgs(TypedDict):
     """TypedDict for call_abi_txn arguments"""
     txn: TransactionWithSigner
     value: str
+
+class CallWithReferencesArgs(TypedDict):
+    """TypedDict for call_with_references arguments"""
+    asset: int
+    account: str | bytes
+    application: int
 
 class SetGlobalArgs(TypedDict):
     """TypedDict for set_global arguments"""
@@ -536,23 +661,25 @@ class SetBoxArgs(TypedDict):
     name: bytes | bytearray | tuple[int, int, int, int]
     value: str
 
-class CallWithReferencesArgs(TypedDict):
-    """TypedDict for call_with_references arguments"""
-    asset: int
-    account: str | bytes
-    application: int
-
 class DefaultValueArgs(TypedDict):
     """TypedDict for default_value arguments"""
     arg_with_default: str | None
+
+class DefaultValueIntArgs(TypedDict):
+    """TypedDict for default_value_int arguments"""
+    arg_with_default: int | None
 
 class DefaultValueFromAbiArgs(TypedDict):
     """TypedDict for default_value_from_abi arguments"""
     arg_with_default: str | None
 
-class StructsArgs(TypedDict):
-    """TypedDict for structs arguments"""
-    name_age: Input
+class DefaultValueFromGlobalStateArgs(TypedDict):
+    """TypedDict for default_value_from_global_state arguments"""
+    arg_with_default: int | None
+
+class DefaultValueFromLocalStateArgs(TypedDict):
+    """TypedDict for default_value_from_local_state arguments"""
+    arg_with_default: str | None
 
 class CreateAbiArgs(TypedDict):
     """TypedDict for create_abi arguments"""
@@ -747,6 +874,206 @@ class StateAppParams:
     @property
     def opt_in(self) -> "_StateAppOptin":
         return _StateAppOptin(self.app_client)
+    def call_abi_uint32(
+        self,
+        args: Tuple[int] | CallAbiUint32Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint32_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32_readonly(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint64(
+        self,
+        args: Tuple[int] | CallAbiUint64Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint64_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64_readonly(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -828,6 +1155,56 @@ class StateAppParams:
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_with_references(
+        self,
+        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -997,56 +1374,6 @@ class StateAppParams:
                 
             ))
 
-    def call_with_references(
-        self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        
-    ) -> AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
-                method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                
-            ))
-
     def error(
         self,
             *,
@@ -1094,7 +1421,7 @@ class StateAppParams:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1142,9 +1469,59 @@ class StateAppParams:
                 
             ))
 
+    def default_value_int(
+        self,
+        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="default_value_int(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1192,9 +1569,9 @@ class StateAppParams:
                 
             ))
 
-    def structs(
+    def default_value_from_global_state(
         self,
-        args: Tuple[Input] | StructsArgs,
+        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1222,7 +1599,57 @@ class StateAppParams:
             method_args = list(args.values())
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
-                method="structs((string,uint64))(string,uint64)",
+                method="default_value_from_global_state(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def default_value_from_local_state(
+        self,
+        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> AppCallMethodCallParams:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+                method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1292,7 +1719,7 @@ class StateAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -1476,6 +1903,206 @@ class StateAppCreateTransactionParams:
     @property
     def opt_in(self) -> "_StateAppOptinTransaction":
         return _StateAppOptinTransaction(self.app_client)
+    def call_abi_uint32(
+        self,
+        args: Tuple[int] | CallAbiUint32Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint32_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32_readonly(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint64(
+        self,
+        args: Tuple[int] | CallAbiUint64Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_abi_uint64_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64_readonly(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -1557,6 +2184,56 @@ class StateAppCreateTransactionParams:
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def call_with_references(
+        self,
+        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1726,56 +2403,6 @@ class StateAppCreateTransactionParams:
                 
             ))
 
-    def call_with_references(
-        self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        
-    ) -> BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
-                method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                
-            ))
-
     def error(
         self,
             *,
@@ -1823,7 +2450,7 @@ class StateAppCreateTransactionParams:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1871,9 +2498,59 @@ class StateAppCreateTransactionParams:
                 
             ))
 
+    def default_value_int(
+        self,
+        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="default_value_int(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1921,9 +2598,9 @@ class StateAppCreateTransactionParams:
                 
             ))
 
-    def structs(
+    def default_value_from_global_state(
         self,
-        args: Tuple[Input] | StructsArgs,
+        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -1951,7 +2628,57 @@ class StateAppCreateTransactionParams:
             method_args = list(args.values())
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
-                method="structs((string,uint64))(string,uint64)",
+                method="default_value_from_global_state(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def default_value_from_local_state(
+        self,
+        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> BuiltTransactions:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+                method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -2021,8 +2748,8 @@ class StateAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+        return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _StateAppUpdateSend:
@@ -2208,6 +2935,210 @@ class StateAppSend:
     @property
     def opt_in(self) -> "_StateAppOptinSend":
         return _StateAppOptinSend(self.app_client)
+    def call_abi_uint32(
+        self,
+        args: Tuple[int] | CallAbiUint32Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+    def call_abi_uint32_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint32_readonly(uint32)uint32",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+    def call_abi_uint64(
+        self,
+        args: Tuple[int] | CallAbiUint64Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+    def call_abi_uint64_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="call_abi_uint64_readonly(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
     def call_abi(
         self,
         args: Tuple[str] | CallAbiArgs,
@@ -2290,6 +3221,57 @@ class StateAppSend:
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+    def call_with_references(
+        self,
+        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -2463,57 +3445,6 @@ class StateAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def call_with_references(
-        self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        
-    ) -> SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
-                method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                
-            ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
-
     def error(
         self,
             *,
@@ -2562,7 +3493,7 @@ class StateAppSend:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -2611,9 +3542,60 @@ class StateAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
+    def default_value_int(
+        self,
+        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[int]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="default_value_int(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -2662,9 +3644,9 @@ class StateAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def structs(
+    def default_value_from_global_state(
         self,
-        args: Tuple[Input] | StructsArgs,
+        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -2682,7 +3664,7 @@ class StateAppSend:
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
-    ) -> SendAppTransactionResult[Output]:
+    ) -> SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -2692,7 +3674,58 @@ class StateAppSend:
             method_args = list(args.values())
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
-                method="structs((string,uint64))(string,uint64)",
+                method="default_value_from_global_state(uint64)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+
+    def default_value_from_local_state(
+        self,
+        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> SendAppTransactionResult[str]:
+    
+        method_args = None
+        
+        if isinstance(args, tuple):
+            method_args = list(args)
+        elif isinstance(args, dict):
+            method_args = list(args.values())
+        
+        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+                method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -2764,9 +3797,24 @@ class StateAppSend:
             ))
         return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
 
-    def clear_state(self, params: AppClientBareCallWithSendParams) -> AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+        return self.app_client.send.bare.clear_state(params)
 
+
+class GlobalStateValue(TypedDict):
+    """Shape of global_state state key values"""
+    bytes1: bytes
+    bytes2: bytes
+    int1: int
+    int2: int
+    value: int
+
+class LocalStateValue(TypedDict):
+    """Shape of local_state state key values"""
+    local_bytes1: bytes
+    local_bytes2: bytes
+    local_int1: int
+    local_int2: int
 
 class StateAppState:
     """Methods to access state for the current StateApp app"""
@@ -2776,68 +3824,68 @@ class StateAppState:
 
     @property
     def global_state(self) -> "_GlobalState":
-        """Methods to access global state for the current app"""
-        return _GlobalState(self.app_client)
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
+
     def local_state(self, address: str) -> "_LocalState":
-        """Methods to access local state for the current app"""
-        return _LocalState(self.app_client, address)
+            """Methods to access local_state for the current app"""
+            return _LocalState(self.app_client, address)
 
 class _GlobalState:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
         
 
-    def get_all(self) -> dict[str, Any]:
+    def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return result
+        return cast(GlobalStateValue, result)
 
     def bytes1(self) -> bytes:
-        """Get the current value of the bytes1 key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("bytes1"))
+            """Get the current value of the bytes1 key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("bytes1"))
 
     def bytes2(self) -> bytes:
-        """Get the current value of the bytes2 key in global_state state"""
-        return cast(bytes, self.app_client.state.global_state.get_value("bytes2"))
+            """Get the current value of the bytes2 key in global_state state"""
+            return cast(bytes, self.app_client.state.global_state.get_value("bytes2"))
 
     def int1(self) -> int:
-        """Get the current value of the int1 key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("int1"))
+            """Get the current value of the int1 key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("int1"))
 
     def int2(self) -> int:
-        """Get the current value of the int2 key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("int2"))
+            """Get the current value of the int2 key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("int2"))
 
     def value(self) -> int:
-        """Get the current value of the value key in global_state state"""
-        return cast(int, self.app_client.state.global_state.get_value("value"))
+            """Get the current value of the value key in global_state state"""
+            return cast(int, self.app_client.state.global_state.get_value("value"))
 
 class _LocalState:
     def __init__(self, app_client: AppClient, address: str):
         self.app_client = app_client
         self.address = address
 
-    def get_all(self) -> dict[str, Any]:
+    def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        return result
+        return cast(LocalStateValue, result)
 
     def local_bytes1(self) -> bytes:
-        """Get the current value of the local_bytes1 key in local_state state"""
-        return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes1"))
+            """Get the current value of the local_bytes1 key in local_state state"""
+            return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes1"))
 
     def local_bytes2(self) -> bytes:
-        """Get the current value of the local_bytes2 key in local_state state"""
-        return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes2"))
+            """Get the current value of the local_bytes2 key in local_state state"""
+            return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes2"))
 
     def local_int1(self) -> int:
-        """Get the current value of the local_int1 key in local_state state"""
-        return cast(int, self.app_client.state.local_state(self.address).get_value("local_int1"))
+            """Get the current value of the local_int1 key in local_state state"""
+            return cast(int, self.app_client.state.local_state(self.address).get_value("local_int1"))
 
     def local_int2(self) -> int:
-        """Get the current value of the local_int2 key in local_state state"""
-        return cast(int, self.app_client.state.local_state(self.address).get_value("local_int2"))
-
+            """Get the current value of the local_int2 key in local_state state"""
+            return cast(int, self.app_client.state.local_state(self.address).get_value("local_int2"))
 
 class StateAppClient:
     """Client for interacting with StateApp smart contract"""
@@ -3232,6 +4280,126 @@ class StateAppFactoryCreateParams:
             AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
+    def call_abi_uint32(
+            self,
+            args: Tuple[int] | CallAbiUint32Args,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint32(uint32)uint32",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint32_readonly(
+            self,
+            args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint32_readonly(uint32)uint32",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint64(
+            self,
+            args: Tuple[int] | CallAbiUint64Args,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint64(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint64_readonly(
+            self,
+            args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint64_readonly(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
     def call_abi(
             self,
             args: Tuple[str] | CallAbiArgs,
@@ -3286,6 +4454,36 @@ class StateAppFactoryCreateParams:
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_with_references(
+            self,
+            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_with_references(asset,account,application)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
@@ -3382,36 +4580,6 @@ class StateAppFactoryCreateParams:
                 )
             )
 
-    def call_with_references(
-            self,
-            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-            *,
-            on_complete: (Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> AppCreateMethodCallParams:
-            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-        
-            return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
-                    method="call_with_references(asset,account,application)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
     def error(
             self,
             args: Any,
@@ -3444,7 +4612,7 @@ class StateAppFactoryCreateParams:
 
     def default_value(
             self,
-            args: Tuple[str] | DefaultValueArgs,
+            args: Tuple[str] | DefaultValueArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3472,9 +4640,39 @@ class StateAppFactoryCreateParams:
                 )
             )
 
+    def default_value_int(
+            self,
+            args: Tuple[int] | DefaultValueIntArgs | None = None,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value_int(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
     def default_value_from_abi(
             self,
-            args: Tuple[str] | DefaultValueFromAbiArgs,
+            args: Tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3502,9 +4700,9 @@ class StateAppFactoryCreateParams:
                 )
             )
 
-    def structs(
+    def default_value_from_global_state(
             self,
-            args: Tuple[Input] | StructsArgs,
+            args: Tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3515,7 +4713,7 @@ class StateAppFactoryCreateParams:
                 ] | None) = None,
             **kwargs
         ) -> AppCreateMethodCallParams:
-            """Creates a new instance using the structs((string,uint64))(string,uint64) ABI method"""
+            """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
             
             method_args = None
             if isinstance(args, tuple):
@@ -3525,7 +4723,37 @@ class StateAppFactoryCreateParams:
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
-                    method="structs((string,uint64))(string,uint64)",
+                    method="default_value_from_global_state(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def default_value_from_local_state(
+            self,
+            args: Tuple[str] | DefaultValueFromLocalStateArgs | None = None,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> AppCreateMethodCallParams:
+            """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.params.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value_from_local_state(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
@@ -3706,6 +4934,126 @@ class StateAppFactoryCreateTransaction:
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateTransactionCreate(app_factory)
 
+    def call_abi_uint32(
+            self,
+            args: Tuple[int] | CallAbiUint32Args,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi_uint32(uint32)uint32 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint32(uint32)uint32",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint32_readonly(
+            self,
+            args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint32_readonly(uint32)uint32",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint64(
+            self,
+            args: Tuple[int] | CallAbiUint64Args,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi_uint64(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint64(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_abi_uint64_readonly(
+            self,
+            args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_abi_uint64_readonly(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
     def call_abi(
             self,
             args: Tuple[str] | CallAbiArgs,
@@ -3760,6 +5108,36 @@ class StateAppFactoryCreateTransaction:
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def call_with_references(
+            self,
+            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="call_with_references(asset,account,application)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
@@ -3856,36 +5234,6 @@ class StateAppFactoryCreateTransaction:
                 )
             )
 
-    def call_with_references(
-            self,
-            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-            *,
-            on_complete: (Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> BuiltTransactions:
-            """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-        
-            return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
-                    method="call_with_references(asset,account,application)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
     def error(
             self,
             args: Any,
@@ -3918,7 +5266,7 @@ class StateAppFactoryCreateTransaction:
 
     def default_value(
             self,
-            args: Tuple[str] | DefaultValueArgs,
+            args: Tuple[str] | DefaultValueArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3946,9 +5294,39 @@ class StateAppFactoryCreateTransaction:
                 )
             )
 
+    def default_value_int(
+            self,
+            args: Tuple[int] | DefaultValueIntArgs | None = None,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the default_value_int(uint64)uint64 ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value_int(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
     def default_value_from_abi(
             self,
-            args: Tuple[str] | DefaultValueFromAbiArgs,
+            args: Tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3976,9 +5354,9 @@ class StateAppFactoryCreateTransaction:
                 )
             )
 
-    def structs(
+    def default_value_from_global_state(
             self,
-            args: Tuple[Input] | StructsArgs,
+            args: Tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
             on_complete: (Literal[
                     OnComplete.NoOpOC,
@@ -3989,7 +5367,7 @@ class StateAppFactoryCreateTransaction:
                 ] | None) = None,
             **kwargs
         ) -> BuiltTransactions:
-            """Creates a transaction using the structs((string,uint64))(string,uint64) ABI method"""
+            """Creates a transaction using the default_value_from_global_state(uint64)uint64 ABI method"""
             
             method_args = None
             if isinstance(args, tuple):
@@ -3999,7 +5377,37 @@ class StateAppFactoryCreateTransaction:
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
-                    method="structs((string,uint64))(string,uint64)",
+                    method="default_value_from_global_state(uint64)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def default_value_from_local_state(
+            self,
+            args: Tuple[str] | DefaultValueFromLocalStateArgs | None = None,
+            *,
+            on_complete: (Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> BuiltTransactions:
+            """Creates a transaction using the default_value_from_local_state(string)string ABI method"""
+            
+            method_args = None
+            if isinstance(args, tuple):
+                method_args = list(args)
+            elif isinstance(args, dict):
+                method_args = list(args.values())
+        
+            return self.app_factory.create_transaction.create(
+                AppFactoryCreateMethodCallParams(
+                    method="default_value_from_local_state(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
@@ -4227,6 +5635,173 @@ class StateAppFactorySendCreate:
             )
 
 
+class _StateAppUpdateComposer:
+    def __init__(self, composer: "StateAppComposer"):
+        self.composer = composer
+    def update_abi(
+        self,
+        args: Tuple[str] | UpdateAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self.composer._composer.add_app_call_method_call(
+            self.composer.client.params.update.update_abi(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self.composer._result_mappers.append(
+            lambda v: self.composer.client.decode_return_value(
+                "update_abi(string)string", v
+            )
+        )
+        return self.composer
+
+
+class _StateAppDeleteComposer:
+    def __init__(self, composer: "StateAppComposer"):
+        self.composer = composer
+    def delete_abi(
+        self,
+        args: Tuple[str] | DeleteAbiArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self.composer._composer.add_app_call_method_call(
+            self.composer.client.params.delete.delete_abi(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self.composer._result_mappers.append(
+            lambda v: self.composer.client.decode_return_value(
+                "delete_abi(string)string", v
+            )
+        )
+        return self.composer
+
+
+class _StateAppOpt_inComposer:
+    def __init__(self, composer: "StateAppComposer"):
+        self.composer = composer
+    def opt_in(
+        self,
+            *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        self.composer._composer.add_app_call_method_call(
+            self.composer.client.params.opt_in.opt_in(
+                
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self.composer._result_mappers.append(
+            lambda v: self.composer.client.decode_return_value(
+                "opt_in()void", v
+            )
+        )
+        return self.composer
+
+
 class StateAppComposer:
     """Composer for creating transaction groups for StateApp contract calls"""
 
@@ -4234,6 +5809,234 @@ class StateAppComposer:
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+
+    @property
+    def update(self) -> "_StateAppUpdateComposer":
+        return _StateAppUpdateComposer(self)
+
+    @property
+    def delete(self) -> "_StateAppDeleteComposer":
+        return _StateAppDeleteComposer(self)
+
+    @property
+    def opt_in(self) -> "_StateAppOpt_inComposer":
+        return _StateAppOpt_inComposer(self)
+
+    def call_abi_uint32(
+        self,
+        args: Tuple[int] | CallAbiUint32Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.call_abi_uint32(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "call_abi_uint32(uint32)uint32", v
+            )
+        )
+        return self
+
+    def call_abi_uint32_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.call_abi_uint32_readonly(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "call_abi_uint32_readonly(uint32)uint32", v
+            )
+        )
+        return self
+
+    def call_abi_uint64(
+        self,
+        args: Tuple[int] | CallAbiUint64Args,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.call_abi_uint64(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "call_abi_uint64(uint64)uint64", v
+            )
+        )
+        return self
+
+    def call_abi_uint64_readonly(
+        self,
+        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.call_abi_uint64_readonly(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "call_abi_uint64_readonly(uint64)uint64", v
+            )
+        )
+        return self
 
     def call_abi(
         self,
@@ -4254,10 +6057,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4306,10 +6111,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4339,6 +6146,60 @@ class StateAppComposer:
         )
         return self
 
+    def call_with_references(
+        self,
+        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if isinstance(args, tuple):
+            method_args = args
+        elif isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.call_with_references(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "call_with_references(asset,account,application)uint64", v
+            )
+        )
+        return self
+
     def set_global(
         self,
         args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
@@ -4358,10 +6219,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4410,10 +6273,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4462,10 +6327,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4495,62 +6362,9 @@ class StateAppComposer:
         )
         return self
 
-    def call_with_references(
-        self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-    ) -> "StateAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
-        self._composer.add_app_call_method_call(
-            self.client.params.call_with_references(
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "call_with_references(asset,account,application)uint64", v
-            )
-        )
-        return self
-
     def error(
         self,
-        args: Any,
-        *,
+            *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
         asset_references: Optional[list[int]] = None,
@@ -4566,15 +6380,11 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
-        if isinstance(args, tuple):
-            method_args = args
-        else:
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.error(
-                args=method_args, # type: ignore
+                
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4601,7 +6411,7 @@ class StateAppComposer:
 
     def default_value(
         self,
-        args: Tuple[str] | DefaultValueArgs,
+        args: Tuple[str | None] | DefaultValueArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -4618,10 +6428,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
-        if isinstance(args, tuple):
+        method_args = None
+        if args is not None and isinstance(args, tuple):
             method_args = args
-        else:
+        elif args is not None and isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4651,9 +6463,9 @@ class StateAppComposer:
         )
         return self
 
-    def default_value_from_abi(
+    def default_value_int(
         self,
-        args: Tuple[str] | DefaultValueFromAbiArgs,
+        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -4670,10 +6482,66 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
-        if isinstance(args, tuple):
+        method_args = None
+        if args is not None and isinstance(args, tuple):
             method_args = args
-        else:
+        elif args is not None and isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.default_value_int(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "default_value_int(uint64)uint64", v
+            )
+        )
+        return self
+
+    def default_value_from_abi(
+        self,
+        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if args is not None and isinstance(args, tuple):
+            method_args = args
+        elif args is not None and isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
@@ -4703,9 +6571,9 @@ class StateAppComposer:
         )
         return self
 
-    def structs(
+    def default_value_from_global_state(
         self,
-        args: Tuple[Input] | StructsArgs,
+        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
         account_references: Optional[list[str]] = None,
         app_references: Optional[list[int]] = None,
@@ -4722,14 +6590,16 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
-        if isinstance(args, tuple):
+        method_args = None
+        if args is not None and isinstance(args, tuple):
             method_args = args
-        else:
+        elif args is not None and isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
-            self.client.params.structs(
+            self.client.params.default_value_from_global_state(
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -4750,7 +6620,61 @@ class StateAppComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "structs((string,uint64))(string,uint64)", v
+                "default_value_from_global_state(uint64)uint64", v
+            )
+        )
+        return self
+
+    def default_value_from_local_state(
+        self,
+        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        *,
+        account_references: Optional[list[str]] = None,
+        app_references: Optional[list[int]] = None,
+        asset_references: Optional[list[int]] = None,
+        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
+        extra_fee: Optional[AlgoAmount] = None,
+        first_valid_round: Optional[int] = None,
+        lease: Optional[bytes] = None,
+        max_fee: Optional[AlgoAmount] = None,
+        note: Optional[bytes] = None,
+        rekey_to: Optional[str] = None,
+        sender: Optional[str] = None,
+        signer: Optional[TransactionSigner] = None,
+        static_fee: Optional[AlgoAmount] = None,
+        validity_window: Optional[int] = None,
+        last_valid_round: Optional[int] = None,
+        
+    ) -> "StateAppComposer":
+        method_args = None
+        if args is not None and isinstance(args, tuple):
+            method_args = args
+        elif args is not None and isinstance(args, dict):
+            method_args = tuple(args.values())
+    
+        self._composer.add_app_call_method_call(
+            self.client.params.default_value_from_local_state(
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "default_value_from_local_state(string)string", v
             )
         )
         return self
@@ -4774,10 +6698,12 @@ class StateAppComposer:
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
         last_valid_round: Optional[int] = None,
+        
     ) -> "StateAppComposer":
+        method_args = None
         if isinstance(args, tuple):
             method_args = args
-        else:
+        elif isinstance(args, dict):
             method_args = tuple(args.values())
     
         self._composer.add_app_call_method_call(
