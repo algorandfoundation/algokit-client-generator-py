@@ -5,7 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
 from typing import (
     Any,
     Callable,
@@ -81,7 +81,7 @@ _APP_SPEC_JSON = r"""{
         ]
     },
     "methods": [],
-    "name": "MinimalApp",
+    "name": "App",
     "state": {
         "keys": {
             "box": {},
@@ -114,7 +114,7 @@ _APP_SPEC_JSON = r"""{
 APP_SPEC = Arc56Contract.from_json(_APP_SPEC_JSON)
 
 
-class _MinimalAppUpdate:
+class _AppUpdate:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -122,7 +122,7 @@ class _MinimalAppUpdate:
         return self.app_client.params.bare.update(params)
 
 
-class _MinimalAppDelete:
+class _AppDelete:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -130,22 +130,22 @@ class _MinimalAppDelete:
         return self.app_client.params.bare.delete(params)
 
 
-class MinimalAppParams:
+class AppParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_MinimalAppUpdate":
-        return _MinimalAppUpdate(self.app_client)
+    def update(self) -> "_AppUpdate":
+        return _AppUpdate(self.app_client)
 
     @property
-    def delete(self) -> "_MinimalAppDelete":
-        return _MinimalAppDelete(self.app_client)
+    def delete(self) -> "_AppDelete":
+        return _AppDelete(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _MinimalAppUpdateTransaction:
+class _AppUpdateTransaction:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -153,7 +153,7 @@ class _MinimalAppUpdateTransaction:
         return self.app_client.create_transaction.bare.update(params)
 
 
-class _MinimalAppDeleteTransaction:
+class _AppDeleteTransaction:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -161,22 +161,22 @@ class _MinimalAppDeleteTransaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
-class MinimalAppCreateTransactionParams:
+class AppCreateTransactionParams:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_MinimalAppUpdateTransaction":
-        return _MinimalAppUpdateTransaction(self.app_client)
+    def update(self) -> "_AppUpdateTransaction":
+        return _AppUpdateTransaction(self.app_client)
 
     @property
-    def delete(self) -> "_MinimalAppDeleteTransaction":
-        return _MinimalAppDeleteTransaction(self.app_client)
+    def delete(self) -> "_AppDeleteTransaction":
+        return _AppDeleteTransaction(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _MinimalAppUpdateSend:
+class _AppUpdateSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -184,7 +184,7 @@ class _MinimalAppUpdateSend:
         return self.app_client.send.bare.update(params)
 
 
-class _MinimalAppDeleteSend:
+class _AppDeleteSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
@@ -192,29 +192,29 @@ class _MinimalAppDeleteSend:
         return self.app_client.send.bare.delete(params)
 
 
-class MinimalAppSend:
+class AppSend:
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_MinimalAppUpdateSend":
-        return _MinimalAppUpdateSend(self.app_client)
+    def update(self) -> "_AppUpdateSend":
+        return _AppUpdateSend(self.app_client)
 
     @property
-    def delete(self) -> "_MinimalAppDeleteSend":
-        return _MinimalAppDeleteSend(self.app_client)
+    def delete(self) -> "_AppDeleteSend":
+        return _AppDeleteSend(self.app_client)
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class MinimalAppState:
-    """Methods to access state for the current MinimalApp app"""
+class AppState:
+    """Methods to access state for the current App app"""
 
     def __init__(self, app_client: AppClient):
         self.app_client = app_client
 
-class MinimalAppClient:
-    """Client for interacting with MinimalApp smart contract"""
+class AppClient:
+    """Client for interacting with App smart contract"""
 
     @overload
     def __init__(self, app_client: AppClient) -> None: ...
@@ -262,10 +262,10 @@ class MinimalAppClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = MinimalAppParams(self.app_client)
-        self.create_transaction = MinimalAppCreateTransactionParams(self.app_client)
-        self.send = MinimalAppSend(self.app_client)
-        self.state = MinimalAppState(self.app_client)
+        self.params = AppParams(self.app_client)
+        self.create_transaction = AppCreateTransactionParams(self.app_client)
+        self.send = AppSend(self.app_client)
+        self.state = AppState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -278,8 +278,8 @@ class MinimalAppClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: AppLookup | None = None,
-    ) -> "MinimalAppClient":
-        return MinimalAppClient(
+    ) -> "AppClient":
+        return AppClient(
             AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -302,8 +302,8 @@ class MinimalAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "MinimalAppClient":
-        return MinimalAppClient(
+    ) -> "AppClient":
+        return AppClient(
             AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -342,8 +342,8 @@ class MinimalAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "MinimalAppClient":
-        return MinimalAppClient(
+    ) -> "AppClient":
+        return AppClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -353,8 +353,8 @@ class MinimalAppClient:
             )
         )
 
-    def new_group(self) -> "MinimalAppComposer":
-        return MinimalAppComposer(self)
+    def new_group(self) -> "AppComposer":
+        return AppComposer(self)
 
     def decode_return_value(
         self,
@@ -369,28 +369,28 @@ class MinimalAppClient:
 
 
 @dataclass(frozen=True)
-class MinimalAppBareCallCreateParams(AppClientCreateSchema, AppClientBareCallParams, BaseOnCompleteParams[Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating MinimalApp contract using bare calls"""
+class AppBareCallCreateParams(AppClientCreateSchema, AppClientBareCallParams, BaseOnCompleteParams[Literal[OnComplete.NoOpOC]]):
+    """Parameters for creating App contract using bare calls"""
 
     def to_algokit_utils_params(self) -> AppClientBareCallCreateParams:
         return AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclass(frozen=True)
-class MinimalAppBareCallUpdateParams(AppClientBareCallParams):
-    """Parameters for calling MinimalApp contract using bare calls"""
+class AppBareCallUpdateParams(AppClientBareCallParams):
+    """Parameters for calling App contract using bare calls"""
 
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
 
 @dataclass(frozen=True)
-class MinimalAppBareCallDeleteParams(AppClientBareCallParams):
-    """Parameters for calling MinimalApp contract using bare calls"""
+class AppBareCallDeleteParams(AppClientBareCallParams):
+    """Parameters for calling App contract using bare calls"""
 
     def to_algokit_utils_params(self) -> AppClientBareCallParams:
         return AppClientBareCallParams(**self.__dict__)
 
-class MinimalAppFactory(TypedAppFactoryProtocol):
-    """Factory for deploying and managing MinimalAppClient smart contracts"""
+class AppFactory(TypedAppFactoryProtocol):
+    """Factory for deploying and managing AppClient smart contracts"""
 
     def __init__(
         self,
@@ -417,9 +417,9 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = MinimalAppFactoryParams(self.app_factory)
-        self.create_transaction = MinimalAppFactoryCreateTransaction(self.app_factory)
-        self.send = MinimalAppFactorySend(self.app_factory)
+        self.params = AppFactoryParams(self.app_factory)
+        self.create_transaction = AppFactoryCreateTransaction(self.app_factory)
+        self.send = AppFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -439,9 +439,9 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
         deploy_time_params: TealTemplateParams | None = None,
         on_update: OnUpdate = OnUpdate.Fail,
         on_schema_break: OnSchemaBreak = OnSchemaBreak.Fail,
-        create_params: MinimalAppBareCallCreateParams | None = None,
-        update_params: MinimalAppBareCallUpdateParams | None = None,
-        delete_params: MinimalAppBareCallDeleteParams | None = None,
+        create_params: AppBareCallCreateParams | None = None,
+        update_params: AppBareCallUpdateParams | None = None,
+        delete_params: AppBareCallDeleteParams | None = None,
         existing_deployments: AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -450,7 +450,7 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[MinimalAppClient, AppFactoryDeployResponse]:
+    ) -> tuple[AppClient, AppFactoryDeployResponse]:
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -468,7 +468,7 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return MinimalAppClient(deploy_response[0]), deploy_response[1]
+        return AppClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -480,9 +480,9 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
         app_lookup_cache: AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> MinimalAppClient:
+    ) -> AppClient:
         """Get an app client by creator address and name"""
-        return MinimalAppClient(
+        return AppClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -503,9 +503,9 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> MinimalAppClient:
+    ) -> AppClient:
         """Get an app client by app ID"""
-        return MinimalAppClient(
+        return AppClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -517,17 +517,17 @@ class MinimalAppFactory(TypedAppFactoryProtocol):
         )
 
 
-class MinimalAppFactoryParams:
-    """Parameters for creating transactions for MinimalApp contract"""
+class AppFactoryParams:
+    """Parameters for creating transactions for App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
-        self.create = MinimalAppFactoryCreateParams(app_factory)
-        self.deploy_update = MinimalAppFactoryUpdateParams(app_factory)
-        self.deploy_delete = MinimalAppFactoryDeleteParams(app_factory)
+        self.create = AppFactoryCreateParams(app_factory)
+        self.deploy_update = AppFactoryUpdateParams(app_factory)
+        self.deploy_delete = AppFactoryDeleteParams(app_factory)
 
-class MinimalAppFactoryCreateParams:
-    """Parameters for 'create' operations of MinimalApp contract"""
+class AppFactoryCreateParams:
+    """Parameters for 'create' operations of App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -549,8 +549,8 @@ class MinimalAppFactoryCreateParams:
             AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class MinimalAppFactoryUpdateParams:
-    """Parameters for 'update' operations of MinimalApp contract"""
+class AppFactoryUpdateParams:
+    """Parameters for 'update' operations of App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -572,8 +572,8 @@ class MinimalAppFactoryUpdateParams:
             AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class MinimalAppFactoryDeleteParams:
-    """Parameters for 'delete' operations of MinimalApp contract"""
+class AppFactoryDeleteParams:
+    """Parameters for 'delete' operations of App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -596,15 +596,15 @@ class MinimalAppFactoryDeleteParams:
         )
 
 
-class MinimalAppFactoryCreateTransaction:
-    """Create transactions for MinimalApp contract"""
+class AppFactoryCreateTransaction:
+    """Create transactions for App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
-        self.create = MinimalAppFactoryCreateTransactionCreate(app_factory)
+        self.create = AppFactoryCreateTransactionCreate(app_factory)
 
-class MinimalAppFactoryCreateTransactionCreate:
-    """Create new instances of MinimalApp contract"""
+class AppFactoryCreateTransactionCreate:
+    """Create new instances of App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -627,16 +627,16 @@ class MinimalAppFactoryCreateTransactionCreate:
         )
 
 
-class MinimalAppFactorySend:
-    """Send calls to MinimalApp contract"""
+class AppFactorySend:
+    """Send calls to App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
-        self.create = MinimalAppFactorySendCreate(app_factory)
+        self.create = AppFactorySendCreate(app_factory)
 
 
-class MinimalAppFactorySendCreate:
-    """Send create calls to MinimalApp contract"""
+class AppFactorySendCreate:
+    """Send create calls to App contract"""
 
     def __init__(self, app_factory: AppFactory):
         self.app_factory = app_factory
@@ -652,39 +652,39 @@ class MinimalAppFactorySendCreate:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> tuple[MinimalAppClient, SendAppCreateTransactionResult]:
+    ) -> tuple[AppClient, SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
-        return MinimalAppClient(result[0]), result[1]
+        return AppClient(result[0]), result[1]
 
 
-class _MinimalAppUpdateComposer:
-    def __init__(self, composer: "MinimalAppComposer"):
+class _AppUpdateComposer:
+    def __init__(self, composer: "AppComposer"):
         self.composer = composer
 
 
-class _MinimalAppDeleteComposer:
-    def __init__(self, composer: "MinimalAppComposer"):
+class _AppDeleteComposer:
+    def __init__(self, composer: "AppComposer"):
         self.composer = composer
 
 
-class MinimalAppComposer:
-    """Composer for creating transaction groups for MinimalApp contract calls"""
+class AppComposer:
+    """Composer for creating transaction groups for App contract calls"""
 
-    def __init__(self, client: "MinimalAppClient"):
+    def __init__(self, client: "AppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
 
     @property
-    def update(self) -> "_MinimalAppUpdateComposer":
-        return _MinimalAppUpdateComposer(self)
+    def update(self) -> "_AppUpdateComposer":
+        return _AppUpdateComposer(self)
 
     @property
-    def delete(self) -> "_MinimalAppDeleteComposer":
-        return _MinimalAppDeleteComposer(self)
+    def delete(self) -> "_AppDeleteComposer":
+        return _AppDeleteComposer(self)
 
     def clear_state(
         self,
@@ -694,7 +694,6 @@ class MinimalAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -703,8 +702,9 @@ class MinimalAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
-    ) -> "MinimalAppComposer":
+    ) -> "AppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 AppClientBareCallWithSendParams(
@@ -730,7 +730,7 @@ class MinimalAppComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: Optional[TransactionSigner] = None
-    ) -> "MinimalAppComposer":
+    ) -> "AppComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

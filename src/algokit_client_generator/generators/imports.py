@@ -5,7 +5,7 @@ from algokit_client_generator.document import DocumentParts
 
 def generate_imports(context: GeneratorContext) -> DocumentParts:
     yield utils.lines("""
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
 from typing import (
     Any,
     Callable,

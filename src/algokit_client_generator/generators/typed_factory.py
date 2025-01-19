@@ -37,6 +37,8 @@ def _generate_method_args_parser() -> str:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
     """
 
 

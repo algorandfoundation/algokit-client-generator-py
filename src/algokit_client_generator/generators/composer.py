@@ -50,6 +50,8 @@ class {class_name}:
         method_args = args
     elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
         method_args = tuple(args.values())
+    if method_args:
+        method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
 """
 
         yield utils.indented(f"""
@@ -192,7 +194,6 @@ def clear_state(
     asset_references: Optional[list[int]] = None,
     box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
     extra_fee: Optional[AlgoAmount] = None,
-    first_valid_round: Optional[int] = None,
     lease: Optional[bytes] = None,
     max_fee: Optional[AlgoAmount] = None,
     note: Optional[bytes] = None,
@@ -201,6 +202,7 @@ def clear_state(
     signer: Optional[TransactionSigner] = None,
     static_fee: Optional[AlgoAmount] = None,
     validity_window: Optional[int] = None,
+    first_valid_round: Optional[int] = None,
     last_valid_round: Optional[int] = None,
 ) -> \"{context.contract_name}Composer\":
     self._composer.add_app_call(

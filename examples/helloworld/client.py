@@ -5,7 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
 from typing import (
     Any,
     Callable,
@@ -146,7 +146,6 @@ _APP_SPEC_JSON = r"""{
         }
     },
     "structs": {},
-    "desc": "An app that says hello",
     "source": {
         "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQpieXRlY2Jsb2NrIDB4CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w2CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gImhlbGxvKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmY5YzFlZGYgLy8gImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sNAplcnIKbWFpbl9sNDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb3dvcmxkY2hlY2tjYXN0ZXJfNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl80CmludGNfMSAvLyAxCnJldHVybgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wxMgp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sMTEKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDUgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDEwCmVycgptYWluX2wxMDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQphc3NlcnQKY2FsbHN1YiB1cGRhdGVfMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIHVwZGF0ZQp1cGRhdGVfMDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGRlbGV0ZQpkZWxldGVfMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX0RFTEVUQUJMRSAvLyBUTVBMX0RFTEVUQUJMRQovLyBDaGVjayBhcHAgaXMgZGVsZXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY29uY2F0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gaGVsbG9fd29ybGRfY2hlY2sKaGVsbG93b3JsZGNoZWNrXzM6CnByb3RvIDEgMApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKcHVzaGJ5dGVzIDB4NTc2ZjcyNmM2NCAvLyAiV29ybGQiCj09CmFzc2VydApyZXRzdWIKCi8vIGhlbGxvX2Nhc3RlcgpoZWxsb2Nhc3Rlcl80Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBoZWxsb18yCmZyYW1lX2J1cnkgMApwdXNoYnl0ZXMgMHgxNTFmN2M3NSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb193b3JsZF9jaGVja19jYXN0ZXIKaGVsbG93b3JsZGNoZWNrY2FzdGVyXzU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmNhbGxzdWIgaGVsbG93b3JsZGNoZWNrXzMKcmV0c3Vi",
         "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"
@@ -199,7 +198,6 @@ class HelloWorldAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -208,6 +206,7 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -218,6 +217,8 @@ class HelloWorldAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -249,7 +250,6 @@ class HelloWorldAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -258,6 +258,7 @@ class HelloWorldAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -268,6 +269,8 @@ class HelloWorldAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
@@ -329,7 +332,6 @@ class HelloWorldAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -338,6 +340,7 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -348,6 +351,8 @@ class HelloWorldAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -379,7 +384,6 @@ class HelloWorldAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -388,6 +392,7 @@ class HelloWorldAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -398,6 +403,8 @@ class HelloWorldAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
@@ -459,7 +466,6 @@ class HelloWorldAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -468,6 +474,7 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -478,6 +485,8 @@ class HelloWorldAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -499,7 +508,7 @@ class HelloWorldAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def hello_world_check(
         self,
@@ -510,7 +519,6 @@ class HelloWorldAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -519,6 +527,7 @@ class HelloWorldAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
@@ -529,6 +538,8 @@ class HelloWorldAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
@@ -550,7 +561,7 @@ class HelloWorldAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
@@ -918,6 +929,8 @@ class HelloWorldAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -948,6 +961,8 @@ class HelloWorldAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -1032,6 +1047,8 @@ class HelloWorldAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1062,6 +1079,8 @@ class HelloWorldAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1165,7 +1184,6 @@ class HelloWorldAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1174,6 +1192,7 @@ class HelloWorldAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "HelloWorldAppComposer":
@@ -1219,7 +1238,6 @@ class HelloWorldAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1228,6 +1246,7 @@ class HelloWorldAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "HelloWorldAppComposer":
@@ -1272,7 +1291,6 @@ class HelloWorldAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1281,6 +1299,7 @@ class HelloWorldAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call(

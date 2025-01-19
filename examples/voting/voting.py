@@ -3,8 +3,8 @@
 from typing import Literal, TypeAlias
 
 import beaker
+import beaker.lib.storage as storage
 import pyteal as pt
-from beaker.lib import storage
 from pyteal.types import require_type
 
 from examples.deployment_standard import deploy_time_permanence_control
@@ -210,7 +210,7 @@ app = beaker.Application("VotingRoundApp", state=VotingState()).apply(
 
 
 @app.create()
-def create(  # noqa: PLR0913
+def create(
     vote_id: pt.abi.String,
     snapshot_public_key: pt.abi.DynamicBytes,
     metadata_ipfs_cid: pt.abi.String,
@@ -297,7 +297,7 @@ def close() -> pt.Expr:
         app.state.close_time.set(pt.Global.latest_timestamp()),
         (note := StringScratchVar()).store(
             pt.Concat(
-                pt.Bytes('{"standard":"arc69","description":"This is a voting result NFT for voting round with ID '),
+                pt.Bytes('{"standard":"arc69","description":"This is a voting result NFT' " for voting round with ID "),
                 app.state.vote_id.get(),
                 pt.Bytes('.","properties":{"metadata":"ipfs://'),
                 app.state.metadata_ipfs_cid.get(),
@@ -418,6 +418,12 @@ class VotingPreconditions(pt.abi.NamedTuple):
 
 @app.external(read_only=True)
 def get_preconditions(signature: pt.abi.DynamicBytes, *, output: VotingPreconditions) -> pt.Expr:
+    """
+    Returns the calculated pre-conditions for the voting round.
+
+    :param signature: The signature for the given voter account
+    :return: The precondition values
+    """
     return pt.Seq(
         (is_voting_open := pt.abi.Uint64()).set(voting_open()),
         (is_allowed_to_vote := pt.abi.Uint64()).set(allowed_to_vote(signature.get())),

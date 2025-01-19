@@ -191,6 +191,7 @@ def test_deploy_create_1arg(state_factory: StateAppFactory) -> None:
         delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
     )
     assert client.app_id > 0
+    assert response.create_response
     assert response.create_response.abi_return == "Deploy Greetings"
     assert not response.update_response
     assert not response.delete_response
@@ -205,6 +206,7 @@ def test_deploy_create_1arg(state_factory: StateAppFactory) -> None:
         delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
     )
     assert client.app_id > 0
+    assert response.update_response
     assert response.update_response.abi_return == "Deploy Update"
     assert not response.create_response
     assert not response.delete_response
@@ -221,6 +223,7 @@ def test_deploy_create_1arg(state_factory: StateAppFactory) -> None:
         delete_params=StateAppMethodCallDeleteParams(args={'input': 'Deploy Delete'}, method='delete_abi(string)string'),
     )
     assert client.app_id > 0
+    assert response.create_response and response.delete_response
     assert response.create_response.abi_return == "Deploy Greetings"
     assert response.delete_response.abi_return == "Deploy Delete"
     assert not response.update_response
@@ -231,6 +234,7 @@ def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
     age = 42
     response = deployed_state_app_client.send.structs(args={"name_age": Input(name="World", age=age)})
 
+    assert response.abi_return
     assert response.abi_return.message == "Hello, World"
     assert response.abi_return.result == age * 2
 
@@ -244,13 +248,13 @@ def test_compose(deployed_state_app_client: StateAppClient) -> None:
     assert set_local_response.return_value is None
 
 
-def test_call_references(deployed_state_app_client: StateAppClient) -> None:
+def test_call_references(deployed_state_app_client: StateAppClient, default_deployer: algokit_utils.Account) -> None:
     asset_id = 1234
-    _, account = deployed_state_app_client.app_client.resolve_signer_sender()
-    response = deployed_state_app_client.call_with_references(
-        asset=asset_id,
-        account=account,
-        application=deployed_state_app_client.app_id,
+    response = deployed_state_app_client.send.call_with_references(args={
+        "asset": asset_id,
+        "account": default_deployer.address,
+        "application": deployed_state_app_client.app_id,
+    }
     )
 
     assert response.return_value

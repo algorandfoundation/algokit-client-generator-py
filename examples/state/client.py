@@ -5,18 +5,22 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
 from typing import (
     Any,
     Callable,
     Optional,
+    Protocol,
     Union,
     overload,
+    Generic,
     Tuple,
     TypedDict,
+    runtime_checkable,
     cast,
     Literal,
 )
+import algosdk
 from algosdk.transaction import OnComplete
 from algokit_utils.applications import AppFactoryCreateParams, AppFactoryCreateMethodCallResult, AppFactoryCreateWithSendParams, AppFactoryCreateMethodCallParams
 from algokit_utils.applications import (
@@ -531,58 +535,49 @@ _APP_SPEC_JSON = r"""{
                 "bytes1": {
                     "key": "Ynl0ZXMx",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes",
-                    "desc": ""
+                    "valueType": "AVMBytes"
                 },
                 "bytes2": {
                     "key": "Ynl0ZXMy",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes",
-                    "desc": ""
+                    "valueType": "AVMBytes"
                 },
                 "int1": {
                     "key": "aW50MQ==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64",
-                    "desc": ""
+                    "valueType": "AVMUint64"
                 },
                 "int2": {
                     "key": "aW50Mg==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64",
-                    "desc": ""
+                    "valueType": "AVMUint64"
                 },
                 "value": {
                     "key": "dmFsdWU=",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64",
-                    "desc": ""
+                    "valueType": "AVMUint64"
                 }
             },
             "local": {
                 "local_bytes1": {
                     "key": "bG9jYWxfYnl0ZXMx",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes",
-                    "desc": ""
+                    "valueType": "AVMBytes"
                 },
                 "local_bytes2": {
                     "key": "bG9jYWxfYnl0ZXMy",
                     "keyType": "AVMString",
-                    "valueType": "AVMBytes",
-                    "desc": ""
+                    "valueType": "AVMBytes"
                 },
                 "local_int1": {
                     "key": "bG9jYWxfaW50MQ==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64",
-                    "desc": ""
+                    "valueType": "AVMUint64"
                 },
                 "local_int2": {
                     "key": "bG9jYWxfaW50Mg==",
                     "keyType": "AVMString",
-                    "valueType": "AVMUint64",
-                    "desc": ""
+                    "valueType": "AVMUint64"
                 }
             }
         },
@@ -710,7 +705,6 @@ class _StateAppUpdate:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -719,6 +713,7 @@ class _StateAppUpdate:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
     ) -> AppCallMethodCallParams:
@@ -729,6 +724,8 @@ class _StateAppUpdate:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.update(AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
@@ -768,7 +765,6 @@ class _StateAppDelete:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -777,6 +773,7 @@ class _StateAppDelete:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -787,6 +784,8 @@ class _StateAppDelete:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.delete(AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
@@ -822,7 +821,6 @@ class _StateAppOptin:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -831,12 +829,15 @@ class _StateAppOptin:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.opt_in(AppClientMethodCallWithSendParams(
                 method="opt_in()void",
@@ -883,7 +884,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -892,6 +892,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -902,6 +903,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
@@ -933,7 +936,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -942,6 +944,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -952,6 +955,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
@@ -983,7 +988,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -992,6 +996,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1002,6 +1007,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
@@ -1033,7 +1040,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1042,6 +1048,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1052,6 +1059,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
@@ -1083,7 +1092,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1092,6 +1100,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1102,6 +1111,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
@@ -1133,7 +1144,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1142,6 +1152,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1152,6 +1163,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
@@ -1183,7 +1196,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1192,6 +1204,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1202,6 +1215,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
@@ -1233,7 +1248,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1242,6 +1256,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1252,6 +1267,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
@@ -1283,7 +1300,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1292,6 +1308,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1302,6 +1319,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
@@ -1333,7 +1352,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1342,6 +1360,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1352,6 +1371,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
@@ -1382,7 +1403,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1391,12 +1411,15 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="error()void",
@@ -1428,7 +1451,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1437,6 +1459,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1447,6 +1470,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
@@ -1478,7 +1503,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1487,6 +1511,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1497,6 +1522,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
@@ -1528,7 +1555,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1537,6 +1563,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1547,6 +1574,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
@@ -1578,7 +1607,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1587,6 +1615,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1597,6 +1626,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
@@ -1628,7 +1659,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1637,6 +1667,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1647,6 +1678,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
@@ -1678,7 +1711,6 @@ class StateAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1687,6 +1719,7 @@ class StateAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -1697,6 +1730,8 @@ class StateAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
@@ -1739,7 +1774,6 @@ class _StateAppUpdateTransaction:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1748,6 +1782,7 @@ class _StateAppUpdateTransaction:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
     ) -> BuiltTransactions:
@@ -1758,6 +1793,8 @@ class _StateAppUpdateTransaction:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.update(AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
@@ -1797,7 +1834,6 @@ class _StateAppDeleteTransaction:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1806,6 +1842,7 @@ class _StateAppDeleteTransaction:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -1816,6 +1853,8 @@ class _StateAppDeleteTransaction:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.delete(AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
@@ -1851,7 +1890,6 @@ class _StateAppOptinTransaction:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1860,12 +1898,15 @@ class _StateAppOptinTransaction:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.opt_in(AppClientMethodCallWithSendParams(
                 method="opt_in()void",
@@ -1912,7 +1953,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1921,6 +1961,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -1931,6 +1972,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
@@ -1962,7 +2005,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1971,6 +2013,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -1981,6 +2024,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
@@ -2012,7 +2057,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2021,6 +2065,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2031,6 +2076,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
@@ -2062,7 +2109,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2071,6 +2117,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2081,6 +2128,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
@@ -2112,7 +2161,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2121,6 +2169,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2131,6 +2180,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
@@ -2162,7 +2213,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2171,6 +2221,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2181,6 +2232,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
@@ -2212,7 +2265,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2221,6 +2273,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2231,6 +2284,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
@@ -2262,7 +2317,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2271,6 +2325,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2281,6 +2336,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
@@ -2312,7 +2369,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2321,6 +2377,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2331,6 +2388,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
@@ -2362,7 +2421,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2371,6 +2429,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2381,6 +2440,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
@@ -2411,7 +2472,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2420,12 +2480,15 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="error()void",
@@ -2457,7 +2520,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2466,6 +2528,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2476,6 +2539,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
@@ -2507,7 +2572,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2516,6 +2580,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2526,6 +2591,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
@@ -2557,7 +2624,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2566,6 +2632,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2576,6 +2643,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
@@ -2607,7 +2676,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2616,6 +2684,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2626,6 +2695,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
@@ -2657,7 +2728,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2666,6 +2736,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2676,6 +2747,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
@@ -2707,7 +2780,6 @@ class StateAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2716,6 +2788,7 @@ class StateAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -2726,6 +2799,8 @@ class StateAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
@@ -2768,7 +2843,6 @@ class _StateAppUpdateSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2777,6 +2851,7 @@ class _StateAppUpdateSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
     ) -> SendAppTransactionResult[str]:
@@ -2787,6 +2862,8 @@ class _StateAppUpdateSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.update(AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
@@ -2808,7 +2885,7 @@ class _StateAppUpdateSend:
                 last_valid_round=last_valid_round,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
-        return SendAppUpdateTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppUpdateTransactionResult[str](**asdict(response))
 
 
 class _StateAppDeleteSend:
@@ -2827,7 +2904,6 @@ class _StateAppDeleteSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2836,6 +2912,7 @@ class _StateAppDeleteSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -2846,6 +2923,8 @@ class _StateAppDeleteSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.delete(AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
@@ -2867,7 +2946,7 @@ class _StateAppDeleteSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
 
 class _StateAppOptinSend:
@@ -2882,7 +2961,6 @@ class _StateAppOptinSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2891,12 +2969,15 @@ class _StateAppOptinSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.opt_in(AppClientMethodCallWithSendParams(
                 method="opt_in()void",
@@ -2918,7 +2999,7 @@ class _StateAppOptinSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
 
 class StateAppSend:
@@ -2944,7 +3025,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -2953,6 +3033,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -2963,6 +3044,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
@@ -2984,7 +3067,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def call_abi_uint32_readonly(
         self,
@@ -2995,7 +3078,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3004,6 +3086,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3014,6 +3097,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
@@ -3035,7 +3120,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def call_abi_uint64(
         self,
@@ -3046,7 +3131,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3055,6 +3139,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3065,6 +3150,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
@@ -3086,7 +3173,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def call_abi_uint64_readonly(
         self,
@@ -3097,7 +3184,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3106,6 +3192,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3116,6 +3203,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
@@ -3137,7 +3226,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def call_abi(
         self,
@@ -3148,7 +3237,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3157,6 +3245,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3167,6 +3256,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
@@ -3188,7 +3279,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def call_abi_txn(
         self,
@@ -3199,7 +3290,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3208,6 +3298,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3218,6 +3309,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
@@ -3239,7 +3332,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def call_with_references(
         self,
@@ -3250,7 +3343,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3259,6 +3351,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3269,6 +3362,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
@@ -3290,7 +3385,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def set_global(
         self,
@@ -3301,7 +3396,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3310,6 +3404,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
@@ -3320,6 +3415,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
@@ -3341,7 +3438,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def set_local(
         self,
@@ -3352,7 +3449,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3361,6 +3457,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
@@ -3371,6 +3468,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
@@ -3392,7 +3491,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def set_box(
         self,
@@ -3403,7 +3502,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3412,6 +3510,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
@@ -3422,6 +3521,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
@@ -3443,7 +3544,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def error(
         self,
@@ -3453,7 +3554,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3462,12 +3562,15 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="error()void",
@@ -3489,7 +3592,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def default_value(
         self,
@@ -3500,7 +3603,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3509,6 +3611,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3519,6 +3622,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
@@ -3540,7 +3645,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def default_value_int(
         self,
@@ -3551,7 +3656,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3560,6 +3664,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3570,6 +3675,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
@@ -3591,7 +3698,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def default_value_from_abi(
         self,
@@ -3602,7 +3709,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3611,6 +3717,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3621,6 +3728,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
@@ -3642,7 +3751,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def default_value_from_global_state(
         self,
@@ -3653,7 +3762,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3662,6 +3770,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[int]:
@@ -3672,6 +3781,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
@@ -3693,7 +3804,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[int](**asdict(response))
 
     def default_value_from_local_state(
         self,
@@ -3704,7 +3815,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3713,6 +3823,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3723,6 +3834,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
@@ -3744,7 +3857,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def create_abi(
         self,
@@ -3755,7 +3868,6 @@ class StateAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -3764,6 +3876,7 @@ class StateAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -3774,6 +3887,8 @@ class StateAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
@@ -3795,7 +3910,7 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
@@ -4300,6 +4415,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4330,6 +4447,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4360,6 +4479,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4390,6 +4511,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4420,6 +4543,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4450,6 +4575,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4480,6 +4607,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4510,6 +4639,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4540,6 +4671,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4570,6 +4703,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4600,6 +4735,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4630,6 +4767,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4660,6 +4799,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4690,6 +4831,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4720,6 +4863,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4750,6 +4895,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4780,6 +4927,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4810,6 +4959,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4840,6 +4991,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4870,6 +5023,8 @@ class StateAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -4954,6 +5109,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -4984,6 +5141,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5014,6 +5173,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5044,6 +5205,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5074,6 +5237,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5104,6 +5269,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5134,6 +5301,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5164,6 +5333,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5194,6 +5365,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5224,6 +5397,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5254,6 +5429,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5284,6 +5461,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5314,6 +5493,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5344,6 +5525,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5374,6 +5557,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5404,6 +5589,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5434,6 +5621,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5464,6 +5653,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5494,6 +5685,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5524,6 +5717,8 @@ class StateAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -5611,6 +5806,8 @@ class StateAppFactorySendCreate:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             result = self.app_factory.send.create(
                 AppFactoryCreateMethodCallParams(
@@ -5647,7 +5844,6 @@ class _StateAppUpdateComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5656,6 +5852,7 @@ class _StateAppUpdateComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
     ) -> "StateAppComposer":
@@ -5664,6 +5861,8 @@ class _StateAppUpdateComposer:
             method_args = args
         elif isinstance(args, dict):
             method_args = tuple(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.update.update_abi(
@@ -5705,7 +5904,6 @@ class _StateAppDeleteComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5714,6 +5912,7 @@ class _StateAppDeleteComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -5722,6 +5921,8 @@ class _StateAppDeleteComposer:
             method_args = args
         elif isinstance(args, dict):
             method_args = tuple(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.delete.delete_abi(
@@ -5762,7 +5963,6 @@ class _StateAppOpt_inComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5771,6 +5971,7 @@ class _StateAppOpt_inComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -5831,7 +6032,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5840,6 +6040,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -5885,7 +6086,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5894,6 +6094,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -5939,7 +6140,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -5948,6 +6148,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -5993,7 +6194,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6002,6 +6202,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6047,7 +6248,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6056,6 +6256,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6101,7 +6302,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6110,6 +6310,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6155,7 +6356,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6164,6 +6364,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6209,7 +6410,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6218,6 +6418,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6263,7 +6464,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6272,6 +6472,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6317,7 +6518,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6326,6 +6526,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6370,7 +6571,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6379,6 +6579,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6418,7 +6619,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6427,6 +6627,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6472,7 +6673,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6481,6 +6681,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6526,7 +6727,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6535,6 +6735,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6580,7 +6781,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6589,6 +6789,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6634,7 +6835,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6643,6 +6843,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6688,7 +6889,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6697,6 +6897,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "StateAppComposer":
@@ -6741,7 +6942,6 @@ class StateAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -6750,6 +6950,7 @@ class StateAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
     ) -> "StateAppComposer":
         self._composer.add_app_call(

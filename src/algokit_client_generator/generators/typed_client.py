@@ -44,6 +44,8 @@ def _generate_args_parser(*, include_args: bool = False) -> str:
         method_args = list(args)
     elif isinstance(args, dict):
         method_args = list(args.values())''' if include_args else ''}
+    if method_args:
+        method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
     """
 
 
@@ -87,7 +89,6 @@ def {method.abi.client_method_name}(
     asset_references: Optional[list[int]] = None,
     box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
     extra_fee: Optional[AlgoAmount] = None,
-    first_valid_round: Optional[int] = None,
     lease: Optional[bytes] = None,
     max_fee: Optional[AlgoAmount] = None,
     note: Optional[bytes] = None,
@@ -96,6 +97,7 @@ def {method.abi.client_method_name}(
     signer: Optional[TransactionSigner] = None,
     static_fee: Optional[AlgoAmount] = None,
     validity_window: Optional[int] = None,
+    first_valid_round: Optional[int] = None,
     last_valid_round: Optional[int] = None,
     {algokit_extra_args(operation)}
 )"""
@@ -131,8 +133,18 @@ def _generate_method_body(
             else "AppClientMethodCallWithSendParams"
         )
 
-    def alogkit_return_type(operation: str) -> str:
-        return "SendAppUpdateTransactionResult" if operation == "update" else "SendAppTransactionResult"
+    def alogkit_return_type(operation: str, method: ContractMethod) -> str:
+        return_type = f"{method.abi.python_type}" if method.abi else ""
+        if operation == "update":
+            return_type = f"SendAppUpdateTransactionResult[{return_type}]"
+        else:
+            return_type = f"SendAppTransactionResult[{return_type}]"
+        return return_type
+
+    def parse_struct_if_needed(method: ContractMethod) -> str:
+        if method.abi and method.abi.result_struct:
+            return f"**(replace(response, abi_return={method.abi.result_struct.struct_class_name}(**cast(dict, response.abi_return)))).__dict__"
+        return "**asdict(response)"
 
     def algokit_extra_args(operation: str) -> str:
         if operation == "update":
@@ -167,7 +179,7 @@ def _generate_method_body(
     else:
         response_code = f"""
     response = self.app_client.send.{operation}({call_params})
-    return {alogkit_return_type(operation)}(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+    return {alogkit_return_type(operation, method)}({parse_struct_if_needed(method)})
 """
         return f"{body}{response_code}"
 

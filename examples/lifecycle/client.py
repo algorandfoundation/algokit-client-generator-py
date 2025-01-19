@@ -5,7 +5,7 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
 from typing import (
     Any,
     Callable,
@@ -124,12 +124,14 @@ _APP_SPEC_JSON = r"""{
             "args": [
                 {
                     "type": "string",
+                    "desc": "The greeting",
                     "name": "greeting"
                 }
             ],
             "name": "create",
             "returns": {
-                "type": "string"
+                "type": "string",
+                "desc": "The formatted greeting"
             },
             "desc": "ABI create method with 1 argument",
             "events": []
@@ -239,7 +241,6 @@ class LifeCycleAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -248,6 +249,7 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -258,6 +260,8 @@ class LifeCycleAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -288,7 +292,6 @@ class LifeCycleAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -297,12 +300,15 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="hello()string",
@@ -334,7 +340,6 @@ class LifeCycleAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -343,6 +348,7 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -353,6 +359,8 @@ class LifeCycleAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="create(string)string",
@@ -384,7 +392,6 @@ class LifeCycleAppParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -393,6 +400,7 @@ class LifeCycleAppParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> AppCallMethodCallParams:
@@ -403,6 +411,8 @@ class LifeCycleAppParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.params.call(AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
@@ -452,7 +462,6 @@ class LifeCycleAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -461,6 +470,7 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -471,6 +481,8 @@ class LifeCycleAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -501,7 +513,6 @@ class LifeCycleAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -510,12 +521,15 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="hello()string",
@@ -547,7 +561,6 @@ class LifeCycleAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -556,6 +569,7 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -566,6 +580,8 @@ class LifeCycleAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="create(string)string",
@@ -597,7 +613,6 @@ class LifeCycleAppCreateTransactionParams:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -606,6 +621,7 @@ class LifeCycleAppCreateTransactionParams:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> BuiltTransactions:
@@ -616,6 +632,8 @@ class LifeCycleAppCreateTransactionParams:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
@@ -665,7 +683,6 @@ class LifeCycleAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -674,6 +691,7 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -684,6 +702,8 @@ class LifeCycleAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello(string)string",
@@ -705,7 +725,7 @@ class LifeCycleAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def hello_string(
         self,
@@ -715,7 +735,6 @@ class LifeCycleAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -724,12 +743,15 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
     
         method_args = None
         
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="hello()string",
@@ -751,7 +773,7 @@ class LifeCycleAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def create_string_string(
         self,
@@ -762,7 +784,6 @@ class LifeCycleAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -771,6 +792,7 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[str]:
@@ -781,6 +803,8 @@ class LifeCycleAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="create(string)string",
@@ -802,7 +826,7 @@ class LifeCycleAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[str](**asdict(response))
 
     def create_string_uint32_void(
         self,
@@ -813,7 +837,6 @@ class LifeCycleAppSend:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -822,6 +845,7 @@ class LifeCycleAppSend:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> SendAppTransactionResult[None]:
@@ -832,6 +856,8 @@ class LifeCycleAppSend:
             method_args = list(args)
         elif isinstance(args, dict):
             method_args = list(args.values())
+        if method_args:
+            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
         response = self.app_client.send.call(AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
@@ -853,7 +879,7 @@ class LifeCycleAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult(**asdict(replace(response, abi_return=response.abi_return.value))) # type: ignore[arg-type]
+        return SendAppTransactionResult[None](**asdict(response))
 
     def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
@@ -1259,6 +1285,8 @@ class LifeCycleAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -1289,6 +1317,8 @@ class LifeCycleAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -1319,6 +1349,8 @@ class LifeCycleAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -1349,6 +1381,8 @@ class LifeCycleAppFactoryCreateParams:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
                 AppFactoryCreateMethodCallParams(
@@ -1433,6 +1467,8 @@ class LifeCycleAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1463,6 +1499,8 @@ class LifeCycleAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1493,6 +1531,8 @@ class LifeCycleAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1523,6 +1563,8 @@ class LifeCycleAppFactoryCreateTransaction:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
                 AppFactoryCreateMethodCallParams(
@@ -1610,6 +1652,8 @@ class LifeCycleAppFactorySendCreate:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             result = self.app_factory.send.create(
                 AppFactoryCreateMethodCallParams(
@@ -1653,6 +1697,8 @@ class LifeCycleAppFactorySendCreate:
                 method_args = list(args)
             elif isinstance(args, dict):
                 method_args = list(args.values())
+            if method_args:
+                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             result = self.app_factory.send.create(
                 AppFactoryCreateMethodCallParams(
@@ -1703,7 +1749,6 @@ class LifeCycleAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1712,6 +1757,7 @@ class LifeCycleAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "LifeCycleAppComposer":
@@ -1756,7 +1802,6 @@ class LifeCycleAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1765,6 +1810,7 @@ class LifeCycleAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "LifeCycleAppComposer":
@@ -1804,7 +1850,6 @@ class LifeCycleAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1813,6 +1858,7 @@ class LifeCycleAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "LifeCycleAppComposer":
@@ -1858,7 +1904,6 @@ class LifeCycleAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1867,6 +1912,7 @@ class LifeCycleAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
         
     ) -> "LifeCycleAppComposer":
@@ -1911,7 +1957,6 @@ class LifeCycleAppComposer:
         asset_references: Optional[list[int]] = None,
         box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
         extra_fee: Optional[AlgoAmount] = None,
-        first_valid_round: Optional[int] = None,
         lease: Optional[bytes] = None,
         max_fee: Optional[AlgoAmount] = None,
         note: Optional[bytes] = None,
@@ -1920,6 +1965,7 @@ class LifeCycleAppComposer:
         signer: Optional[TransactionSigner] = None,
         static_fee: Optional[AlgoAmount] = None,
         validity_window: Optional[int] = None,
+        first_valid_round: Optional[int] = None,
         last_valid_round: Optional[int] = None,
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call(

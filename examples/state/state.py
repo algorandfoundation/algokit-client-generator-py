@@ -20,10 +20,27 @@ class BareCallAppState:
     local_int1 = beaker.LocalStateValue(stack_type=pt.TealType.uint64)
     local_int2 = beaker.LocalStateValue(stack_type=pt.TealType.uint64)
     box = BoxMapping(pt.abi.StaticBytes[Literal[4]], pt.abi.String)
+    reserved_global_bytes = beaker.ReservedGlobalStateValue(stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved global state description")
+    reserved_local_bytes = beaker.ReservedLocalStateValue(stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved local state description")
 
 
 app = beaker.Application("StateApp", state=BareCallAppState)
 
+@app.external
+def call_abi_uint32(input: pt.abi.Uint32, *, output: pt.abi.Uint32) -> pt.Expr:
+    return output.set(input.get())
+
+@app.external(read_only=True)
+def call_abi_uint32_readonly(input: pt.abi.Uint32, *, output: pt.abi.Uint32) -> pt.Expr:
+    return output.set(input.get())
+
+@app.external
+def call_abi_uint64(input: pt.abi.Uint64, *, output: pt.abi.Uint64) -> pt.Expr:
+    return output.set(input.get())
+
+@app.external(read_only=True)
+def call_abi_uint64_readonly(input: pt.abi.Uint64, *, output: pt.abi.Uint64) -> pt.Expr:
+    return output.set(input.get())
 
 @app.external(read_only=True)
 def call_abi(value: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:
@@ -55,6 +72,20 @@ def call_abi_txn(txn: pt.abi.PaymentTransaction, value: pt.abi.String, *, output
         )
     )
 
+@app.external()
+def call_with_references(
+    asset: pt.abi.Asset,
+    account: pt.abi.Account,
+    application: pt.abi.Application,
+    *,
+    output: pt.abi.Uint64
+) -> pt.Expr:
+    return pt.Seq(
+        pt.Assert(asset.asset_id(), comment="asset not provided"),
+        pt.Assert(pt.Len(account.address()), comment="account not provided"),
+        pt.Assert(application.application_id(), comment="application not provided"),
+        output.set(pt.Int(1)),
+    )
 
 @app.external()
 def set_global(
@@ -85,40 +116,41 @@ def set_box(name: pt.abi.StaticBytes[Literal[4]], value: pt.abi.String) -> pt.Ex
     return app.state.box[name.get()].set(value.get())
 
 
-@app.external()
-def call_with_references(
-    asset: pt.abi.Asset, account: pt.abi.Account, application: pt.abi.Application, *, output: pt.abi.Uint64
-) -> pt.Expr:
-    return pt.Seq(
-        pt.Assert(asset.asset_id(), comment="asset not provided"),
-        pt.Assert(pt.Len(account.address()), comment="account not provided"),
-        pt.Assert(application.application_id(), comment="application not provided"),
-        output.set(pt.Int(1)),
-    )
-
-
 @app.external(read_only=True)
 def error() -> pt.Expr:
     return pt.Assert(pt.Int(0), comment="Deliberate error")
 
 
+
 @app.external(read_only=True)
 def default_value(
-    arg_with_default: pt.abi.String = "default value",  # type: ignore[assignment]
-    *,
-    output: pt.abi.String,
+    arg_with_default: pt.abi.String = "default value", *, output: pt.abi.String  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(arg_with_default.get())
 
+@app.external(read_only=True)
+def default_value_int(
+    arg_with_default: pt.abi.Uint64 = 123, *, output: pt.abi.Uint64  # type: ignore[assignment]
+) -> pt.Expr:
+    return output.set(arg_with_default.get())
 
 @app.external(read_only=True)
 def default_value_from_abi(
-    arg_with_default: pt.abi.String = default_value,  # type: ignore[assignment]
-    *,
-    output: pt.abi.String,
+    arg_with_default: pt.abi.String = default_value, *, output: pt.abi.String  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(pt.Concat(pt.Bytes("ABI, "), arg_with_default.get()))
 
+@app.external(read_only=True)
+def default_value_from_global_state(
+    arg_with_default: pt.abi.Uint64 = BareCallAppState.int1, *, output: pt.abi.Uint64  # type: ignore[assignment]
+) -> pt.Expr:
+    return output.set(arg_with_default.get())
+
+@app.external(read_only=True)
+def default_value_from_local_state(
+    arg_with_default: pt.abi.String = BareCallAppState.local_bytes1, *, output: pt.abi.String  # type: ignore[assignment]
+) -> pt.Expr:
+    return output.set(pt.Concat(pt.Bytes("Local state, "), arg_with_default.get()))
 
 @app.external(
     authorize=beaker.Authorize.only_creator(),
@@ -130,7 +162,7 @@ def create() -> pt.Expr:
 
 
 @app.create(authorize=beaker.Authorize.only_creator())
-def create_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
+def create_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
     return output.set(input.get())
 
 
@@ -140,7 +172,7 @@ def update() -> pt.Expr:
 
 
 @app.update(authorize=beaker.Authorize.only_creator())
-def update_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
+def update_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
     return pt.Seq(
         pt.Assert(pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable"), output.set(input.get())
     )
@@ -152,7 +184,7 @@ def delete() -> pt.Expr:
 
 
 @app.delete(authorize=beaker.Authorize.only_creator())
-def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: A002: ignore[A003]
+def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
     return pt.Seq(
         pt.Assert(pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable"), output.set(input.get())
     )
@@ -161,27 +193,3 @@ def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # no
 @app.opt_in
 def opt_in() -> pt.Expr:
     return pt.Approve()
-
-
-class Input(pt.abi.NamedTuple):
-    name: pt.abi.Field[pt.abi.String]
-    age: pt.abi.Field[pt.abi.Uint64]
-
-
-class Output(pt.abi.NamedTuple):
-    message: pt.abi.Field[pt.abi.String]
-    result: pt.abi.Field[pt.abi.Uint64]
-
-
-@app.external()
-def structs(name_age: Input, *, output: Output) -> pt.Expr:
-    return pt.Seq(
-        (name := pt.abi.String()).set(name_age.name),
-        (age := pt.abi.Uint64()).set(name_age.age),
-        (message := pt.abi.String()).set(pt.Concat(pt.Bytes("Hello, "), name.get())),
-        (result := pt.abi.Uint64()).set(pt.Mul(age.get(), pt.Int(2))),
-        output.set(
-            message,
-            result,
-        ),
-    )
