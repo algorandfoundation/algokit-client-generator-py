@@ -5,69 +5,20 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
-from typing import (
-    Any,
-    Callable,
-    Optional,
-    Protocol,
-    Union,
-    overload,
-    Generic,
-    Tuple,
-    TypedDict,
-    runtime_checkable,
-    cast,
-    Literal,
-)
+# common
+import dataclasses
+import typing
+# core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algokit_utils.applications import AppFactoryCreateParams, AppFactoryCreateMethodCallResult, AppFactoryCreateWithSendParams, AppFactoryCreateMethodCallParams
-from algokit_utils.applications import (
-    AppClient,
-    AppClientBareCallWithSendParams,
-    AppClientMethodCallWithSendParams,
-    AppClientMethodCallWithCompilationAndSendParams,
-    AppClientMethodCallParams,
-    AppClientParams,
-    AppFactory,
-    AppFactoryParams,
-    Arc56Contract,
-    AppClientBareCallWithCompilationAndSendParams,
-    AppClientBareCallParams,
-    AppClientCreateSchema,
-    BaseOnCompleteParams,
-    AppClientMethodCallParams,
-    AppClientBareCallParams,
-    AppClientBareCallCreateParams,
-    AppClientMethodCallCreateParams,
-    BaseAppClientMethodCallParams,
-)
-from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams, AppCreateMethodCallParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
-from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
-from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate
-from algokit_utils.applications.app_factory import (
-    AppFactoryDeployResponse,
-    TypedAppFactoryProtocol,
-)
-from algokit_utils.models import AlgoAmount, BoxIdentifier, BoxReference
-from algokit_utils.models.state import TealTemplateParams
-from algokit_utils.protocols import AlgorandClientProtocol
-from algokit_utils.transactions import (
-    AppCallMethodCallParams,
-    AppCallParams,
-    SendAppUpdateTransactionResult,
-                      
-    SendAppTransactionResult,
-    SendAtomicTransactionComposerResults,
-    TransactionComposer,
-)
-from algokit_utils.transactions.transaction_composer import BuiltTransactions
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
+# utils
+from algokit_utils import applications, models, protocols, transactions
+from algokit_utils.applications import abi as applications_abi
 
 _APP_SPEC_JSON = r"""{
     "arcs": [],
@@ -337,10 +288,10 @@ _APP_SPEC_JSON = r"""{
         "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"
     }
 }"""
-APP_SPEC = Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class VotingPreconditions:
     """Struct for VotingPreconditions"""
     is_voting_open: int
@@ -349,21 +300,21 @@ class VotingPreconditions:
     current_time: int
 
 
-class BootstrapArgs(TypedDict):
+class BootstrapArgs(typing.TypedDict):
     """TypedDict for bootstrap arguments"""
     fund_min_bal_req: TransactionWithSigner
 
-class GetPreconditionsArgs(TypedDict):
+class GetPreconditionsArgs(typing.TypedDict):
     """TypedDict for get_preconditions arguments"""
     signature: bytes | bytearray
 
-class VoteArgs(TypedDict):
+class VoteArgs(typing.TypedDict):
     """TypedDict for vote arguments"""
     fund_min_bal_req: TransactionWithSigner
     signature: bytes | bytearray
     answer_ids: list[int]
 
-class CreateArgs(TypedDict):
+class CreateArgs(typing.TypedDict):
     """TypedDict for create arguments"""
     vote_id: str
     snapshot_public_key: bytes | bytearray
@@ -376,40 +327,40 @@ class CreateArgs(TypedDict):
 
 
 class _VotingRoundAppDelete:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
 
 class VotingRoundAppParams:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def delete(self) -> "_VotingRoundAppDelete":
         return _VotingRoundAppDelete(self.app_client)
     def bootstrap(
         self,
-        args: Tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[TransactionWithSigner] | BootstrapArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -418,9 +369,9 @@ class VotingRoundAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -444,30 +395,30 @@ class VotingRoundAppParams:
     def close(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -490,25 +441,25 @@ class VotingRoundAppParams:
 
     def get_preconditions(
         self,
-        args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+        args: tuple[bytes | bytearray] | GetPreconditionsArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -517,9 +468,9 @@ class VotingRoundAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -542,25 +493,25 @@ class VotingRoundAppParams:
 
     def vote(
         self,
-        args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -569,9 +520,9 @@ class VotingRoundAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -594,25 +545,25 @@ class VotingRoundAppParams:
 
     def create(
         self,
-        args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+        args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -621,9 +572,9 @@ class VotingRoundAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -644,45 +595,45 @@ class VotingRoundAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
 class _VotingRoundAppDeleteTransaction:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
 class VotingRoundAppCreateTransactionParams:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def delete(self) -> "_VotingRoundAppDeleteTransaction":
         return _VotingRoundAppDeleteTransaction(self.app_client)
     def bootstrap(
         self,
-        args: Tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[TransactionWithSigner] | BootstrapArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -691,9 +642,9 @@ class VotingRoundAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -717,30 +668,30 @@ class VotingRoundAppCreateTransactionParams:
     def close(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -763,25 +714,25 @@ class VotingRoundAppCreateTransactionParams:
 
     def get_preconditions(
         self,
-        args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+        args: tuple[bytes | bytearray] | GetPreconditionsArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -790,9 +741,9 @@ class VotingRoundAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -815,25 +766,25 @@ class VotingRoundAppCreateTransactionParams:
 
     def vote(
         self,
-        args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -842,9 +793,9 @@ class VotingRoundAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -867,25 +818,25 @@ class VotingRoundAppCreateTransactionParams:
 
     def create(
         self,
-        args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+        args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -894,9 +845,9 @@ class VotingRoundAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -917,45 +868,45 @@ class VotingRoundAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _VotingRoundAppDeleteSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
         return self.app_client.send.bare.delete(params)
 
 
 class VotingRoundAppSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def delete(self) -> "_VotingRoundAppDeleteSend":
         return _VotingRoundAppDeleteSend(self.app_client)
     def bootstrap(
         self,
-        args: Tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[TransactionWithSigner] | BootstrapArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -964,9 +915,9 @@ class VotingRoundAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -986,35 +937,35 @@ class VotingRoundAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def close(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1034,29 +985,29 @@ class VotingRoundAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def get_preconditions(
         self,
-        args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+        args: tuple[bytes | bytearray] | GetPreconditionsArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[VotingPreconditions]:
+    ) -> transactions.SendAppTransactionResult[VotingPreconditions]:
     
         method_args = None
         
@@ -1065,9 +1016,9 @@ class VotingRoundAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1087,29 +1038,29 @@ class VotingRoundAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[VotingPreconditions](**(replace(response, abi_return=VotingPreconditions(**cast(dict, response.abi_return)))).__dict__)
+        return transactions.SendAppTransactionResult[VotingPreconditions](**(dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))).__dict__)
 
     def vote(
         self,
-        args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -1118,9 +1069,9 @@ class VotingRoundAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1140,29 +1091,29 @@ class VotingRoundAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def create(
         self,
-        args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+        args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -1171,9 +1122,9 @@ class VotingRoundAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1193,13 +1144,13 @@ class VotingRoundAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class GlobalStateValue(TypedDict):
+class GlobalStateValue(typing.TypedDict):
     """Shape of global_state state key values"""
     close_time: int
     end_time: int
@@ -1218,7 +1169,7 @@ class GlobalStateValue(TypedDict):
 class VotingRoundAppState:
     """Methods to access state for the current VotingRoundApp app"""
 
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     @property
@@ -1227,78 +1178,78 @@ class VotingRoundAppState:
             return _GlobalState(self.app_client)
 
 class _GlobalState:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return cast(GlobalStateValue, result)
+        return typing.cast(GlobalStateValue, result)
 
     def close_time(self) -> int:
             """Get the current value of the close_time key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("close_time"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("close_time"))
 
     def end_time(self) -> int:
             """Get the current value of the end_time key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("end_time"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("end_time"))
 
     def is_bootstrapped(self) -> int:
             """Get the current value of the is_bootstrapped key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("is_bootstrapped"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("is_bootstrapped"))
 
     def metadata_ipfs_cid(self) -> bytes:
             """Get the current value of the metadata_ipfs_cid key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("metadata_ipfs_cid"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("metadata_ipfs_cid"))
 
     def nft_asset_id(self) -> int:
             """Get the current value of the nft_asset_id key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("nft_asset_id"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("nft_asset_id"))
 
     def nft_image_url(self) -> bytes:
             """Get the current value of the nft_image_url key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("nft_image_url"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("nft_image_url"))
 
     def option_counts(self) -> bytes:
             """Get the current value of the option_counts key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("option_counts"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("option_counts"))
 
     def quorum(self) -> int:
             """Get the current value of the quorum key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("quorum"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("quorum"))
 
     def snapshot_public_key(self) -> bytes:
             """Get the current value of the snapshot_public_key key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("snapshot_public_key"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("snapshot_public_key"))
 
     def start_time(self) -> int:
             """Get the current value of the start_time key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("start_time"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("start_time"))
 
     def total_options(self) -> int:
             """Get the current value of the total_options key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("total_options"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("total_options"))
 
     def vote_id(self) -> bytes:
             """Get the current value of the vote_id key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("vote_id"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("vote_id"))
 
     def voter_count(self) -> int:
             """Get the current value of the voter_count key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("voter_count"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("voter_count"))
 
 class VotingRoundAppClient:
     """Client for interacting with VotingRoundApp smart contract"""
 
-    @overload
-    def __init__(self, app_client: AppClient) -> None: ...
+    @typing.overload
+    def __init__(self, app_client: applications.AppClient) -> None: ...
     
-    @overload
+    @typing.overload
     def __init__(
         self,
         *,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -1309,9 +1260,9 @@ class VotingRoundAppClient:
 
     def __init__(
         self,
-        app_client: AppClient | None = None,
+        app_client: applications.AppClient | None = None,
         *,
-        algorand: AlgorandClientProtocol | None = None,
+        algorand: protocols.AlgorandClientProtocol | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -1322,8 +1273,8 @@ class VotingRoundAppClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = AppClient(
-                AppClientParams(
+            self.app_client = applications.AppClient(
+                applications.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -1346,16 +1297,16 @@ class VotingRoundAppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
+        app_lookup_cache: applications.AppLookup | None = None,
     ) -> "VotingRoundAppClient":
         return VotingRoundAppClient(
-            AppClient.from_creator_and_name(
+            applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -1371,7 +1322,7 @@ class VotingRoundAppClient:
     
     @staticmethod
     def from_network(
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -1379,7 +1330,7 @@ class VotingRoundAppClient:
         clear_source_map: SourceMap | None = None,
     ) -> "VotingRoundAppClient":
         return VotingRoundAppClient(
-            AppClient.from_network(
+            applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -1403,11 +1354,11 @@ class VotingRoundAppClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> Arc56Contract:
+    def app_spec(self) -> applications.Arc56Contract:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> AlgorandClientProtocol:
+    def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_client.algorand
 
     def clone(
@@ -1434,8 +1385,8 @@ class VotingRoundAppClient:
     def decode_return_value(
         self,
         method: str,
-        return_value: ABIReturn | None
-    ) -> ABIValue | ABIStruct | None:
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
         if return_value is None:
             return None
     
@@ -1443,38 +1394,38 @@ class VotingRoundAppClient:
         return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class VotingRoundAppMethodCallCreateParams(
-    AppClientCreateSchema, BaseAppClientMethodCallParams[
-        Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
-        Literal["create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"],
-        Literal[OnComplete.NoOpOC]
+    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+        tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+        typing.Literal["create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"],
+        typing.Literal[OnComplete.NoOpOC]
     ]
 ):
     """Parameters for creating VotingRoundApp contract using ABI"""
 
-    def to_algokit_utils_params(self) -> AppClientMethodCallCreateParams:
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
-        return AppClientMethodCallCreateParams(
+        return applications.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
             }
         )
 
-@dataclass(frozen=True)
-class VotingRoundAppBareCallDeleteParams(AppClientBareCallParams):
+@dataclasses.dataclass(frozen=True)
+class VotingRoundAppBareCallDeleteParams(applications.AppClientBareCallParams):
     """Parameters for calling VotingRoundApp contract using bare calls"""
 
-    def to_algokit_utils_params(self) -> AppClientBareCallParams:
-        return AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
+        return applications.AppClientBareCallParams(**self.__dict__)
 
-class VotingRoundAppFactory(TypedAppFactoryProtocol):
+class VotingRoundAppFactory(applications.TypedAppFactoryProtocol):
     """Factory for deploying and managing VotingRoundAppClient smart contracts"""
 
     def __init__(
         self,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -1482,10 +1433,10 @@ class VotingRoundAppFactory(TypedAppFactoryProtocol):
         version: str | None = None,
         updatable: bool | None = None,
         deletable: bool | None = None,
-        deploy_time_params: TealTemplateParams | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
     ):
-        self.app_factory = AppFactory(
-            params=AppFactoryParams(
+        self.app_factory = applications.AppFactory(
+            params=applications.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
@@ -1506,22 +1457,22 @@ class VotingRoundAppFactory(TypedAppFactoryProtocol):
         return self.app_factory.app_name
 
     @property
-    def app_spec(self) -> Arc56Contract:
+    def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
 
     @property
-    def algorand(self) -> AlgorandClientProtocol:
+    def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
 
     def deploy(
         self,
         *,
-        deploy_time_params: TealTemplateParams | None = None,
-        on_update: OnUpdate = OnUpdate.Fail,
-        on_schema_break: OnSchemaBreak = OnSchemaBreak.Fail,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
+        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: VotingRoundAppMethodCallCreateParams | None = None,
         delete_params: VotingRoundAppBareCallDeleteParams | None = None,
-        existing_deployments: AppLookup | None = None,
+        existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
         deletable: bool | None = None,
@@ -1529,7 +1480,7 @@ class VotingRoundAppFactory(TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[VotingRoundAppClient, AppFactoryDeployResponse]:
+    ) -> tuple[VotingRoundAppClient, applications.AppFactoryDeployResponse]:
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -1555,7 +1506,7 @@ class VotingRoundAppFactory(TypedAppFactoryProtocol):
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
+        app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> VotingRoundAppClient:
@@ -1598,7 +1549,7 @@ class VotingRoundAppFactory(TypedAppFactoryProtocol):
 class VotingRoundAppFactoryParams:
     """Parameters for creating transactions for VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactoryCreateParams(app_factory)
         self.deploy_update = VotingRoundAppFactoryUpdateParams(app_factory)
@@ -1607,13 +1558,13 @@ class VotingRoundAppFactoryParams:
 class VotingRoundAppFactoryCreateParams:
     """Parameters for 'create' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -1621,17 +1572,17 @@ class VotingRoundAppFactoryCreateParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppCreateParams:
+    ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
         return self.app_factory.params.bare.create(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
     def bootstrap(
             self,
-            args: Tuple[TransactionWithSigner] | BootstrapArgs,
+            args: tuple[TransactionWithSigner] | BootstrapArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1639,7 +1590,7 @@ class VotingRoundAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the bootstrap(pay)void ABI method"""
             
             method_args = None
@@ -1648,10 +1599,10 @@ class VotingRoundAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="bootstrap(pay)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1661,9 +1612,9 @@ class VotingRoundAppFactoryCreateParams:
 
     def close(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1671,7 +1622,7 @@ class VotingRoundAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the close()void ABI method"""
             
             method_args = None
@@ -1680,10 +1631,10 @@ class VotingRoundAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="close()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1693,9 +1644,9 @@ class VotingRoundAppFactoryCreateParams:
 
     def get_preconditions(
             self,
-            args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+            args: tuple[bytes | bytearray] | GetPreconditionsArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1703,7 +1654,7 @@ class VotingRoundAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
             
             method_args = None
@@ -1712,10 +1663,10 @@ class VotingRoundAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1725,9 +1676,9 @@ class VotingRoundAppFactoryCreateParams:
 
     def vote(
             self,
-            args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+            args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1735,7 +1686,7 @@ class VotingRoundAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the vote(pay,byte[],uint8[])void ABI method"""
             
             method_args = None
@@ -1744,10 +1695,10 @@ class VotingRoundAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="vote(pay,byte[],uint8[])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1757,9 +1708,9 @@ class VotingRoundAppFactoryCreateParams:
 
     def create(
             self,
-            args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+            args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1767,7 +1718,7 @@ class VotingRoundAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
             
             method_args = None
@@ -1776,10 +1727,10 @@ class VotingRoundAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1790,13 +1741,13 @@ class VotingRoundAppFactoryCreateParams:
 class VotingRoundAppFactoryUpdateParams:
     """Parameters for 'update' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -1804,22 +1755,22 @@ class VotingRoundAppFactoryUpdateParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppUpdateParams:
+    ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
         return self.app_factory.params.bare.deploy_update(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 class VotingRoundAppFactoryDeleteParams:
     """Parameters for 'delete' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -1827,25 +1778,25 @@ class VotingRoundAppFactoryDeleteParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppDeleteParams:
+    ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
         return self.app_factory.params.bare.deploy_delete(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 
 class VotingRoundAppFactoryCreateTransaction:
     """Create transactions for VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactoryCreateTransactionCreate(app_factory)
 
     def bootstrap(
             self,
-            args: Tuple[TransactionWithSigner] | BootstrapArgs,
+            args: tuple[TransactionWithSigner] | BootstrapArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1853,7 +1804,7 @@ class VotingRoundAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the bootstrap(pay)void ABI method"""
             
             method_args = None
@@ -1862,10 +1813,10 @@ class VotingRoundAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="bootstrap(pay)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1875,9 +1826,9 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def close(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1885,7 +1836,7 @@ class VotingRoundAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the close()void ABI method"""
             
             method_args = None
@@ -1894,10 +1845,10 @@ class VotingRoundAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="close()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1907,9 +1858,9 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def get_preconditions(
             self,
-            args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+            args: tuple[bytes | bytearray] | GetPreconditionsArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1917,7 +1868,7 @@ class VotingRoundAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
             
             method_args = None
@@ -1926,10 +1877,10 @@ class VotingRoundAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1939,9 +1890,9 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def vote(
             self,
-            args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+            args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1949,7 +1900,7 @@ class VotingRoundAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the vote(pay,byte[],uint8[])void ABI method"""
             
             method_args = None
@@ -1958,10 +1909,10 @@ class VotingRoundAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="vote(pay,byte[],uint8[])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -1971,9 +1922,9 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def create(
             self,
-            args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+            args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -1981,7 +1932,7 @@ class VotingRoundAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
             
             method_args = None
@@ -1990,10 +1941,10 @@ class VotingRoundAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -2005,13 +1956,13 @@ class VotingRoundAppFactoryCreateTransaction:
 class VotingRoundAppFactoryCreateTransactionCreate:
     """Create new instances of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -2022,14 +1973,14 @@ class VotingRoundAppFactoryCreateTransactionCreate:
     ) -> Transaction:
         """Creates a new instance using a bare call"""
         return self.app_factory.create_transaction.bare.create(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 
 class VotingRoundAppFactorySend:
     """Send calls to VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactorySendCreate(app_factory)
 
@@ -2037,13 +1988,13 @@ class VotingRoundAppFactorySend:
 class VotingRoundAppFactorySendCreate:
     """Send create calls to VotingRoundApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -2051,18 +2002,18 @@ class VotingRoundAppFactorySendCreate:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> tuple[VotingRoundAppClient, SendAppCreateTransactionResult]:
+    ) -> tuple[VotingRoundAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
-            AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
         return VotingRoundAppClient(result[0]), result[1]
 
     def create(
             self,
-            args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+            args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -2070,7 +2021,7 @@ class VotingRoundAppFactorySendCreate:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> tuple[VotingRoundAppClient, AppFactoryCreateMethodCallResult[None]]:
+        ) -> tuple[VotingRoundAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
             
             method_args = None
@@ -2079,19 +2030,19 @@ class VotingRoundAppFactorySendCreate:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             result = self.app_factory.send.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
                 )
             )
-            return_value = None if result[1].abi_return is None else cast(None, result[1].abi_return)
+            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
     
-            return VotingRoundAppClient(result[0]), AppFactoryCreateMethodCallResult[None](
+            return VotingRoundAppClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
                 app_id=result[1].app_id,
                 abi_return=return_value,
                 transaction=result[1].transaction,
@@ -2115,7 +2066,7 @@ class VotingRoundAppComposer:
     def __init__(self, client: "VotingRoundAppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def delete(self) -> "_VotingRoundAppDeleteComposer":
@@ -2123,23 +2074,23 @@ class VotingRoundAppComposer:
 
     def bootstrap(
         self,
-        args: Tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[TransactionWithSigner] | BootstrapArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
         method_args = None
@@ -2178,21 +2129,21 @@ class VotingRoundAppComposer:
     def close(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
@@ -2224,23 +2175,23 @@ class VotingRoundAppComposer:
 
     def get_preconditions(
         self,
-        args: Tuple[bytes | bytearray] | GetPreconditionsArgs,
+        args: tuple[bytes | bytearray] | GetPreconditionsArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
         method_args = None
@@ -2278,23 +2229,23 @@ class VotingRoundAppComposer:
 
     def vote(
         self,
-        args: Tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
         method_args = None
@@ -2332,23 +2283,23 @@ class VotingRoundAppComposer:
 
     def create(
         self,
-        args: Tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
+        args: tuple[str, bytes | bytearray, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
         method_args = None
@@ -2387,25 +2338,25 @@ class VotingRoundAppComposer:
     def clear_state(
         self,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
-                AppClientBareCallWithSendParams(
+                applications.AppClientBareCallWithSendParams(
                     account_references=account_references,
                     app_references=app_references,
                     asset_references=asset_references,
@@ -2427,12 +2378,12 @@ class VotingRoundAppComposer:
         return self
     
     def add_transaction(
-        self, txn: Transaction, signer: Optional[TransactionSigner] = None
+        self, txn: Transaction, signer: TransactionSigner | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> TransactionComposer:
+    def composer(self) -> transactions.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -2444,7 +2395,7 @@ class VotingRoundAppComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: int | None = None,
-    ) -> SendAtomicTransactionComposerResults:
+    ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -2460,7 +2411,7 @@ class VotingRoundAppComposer:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
-    ) -> SendAtomicTransactionComposerResults:
+    ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.send(
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,

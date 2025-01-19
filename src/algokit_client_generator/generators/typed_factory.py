@@ -8,7 +8,7 @@ from algokit_client_generator.spec import ContractMethod
 
 def _generate_on_complete_type() -> str:
     """Generate the OnComplete type literal"""
-    return """Literal[
+    return """typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -20,8 +20,8 @@ def _generate_on_complete_type() -> str:
 def _generate_method_args_type(method: ContractMethod) -> str:
     """Generate the args type for a method"""
     if not method.abi or not method.abi.args:
-        return "Any"
-    tuple_type = f"Tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
+        return "typing.Any"
+    tuple_type = f"tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
     args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
     # Make args optional if all arguments have defaults
     if all(arg.has_default for arg in method.abi.args):
@@ -38,7 +38,7 @@ def _generate_method_args_parser() -> str:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
     """
 
 
@@ -65,11 +65,11 @@ def _generate_abi_method(method: ContractMethod, operation: str) -> DocumentPart
     yield Part.Gap1
     yield Part.IncIndent
     yield utils.indented(f"""
-    {method_params} -> App{operation.title()}{'MethodCall' if method.abi else ''}Params:
+    {method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
         \"\"\"Creates a new instance using the {method.abi.method.get_signature()} ABI method\"\"\"
         {_generate_method_args_parser()}
         return self.app_factory.params.{operation}(
-            AppFactoryCreateMethodCallParams(
+            applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
@@ -90,11 +90,11 @@ def _generate_abi_transaction_method(method: ContractMethod) -> DocumentParts:
 
     yield Part.IncIndent
     yield utils.indented(f"""
-    {method_params} -> BuiltTransactions:
+    {method_params} -> transactions.BuiltTransactions:
         \"\"\"Creates a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
         {_generate_method_args_parser()}
         return self.app_factory.create_transaction.create(
-            AppFactoryCreateMethodCallParams(
+            applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
@@ -124,20 +124,20 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     method_params = _generate_common_method_params(method_name, args_type)
 
     yield utils.indented(f"""
-    {method_params} -> tuple[{context.contract_name}Client, AppFactoryCreateMethodCallResult[{return_type}]]:
+    {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
         {_generate_method_args_parser()}
         result = self.app_factory.send.create(
-            AppFactoryCreateMethodCallParams(
+            applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
                 **kwargs
             )
         )
-        return_value = None if result[1].abi_return is None else cast({return_type}, result[1].abi_return)
+        return_value = None if result[1].abi_return is None else typing.cast({return_type}, result[1].abi_return)
 
-        return {context.contract_name}Client(result[0]), AppFactoryCreateMethodCallResult[{return_type}](
+        return {context.contract_name}Client(result[0]), applications.AppFactoryCreateMethodCallResult[{return_type}](
             app_id=result[1].app_id,
             abi_return=return_value,
             transaction=result[1].transaction,
@@ -160,7 +160,7 @@ def _generate_operation_params_class(context: GeneratorContext, operation: str) 
 class {class_name}:
     \"\"\"Parameters for '{operation}' operations of {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
@@ -168,10 +168,10 @@ class {class_name}:
         *,
         on_complete: ({_generate_on_complete_type()} | None) = None,
         **kwargs
-    ) -> App{operation.title()}Params:
+    ) -> transactions.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         return self.app_factory.params.bare.{method_name}(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 """)
 
@@ -260,9 +260,9 @@ def generate_factory_deploy_types(
         method_data = []
         for m in abi_methods:
             if m.abi and m.abi.args:
-                args_type = f"Tuple[{', '.join(arg.python_type for arg in m.abi.args)}]"
+                args_type = f"tuple[{', '.join(arg.python_type for arg in m.abi.args)}]"
                 args_union = f"{args_type} | {utils.to_camel_case(m.abi.client_method_name)}Args"
-                method_sig = f'Literal["{m.abi.method.get_signature()}"]'
+                method_sig = f'typing.Literal["{m.abi.method.get_signature()}"]'
                 method_data.append((args_union, method_sig))
 
         args_unions, method_signatures = zip(*method_data, strict=False) if method_data else ([], [])
@@ -277,19 +277,19 @@ def generate_factory_deploy_types(
         class_name = f"{context.contract_name}MethodCall{type_suffix}Params"
 
         yield utils.indented(f"""
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class {class_name}(
-    {'AppClientCreateSchema, ' if is_create else ''}BaseAppClientMethodCallParams[
-        {', '.join(args_unions) if len(args_unions) == 1 else f'Union[{", ".join(args_unions)}]' if args_unions else 'Any'},
-        {', '.join(method_signatures) if len(method_signatures) == 1 else f'Union[{", ".join(method_signatures)}]' if method_signatures else 'Any'},
-        Literal[{', '.join(sorted(on_completes))}]
+    {'applications.AppClientCreateSchema, ' if is_create else ''}applications.BaseAppClientMethodCallParams[
+        {', '.join(args_unions) if len(args_unions) == 1 else f'{" | ".join(args_unions)}' if args_unions else 'typing.Any'},
+        {', '.join(method_signatures) if len(method_signatures) == 1 else f'{" | ".join(method_signatures)}' if method_signatures else 'typing.Any'},
+        typing.Literal[{', '.join(sorted(on_completes))}]
     ]
 ):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
 
-    def to_algokit_utils_params(self) -> AppClientMethodCall{'Create' if is_create else ''}Params:
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCall{'Create' if is_create else ''}Params:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
-        return AppClientMethodCall{'Create' if is_create else ''}Params(
+        return applications.AppClientMethodCall{'Create' if is_create else ''}Params(
             **{{
                 **self.__dict__,
                 "args": method_args,
@@ -310,20 +310,22 @@ class {class_name}(
 
         base_classes = []
         if is_create:
-            base_classes.append("AppClientCreateSchema")
-        base_classes.append("AppClientBareCallParams")
+            base_classes.append("applications.AppClientCreateSchema")
+        base_classes.append("applications.AppClientBareCallParams")
         if is_create and on_complete_options:
-            base_classes.append(f"BaseOnCompleteParams[Literal[{', '.join(sorted(on_complete_options))}]]")
+            base_classes.append(
+                f"applications.BaseOnCompleteParams[typing.Literal[{', '.join(sorted(on_complete_options))}]]"
+            )
 
         class_name = f"{context.contract_name}BareCall{type_suffix}Params"
 
         yield utils.indented(f"""
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class {class_name}({', '.join(base_classes)}):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using bare calls\"\"\"
 
-    def to_algokit_utils_params(self) -> AppClientBareCall{'Create' if is_create else ''}Params:
-        return AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientBareCall{'Create' if is_create else ''}Params:
+        return applications.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
 """)
 
 
@@ -333,12 +335,12 @@ def generate_factory_class(
     """Generate the main factory class"""
 
     yield utils.indented(f"""
-class {context.contract_name}Factory(TypedAppFactoryProtocol):
+class {context.contract_name}Factory(applications.TypedAppFactoryProtocol):
     \"\"\"Factory for deploying and managing {context.contract_name}Client smart contracts\"\"\"
 
     def __init__(
         self,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -346,10 +348,10 @@ class {context.contract_name}Factory(TypedAppFactoryProtocol):
         version: str | None = None,
         updatable: bool | None = None,
         deletable: bool | None = None,
-        deploy_time_params: TealTemplateParams | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
     ):
-        self.app_factory = AppFactory(
-            params=AppFactoryParams(
+        self.app_factory = applications.AppFactory(
+            params=applications.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
@@ -370,21 +372,21 @@ class {context.contract_name}Factory(TypedAppFactoryProtocol):
         return self.app_factory.app_name
 
     @property
-    def app_spec(self) -> Arc56Contract:
+    def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
 
     @property
-    def algorand(self) -> AlgorandClientProtocol:
+    def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
 
     def deploy(
         self,
         *,
-        deploy_time_params: TealTemplateParams | None = None,
-        on_update: OnUpdate = OnUpdate.Fail,
-        on_schema_break: OnSchemaBreak = OnSchemaBreak.Fail,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
+        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         {',\n        '.join(deploy_params)},
-        existing_deployments: AppLookup | None = None,
+        existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
         deletable: bool | None = None,
@@ -392,7 +394,7 @@ class {context.contract_name}Factory(TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[{context.contract_name}Client, AppFactoryDeployResponse]:
+    ) -> tuple[{context.contract_name}Client, applications.AppFactoryDeployResponse]:
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -417,7 +419,7 @@ class {context.contract_name}Factory(TypedAppFactoryProtocol):
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
+        app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> {context.contract_name}Client:
@@ -464,7 +466,7 @@ def generate_factory_params(context: GeneratorContext) -> DocumentParts:
 class {context.contract_name}FactoryParams:
     \"\"\"Parameters for creating transactions for {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactoryCreateParams(app_factory)
         self.deploy_update = {context.contract_name}FactoryUpdateParams(app_factory)
@@ -483,7 +485,7 @@ def _generate_factory_create_transaction(context: GeneratorContext) -> DocumentP
 class {context.contract_name}FactoryCreateTransaction:
     \"\"\"Create transactions for {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactoryCreateTransactionCreate(app_factory)
 """)
@@ -502,7 +504,7 @@ def _generate_factory_send(context: GeneratorContext) -> DocumentParts:
 class {context.contract_name}FactorySend:
     \"\"\"Send calls to {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactorySendCreate(app_factory)
 """)
@@ -514,7 +516,7 @@ def _generate_create_transaction_class(context: GeneratorContext) -> DocumentPar
 class {context.contract_name}FactoryCreateTransactionCreate:
     \"\"\"Create new instances of {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
@@ -525,7 +527,7 @@ class {context.contract_name}FactoryCreateTransactionCreate:
     ) -> Transaction:
         \"\"\"Creates a new instance using a bare call\"\"\"
         return self.app_factory.create_transaction.bare.create(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 """)
 
@@ -536,7 +538,7 @@ def _generate_send_class(context: GeneratorContext) -> DocumentParts:
 class {context.contract_name}FactorySendCreate:
     \"\"\"Send create calls to {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
@@ -544,10 +546,10 @@ class {context.contract_name}FactorySendCreate:
         *,
         on_complete: ({_generate_on_complete_type()} | None) = None,
         **kwargs
-    ) -> tuple[{context.contract_name}Client, SendAppCreateTransactionResult]:
+    ) -> tuple[{context.contract_name}Client, transactions.SendAppCreateTransactionResult]:
         \"\"\"Creates a new instance using a bare call\"\"\"
         result = self.app_factory.send.bare.create(
-            AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
         return {context.contract_name}Client(result[0]), result[1]
 """)

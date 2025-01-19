@@ -5,69 +5,20 @@
 # DO NOT MODIFY IT BY HAND.
 # requires: algokit-utils@^3.0.0
 
-from dataclasses import dataclass, asdict, replace, astuple, is_dataclass
-from typing import (
-    Any,
-    Callable,
-    Optional,
-    Protocol,
-    Union,
-    overload,
-    Generic,
-    Tuple,
-    TypedDict,
-    runtime_checkable,
-    cast,
-    Literal,
-)
+# common
+import dataclasses
+import typing
+# core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algokit_utils.applications import AppFactoryCreateParams, AppFactoryCreateMethodCallResult, AppFactoryCreateWithSendParams, AppFactoryCreateMethodCallParams
-from algokit_utils.applications import (
-    AppClient,
-    AppClientBareCallWithSendParams,
-    AppClientMethodCallWithSendParams,
-    AppClientMethodCallWithCompilationAndSendParams,
-    AppClientMethodCallParams,
-    AppClientParams,
-    AppFactory,
-    AppFactoryParams,
-    Arc56Contract,
-    AppClientBareCallWithCompilationAndSendParams,
-    AppClientBareCallParams,
-    AppClientCreateSchema,
-    BaseOnCompleteParams,
-    AppClientMethodCallParams,
-    AppClientBareCallParams,
-    AppClientBareCallCreateParams,
-    AppClientMethodCallCreateParams,
-    BaseAppClientMethodCallParams,
-)
-from algokit_utils.transactions import SendAppCreateTransactionResult, AppCallParams, AppCreateParams, AppDeleteParams, AppUpdateParams, AppCreateMethodCallParams
 from algosdk.atomic_transaction_composer import TransactionWithSigner
-from algokit_utils.applications.abi import ABIReturn, ABIStruct, ABIValue
-from algokit_utils.applications.app_deployer import AppLookup, OnSchemaBreak, OnUpdate
-from algokit_utils.applications.app_factory import (
-    AppFactoryDeployResponse,
-    TypedAppFactoryProtocol,
-)
-from algokit_utils.models import AlgoAmount, BoxIdentifier, BoxReference
-from algokit_utils.models.state import TealTemplateParams
-from algokit_utils.protocols import AlgorandClientProtocol
-from algokit_utils.transactions import (
-    AppCallMethodCallParams,
-    AppCallParams,
-    SendAppUpdateTransactionResult,
-                      
-    SendAppTransactionResult,
-    SendAtomicTransactionComposerResults,
-    TransactionComposer,
-)
-from algokit_utils.transactions.transaction_composer import BuiltTransactions
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
+# utils
+from algokit_utils import applications, models, protocols, transactions
+from algokit_utils.applications import abi as applications_abi
 
 _APP_SPEC_JSON = r"""{
     "arcs": [],
@@ -603,120 +554,120 @@ _APP_SPEC_JSON = r"""{
         "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"
     }
 }"""
-APP_SPEC = Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 
-class CallAbiUint32Args(TypedDict):
+class CallAbiUint32Args(typing.TypedDict):
     """TypedDict for call_abi_uint32 arguments"""
     input: int
 
-class CallAbiUint32ReadonlyArgs(TypedDict):
+class CallAbiUint32ReadonlyArgs(typing.TypedDict):
     """TypedDict for call_abi_uint32_readonly arguments"""
     input: int
 
-class CallAbiUint64Args(TypedDict):
+class CallAbiUint64Args(typing.TypedDict):
     """TypedDict for call_abi_uint64 arguments"""
     input: int
 
-class CallAbiUint64ReadonlyArgs(TypedDict):
+class CallAbiUint64ReadonlyArgs(typing.TypedDict):
     """TypedDict for call_abi_uint64_readonly arguments"""
     input: int
 
-class CallAbiArgs(TypedDict):
+class CallAbiArgs(typing.TypedDict):
     """TypedDict for call_abi arguments"""
     value: str
 
-class CallAbiTxnArgs(TypedDict):
+class CallAbiTxnArgs(typing.TypedDict):
     """TypedDict for call_abi_txn arguments"""
     txn: TransactionWithSigner
     value: str
 
-class CallWithReferencesArgs(TypedDict):
+class CallWithReferencesArgs(typing.TypedDict):
     """TypedDict for call_with_references arguments"""
     asset: int
     account: str | bytes
     application: int
 
-class SetGlobalArgs(TypedDict):
+class SetGlobalArgs(typing.TypedDict):
     """TypedDict for set_global arguments"""
     int1: int
     int2: int
     bytes1: str
     bytes2: bytes | bytearray | tuple[int, int, int, int]
 
-class SetLocalArgs(TypedDict):
+class SetLocalArgs(typing.TypedDict):
     """TypedDict for set_local arguments"""
     int1: int
     int2: int
     bytes1: str
     bytes2: bytes | bytearray | tuple[int, int, int, int]
 
-class SetBoxArgs(TypedDict):
+class SetBoxArgs(typing.TypedDict):
     """TypedDict for set_box arguments"""
     name: bytes | bytearray | tuple[int, int, int, int]
     value: str
 
-class DefaultValueArgs(TypedDict):
+class DefaultValueArgs(typing.TypedDict):
     """TypedDict for default_value arguments"""
     arg_with_default: str | None
 
-class DefaultValueIntArgs(TypedDict):
+class DefaultValueIntArgs(typing.TypedDict):
     """TypedDict for default_value_int arguments"""
     arg_with_default: int | None
 
-class DefaultValueFromAbiArgs(TypedDict):
+class DefaultValueFromAbiArgs(typing.TypedDict):
     """TypedDict for default_value_from_abi arguments"""
     arg_with_default: str | None
 
-class DefaultValueFromGlobalStateArgs(TypedDict):
+class DefaultValueFromGlobalStateArgs(typing.TypedDict):
     """TypedDict for default_value_from_global_state arguments"""
     arg_with_default: int | None
 
-class DefaultValueFromLocalStateArgs(TypedDict):
+class DefaultValueFromLocalStateArgs(typing.TypedDict):
     """TypedDict for default_value_from_local_state arguments"""
     arg_with_default: str | None
 
-class CreateAbiArgs(TypedDict):
+class CreateAbiArgs(typing.TypedDict):
     """TypedDict for create_abi arguments"""
     input: str
 
-class UpdateAbiArgs(TypedDict):
+class UpdateAbiArgs(typing.TypedDict):
     """TypedDict for update_abi arguments"""
     input: str
 
-class DeleteAbiArgs(TypedDict):
+class DeleteAbiArgs(typing.TypedDict):
     """TypedDict for delete_abi arguments"""
     input: str
 
 
 class _StateAppUpdate:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> AppUpdateParams:
+    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
     def update_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
+        args: tuple[str] | UpdateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
-    ) -> AppCallMethodCallParams:
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -725,9 +676,9 @@ class _StateAppUpdate:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.update(AppClientMethodCallWithCompilationAndSendParams(
+        return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -750,33 +701,33 @@ class _StateAppUpdate:
 
 
 class _StateAppDelete:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
     def delete_abi(
         self,
-        args: Tuple[str] | DeleteAbiArgs,
+        args: tuple[str] | DeleteAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -785,9 +736,9 @@ class _StateAppDelete:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.delete(AppClientMethodCallWithSendParams(
+        return self.app_client.params.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -810,36 +761,36 @@ class _StateAppDelete:
 
 
 class _StateAppOptin:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def opt_in(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.opt_in(AppClientMethodCallWithSendParams(
+        return self.app_client.params.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -862,7 +813,7 @@ class _StateAppOptin:
 
 
 class StateAppParams:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def update(self) -> "_StateAppUpdate":
@@ -877,25 +828,25 @@ class StateAppParams:
         return _StateAppOptin(self.app_client)
     def call_abi_uint32(
         self,
-        args: Tuple[int] | CallAbiUint32Args,
+        args: tuple[int] | CallAbiUint32Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -904,9 +855,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -929,25 +880,25 @@ class StateAppParams:
 
     def call_abi_uint32_readonly(
         self,
-        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -956,9 +907,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -981,25 +932,25 @@ class StateAppParams:
 
     def call_abi_uint64(
         self,
-        args: Tuple[int] | CallAbiUint64Args,
+        args: tuple[int] | CallAbiUint64Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1008,9 +959,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1033,25 +984,25 @@ class StateAppParams:
 
     def call_abi_uint64_readonly(
         self,
-        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1060,9 +1011,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1085,25 +1036,25 @@ class StateAppParams:
 
     def call_abi(
         self,
-        args: Tuple[str] | CallAbiArgs,
+        args: tuple[str] | CallAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1112,9 +1063,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1137,25 +1088,25 @@ class StateAppParams:
 
     def call_abi_txn(
         self,
-        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1164,9 +1115,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1189,25 +1140,25 @@ class StateAppParams:
 
     def call_with_references(
         self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1216,9 +1167,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1241,25 +1192,25 @@ class StateAppParams:
 
     def set_global(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1268,9 +1219,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1293,25 +1244,25 @@ class StateAppParams:
 
     def set_local(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1320,9 +1271,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1345,25 +1296,25 @@ class StateAppParams:
 
     def set_box(
         self,
-        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1372,9 +1323,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1398,30 +1349,30 @@ class StateAppParams:
     def error(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1444,25 +1395,25 @@ class StateAppParams:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs | None = None,
+        args: tuple[str | None] | DefaultValueArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1471,9 +1422,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1496,25 +1447,25 @@ class StateAppParams:
 
     def default_value_int(
         self,
-        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1523,9 +1474,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1548,25 +1499,25 @@ class StateAppParams:
 
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1575,9 +1526,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1600,25 +1551,25 @@ class StateAppParams:
 
     def default_value_from_global_state(
         self,
-        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1627,9 +1578,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1652,25 +1603,25 @@ class StateAppParams:
 
     def default_value_from_local_state(
         self,
-        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1679,9 +1630,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1704,25 +1655,25 @@ class StateAppParams:
 
     def create_abi(
         self,
-        args: Tuple[str] | CreateAbiArgs,
+        args: tuple[str] | CreateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> AppCallMethodCallParams:
+    ) -> transactions.AppCallMethodCallParams:
     
         method_args = None
         
@@ -1731,9 +1682,9 @@ class StateAppParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.params.call(AppClientMethodCallWithSendParams(
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1754,38 +1705,38 @@ class StateAppParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> AppCallParams:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
 class _StateAppUpdateTransaction:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.update(params)
 
     def update_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
+        args: tuple[str] | UpdateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
-    ) -> BuiltTransactions:
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -1794,9 +1745,9 @@ class _StateAppUpdateTransaction:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.update(AppClientMethodCallWithCompilationAndSendParams(
+        return self.app_client.create_transaction.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1819,33 +1770,33 @@ class _StateAppUpdateTransaction:
 
 
 class _StateAppDeleteTransaction:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
     def delete_abi(
         self,
-        args: Tuple[str] | DeleteAbiArgs,
+        args: tuple[str] | DeleteAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -1854,9 +1805,9 @@ class _StateAppDeleteTransaction:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.delete(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1879,36 +1830,36 @@ class _StateAppDeleteTransaction:
 
 
 class _StateAppOptinTransaction:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def opt_in(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.opt_in(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1931,7 +1882,7 @@ class _StateAppOptinTransaction:
 
 
 class StateAppCreateTransactionParams:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def update(self) -> "_StateAppUpdateTransaction":
@@ -1946,25 +1897,25 @@ class StateAppCreateTransactionParams:
         return _StateAppOptinTransaction(self.app_client)
     def call_abi_uint32(
         self,
-        args: Tuple[int] | CallAbiUint32Args,
+        args: tuple[int] | CallAbiUint32Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -1973,9 +1924,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -1998,25 +1949,25 @@ class StateAppCreateTransactionParams:
 
     def call_abi_uint32_readonly(
         self,
-        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2025,9 +1976,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2050,25 +2001,25 @@ class StateAppCreateTransactionParams:
 
     def call_abi_uint64(
         self,
-        args: Tuple[int] | CallAbiUint64Args,
+        args: tuple[int] | CallAbiUint64Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2077,9 +2028,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2102,25 +2053,25 @@ class StateAppCreateTransactionParams:
 
     def call_abi_uint64_readonly(
         self,
-        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2129,9 +2080,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2154,25 +2105,25 @@ class StateAppCreateTransactionParams:
 
     def call_abi(
         self,
-        args: Tuple[str] | CallAbiArgs,
+        args: tuple[str] | CallAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2181,9 +2132,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2206,25 +2157,25 @@ class StateAppCreateTransactionParams:
 
     def call_abi_txn(
         self,
-        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2233,9 +2184,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2258,25 +2209,25 @@ class StateAppCreateTransactionParams:
 
     def call_with_references(
         self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2285,9 +2236,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2310,25 +2261,25 @@ class StateAppCreateTransactionParams:
 
     def set_global(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2337,9 +2288,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2362,25 +2313,25 @@ class StateAppCreateTransactionParams:
 
     def set_local(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2389,9 +2340,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2414,25 +2365,25 @@ class StateAppCreateTransactionParams:
 
     def set_box(
         self,
-        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2441,9 +2392,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2467,30 +2418,30 @@ class StateAppCreateTransactionParams:
     def error(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2513,25 +2464,25 @@ class StateAppCreateTransactionParams:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs | None = None,
+        args: tuple[str | None] | DefaultValueArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2540,9 +2491,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2565,25 +2516,25 @@ class StateAppCreateTransactionParams:
 
     def default_value_int(
         self,
-        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2592,9 +2543,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2617,25 +2568,25 @@ class StateAppCreateTransactionParams:
 
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2644,9 +2595,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2669,25 +2620,25 @@ class StateAppCreateTransactionParams:
 
     def default_value_from_global_state(
         self,
-        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2696,9 +2647,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2721,25 +2672,25 @@ class StateAppCreateTransactionParams:
 
     def default_value_from_local_state(
         self,
-        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2748,9 +2699,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2773,25 +2724,25 @@ class StateAppCreateTransactionParams:
 
     def create_abi(
         self,
-        args: Tuple[str] | CreateAbiArgs,
+        args: tuple[str] | CreateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> BuiltTransactions:
+    ) -> transactions.BuiltTransactions:
     
         method_args = None
         
@@ -2800,9 +2751,9 @@ class StateAppCreateTransactionParams:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        return self.app_client.create_transaction.call(AppClientMethodCallWithSendParams(
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2823,38 +2774,38 @@ class StateAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
 class _StateAppUpdateSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithCompilationAndSendParams | None = None) -> SendAppTransactionResult:
+    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.SendAppTransactionResult:
         return self.app_client.send.bare.update(params)
 
     def update_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
+        args: tuple[str] | UpdateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
-    ) -> SendAppTransactionResult[str]:
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -2863,9 +2814,9 @@ class _StateAppUpdateSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.update(AppClientMethodCallWithCompilationAndSendParams(
+        response = self.app_client.send.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2885,37 +2836,37 @@ class _StateAppUpdateSend:
                 last_valid_round=last_valid_round,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
-        return SendAppUpdateTransactionResult[str](**asdict(response))
+        return transactions.SendAppUpdateTransactionResult[str](**dataclasses.asdict(response))
 
 
 class _StateAppDeleteSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult:
+    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
         return self.app_client.send.bare.delete(params)
 
     def delete_abi(
         self,
-        args: Tuple[str] | DeleteAbiArgs,
+        args: tuple[str] | DeleteAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -2924,9 +2875,9 @@ class _StateAppDeleteSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.delete(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2946,40 +2897,40 @@ class _StateAppDeleteSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
 
 class _StateAppOptinSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def opt_in(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.opt_in(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -2999,11 +2950,11 @@ class _StateAppOptinSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
 
 class StateAppSend:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
     def update(self) -> "_StateAppUpdateSend":
@@ -3018,25 +2969,25 @@ class StateAppSend:
         return _StateAppOptinSend(self.app_client)
     def call_abi_uint32(
         self,
-        args: Tuple[int] | CallAbiUint32Args,
+        args: tuple[int] | CallAbiUint32Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3045,9 +2996,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3067,29 +3018,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint32_readonly(
         self,
-        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3098,9 +3049,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3120,29 +3071,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint64(
         self,
-        args: Tuple[int] | CallAbiUint64Args,
+        args: tuple[int] | CallAbiUint64Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3151,9 +3102,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3173,29 +3124,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint64_readonly(
         self,
-        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3204,9 +3155,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3226,29 +3177,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi(
         self,
-        args: Tuple[str] | CallAbiArgs,
+        args: tuple[str] | CallAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3257,9 +3208,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3279,29 +3230,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def call_abi_txn(
         self,
-        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3310,9 +3261,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3332,29 +3283,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def call_with_references(
         self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3363,9 +3314,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3385,29 +3336,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def set_global(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -3416,9 +3367,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3438,29 +3389,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def set_local(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -3469,9 +3420,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3491,29 +3442,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def set_box(
         self,
-        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
@@ -3522,9 +3473,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3544,35 +3495,35 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def error(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[None]:
     
         method_args = None
         
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3592,29 +3543,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[None](**asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs | None = None,
+        args: tuple[str | None] | DefaultValueArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3623,9 +3574,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3645,29 +3596,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def default_value_int(
         self,
-        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3676,9 +3627,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3698,29 +3649,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3729,9 +3680,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3751,29 +3702,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def default_value_from_global_state(
         self,
-        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[int]:
+    ) -> transactions.SendAppTransactionResult[int]:
     
         method_args = None
         
@@ -3782,9 +3733,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3804,29 +3755,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[int](**asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def default_value_from_local_state(
         self,
-        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3835,9 +3786,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3857,29 +3808,29 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def create_abi(
         self,
-        args: Tuple[str] | CreateAbiArgs,
+        args: tuple[str] | CreateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
-    ) -> SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[str]:
     
         method_args = None
         
@@ -3888,9 +3839,9 @@ class StateAppSend:
         elif isinstance(args, dict):
             method_args = list(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
-        response = self.app_client.send.call(AppClientMethodCallWithSendParams(
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
                 account_references=account_references,
@@ -3910,13 +3861,13 @@ class StateAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return SendAppTransactionResult[str](**asdict(response))
+        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
-    def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> SendAppTransactionResult[ABIReturn]:
+    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class GlobalStateValue(TypedDict):
+class GlobalStateValue(typing.TypedDict):
     """Shape of global_state state key values"""
     bytes1: bytes
     bytes2: bytes
@@ -3924,7 +3875,7 @@ class GlobalStateValue(TypedDict):
     int2: int
     value: int
 
-class LocalStateValue(TypedDict):
+class LocalStateValue(typing.TypedDict):
     """Shape of local_state state key values"""
     local_bytes1: bytes
     local_bytes2: bytes
@@ -3934,7 +3885,7 @@ class LocalStateValue(TypedDict):
 class StateAppState:
     """Methods to access state for the current StateApp app"""
 
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     @property
@@ -3947,72 +3898,72 @@ class StateAppState:
             return _LocalState(self.app_client, address)
 
 class _GlobalState:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return cast(GlobalStateValue, result)
+        return typing.cast(GlobalStateValue, result)
 
     def bytes1(self) -> bytes:
             """Get the current value of the bytes1 key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("bytes1"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("bytes1"))
 
     def bytes2(self) -> bytes:
             """Get the current value of the bytes2 key in global_state state"""
-            return cast(bytes, self.app_client.state.global_state.get_value("bytes2"))
+            return typing.cast(bytes, self.app_client.state.global_state.get_value("bytes2"))
 
     def int1(self) -> int:
             """Get the current value of the int1 key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("int1"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("int1"))
 
     def int2(self) -> int:
             """Get the current value of the int2 key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("int2"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("int2"))
 
     def value(self) -> int:
             """Get the current value of the value key in global_state state"""
-            return cast(int, self.app_client.state.global_state.get_value("value"))
+            return typing.cast(int, self.app_client.state.global_state.get_value("value"))
 
 class _LocalState:
-    def __init__(self, app_client: AppClient, address: str):
+    def __init__(self, app_client: applications.AppClient, address: str):
         self.app_client = app_client
         self.address = address
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        return cast(LocalStateValue, result)
+        return typing.cast(LocalStateValue, result)
 
     def local_bytes1(self) -> bytes:
             """Get the current value of the local_bytes1 key in local_state state"""
-            return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes1"))
+            return typing.cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes1"))
 
     def local_bytes2(self) -> bytes:
             """Get the current value of the local_bytes2 key in local_state state"""
-            return cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes2"))
+            return typing.cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes2"))
 
     def local_int1(self) -> int:
             """Get the current value of the local_int1 key in local_state state"""
-            return cast(int, self.app_client.state.local_state(self.address).get_value("local_int1"))
+            return typing.cast(int, self.app_client.state.local_state(self.address).get_value("local_int1"))
 
     def local_int2(self) -> int:
             """Get the current value of the local_int2 key in local_state state"""
-            return cast(int, self.app_client.state.local_state(self.address).get_value("local_int2"))
+            return typing.cast(int, self.app_client.state.local_state(self.address).get_value("local_int2"))
 
 class StateAppClient:
     """Client for interacting with StateApp smart contract"""
 
-    @overload
-    def __init__(self, app_client: AppClient) -> None: ...
+    @typing.overload
+    def __init__(self, app_client: applications.AppClient) -> None: ...
     
-    @overload
+    @typing.overload
     def __init__(
         self,
         *,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -4023,9 +3974,9 @@ class StateAppClient:
 
     def __init__(
         self,
-        app_client: AppClient | None = None,
+        app_client: applications.AppClient | None = None,
         *,
-        algorand: AlgorandClientProtocol | None = None,
+        algorand: protocols.AlgorandClientProtocol | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -4036,8 +3987,8 @@ class StateAppClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = AppClient(
-                AppClientParams(
+            self.app_client = applications.AppClient(
+                applications.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -4060,16 +4011,16 @@ class StateAppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
+        app_lookup_cache: applications.AppLookup | None = None,
     ) -> "StateAppClient":
         return StateAppClient(
-            AppClient.from_creator_and_name(
+            applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -4085,7 +4036,7 @@ class StateAppClient:
     
     @staticmethod
     def from_network(
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -4093,7 +4044,7 @@ class StateAppClient:
         clear_source_map: SourceMap | None = None,
     ) -> "StateAppClient":
         return StateAppClient(
-            AppClient.from_network(
+            applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -4117,11 +4068,11 @@ class StateAppClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> Arc56Contract:
+    def app_spec(self) -> applications.Arc56Contract:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> AlgorandClientProtocol:
+    def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_client.algorand
 
     def clone(
@@ -4148,8 +4099,8 @@ class StateAppClient:
     def decode_return_value(
         self,
         method: str,
-        return_value: ABIReturn | None
-    ) -> ABIValue | ABIStruct | None:
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
         if return_value is None:
             return None
     
@@ -4157,90 +4108,90 @@ class StateAppClient:
         return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class StateAppMethodCallCreateParams(
-    AppClientCreateSchema, BaseAppClientMethodCallParams[
-        Tuple[str] | CreateAbiArgs,
-        Literal["create_abi(string)string"],
-        Literal[OnComplete.NoOpOC]
+    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+        tuple[str] | CreateAbiArgs,
+        typing.Literal["create_abi(string)string"],
+        typing.Literal[OnComplete.NoOpOC]
     ]
 ):
     """Parameters for creating StateApp contract using ABI"""
 
-    def to_algokit_utils_params(self) -> AppClientMethodCallCreateParams:
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
-        return AppClientMethodCallCreateParams(
+        return applications.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
             }
         )
 
-@dataclass(frozen=True)
-class StateAppBareCallCreateParams(AppClientCreateSchema, AppClientBareCallParams, BaseOnCompleteParams[Literal[OnComplete.NoOpOC, OnComplete.OptInOC]]):
+@dataclasses.dataclass(frozen=True)
+class StateAppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC, OnComplete.OptInOC]]):
     """Parameters for creating StateApp contract using bare calls"""
 
-    def to_algokit_utils_params(self) -> AppClientBareCallCreateParams:
-        return AppClientBareCallCreateParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
+        return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class StateAppMethodCallUpdateParams(
-    BaseAppClientMethodCallParams[
-        Tuple[str] | UpdateAbiArgs,
-        Literal["update_abi(string)string"],
-        Literal[OnComplete.UpdateApplicationOC]
+    applications.BaseAppClientMethodCallParams[
+        tuple[str] | UpdateAbiArgs,
+        typing.Literal["update_abi(string)string"],
+        typing.Literal[OnComplete.UpdateApplicationOC]
     ]
 ):
     """Parameters for calling StateApp contract using ABI"""
 
-    def to_algokit_utils_params(self) -> AppClientMethodCallParams:
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
-        return AppClientMethodCallParams(
+        return applications.AppClientMethodCallParams(
             **{
                 **self.__dict__,
                 "args": method_args,
             }
         )
 
-@dataclass(frozen=True)
-class StateAppBareCallUpdateParams(AppClientBareCallParams):
+@dataclasses.dataclass(frozen=True)
+class StateAppBareCallUpdateParams(applications.AppClientBareCallParams):
     """Parameters for calling StateApp contract using bare calls"""
 
-    def to_algokit_utils_params(self) -> AppClientBareCallParams:
-        return AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
+        return applications.AppClientBareCallParams(**self.__dict__)
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class StateAppMethodCallDeleteParams(
-    BaseAppClientMethodCallParams[
-        Tuple[str] | DeleteAbiArgs,
-        Literal["delete_abi(string)string"],
-        Literal[OnComplete.DeleteApplicationOC]
+    applications.BaseAppClientMethodCallParams[
+        tuple[str] | DeleteAbiArgs,
+        typing.Literal["delete_abi(string)string"],
+        typing.Literal[OnComplete.DeleteApplicationOC]
     ]
 ):
     """Parameters for calling StateApp contract using ABI"""
 
-    def to_algokit_utils_params(self) -> AppClientMethodCallParams:
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
         method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
-        return AppClientMethodCallParams(
+        return applications.AppClientMethodCallParams(
             **{
                 **self.__dict__,
                 "args": method_args,
             }
         )
 
-@dataclass(frozen=True)
-class StateAppBareCallDeleteParams(AppClientBareCallParams):
+@dataclasses.dataclass(frozen=True)
+class StateAppBareCallDeleteParams(applications.AppClientBareCallParams):
     """Parameters for calling StateApp contract using bare calls"""
 
-    def to_algokit_utils_params(self) -> AppClientBareCallParams:
-        return AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
+        return applications.AppClientBareCallParams(**self.__dict__)
 
-class StateAppFactory(TypedAppFactoryProtocol):
+class StateAppFactory(applications.TypedAppFactoryProtocol):
     """Factory for deploying and managing StateAppClient smart contracts"""
 
     def __init__(
         self,
-        algorand: AlgorandClientProtocol,
+        algorand: protocols.AlgorandClientProtocol,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -4248,10 +4199,10 @@ class StateAppFactory(TypedAppFactoryProtocol):
         version: str | None = None,
         updatable: bool | None = None,
         deletable: bool | None = None,
-        deploy_time_params: TealTemplateParams | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
     ):
-        self.app_factory = AppFactory(
-            params=AppFactoryParams(
+        self.app_factory = applications.AppFactory(
+            params=applications.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
@@ -4272,23 +4223,23 @@ class StateAppFactory(TypedAppFactoryProtocol):
         return self.app_factory.app_name
 
     @property
-    def app_spec(self) -> Arc56Contract:
+    def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
 
     @property
-    def algorand(self) -> AlgorandClientProtocol:
+    def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
 
     def deploy(
         self,
         *,
-        deploy_time_params: TealTemplateParams | None = None,
-        on_update: OnUpdate = OnUpdate.Fail,
-        on_schema_break: OnSchemaBreak = OnSchemaBreak.Fail,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
+        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: StateAppMethodCallCreateParams | StateAppBareCallCreateParams | None = None,
         update_params: StateAppMethodCallUpdateParams | StateAppBareCallUpdateParams | None = None,
         delete_params: StateAppMethodCallDeleteParams | StateAppBareCallDeleteParams | None = None,
-        existing_deployments: AppLookup | None = None,
+        existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
         deletable: bool | None = None,
@@ -4296,7 +4247,7 @@ class StateAppFactory(TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[StateAppClient, AppFactoryDeployResponse]:
+    ) -> tuple[StateAppClient, applications.AppFactoryDeployResponse]:
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -4323,7 +4274,7 @@ class StateAppFactory(TypedAppFactoryProtocol):
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: AppLookup | None = None,
+        app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> StateAppClient:
@@ -4366,7 +4317,7 @@ class StateAppFactory(TypedAppFactoryProtocol):
 class StateAppFactoryParams:
     """Parameters for creating transactions for StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateParams(app_factory)
         self.deploy_update = StateAppFactoryUpdateParams(app_factory)
@@ -4375,13 +4326,13 @@ class StateAppFactoryParams:
 class StateAppFactoryCreateParams:
     """Parameters for 'create' operations of StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -4389,17 +4340,17 @@ class StateAppFactoryCreateParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppCreateParams:
+    ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
         return self.app_factory.params.bare.create(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
     def call_abi_uint32(
             self,
-            args: Tuple[int] | CallAbiUint32Args,
+            args: tuple[int] | CallAbiUint32Args,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4407,7 +4358,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
             
             method_args = None
@@ -4416,10 +4367,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32(uint32)uint32",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4429,9 +4380,9 @@ class StateAppFactoryCreateParams:
 
     def call_abi_uint32_readonly(
             self,
-            args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+            args: tuple[int] | CallAbiUint32ReadonlyArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4439,7 +4390,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
             
             method_args = None
@@ -4448,10 +4399,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32_readonly(uint32)uint32",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4461,9 +4412,9 @@ class StateAppFactoryCreateParams:
 
     def call_abi_uint64(
             self,
-            args: Tuple[int] | CallAbiUint64Args,
+            args: tuple[int] | CallAbiUint64Args,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4471,7 +4422,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
             
             method_args = None
@@ -4480,10 +4431,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4493,9 +4444,9 @@ class StateAppFactoryCreateParams:
 
     def call_abi_uint64_readonly(
             self,
-            args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+            args: tuple[int] | CallAbiUint64ReadonlyArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4503,7 +4454,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
             
             method_args = None
@@ -4512,10 +4463,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64_readonly(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4525,9 +4476,9 @@ class StateAppFactoryCreateParams:
 
     def call_abi(
             self,
-            args: Tuple[str] | CallAbiArgs,
+            args: tuple[str] | CallAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4535,7 +4486,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi(string)string ABI method"""
             
             method_args = None
@@ -4544,10 +4495,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4557,9 +4508,9 @@ class StateAppFactoryCreateParams:
 
     def call_abi_txn(
             self,
-            args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+            args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4567,7 +4518,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
             
             method_args = None
@@ -4576,10 +4527,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4589,9 +4540,9 @@ class StateAppFactoryCreateParams:
 
     def call_with_references(
             self,
-            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+            args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4599,7 +4550,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
             
             method_args = None
@@ -4608,10 +4559,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_with_references(asset,account,application)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4621,9 +4572,9 @@ class StateAppFactoryCreateParams:
 
     def set_global(
             self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4631,7 +4582,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
             
             method_args = None
@@ -4640,10 +4591,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_global(uint64,uint64,string,byte[4])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4653,9 +4604,9 @@ class StateAppFactoryCreateParams:
 
     def set_local(
             self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4663,7 +4614,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
             
             method_args = None
@@ -4672,10 +4623,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_local(uint64,uint64,string,byte[4])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4685,9 +4636,9 @@ class StateAppFactoryCreateParams:
 
     def set_box(
             self,
-            args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+            args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4695,7 +4646,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_box(byte[4],string)void ABI method"""
             
             method_args = None
@@ -4704,10 +4655,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_box(byte[4],string)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4717,9 +4668,9 @@ class StateAppFactoryCreateParams:
 
     def error(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4727,7 +4678,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the error()void ABI method"""
             
             method_args = None
@@ -4736,10 +4687,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="error()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4749,9 +4700,9 @@ class StateAppFactoryCreateParams:
 
     def default_value(
             self,
-            args: Tuple[str] | DefaultValueArgs | None = None,
+            args: tuple[str] | DefaultValueArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4759,7 +4710,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value(string)string ABI method"""
             
             method_args = None
@@ -4768,10 +4719,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4781,9 +4732,9 @@ class StateAppFactoryCreateParams:
 
     def default_value_int(
             self,
-            args: Tuple[int] | DefaultValueIntArgs | None = None,
+            args: tuple[int] | DefaultValueIntArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4791,7 +4742,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
             
             method_args = None
@@ -4800,10 +4751,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_int(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4813,9 +4764,9 @@ class StateAppFactoryCreateParams:
 
     def default_value_from_abi(
             self,
-            args: Tuple[str] | DefaultValueFromAbiArgs | None = None,
+            args: tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4823,7 +4774,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_abi(string)string ABI method"""
             
             method_args = None
@@ -4832,10 +4783,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4845,9 +4796,9 @@ class StateAppFactoryCreateParams:
 
     def default_value_from_global_state(
             self,
-            args: Tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
+            args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4855,7 +4806,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
             
             method_args = None
@@ -4864,10 +4815,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_global_state(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4877,9 +4828,9 @@ class StateAppFactoryCreateParams:
 
     def default_value_from_local_state(
             self,
-            args: Tuple[str] | DefaultValueFromLocalStateArgs | None = None,
+            args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4887,7 +4838,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
             
             method_args = None
@@ -4896,10 +4847,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_local_state(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4909,9 +4860,9 @@ class StateAppFactoryCreateParams:
 
     def create_abi(
             self,
-            args: Tuple[str] | CreateAbiArgs,
+            args: tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4919,7 +4870,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create_abi(string)string ABI method"""
             
             method_args = None
@@ -4928,10 +4879,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4941,9 +4892,9 @@ class StateAppFactoryCreateParams:
 
     def update_abi(
             self,
-            args: Tuple[str] | UpdateAbiArgs,
+            args: tuple[str] | UpdateAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4951,7 +4902,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the update_abi(string)string ABI method"""
             
             method_args = None
@@ -4960,10 +4911,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="update_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -4973,9 +4924,9 @@ class StateAppFactoryCreateParams:
 
     def delete_abi(
             self,
-            args: Tuple[str] | DeleteAbiArgs,
+            args: tuple[str] | DeleteAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -4983,7 +4934,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the delete_abi(string)string ABI method"""
             
             method_args = None
@@ -4992,10 +4943,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="delete_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5005,9 +4956,9 @@ class StateAppFactoryCreateParams:
 
     def opt_in(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5015,7 +4966,7 @@ class StateAppFactoryCreateParams:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> AppCreateMethodCallParams:
+        ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the opt_in()void ABI method"""
             
             method_args = None
@@ -5024,10 +4975,10 @@ class StateAppFactoryCreateParams:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.params.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="opt_in()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5038,13 +4989,13 @@ class StateAppFactoryCreateParams:
 class StateAppFactoryUpdateParams:
     """Parameters for 'update' operations of StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -5052,22 +5003,22 @@ class StateAppFactoryUpdateParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppUpdateParams:
+    ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
         return self.app_factory.params.bare.deploy_update(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 class StateAppFactoryDeleteParams:
     """Parameters for 'delete' operations of StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -5075,25 +5026,25 @@ class StateAppFactoryDeleteParams:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> AppDeleteParams:
+    ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
         return self.app_factory.params.bare.deploy_delete(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 
 class StateAppFactoryCreateTransaction:
     """Create transactions for StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateTransactionCreate(app_factory)
 
     def call_abi_uint32(
             self,
-            args: Tuple[int] | CallAbiUint32Args,
+            args: tuple[int] | CallAbiUint32Args,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5101,7 +5052,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint32(uint32)uint32 ABI method"""
             
             method_args = None
@@ -5110,10 +5061,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32(uint32)uint32",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5123,9 +5074,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi_uint32_readonly(
             self,
-            args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+            args: tuple[int] | CallAbiUint32ReadonlyArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5133,7 +5084,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
             
             method_args = None
@@ -5142,10 +5093,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32_readonly(uint32)uint32",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5155,9 +5106,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi_uint64(
             self,
-            args: Tuple[int] | CallAbiUint64Args,
+            args: tuple[int] | CallAbiUint64Args,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5165,7 +5116,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint64(uint64)uint64 ABI method"""
             
             method_args = None
@@ -5174,10 +5125,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5187,9 +5138,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi_uint64_readonly(
             self,
-            args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+            args: tuple[int] | CallAbiUint64ReadonlyArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5197,7 +5148,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
             
             method_args = None
@@ -5206,10 +5157,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64_readonly(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5219,9 +5170,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi(
             self,
-            args: Tuple[str] | CallAbiArgs,
+            args: tuple[str] | CallAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5229,7 +5180,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi(string)string ABI method"""
             
             method_args = None
@@ -5238,10 +5189,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5251,9 +5202,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi_txn(
             self,
-            args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+            args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5261,7 +5212,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_txn(pay,string)string ABI method"""
             
             method_args = None
@@ -5270,10 +5221,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5283,9 +5234,9 @@ class StateAppFactoryCreateTransaction:
 
     def call_with_references(
             self,
-            args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+            args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5293,7 +5244,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
             
             method_args = None
@@ -5302,10 +5253,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="call_with_references(asset,account,application)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5315,9 +5266,9 @@ class StateAppFactoryCreateTransaction:
 
     def set_global(
             self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5325,7 +5276,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_global(uint64,uint64,string,byte[4])void ABI method"""
             
             method_args = None
@@ -5334,10 +5285,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_global(uint64,uint64,string,byte[4])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5347,9 +5298,9 @@ class StateAppFactoryCreateTransaction:
 
     def set_local(
             self,
-            args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5357,7 +5308,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_local(uint64,uint64,string,byte[4])void ABI method"""
             
             method_args = None
@@ -5366,10 +5317,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_local(uint64,uint64,string,byte[4])void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5379,9 +5330,9 @@ class StateAppFactoryCreateTransaction:
 
     def set_box(
             self,
-            args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+            args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5389,7 +5340,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_box(byte[4],string)void ABI method"""
             
             method_args = None
@@ -5398,10 +5349,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="set_box(byte[4],string)void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5411,9 +5362,9 @@ class StateAppFactoryCreateTransaction:
 
     def error(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5421,7 +5372,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the error()void ABI method"""
             
             method_args = None
@@ -5430,10 +5381,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="error()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5443,9 +5394,9 @@ class StateAppFactoryCreateTransaction:
 
     def default_value(
             self,
-            args: Tuple[str] | DefaultValueArgs | None = None,
+            args: tuple[str] | DefaultValueArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5453,7 +5404,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value(string)string ABI method"""
             
             method_args = None
@@ -5462,10 +5413,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5475,9 +5426,9 @@ class StateAppFactoryCreateTransaction:
 
     def default_value_int(
             self,
-            args: Tuple[int] | DefaultValueIntArgs | None = None,
+            args: tuple[int] | DefaultValueIntArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5485,7 +5436,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_int(uint64)uint64 ABI method"""
             
             method_args = None
@@ -5494,10 +5445,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_int(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5507,9 +5458,9 @@ class StateAppFactoryCreateTransaction:
 
     def default_value_from_abi(
             self,
-            args: Tuple[str] | DefaultValueFromAbiArgs | None = None,
+            args: tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5517,7 +5468,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_abi(string)string ABI method"""
             
             method_args = None
@@ -5526,10 +5477,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5539,9 +5490,9 @@ class StateAppFactoryCreateTransaction:
 
     def default_value_from_global_state(
             self,
-            args: Tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
+            args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5549,7 +5500,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_global_state(uint64)uint64 ABI method"""
             
             method_args = None
@@ -5558,10 +5509,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_global_state(uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5571,9 +5522,9 @@ class StateAppFactoryCreateTransaction:
 
     def default_value_from_local_state(
             self,
-            args: Tuple[str] | DefaultValueFromLocalStateArgs | None = None,
+            args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5581,7 +5532,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_local_state(string)string ABI method"""
             
             method_args = None
@@ -5590,10 +5541,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_local_state(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5603,9 +5554,9 @@ class StateAppFactoryCreateTransaction:
 
     def create_abi(
             self,
-            args: Tuple[str] | CreateAbiArgs,
+            args: tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5613,7 +5564,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create_abi(string)string ABI method"""
             
             method_args = None
@@ -5622,10 +5573,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5635,9 +5586,9 @@ class StateAppFactoryCreateTransaction:
 
     def update_abi(
             self,
-            args: Tuple[str] | UpdateAbiArgs,
+            args: tuple[str] | UpdateAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5645,7 +5596,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the update_abi(string)string ABI method"""
             
             method_args = None
@@ -5654,10 +5605,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="update_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5667,9 +5618,9 @@ class StateAppFactoryCreateTransaction:
 
     def delete_abi(
             self,
-            args: Tuple[str] | DeleteAbiArgs,
+            args: tuple[str] | DeleteAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5677,7 +5628,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the delete_abi(string)string ABI method"""
             
             method_args = None
@@ -5686,10 +5637,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="delete_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5699,9 +5650,9 @@ class StateAppFactoryCreateTransaction:
 
     def opt_in(
             self,
-            args: Any,
+            args: typing.Any,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5709,7 +5660,7 @@ class StateAppFactoryCreateTransaction:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> BuiltTransactions:
+        ) -> transactions.BuiltTransactions:
             """Creates a transaction using the opt_in()void ABI method"""
             
             method_args = None
@@ -5718,10 +5669,10 @@ class StateAppFactoryCreateTransaction:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             return self.app_factory.create_transaction.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="opt_in()void",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
@@ -5733,13 +5684,13 @@ class StateAppFactoryCreateTransaction:
 class StateAppFactoryCreateTransactionCreate:
     """Create new instances of StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -5750,14 +5701,14 @@ class StateAppFactoryCreateTransactionCreate:
     ) -> Transaction:
         """Creates a new instance using a bare call"""
         return self.app_factory.create_transaction.bare.create(
-            AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
 
 class StateAppFactorySend:
     """Send calls to StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactorySendCreate(app_factory)
 
@@ -5765,13 +5716,13 @@ class StateAppFactorySend:
 class StateAppFactorySendCreate:
     """Send create calls to StateApp contract"""
 
-    def __init__(self, app_factory: AppFactory):
+    def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        on_complete: (Literal[
+        on_complete: (typing.Literal[
                 OnComplete.NoOpOC,
                 OnComplete.UpdateApplicationOC,
                 OnComplete.DeleteApplicationOC,
@@ -5779,18 +5730,18 @@ class StateAppFactorySendCreate:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> tuple[StateAppClient, SendAppCreateTransactionResult]:
+    ) -> tuple[StateAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
-            AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
         return StateAppClient(result[0]), result[1]
 
     def create_abi(
             self,
-            args: Tuple[str] | CreateAbiArgs,
+            args: tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (Literal[
+            on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
                     OnComplete.UpdateApplicationOC,
                     OnComplete.DeleteApplicationOC,
@@ -5798,7 +5749,7 @@ class StateAppFactorySendCreate:
                     OnComplete.CloseOutOC,
                 ] | None) = None,
             **kwargs
-        ) -> tuple[StateAppClient, AppFactoryCreateMethodCallResult[str]]:
+        ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
             
             method_args = None
@@ -5807,19 +5758,19 @@ class StateAppFactorySendCreate:
             elif isinstance(args, dict):
                 method_args = list(args.values())
             if method_args:
-                method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
         
             result = self.app_factory.send.create(
-                AppFactoryCreateMethodCallParams(
+                applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
                 )
             )
-            return_value = None if result[1].abi_return is None else cast(str, result[1].abi_return)
+            return_value = None if result[1].abi_return is None else typing.cast(str, result[1].abi_return)
     
-            return StateAppClient(result[0]), AppFactoryCreateMethodCallResult[str](
+            return StateAppClient(result[0]), applications.AppFactoryCreateMethodCallResult[str](
                 app_id=result[1].app_id,
                 abi_return=return_value,
                 transaction=result[1].transaction,
@@ -5837,24 +5788,24 @@ class _StateAppUpdateComposer:
         self.composer = composer
     def update_abi(
         self,
-        args: Tuple[str] | UpdateAbiArgs,
+        args: tuple[str] | UpdateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "StateAppComposer":
         method_args = None
         if isinstance(args, tuple):
@@ -5862,7 +5813,7 @@ class _StateAppUpdateComposer:
         elif isinstance(args, dict):
             method_args = tuple(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.update.update_abi(
@@ -5897,23 +5848,23 @@ class _StateAppDeleteComposer:
         self.composer = composer
     def delete_abi(
         self,
-        args: Tuple[str] | DeleteAbiArgs,
+        args: tuple[str] | DeleteAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -5922,7 +5873,7 @@ class _StateAppDeleteComposer:
         elif isinstance(args, dict):
             method_args = tuple(args.values())
         if method_args:
-            method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.delete.delete_abi(
@@ -5958,21 +5909,21 @@ class _StateAppOpt_inComposer:
     def opt_in(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         self.composer._composer.add_app_call_method_call(
@@ -6009,7 +5960,7 @@ class StateAppComposer:
     def __init__(self, client: "StateAppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def update(self) -> "_StateAppUpdateComposer":
@@ -6025,23 +5976,23 @@ class StateAppComposer:
 
     def call_abi_uint32(
         self,
-        args: Tuple[int] | CallAbiUint32Args,
+        args: tuple[int] | CallAbiUint32Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6079,23 +6030,23 @@ class StateAppComposer:
 
     def call_abi_uint32_readonly(
         self,
-        args: Tuple[int] | CallAbiUint32ReadonlyArgs,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6133,23 +6084,23 @@ class StateAppComposer:
 
     def call_abi_uint64(
         self,
-        args: Tuple[int] | CallAbiUint64Args,
+        args: tuple[int] | CallAbiUint64Args,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6187,23 +6138,23 @@ class StateAppComposer:
 
     def call_abi_uint64_readonly(
         self,
-        args: Tuple[int] | CallAbiUint64ReadonlyArgs,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6241,23 +6192,23 @@ class StateAppComposer:
 
     def call_abi(
         self,
-        args: Tuple[str] | CallAbiArgs,
+        args: tuple[str] | CallAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6295,23 +6246,23 @@ class StateAppComposer:
 
     def call_abi_txn(
         self,
-        args: Tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6349,23 +6300,23 @@ class StateAppComposer:
 
     def call_with_references(
         self,
-        args: Tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6403,23 +6354,23 @@ class StateAppComposer:
 
     def set_global(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6457,23 +6408,23 @@ class StateAppComposer:
 
     def set_local(
         self,
-        args: Tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6511,23 +6462,23 @@ class StateAppComposer:
 
     def set_box(
         self,
-        args: Tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6566,21 +6517,21 @@ class StateAppComposer:
     def error(
         self,
             *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -6612,23 +6563,23 @@ class StateAppComposer:
 
     def default_value(
         self,
-        args: Tuple[str | None] | DefaultValueArgs | None = None,
+        args: tuple[str | None] | DefaultValueArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6666,23 +6617,23 @@ class StateAppComposer:
 
     def default_value_int(
         self,
-        args: Tuple[int | None] | DefaultValueIntArgs | None = None,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6720,23 +6671,23 @@ class StateAppComposer:
 
     def default_value_from_abi(
         self,
-        args: Tuple[str | None] | DefaultValueFromAbiArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6774,23 +6725,23 @@ class StateAppComposer:
 
     def default_value_from_global_state(
         self,
-        args: Tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6828,23 +6779,23 @@ class StateAppComposer:
 
     def default_value_from_local_state(
         self,
-        args: Tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6882,23 +6833,23 @@ class StateAppComposer:
 
     def create_abi(
         self,
-        args: Tuple[str] | CreateAbiArgs,
+        args: tuple[str] | CreateAbiArgs,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
         method_args = None
@@ -6937,25 +6888,25 @@ class StateAppComposer:
     def clear_state(
         self,
         *,
-        account_references: Optional[list[str]] = None,
-        app_references: Optional[list[int]] = None,
-        asset_references: Optional[list[int]] = None,
-        box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-        extra_fee: Optional[AlgoAmount] = None,
-        lease: Optional[bytes] = None,
-        max_fee: Optional[AlgoAmount] = None,
-        note: Optional[bytes] = None,
-        rekey_to: Optional[str] = None,
-        sender: Optional[str] = None,
-        signer: Optional[TransactionSigner] = None,
-        static_fee: Optional[AlgoAmount] = None,
-        validity_window: Optional[int] = None,
-        first_valid_round: Optional[int] = None,
-        last_valid_round: Optional[int] = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
     ) -> "StateAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
-                AppClientBareCallWithSendParams(
+                applications.AppClientBareCallWithSendParams(
                     account_references=account_references,
                     app_references=app_references,
                     asset_references=asset_references,
@@ -6977,12 +6928,12 @@ class StateAppComposer:
         return self
     
     def add_transaction(
-        self, txn: Transaction, signer: Optional[TransactionSigner] = None
+        self, txn: Transaction, signer: TransactionSigner | None = None
     ) -> "StateAppComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> TransactionComposer:
+    def composer(self) -> transactions.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -6994,7 +6945,7 @@ class StateAppComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: int | None = None,
-    ) -> SendAtomicTransactionComposerResults:
+    ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -7010,7 +6961,7 @@ class StateAppComposer:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
-    ) -> SendAtomicTransactionComposerResults:
+    ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.send(
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,

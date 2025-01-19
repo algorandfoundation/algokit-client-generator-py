@@ -3,7 +3,7 @@ import pytest
 from algokit_utils.models import AlgoAmount
 from algokit_utils.protocols import AlgorandClientProtocol
 
-from examples.minimal.client import MinimalAppFactory
+from examples.minimal.client import AppFactory
 
 
 @pytest.fixture

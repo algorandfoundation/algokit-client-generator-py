@@ -16,23 +16,23 @@ class PropertyType(Enum):
 
 
 OPERATION_TO_PARAMS_CLASS = {
-    "update": "AppClientBareCallWithCompilationAndSendParams",
-    "delete": "AppClientBareCallWithSendParams",
-    "opt_in": "AppClientBareCallWithSendParams",
-    "close_out": "AppClientBareCallWithSendParams",
+    "update": "applications.AppClientBareCallWithCompilationAndSendParams",
+    "delete": "applications.AppClientBareCallWithSendParams",
+    "opt_in": "applications.AppClientBareCallWithSendParams",
+    "close_out": "applications.AppClientBareCallWithSendParams",
 }
 
 CLEAR_STATE_PROPERTY_TO_RETURN_CLASS = {
-    PropertyType.SEND: "SendAppTransactionResult[ABIReturn]",
+    PropertyType.SEND: "transactions.SendAppTransactionResult[applications_abi.ABIReturn]",
     PropertyType.CREATE_TRANSACTION: "Transaction",
-    PropertyType.PARAMS: "AppCallParams",
+    PropertyType.PARAMS: "transactions.AppCallParams",
 }
 
 OPERATION_TO_RETURN_PARAMS_TYPE = {
-    "update": "AppUpdateParams",
-    "delete": "AppCallParams",
-    "opt_in": "AppCallParams",
-    "close_out": "AppCallParams",
+    "update": "transactions.AppUpdateParams",
+    "delete": "transactions.AppCallParams",
+    "opt_in": "transactions.AppCallParams",
+    "close_out": "transactions.AppCallParams",
 }
 
 
@@ -45,7 +45,7 @@ def _generate_args_parser(*, include_args: bool = False) -> str:
     elif isinstance(args, dict):
         method_args = list(args.values())''' if include_args else ''}
     if method_args:
-        method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+        method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
     """
 
 
@@ -68,7 +68,7 @@ def _generate_common_method_params(
                 arg_type = f"{arg_type} | None"
             tuple_args.append(arg_type)
 
-        tuple_type = f"Tuple[{', '.join(tuple_args)}]"
+        tuple_type = f"tuple[{', '.join(tuple_args)}]"
         args_type = f"{tuple_type} | {utils.to_camel_case(method.abi.client_method_name)}Args"
         # Make entire args parameter optional if all args have defaults
         if all(arg.has_default for arg in method.abi.args):
@@ -76,7 +76,9 @@ def _generate_common_method_params(
 
     def algokit_extra_args(operation: str | None = None) -> str:
         if operation == "update":
-            return "updatable: bool | None, deletable: bool | None, deploy_time_params: TealTemplateParams | None"
+            return (
+                "updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None"
+            )
         return ""
 
     # Remove the extra_params parameter since we handle return type differently
@@ -84,32 +86,32 @@ def _generate_common_method_params(
 def {method.abi.client_method_name}(
     self,
     {f'args: {args_type},\n    *,' if args_type else '    *,'}
-    account_references: Optional[list[str]] = None,
-    app_references: Optional[list[int]] = None,
-    asset_references: Optional[list[int]] = None,
-    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-    extra_fee: Optional[AlgoAmount] = None,
-    lease: Optional[bytes] = None,
-    max_fee: Optional[AlgoAmount] = None,
-    note: Optional[bytes] = None,
-    rekey_to: Optional[str] = None,
-    sender: Optional[str] = None,
-    signer: Optional[TransactionSigner] = None,
-    static_fee: Optional[AlgoAmount] = None,
-    validity_window: Optional[int] = None,
-    first_valid_round: Optional[int] = None,
-    last_valid_round: Optional[int] = None,
+    account_references: list[str] | None = None,
+    app_references: list[int] | None = None,
+    asset_references: list[int] | None = None,
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+    extra_fee: models.AlgoAmount | None = None,
+    lease: bytes | None = None,
+    max_fee: models.AlgoAmount | None = None,
+    note: bytes | None = None,
+    rekey_to: str | None = None,
+    sender: str | None = None,
+    signer: TransactionSigner | None = None,
+    static_fee: models.AlgoAmount | None = None,
+    validity_window: int | None = None,
+    first_valid_round: int | None = None,
+    last_valid_round: int | None = None,
     {algokit_extra_args(operation)}
 )"""
 
     # Add return type annotation if needed
     return_type = method.abi.python_type
     if property_type == PropertyType.SEND:
-        return_type = f"SendAppTransactionResult[{return_type}]"
+        return_type = f"transactions.SendAppTransactionResult[{return_type}]"
     elif property_type == PropertyType.CREATE_TRANSACTION:
-        return_type = "BuiltTransactions"
+        return_type = "transactions.BuiltTransactions"
     elif property_type == PropertyType.PARAMS:
-        return_type = "AppCallMethodCallParams" if method.abi else "AppCallParams"
+        return_type = "transactions.AppCallMethodCallParams" if method.abi else "transactions.AppCallParams"
 
     params += f" -> {return_type}:"
 
@@ -128,23 +130,23 @@ def _generate_method_body(
 
     def algokit_param_type(operation: str) -> str:
         return (
-            "AppClientMethodCallWithCompilationAndSendParams"
+            "applications.AppClientMethodCallWithCompilationAndSendParams"
             if operation == "update"
-            else "AppClientMethodCallWithSendParams"
+            else "applications.AppClientMethodCallWithSendParams"
         )
 
     def alogkit_return_type(operation: str, method: ContractMethod) -> str:
         return_type = f"{method.abi.python_type}" if method.abi else ""
         if operation == "update":
-            return_type = f"SendAppUpdateTransactionResult[{return_type}]"
+            return_type = f"transactions.SendAppUpdateTransactionResult[{return_type}]"
         else:
-            return_type = f"SendAppTransactionResult[{return_type}]"
+            return_type = f"transactions.SendAppTransactionResult[{return_type}]"
         return return_type
 
     def parse_struct_if_needed(method: ContractMethod) -> str:
         if method.abi and method.abi.result_struct:
-            return f"**(replace(response, abi_return={method.abi.result_struct.struct_class_name}(**cast(dict, response.abi_return)))).__dict__"
-        return "**asdict(response)"
+            return f"**(dataclasses.replace(response, abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return)))).__dict__"
+        return "**dataclasses.asdict(response)"
 
     def algokit_extra_args(operation: str) -> str:
         if operation == "update":
@@ -203,7 +205,7 @@ def generate_operation_class(
 
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent
@@ -223,7 +225,7 @@ def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> 
 """)
         else:  # SEND
             yield utils.indented(f"""
-def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> SendAppTransactionResult:
+def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> transactions.SendAppTransactionResult:
     return self.app_client.send.bare.{operation}(params)
 """)
 
@@ -285,7 +287,7 @@ def _generate_class_methods(  # noqa: C901
     # Then generate the main class with properties
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent
@@ -344,7 +346,7 @@ def {operation}(self) -> "{operation_class}":
     # Add clear_state method
     yield Part.Gap1
     yield utils.indented(f"""
-def clear_state(self, params: AppClientBareCallWithSendParams | None = None) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
+def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
     return self.app_client.{property_type.value}.bare.clear_state(params)
 """)
 
@@ -366,7 +368,7 @@ def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
         typed_dict_name = f"{utils.to_camel_case(method.abi.client_method_name)}Args"
 
         yield utils.indented(f"""
-class {typed_dict_name}(TypedDict):
+class {typed_dict_name}(typing.TypedDict):
     \"\"\"TypedDict for {method.abi.client_method_name} arguments\"\"\"
 """)
         yield Part.IncIndent
@@ -393,14 +395,14 @@ class {context.contract_name}Client:
 def generate_constructor_overloads(context: GeneratorContext) -> DocumentParts:
     """Generate constructor overloads"""
     yield utils.indented("""
-@overload
-def __init__(self, app_client: AppClient) -> None: ...
+@typing.overload
+def __init__(self, app_client: applications.AppClient) -> None: ...
 
-@overload
+@typing.overload
 def __init__(
     self,
     *,
-    algorand: AlgorandClientProtocol,
+    algorand: protocols.AlgorandClientProtocol,
     app_id: int,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -416,9 +418,9 @@ def generate_constructor(context: GeneratorContext) -> DocumentParts:
     yield utils.indented(f"""
 def __init__(
     self,
-    app_client: AppClient | None = None,
+    app_client: applications.AppClient | None = None,
     *,
-    algorand: AlgorandClientProtocol | None = None,
+    algorand: protocols.AlgorandClientProtocol | None = None,
     app_id: int | None = None,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -429,8 +431,8 @@ def __init__(
     if app_client:
         self.app_client = app_client
     elif algorand and app_id:
-        self.app_client = AppClient(
-            AppClientParams(
+        self.app_client = applications.AppClient(
+            applications.AppClientParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_id=app_id,
@@ -458,16 +460,16 @@ def generate_static_methods(context: GeneratorContext) -> DocumentParts:
 def from_creator_and_name(
     creator_address: str,
     app_name: str,
-    algorand: AlgorandClientProtocol,
+    algorand: protocols.AlgorandClientProtocol,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
     ignore_cache: bool | None = None,
-    app_lookup_cache: AppLookup | None = None,
+    app_lookup_cache: applications.AppLookup | None = None,
 ) -> \"{context.contract_name}Client\":
     return {context.contract_name}Client(
-        AppClient.from_creator_and_name(
+        applications.AppClient.from_creator_and_name(
             creator_address=creator_address,
             app_name=app_name,
             app_spec=APP_SPEC,
@@ -483,7 +485,7 @@ def from_creator_and_name(
 
 @staticmethod
 def from_network(
-    algorand: AlgorandClientProtocol,
+    algorand: protocols.AlgorandClientProtocol,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
@@ -491,7 +493,7 @@ def from_network(
     clear_source_map: SourceMap | None = None,
 ) -> \"{context.contract_name}Client\":
     return {context.contract_name}Client(
-        AppClient.from_network(
+        applications.AppClient.from_network(
             app_spec=APP_SPEC,
             algorand=algorand,
             app_name=app_name,
@@ -520,11 +522,11 @@ def app_name(self) -> str:
     return self.app_client.app_name
 
 @property
-def app_spec(self) -> Arc56Contract:
+def app_spec(self) -> applications.Arc56Contract:
     return self.app_client.app_spec
 
 @property
-def algorand(self) -> AlgorandClientProtocol:
+def algorand(self) -> protocols.AlgorandClientProtocol:
     return self.app_client.algorand
 """)
 
@@ -558,8 +560,8 @@ def generate_decode_return_value(context: GeneratorContext) -> DocumentParts:
 def decode_return_value(
     self,
     method: str,
-    return_value: ABIReturn | None
-) -> ABIValue | ABIStruct | None:
+    return_value: applications_abi.ABIReturn | None
+) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
     if return_value is None:
         return None
 
@@ -594,7 +596,7 @@ def generate_structs(context: GeneratorContext) -> DocumentParts:
             first = False
 
             yield utils.indented(f"""
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class {struct.struct_class_name}:
     \"\"\"Struct for {struct.abi_name}\"\"\"
 """)
@@ -612,7 +614,7 @@ def _generate_state_typeddict(state_type: str, keys: dict, class_name: str) -> I
         return
 
     yield utils.indented(f"""
-class {class_name}(TypedDict):
+class {class_name}(typing.TypedDict):
     \"\"\"Shape of {state_type} state key values\"\"\"
 """)
     yield Part.IncIndent
@@ -633,14 +635,14 @@ def _generate_state_class(
     """Generate a state access class with typed methods"""
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: AppClient{extra_params}):
+    def __init__(self, app_client: applications.AppClient{extra_params}):
         self.app_client = app_client
         {'self.address = address' if extra_params else ''}
 
-    def get_all(self) -> {value_type_name or 'dict[str, Any]'}:
+    def get_all(self) -> {value_type_name or 'dict[str, typing.Any]'}:
         \"\"\"Get all current keyed values from {state_type} state\"\"\"
         result = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_all()
-        return {'cast(' + value_type_name + ', result)' if value_type_name else 'result'}
+        return {'typing.cast(' + value_type_name + ', result)' if value_type_name else 'result'}
 """)
 
     # Generate methods for individual keys
@@ -652,7 +654,7 @@ class {class_name}:
             yield utils.indented(f"""
     def {utils.get_method_name(key_name)}(self) -> {python_type}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
-        return cast({python_type}, self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}"))
+        return typing.cast({python_type}, self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}"))
 """)
             yield Part.DecIndent
 
@@ -695,7 +697,7 @@ def generate_state_methods(context: GeneratorContext) -> DocumentParts:
 class {context.contract_name}State:
     \"\"\"Methods to access state for the current {context.app_spec.name} app\"\"\"
 
-    def __init__(self, app_client: AppClient):
+    def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent
@@ -744,7 +746,7 @@ def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(self{', 
         for t in ["global_state", "local_state", "box"]
     ):
         yield utils.indented("""
-class _MapState(Generic[KeyType, ValueType]):
+class _MapState(typing.Generic[KeyType, ValueType]):
     \"\"\"Generic class for accessing state maps with strongly typed keys and values\"\"\"
 
     def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str):
@@ -753,11 +755,11 @@ class _MapState(Generic[KeyType, ValueType]):
 
     def get_map(self) -> dict[KeyType, ValueType]:
         \"\"\"Get all current values in the map\"\"\"
-        return cast(dict[KeyType, ValueType], self._state_accessor.get_map(self._map_name))
+        return typing.cast(dict[KeyType, ValueType], self._state_accessor.get_map(self._map_name))
 
     def get_value(self, key: KeyType) -> ValueType | None:
         \"\"\"Get a value from the map by key\"\"\"
-        return cast(ValueType | None, self._state_accessor.get_map_value(self._map_name, key))
+        return typing.cast(ValueType | None, self._state_accessor.get_map_value(self._map_name, key))
 """)
 
 

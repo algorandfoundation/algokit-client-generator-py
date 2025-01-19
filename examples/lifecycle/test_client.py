@@ -40,6 +40,14 @@ def test_create_bare_optin(lifecycle_factory: LifeCycleAppFactory) -> None:
     assert response.abi_return == "Hello, Bare\n"
 
 
+def test_deploy_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
+    client, _ = lifecycle_factory.deploy()
+    assert client.app_id
+
+    response = client.send.hello_string_string(args={"name": "Deploy Bare"})
+    assert response.abi_return == "Hello, Deploy Bare\n"
+
+
 def test_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:
     client, create_response = lifecycle_factory.send.create.create_string_string(
         args={"greeting": "Greetings"}, updatable=True
@@ -58,14 +66,6 @@ def test_create_2arg(lifecycle_factory: LifeCycleAppFactory) -> None:
     assert create_response.abi_return is None
     response = client.send.hello_string_string(args={"name": "2 Arg"})
     assert response.abi_return == "Greetings, 2 Arg\nGreetings, 2 Arg\n"
-
-
-def test_deploy_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, _ = lifecycle_factory.deploy()
-    assert client.app_id
-
-    response = client.send.hello_string_string(args={"name": "Deploy Bare"})
-    assert response.abi_return == "Hello, Deploy Bare\n"
 
 
 def test_deploy_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:

@@ -51,7 +51,7 @@ class {class_name}:
     elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
         method_args = tuple(args.values())
     if method_args:
-        method_args = [astuple(arg) if is_dataclass(arg) else arg for arg in method_args] # type: ignore
+        method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
 """
 
         yield utils.indented(f"""
@@ -120,7 +120,7 @@ class {context.contract_name}Composer:
     def __init__(self, client: "{context.contract_name}Client"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[Optional[Callable[[Optional[ABIReturn]], Any]]] = []
+        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 """)
     yield Part.IncIndent
 
@@ -189,25 +189,25 @@ def {operation}(self) -> "{class_name}":
 def clear_state(
     self,
     *,
-    account_references: Optional[list[str]] = None,
-    app_references: Optional[list[int]] = None,
-    asset_references: Optional[list[int]] = None,
-    box_references: Optional[list[Union[BoxReference, BoxIdentifier]]] = None,
-    extra_fee: Optional[AlgoAmount] = None,
-    lease: Optional[bytes] = None,
-    max_fee: Optional[AlgoAmount] = None,
-    note: Optional[bytes] = None,
-    rekey_to: Optional[str] = None,
-    sender: Optional[str] = None,
-    signer: Optional[TransactionSigner] = None,
-    static_fee: Optional[AlgoAmount] = None,
-    validity_window: Optional[int] = None,
-    first_valid_round: Optional[int] = None,
-    last_valid_round: Optional[int] = None,
+    account_references: list[str] | None = None,
+    app_references: list[int] | None = None,
+    asset_references: list[int] | None = None,
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+    extra_fee: models.AlgoAmount | None = None,
+    lease: bytes | None = None,
+    max_fee: models.AlgoAmount | None = None,
+    note: bytes | None = None,
+    rekey_to: str | None = None,
+    sender: str | None = None,
+    signer: TransactionSigner | None = None,
+    static_fee: models.AlgoAmount | None = None,
+    validity_window: int | None = None,
+    first_valid_round: int | None = None,
+    last_valid_round: int | None = None,
 ) -> \"{context.contract_name}Composer\":
     self._composer.add_app_call(
         self.client.params.clear_state(
-            AppClientBareCallWithSendParams(
+            applications.AppClientBareCallWithSendParams(
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -229,12 +229,12 @@ def clear_state(
     return self
 
 def add_transaction(
-    self, txn: Transaction, signer: Optional[TransactionSigner] = None
+    self, txn: Transaction, signer: TransactionSigner | None = None
 ) -> \"{context.contract_name}Composer\":
     self._composer.add_transaction(txn, signer)
     return self
 
-def composer(self) -> TransactionComposer:
+def composer(self) -> transactions.TransactionComposer:
     return self._composer
 
 def simulate(
@@ -246,7 +246,7 @@ def simulate(
     exec_trace_config: SimulateTraceConfig | None = None,
     simulation_round: int | None = None,
     skip_signatures: int | None = None,
-) -> SendAtomicTransactionComposerResults:
+) -> transactions.SendAtomicTransactionComposerResults:
     return self._composer.simulate(
         allow_more_logs=allow_more_logs,
         allow_empty_signatures=allow_empty_signatures,
@@ -262,7 +262,7 @@ def send(
     max_rounds_to_wait: int | None = None,
     suppress_log: bool | None = None,
     populate_app_call_resources: bool | None = None,
-) -> SendAtomicTransactionComposerResults:
+) -> transactions.SendAtomicTransactionComposerResults:
     return self._composer.send(
         max_rounds_to_wait=max_rounds_to_wait,
         suppress_log=suppress_log,

@@ -12,7 +12,7 @@ class GeneratorContext:
         # Reserved module-level symbols to avoid naming conflicts
         self.used_module_symbols = {
             "_APP_SPEC_JSON",  # Used in app_spec.py to store raw JSON
-            "APP_SPEC",  # Used throughout as Arc56Contract instance
+            "APP_SPEC",  # Used throughout as applications.Arc56Contract instance
             "DeployCreate",  # Used in typed_factory.py for deployment types
             "Deploy",  # Used in typed_factory.py for deployment types
             "Composer",  # Used in composer.py for transaction composition
@@ -21,8 +21,8 @@ class GeneratorContext:
         # Reserved client method/property names to avoid naming conflicts
         self.used_client_symbols = {
             "__init__",  # Constructor in typed_client.py
-            "app_spec",  # Property in typed_client.py returning Arc56Contract
-            "app_client",  # Internal AppClient instance in typed_client.py
+            "app_spec",  # Property in typed_client.py returning applications.Arc56Contract
+            "app_client",  # Internal applications.AppClient instance in typed_client.py
             "app_id",  # Property in typed_client.py returning application ID
             "app_address",  # Property in typed_client.py returning application address
             "no_op",  # Used for no-op transaction methods
