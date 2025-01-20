@@ -20,7 +20,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 from algokit_utils import applications, models, protocols, transactions
 from algokit_utils.applications import abi as applications_abi
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "desc": "Returns Hello, {name}", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "desc": "Asserts {name} is \"World\"", "events": []}], "name": "HelloWorldApp", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQpieXRlY2Jsb2NrIDB4CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w2CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gImhlbGxvKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmY5YzFlZGYgLy8gImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sNAplcnIKbWFpbl9sNDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb3dvcmxkY2hlY2tjYXN0ZXJfNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl80CmludGNfMSAvLyAxCnJldHVybgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wxMgp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sMTEKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDUgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDEwCmVycgptYWluX2wxMDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQphc3NlcnQKY2FsbHN1YiB1cGRhdGVfMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIHVwZGF0ZQp1cGRhdGVfMDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGRlbGV0ZQpkZWxldGVfMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX0RFTEVUQUJMRSAvLyBUTVBMX0RFTEVUQUJMRQovLyBDaGVjayBhcHAgaXMgZGVsZXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY29uY2F0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gaGVsbG9fd29ybGRfY2hlY2sKaGVsbG93b3JsZGNoZWNrXzM6CnByb3RvIDEgMApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKcHVzaGJ5dGVzIDB4NTc2ZjcyNmM2NCAvLyAiV29ybGQiCj09CmFzc2VydApyZXRzdWIKCi8vIGhlbGxvX2Nhc3RlcgpoZWxsb2Nhc3Rlcl80Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBoZWxsb18yCmZyYW1lX2J1cnkgMApwdXNoYnl0ZXMgMHgxNTFmN2M3NSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb193b3JsZF9jaGVja19jYXN0ZXIKaGVsbG93b3JsZGNoZWNrY2FzdGVyXzU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmNhbGxzdWIgaGVsbG93b3JsZGNoZWNrXzMKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "NestedContract", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmFwcHJvdmFsX3Byb2dyYW06CiAgICBpbnRjYmxvY2sgMSAwCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIGNhbGxzdWIgX19wdXlhX2FyYzRfcm91dGVyX18KICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuX19wdXlhX2FyYzRfcm91dGVyX18oKSAtPiB1aW50NjQ6Cl9fcHV5YV9hcmM0X3JvdXRlcl9fOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgcHJvdG8gMCAxCiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDcKICAgIHB1c2hieXRlc3MgMHhmZTZiZGY2OSAweDlmZDgzNWY4IDB4MzRhZjM5NDIgLy8gbWV0aG9kICJhZGQodWludDY0LHVpbnQ2NCl1aW50NjQiLCBtZXRob2QgImdldF9wYXlfdHhuX2Ftb3VudChwYXkpdWludDY0IiwgbWV0aG9kICJuZXN0ZWRfbWV0aG9kX2NhbGwoc3RyaW5nLHBheSxhcHBsKWJ5dGVbXSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2FkZF9yb3V0ZUAyIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUAzIF9fcHV5YV9hcmM0X3JvdXRlcl9fX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA0CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgpfX3B1eWFfYXJjNF9yb3V0ZXJfX19hZGRfcm91dGVAMjoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkQ29udHJhY3QoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fZ2V0X3BheV90eG5fYW1vdW50X3JvdXRlQDM6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGdldF9wYXlfdHhuX2Ftb3VudAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDQ6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgdHhuIEdyb3VwSW5kZXgKICAgIHB1c2hpbnQgMiAvLyAyCiAgICAtCiAgICBkdXAKICAgIGd0eG5zIFR5cGVFbnVtCiAgICBpbnRjXzAgLy8gcGF5CiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgcGF5CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIHB1c2hpbnQgNiAvLyBhcHBsCiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgYXBwbAogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIG5lc3RlZF9tZXRob2RfY2FsbAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDc6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogX19wdXlhX2FyYzRfcm91dGVyX19fYWZ0ZXJfaWZfZWxzZUAxMQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXRzdWIKCl9fcHV5YV9hcmM0X3JvdXRlcl9fX2FmdGVyX2lmX2Vsc2VAMTE6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMubmVzdGVkLm5lc3RlZC5OZXN0ZWRDb250cmFjdC5hZGQoYTogYnl0ZXMsIGI6IGJ5dGVzKSAtPiBieXRlczoKYWRkOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo1LTYKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIGFkZChzZWxmLCBhOiBhcmM0LlVJbnQ2NCwgYjogYXJjNC5VSW50NjQpIC0+IGFyYzQuVUludDY0OgogICAgcHJvdG8gMiAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjcKICAgIC8vIHJldHVybiBhcmM0LlVJbnQ2NChhLm5hdGl2ZSArIGIubmF0aXZlKQogICAgZnJhbWVfZGlnIC0yCiAgICBidG9pCiAgICBmcmFtZV9kaWcgLTEKICAgIGJ0b2kKICAgICsKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QubmVzdGVkX21ldGhvZF9jYWxsKF86IGJ5dGVzLCBfcGF5X3R4bjogdWludDY0LCBtZXRob2RfY2FsbDogdWludDY0KSAtPiBieXRlczoKbmVzdGVkX21ldGhvZF9jYWxsOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMy0xNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgbmVzdGVkX21ldGhvZF9jYWxsKAogICAgLy8gICAgIHNlbGYsIF86IGFyYzQuU3RyaW5nLCBfcGF5X3R4bjogZ3R4bi5QYXltZW50VHJhbnNhY3Rpb24sIG1ldGhvZF9jYWxsOiBndHhuLkFwcGxpY2F0aW9uQ2FsbFRyYW5zYWN0aW9uCiAgICAvLyApIC0+IGFyYzQuRHluYW1pY0J5dGVzOgogICAgcHJvdG8gMyAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjE3CiAgICAvLyByZXR1cm4gYXJjNC5EeW5hbWljQnl0ZXMobWV0aG9kX2NhbGwudHhuX2lkKQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBUeElECiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmNsZWFyX3N0YXRlX3Byb2dyYW06CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [57, 79, 105], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [151], "errorMessage": "can only call when creating"}, {"pc": [60, 82, 108], "errorMessage": "can only call when not creating"}, {"pc": [133], "errorMessage": "transaction type is appl"}, {"pc": [92, 122], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -47,45 +47,30 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
 
 
 @dataclasses.dataclass(frozen=True)
-class HelloArgs:
-    """Dataclass for hello arguments"""
-    name: str
+class AddArgs:
+    """Dataclass for add arguments"""
+    a: int
+    b: int
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldCheckArgs:
-    """Dataclass for hello_world_check arguments"""
-    name: str
+class GetPayTxnAmountArgs:
+    """Dataclass for get_pay_txn_amount arguments"""
+    pay_txn: transactions.AppMethodCallTransactionArgument
+
+@dataclasses.dataclass(frozen=True)
+class NestedMethodCallArgs:
+    """Dataclass for nested_method_call arguments"""
+    _: str
+    _pay_txn: transactions.AppMethodCallTransactionArgument
+    method_call: transactions.AppMethodCallTransactionArgument
 
 
-class _HelloWorldAppUpdate:
+class NestedContractParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.AppUpdateParams:
-        return self.app_client.params.bare.update(params)
-
-
-class _HelloWorldAppDelete:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
-        return self.app_client.params.bare.delete(params)
-
-
-class HelloWorldAppParams:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdate":
-        return _HelloWorldAppUpdate(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDelete":
-        return _HelloWorldAppDelete(self.app_client)
-    def hello(
+    def add(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[int, int] | AddArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -106,7 +91,7 @@ class HelloWorldAppParams:
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
+                method="add(uint64,uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -126,9 +111,9 @@ class HelloWorldAppParams:
                 
             ))
 
-    def hello_world_check(
+    def get_pay_txn_amount(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -149,7 +134,50 @@ class HelloWorldAppParams:
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
+                method="get_pay_txn_amount(pay)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def nested_method_call(
+        self,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+        *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        
+    ) -> transactions.AppCallMethodCallParams:
+        method_args = _parse_abi_args(args)
+        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
+                method="nested_method_call(string,pay,appl)byte[]",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -173,35 +201,12 @@ class HelloWorldAppParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _HelloWorldAppUpdateTransaction:
+class NestedContractCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
-        return self.app_client.create_transaction.bare.update(params)
-
-
-class _HelloWorldAppDeleteTransaction:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
-        return self.app_client.create_transaction.bare.delete(params)
-
-
-class HelloWorldAppCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdateTransaction":
-        return _HelloWorldAppUpdateTransaction(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteTransaction":
-        return _HelloWorldAppDeleteTransaction(self.app_client)
-    def hello(
+    def add(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[int, int] | AddArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -222,7 +227,7 @@ class HelloWorldAppCreateTransactionParams:
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
+                method="add(uint64,uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -242,9 +247,9 @@ class HelloWorldAppCreateTransactionParams:
                 
             ))
 
-    def hello_world_check(
+    def get_pay_txn_amount(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -265,7 +270,50 @@ class HelloWorldAppCreateTransactionParams:
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
+                method="get_pay_txn_amount(pay)uint64",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+
+    def nested_method_call(
+        self,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+        *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        
+    ) -> transactions.BuiltTransactions:
+        method_args = _parse_abi_args(args)
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
+                method="nested_method_call(string,pay,appl)byte[]",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -289,35 +337,12 @@ class HelloWorldAppCreateTransactionParams:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _HelloWorldAppUpdateSend:
+class NestedContractSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.update(params)
-
-
-class _HelloWorldAppDeleteSend:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.delete(params)
-
-
-class HelloWorldAppSend:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdateSend":
-        return _HelloWorldAppUpdateSend(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteSend":
-        return _HelloWorldAppDeleteSend(self.app_client)
-    def hello(
+    def add(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[int, int] | AddArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -335,10 +360,10 @@ class HelloWorldAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         
-    ) -> transactions.SendAppTransactionResult[str]:
+    ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
+                method="add(uint64,uint64)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -357,11 +382,11 @@ class HelloWorldAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
-    def hello_world_check(
+    def get_pay_txn_amount(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -379,10 +404,10 @@ class HelloWorldAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         
-    ) -> transactions.SendAppTransactionResult[None]:
+    ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
+                method="get_pay_txn_amount(pay)uint64",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -401,20 +426,64 @@ class HelloWorldAppSend:
                 last_valid_round=last_valid_round,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+
+    def nested_method_call(
+        self,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+        *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        
+    ) -> transactions.SendAppTransactionResult[bytes | bytearray]:
+        method_args = _parse_abi_args(args)
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
+                method="nested_method_call(string,pay,appl)byte[]",
+                args=method_args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                
+            ))
+        return transactions.SendAppTransactionResult[bytes | bytearray](**dataclasses.asdict(response))
 
     def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class HelloWorldAppState:
-    """Methods to access state for the current HelloWorldApp app"""
+class NestedContractState:
+    """Methods to access state for the current NestedContract app"""
 
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-class HelloWorldAppClient:
-    """Client for interacting with HelloWorldApp smart contract"""
+class NestedContractClient:
+    """Client for interacting with NestedContract smart contract"""
 
     @typing.overload
     def __init__(self, app_client: applications.AppClient) -> None: ...
@@ -462,10 +531,10 @@ class HelloWorldAppClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = HelloWorldAppParams(self.app_client)
-        self.create_transaction = HelloWorldAppCreateTransactionParams(self.app_client)
-        self.send = HelloWorldAppSend(self.app_client)
-        self.state = HelloWorldAppState(self.app_client)
+        self.params = NestedContractParams(self.app_client)
+        self.create_transaction = NestedContractCreateTransactionParams(self.app_client)
+        self.send = NestedContractSend(self.app_client)
+        self.state = NestedContractState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -478,8 +547,8 @@ class HelloWorldAppClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "NestedContractClient":
+        return NestedContractClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -502,8 +571,8 @@ class HelloWorldAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "NestedContractClient":
+        return NestedContractClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -542,8 +611,8 @@ class HelloWorldAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "NestedContractClient":
+        return NestedContractClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -553,8 +622,8 @@ class HelloWorldAppClient:
             )
         )
 
-    def new_group(self) -> "HelloWorldAppComposer":
-        return HelloWorldAppComposer(self)
+    def new_group(self) -> "NestedContractComposer":
+        return NestedContractComposer(self)
 
     def decode_return_value(
         self,
@@ -569,28 +638,14 @@ class HelloWorldAppClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating HelloWorldApp contract using bare calls"""
+class NestedContractBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
+    """Parameters for creating NestedContract contract using bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-@dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallUpdateParams(applications.AppClientBareCallParams):
-    """Parameters for calling HelloWorldApp contract using bare calls"""
-
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
-
-@dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallDeleteParams(applications.AppClientBareCallParams):
-    """Parameters for calling HelloWorldApp contract using bare calls"""
-
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
-
-class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing HelloWorldAppClient smart contracts"""
+class NestedContractFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing NestedContractClient smart contracts"""
 
     def __init__(
         self,
@@ -617,9 +672,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = HelloWorldAppFactoryParams(self.app_factory)
-        self.create_transaction = HelloWorldAppFactoryCreateTransaction(self.app_factory)
-        self.send = HelloWorldAppFactorySend(self.app_factory)
+        self.params = NestedContractFactoryParams(self.app_factory)
+        self.create_transaction = NestedContractFactoryCreateTransaction(self.app_factory)
+        self.send = NestedContractFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -639,9 +694,7 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: HelloWorldAppBareCallCreateParams | None = None,
-        update_params: HelloWorldAppBareCallUpdateParams | None = None,
-        delete_params: HelloWorldAppBareCallDeleteParams | None = None,
+        create_params: NestedContractBareCallCreateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -650,14 +703,12 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[HelloWorldAppClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[NestedContractClient, applications.AppFactoryDeployResponse]:
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
-            update_params=update_params.to_algokit_utils_params() if update_params else None,
-            delete_params=delete_params.to_algokit_utils_params() if delete_params else None,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -668,7 +719,7 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return HelloWorldAppClient(deploy_response[0]), deploy_response[1]
+        return NestedContractClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -680,9 +731,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
+    ) -> NestedContractClient:
         """Get an app client by creator address and name"""
-        return HelloWorldAppClient(
+        return NestedContractClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -703,9 +754,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
+    ) -> NestedContractClient:
         """Get an app client by app ID"""
-        return HelloWorldAppClient(
+        return NestedContractClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -717,17 +768,17 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class HelloWorldAppFactoryParams:
-    """Parameters for creating transactions for HelloWorldApp contract"""
+class NestedContractFactoryParams:
+    """Parameters for creating transactions for NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactoryCreateParams(app_factory)
-        self.deploy_update = HelloWorldAppFactoryUpdateParams(app_factory)
-        self.deploy_delete = HelloWorldAppFactoryDeleteParams(app_factory)
+        self.create = NestedContractFactoryCreateParams(app_factory)
+        self.deploy_update = NestedContractFactoryUpdateParams(app_factory)
+        self.deploy_delete = NestedContractFactoryDeleteParams(app_factory)
 
-class HelloWorldAppFactoryCreateParams:
-    """Parameters for 'create' operations of HelloWorldApp contract"""
+class NestedContractFactoryCreateParams:
+    """Parameters for 'create' operations of NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -749,9 +800,9 @@ class HelloWorldAppFactoryCreateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-    def hello(
+    def add(
             self,
-            args: tuple[str] | HelloArgs,
+            args: tuple[int, int] | AddArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -762,20 +813,20 @@ class HelloWorldAppFactoryCreateParams:
                 ] | None) = None,
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the hello(string)string ABI method"""
+            """Creates a new instance using the add(uint64,uint64)uint64 ABI method"""
             method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="hello(string)string",
+                    method="add(uint64,uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
                 )
             )
 
-    def hello_world_check(
+    def get_pay_txn_amount(
             self,
-            args: tuple[str] | HelloWorldCheckArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -786,19 +837,43 @@ class HelloWorldAppFactoryCreateParams:
                 ] | None) = None,
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the hello_world_check(string)void ABI method"""
+            """Creates a new instance using the get_pay_txn_amount(pay)uint64 ABI method"""
             method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="hello_world_check(string)void",
+                    method="get_pay_txn_amount(pay)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
                 )
             )
 
-class HelloWorldAppFactoryUpdateParams:
-    """Parameters for 'update' operations of HelloWorldApp contract"""
+    def nested_method_call(
+            self,
+            args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+            *,
+            on_complete: (typing.Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> transactions.AppCreateMethodCallParams:
+            """Creates a new instance using the nested_method_call(string,pay,appl)byte[] ABI method"""
+            method_args = _parse_abi_args(args)
+            return self.app_factory.params.create(
+                applications.AppFactoryCreateMethodCallParams(
+                    method="nested_method_call(string,pay,appl)byte[]",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+class NestedContractFactoryUpdateParams:
+    """Parameters for 'update' operations of NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -820,8 +895,8 @@ class HelloWorldAppFactoryUpdateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class HelloWorldAppFactoryDeleteParams:
-    """Parameters for 'delete' operations of HelloWorldApp contract"""
+class NestedContractFactoryDeleteParams:
+    """Parameters for 'delete' operations of NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -844,16 +919,16 @@ class HelloWorldAppFactoryDeleteParams:
         )
 
 
-class HelloWorldAppFactoryCreateTransaction:
-    """Create transactions for HelloWorldApp contract"""
+class NestedContractFactoryCreateTransaction:
+    """Create transactions for NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactoryCreateTransactionCreate(app_factory)
+        self.create = NestedContractFactoryCreateTransactionCreate(app_factory)
 
-    def hello(
+    def add(
             self,
-            args: tuple[str] | HelloArgs,
+            args: tuple[int, int] | AddArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -864,20 +939,20 @@ class HelloWorldAppFactoryCreateTransaction:
                 ] | None) = None,
             **kwargs
         ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the hello(string)string ABI method"""
+            """Creates a transaction using the add(uint64,uint64)uint64 ABI method"""
             method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="hello(string)string",
+                    method="add(uint64,uint64)uint64",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
                 )
             )
 
-    def hello_world_check(
+    def get_pay_txn_amount(
             self,
-            args: tuple[str] | HelloWorldCheckArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -888,11 +963,35 @@ class HelloWorldAppFactoryCreateTransaction:
                 ] | None) = None,
             **kwargs
         ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the hello_world_check(string)void ABI method"""
+            """Creates a transaction using the get_pay_txn_amount(pay)uint64 ABI method"""
             method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="hello_world_check(string)void",
+                    method="get_pay_txn_amount(pay)uint64",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+
+    def nested_method_call(
+            self,
+            args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+            *,
+            on_complete: (typing.Literal[
+                    OnComplete.NoOpOC,
+                    OnComplete.UpdateApplicationOC,
+                    OnComplete.DeleteApplicationOC,
+                    OnComplete.OptInOC,
+                    OnComplete.CloseOutOC,
+                ] | None) = None,
+            **kwargs
+        ) -> transactions.BuiltTransactions:
+            """Creates a transaction using the nested_method_call(string,pay,appl)byte[] ABI method"""
+            method_args = _parse_abi_args(args)
+            return self.app_factory.create_transaction.create(
+                applications.AppFactoryCreateMethodCallParams(
+                    method="nested_method_call(string,pay,appl)byte[]",
                     args=method_args, # type: ignore
                     on_complete=on_complete,
                     **kwargs
@@ -900,8 +999,8 @@ class HelloWorldAppFactoryCreateTransaction:
             )
 
 
-class HelloWorldAppFactoryCreateTransactionCreate:
-    """Create new instances of HelloWorldApp contract"""
+class NestedContractFactoryCreateTransactionCreate:
+    """Create new instances of NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -924,16 +1023,16 @@ class HelloWorldAppFactoryCreateTransactionCreate:
         )
 
 
-class HelloWorldAppFactorySend:
-    """Send calls to HelloWorldApp contract"""
+class NestedContractFactorySend:
+    """Send calls to NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactorySendCreate(app_factory)
+        self.create = NestedContractFactorySendCreate(app_factory)
 
 
-class HelloWorldAppFactorySendCreate:
-    """Send create calls to HelloWorldApp contract"""
+class NestedContractFactorySendCreate:
+    """Send create calls to NestedContract contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -949,43 +1048,25 @@ class HelloWorldAppFactorySendCreate:
                 OnComplete.CloseOutOC,
             ] | None) = None,
         **kwargs
-    ) -> tuple[HelloWorldAppClient, transactions.SendAppCreateTransactionResult]:
+    ) -> tuple[NestedContractClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
-        return HelloWorldAppClient(result[0]), result[1]
+        return NestedContractClient(result[0]), result[1]
 
 
-class _HelloWorldAppUpdateComposer:
-    def __init__(self, composer: "HelloWorldAppComposer"):
-        self.composer = composer
+class NestedContractComposer:
+    """Composer for creating transaction groups for NestedContract contract calls"""
 
-
-class _HelloWorldAppDeleteComposer:
-    def __init__(self, composer: "HelloWorldAppComposer"):
-        self.composer = composer
-
-
-class HelloWorldAppComposer:
-    """Composer for creating transaction groups for HelloWorldApp contract calls"""
-
-    def __init__(self, client: "HelloWorldAppClient"):
+    def __init__(self, client: "NestedContractClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
-    @property
-    def update(self) -> "_HelloWorldAppUpdateComposer":
-        return _HelloWorldAppUpdateComposer(self)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteComposer":
-        return _HelloWorldAppDeleteComposer(self)
-
-    def hello(
+    def add(
         self,
-        args: tuple[str] | HelloArgs,
+        args: tuple[int, int] | AddArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -1003,9 +1084,9 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         
-    ) -> "HelloWorldAppComposer":
+    ) -> "NestedContractComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.hello(
+            self.client.params.add(
                 args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1026,14 +1107,14 @@ class HelloWorldAppComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "hello(string)string", v
+                "add(uint64,uint64)uint64", v
             )
         )
         return self
 
-    def hello_world_check(
+    def get_pay_txn_amount(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -1051,9 +1132,9 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         
-    ) -> "HelloWorldAppComposer":
+    ) -> "NestedContractComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.hello_world_check(
+            self.client.params.get_pay_txn_amount(
                 args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1074,7 +1155,55 @@ class HelloWorldAppComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "hello_world_check(string)void", v
+                "get_pay_txn_amount(pay)uint64", v
+            )
+        )
+        return self
+
+    def nested_method_call(
+        self,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
+        *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        
+    ) -> "NestedContractComposer":
+        self._composer.add_app_call_method_call(
+            self.client.params.nested_method_call(
+                args=args, # type: ignore
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+            )
+        )
+        self._result_mappers.append(
+            lambda v: self.client.decode_return_value(
+                "nested_method_call(string,pay,appl)byte[]", v
             )
         )
         return self
@@ -1097,7 +1226,7 @@ class HelloWorldAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-    ) -> "HelloWorldAppComposer":
+    ) -> "NestedContractComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -1123,7 +1252,7 @@ class HelloWorldAppComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "HelloWorldAppComposer":
+    ) -> "NestedContractComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
