@@ -5,6 +5,7 @@
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
+            "justMyCode": false,
             "program": "scripts/update_approvals.py",
             "console": "integratedTerminal",
             "env": {

@@ -66,6 +66,8 @@ def map_abi_type_to_python(abi_type_str: str) -> str:  # noqa: PLR0911
             return "int"
         case "AVMString":
             return "str"
+        case "tuple":
+            return "tuple"
         case abi.ABIReferenceType.ASSET | abi.ABIReferenceType.APPLICATION:
             return "int"
         case abi.ABIReferenceType.ACCOUNT:

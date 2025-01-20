@@ -104,7 +104,7 @@ class ContractMethods:
     ) -> None:
         # Handle call actions
         for action in call_actions:
-            action_name = _map_enum_to_property(action.value)
+            action_name = _map_enum_to_property(action.value if isinstance(action, CallEnum) else action)
             collection = getattr(self, action_name)
             contract_method = ContractMethod(
                 abi=abi,
@@ -118,7 +118,10 @@ class ContractMethods:
             contract_method = ContractMethod(
                 abi=abi,
                 call_config="create",
-                on_complete=[_map_enum_to_property(action.value) for action in create_actions],
+                on_complete=[
+                    _map_enum_to_property(action.value if isinstance(action, CreateEnum) else action)
+                    for action in create_actions
+                ],
             )
             self.create.append(contract_method)
 
