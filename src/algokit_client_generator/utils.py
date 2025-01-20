@@ -72,7 +72,7 @@ def map_abi_type_to_python(abi_type_str: str) -> str:  # noqa: PLR0911
             return "str | bytes"
     if abi.is_abi_transaction_type(abi_type_str):
         # TODO: generic TransactionWithSigner and/or allow unsigned types signed with signer used in transaction
-        return "TransactionWithSigner"
+        return "transactions.AppMethodCallTransactionArgument"
     abi_type = abi.ABIType.from_string(abi_type_str)
     return abi_type_to_python(abi_type)
 

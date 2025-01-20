@@ -10,6 +10,3 @@ app = (
     .apply(deploy_time_immutability_control)
     .apply(deploy_time_permanence_control)
 )
-
-
-

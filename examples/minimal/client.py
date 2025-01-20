@@ -64,6 +64,28 @@ _APP_SPEC_JSON = r"""{
 }"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
+def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+    """Helper to parse ABI args into the format expected by underlying client"""
+    if args is None:
+        return None
+
+    def convert_dataclass(value: typing.Any) -> typing.Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        elif isinstance(value, (list, tuple)):
+            return type(value)(convert_dataclass(item) for item in value)
+        return value
+
+    match args:
+        case tuple():
+            method_args = list(args)
+        case _ if dataclasses.is_dataclass(args):
+            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+        case _:
+            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+
 
 class _AppUpdate:
     def __init__(self, app_client: applications.AppClient):

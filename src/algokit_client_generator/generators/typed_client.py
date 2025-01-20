@@ -36,27 +36,14 @@ OPERATION_TO_RETURN_PARAMS_TYPE = {
 }
 
 
-def _generate_args_parser(*, include_args: bool = False) -> str:
-    return f"""
-    method_args = None
-    {'''
-    if isinstance(args, tuple):
-        method_args = list(args)
-    elif isinstance(args, dict):
-        method_args = list(args.values())''' if include_args else ''}
-    if method_args:
-        method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-    """
-
-
-def _generate_common_method_params(
+def _generate_common_method_params(  # noqa: C901
     method: ContractMethod,
     property_type: PropertyType,
     operation: str | None = None,
-) -> str:
+) -> tuple[str, bool]:
     """Generate the common method parameters shared across different generator methods"""
     if not method.abi:  # Add early return if no ABI
-        return ""
+        return "", False
 
     args_type = None
     if method.abi.args:
@@ -115,7 +102,7 @@ def {method.abi.client_method_name}(
 
     params += f" -> {return_type}:"
 
-    return params
+    return params, args_type is not None
 
 
 def _generate_method_body(
@@ -123,9 +110,11 @@ def _generate_method_body(
     method: ContractMethod,
     property_type: PropertyType,
     operation: str = "call",
+    *,
+    include_args: bool = False,
 ) -> str:
     """Generate the common method body shared across different generator methods"""
-    body = _generate_args_parser(include_args=bool(method.abi and method.abi.args))
+    body = "    method_args = _parse_abi_args(args)" if include_args else ""
     method_sig = method.abi.method.get_signature() if method.abi else ""
 
     def algokit_param_type(operation: str) -> str:
@@ -154,8 +143,8 @@ def _generate_method_body(
         return ""
 
     call_params = f"""{algokit_param_type(operation)}(
-            method="{method_sig}",
-            args=method_args, # type: ignore
+            method="{method_sig}",{'''
+            args=method_args, # type: ignore''' if include_args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,
@@ -235,7 +224,7 @@ def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> 
             continue
 
         yield Part.Gap1
-        method_params = _generate_common_method_params(
+        method_params, include_args = _generate_common_method_params(
             method,
             property_type,
             operation=operation,
@@ -245,6 +234,7 @@ def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> 
             method,
             property_type,
             operation=operation,
+            include_args=include_args,
         )
         yield utils.indented(f"{method_params}\n{method_body}")
 
@@ -330,7 +320,7 @@ def {operation}(self) -> "{operation_class}":
             yield Part.Gap1
         first = False
 
-        method_params = _generate_common_method_params(
+        method_params, include_args = _generate_common_method_params(
             method,
             property_type=property_type,
         )
@@ -339,6 +329,7 @@ def {operation}(self) -> "{operation_class}":
             context,
             method,
             property_type,
+            include_args=include_args,
         )
 
         yield utils.indented(f"{method_params}\n{method_body}")
@@ -354,7 +345,7 @@ def clear_state(self, params: applications.AppClientBareCallWithSendParams | Non
 
 
 def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
-    """Generate TypedDict classes for each method's arguments"""
+    """Generate dataclasses for each method's arguments"""
     first = True
     for method in context.methods.all_abi_methods:
         if not method.abi or not method.abi.args:
@@ -368,14 +359,15 @@ def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
         typed_dict_name = f"{utils.to_camel_case(method.abi.client_method_name)}Args"
 
         yield utils.indented(f"""
-class {typed_dict_name}(typing.TypedDict):
-    \"\"\"TypedDict for {method.abi.client_method_name} arguments\"\"\"
+@dataclasses.dataclass(frozen=True)
+class {typed_dict_name}:
+    \"\"\"Dataclass for {method.abi.client_method_name} arguments\"\"\"
 """)
         yield Part.IncIndent
 
         for arg in method.abi.args:
             # Use None as default for optional args
-            python_type = f"{arg.python_type} | None" if arg.has_default else arg.python_type
+            python_type = f"{arg.python_type} | None = None" if arg.has_default else arg.python_type
             yield f"{arg.name}: {python_type}"
 
         yield Part.DecIndent

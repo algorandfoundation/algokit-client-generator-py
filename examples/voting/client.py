@@ -290,6 +290,28 @@ _APP_SPEC_JSON = r"""{
 }"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
+def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+    """Helper to parse ABI args into the format expected by underlying client"""
+    if args is None:
+        return None
+
+    def convert_dataclass(value: typing.Any) -> typing.Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        elif isinstance(value, (list, tuple)):
+            return type(value)(convert_dataclass(item) for item in value)
+        return value
+
+    match args:
+        case tuple():
+            method_args = list(args)
+        case _ if dataclasses.is_dataclass(args):
+            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+        case _:
+            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+
 
 @dataclasses.dataclass(frozen=True)
 class VotingPreconditions:
@@ -300,22 +322,26 @@ class VotingPreconditions:
     current_time: int
 
 
-class BootstrapArgs(typing.TypedDict):
-    """TypedDict for bootstrap arguments"""
-    fund_min_bal_req: TransactionWithSigner
+@dataclasses.dataclass(frozen=True)
+class BootstrapArgs:
+    """Dataclass for bootstrap arguments"""
+    fund_min_bal_req: transactions.AppMethodCallTransactionArgument
 
-class GetPreconditionsArgs(typing.TypedDict):
-    """TypedDict for get_preconditions arguments"""
+@dataclasses.dataclass(frozen=True)
+class GetPreconditionsArgs:
+    """Dataclass for get_preconditions arguments"""
     signature: bytes | bytearray
 
-class VoteArgs(typing.TypedDict):
-    """TypedDict for vote arguments"""
-    fund_min_bal_req: TransactionWithSigner
+@dataclasses.dataclass(frozen=True)
+class VoteArgs:
+    """Dataclass for vote arguments"""
+    fund_min_bal_req: transactions.AppMethodCallTransactionArgument
     signature: bytes | bytearray
     answer_ids: list[int]
 
-class CreateArgs(typing.TypedDict):
-    """TypedDict for create arguments"""
+@dataclasses.dataclass(frozen=True)
+class CreateArgs:
+    """Dataclass for create arguments"""
     vote_id: str
     snapshot_public_key: bytes | bytearray
     metadata_ipfs_cid: str
@@ -342,7 +368,7 @@ class VotingRoundAppParams:
         return _VotingRoundAppDelete(self.app_client)
     def bootstrap(
         self,
-        args: tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -361,16 +387,7 @@ class VotingRoundAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
@@ -413,14 +430,8 @@ class VotingRoundAppParams:
         
     ) -> transactions.AppCallMethodCallParams:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -460,16 +471,7 @@ class VotingRoundAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
@@ -493,7 +495,7 @@ class VotingRoundAppParams:
 
     def vote(
         self,
-        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -512,16 +514,7 @@ class VotingRoundAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
@@ -564,16 +557,7 @@ class VotingRoundAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
@@ -615,7 +599,7 @@ class VotingRoundAppCreateTransactionParams:
         return _VotingRoundAppDeleteTransaction(self.app_client)
     def bootstrap(
         self,
-        args: tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -634,16 +618,7 @@ class VotingRoundAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
@@ -686,14 +661,8 @@ class VotingRoundAppCreateTransactionParams:
         
     ) -> transactions.BuiltTransactions:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -733,16 +702,7 @@ class VotingRoundAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
@@ -766,7 +726,7 @@ class VotingRoundAppCreateTransactionParams:
 
     def vote(
         self,
-        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -785,16 +745,7 @@ class VotingRoundAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
@@ -837,16 +788,7 @@ class VotingRoundAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
@@ -888,7 +830,7 @@ class VotingRoundAppSend:
         return _VotingRoundAppDeleteSend(self.app_client)
     def bootstrap(
         self,
-        args: tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -907,16 +849,7 @@ class VotingRoundAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
                 args=method_args, # type: ignore
@@ -960,14 +893,8 @@ class VotingRoundAppSend:
         
     ) -> transactions.SendAppTransactionResult[None]:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="close()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1008,16 +935,7 @@ class VotingRoundAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[VotingPreconditions]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 args=method_args, # type: ignore
@@ -1042,7 +960,7 @@ class VotingRoundAppSend:
 
     def vote(
         self,
-        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -1061,16 +979,7 @@ class VotingRoundAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
                 args=method_args, # type: ignore
@@ -1114,16 +1023,7 @@ class VotingRoundAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 args=method_args, # type: ignore
@@ -1405,7 +1305,7 @@ class VotingRoundAppMethodCallCreateParams(
     """Parameters for creating VotingRoundApp contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
@@ -1580,7 +1480,7 @@ class VotingRoundAppFactoryCreateParams:
 
     def bootstrap(
             self,
-            args: tuple[TransactionWithSigner] | BootstrapArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -1592,15 +1492,7 @@ class VotingRoundAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the bootstrap(pay)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="bootstrap(pay)void",
@@ -1624,15 +1516,7 @@ class VotingRoundAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the close()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="close()void",
@@ -1656,15 +1540,7 @@ class VotingRoundAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
@@ -1676,7 +1552,7 @@ class VotingRoundAppFactoryCreateParams:
 
     def vote(
             self,
-            args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -1688,15 +1564,7 @@ class VotingRoundAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the vote(pay,byte[],uint8[])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="vote(pay,byte[],uint8[])void",
@@ -1720,15 +1588,7 @@ class VotingRoundAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
@@ -1794,7 +1654,7 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def bootstrap(
             self,
-            args: tuple[TransactionWithSigner] | BootstrapArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -1806,15 +1666,7 @@ class VotingRoundAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the bootstrap(pay)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="bootstrap(pay)void",
@@ -1838,15 +1690,7 @@ class VotingRoundAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the close()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="close()void",
@@ -1870,15 +1714,7 @@ class VotingRoundAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
@@ -1890,7 +1726,7 @@ class VotingRoundAppFactoryCreateTransaction:
 
     def vote(
             self,
-            args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -1902,15 +1738,7 @@ class VotingRoundAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the vote(pay,byte[],uint8[])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="vote(pay,byte[],uint8[])void",
@@ -1934,15 +1762,7 @@ class VotingRoundAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
@@ -2023,15 +1843,7 @@ class VotingRoundAppFactorySendCreate:
             **kwargs
         ) -> tuple[VotingRoundAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
@@ -2074,7 +1886,7 @@ class VotingRoundAppComposer:
 
     def bootstrap(
         self,
-        args: tuple[TransactionWithSigner] | BootstrapArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -2093,15 +1905,9 @@ class VotingRoundAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.bootstrap(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2194,15 +2000,9 @@ class VotingRoundAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.get_preconditions(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2229,7 +2029,7 @@ class VotingRoundAppComposer:
 
     def vote(
         self,
-        args: tuple[TransactionWithSigner, bytes | bytearray, list[int]] | VoteArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | bytearray, list[int]] | VoteArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -2248,15 +2048,9 @@ class VotingRoundAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.vote(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2302,15 +2096,9 @@ class VotingRoundAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "VotingRoundAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.create(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

@@ -556,87 +556,127 @@ _APP_SPEC_JSON = r"""{
 }"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
+def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+    """Helper to parse ABI args into the format expected by underlying client"""
+    if args is None:
+        return None
 
-class CallAbiUint32Args(typing.TypedDict):
-    """TypedDict for call_abi_uint32 arguments"""
+    def convert_dataclass(value: typing.Any) -> typing.Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        elif isinstance(value, (list, tuple)):
+            return type(value)(convert_dataclass(item) for item in value)
+        return value
+
+    match args:
+        case tuple():
+            method_args = list(args)
+        case _ if dataclasses.is_dataclass(args):
+            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+        case _:
+            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+
+
+@dataclasses.dataclass(frozen=True)
+class CallAbiUint32Args:
+    """Dataclass for call_abi_uint32 arguments"""
     input: int
 
-class CallAbiUint32ReadonlyArgs(typing.TypedDict):
-    """TypedDict for call_abi_uint32_readonly arguments"""
+@dataclasses.dataclass(frozen=True)
+class CallAbiUint32ReadonlyArgs:
+    """Dataclass for call_abi_uint32_readonly arguments"""
     input: int
 
-class CallAbiUint64Args(typing.TypedDict):
-    """TypedDict for call_abi_uint64 arguments"""
+@dataclasses.dataclass(frozen=True)
+class CallAbiUint64Args:
+    """Dataclass for call_abi_uint64 arguments"""
     input: int
 
-class CallAbiUint64ReadonlyArgs(typing.TypedDict):
-    """TypedDict for call_abi_uint64_readonly arguments"""
+@dataclasses.dataclass(frozen=True)
+class CallAbiUint64ReadonlyArgs:
+    """Dataclass for call_abi_uint64_readonly arguments"""
     input: int
 
-class CallAbiArgs(typing.TypedDict):
-    """TypedDict for call_abi arguments"""
+@dataclasses.dataclass(frozen=True)
+class CallAbiArgs:
+    """Dataclass for call_abi arguments"""
     value: str
 
-class CallAbiTxnArgs(typing.TypedDict):
-    """TypedDict for call_abi_txn arguments"""
-    txn: TransactionWithSigner
+@dataclasses.dataclass(frozen=True)
+class CallAbiTxnArgs:
+    """Dataclass for call_abi_txn arguments"""
+    txn: transactions.AppMethodCallTransactionArgument
     value: str
 
-class CallWithReferencesArgs(typing.TypedDict):
-    """TypedDict for call_with_references arguments"""
+@dataclasses.dataclass(frozen=True)
+class CallWithReferencesArgs:
+    """Dataclass for call_with_references arguments"""
     asset: int
     account: str | bytes
     application: int
 
-class SetGlobalArgs(typing.TypedDict):
-    """TypedDict for set_global arguments"""
+@dataclasses.dataclass(frozen=True)
+class SetGlobalArgs:
+    """Dataclass for set_global arguments"""
     int1: int
     int2: int
     bytes1: str
     bytes2: bytes | bytearray | tuple[int, int, int, int]
 
-class SetLocalArgs(typing.TypedDict):
-    """TypedDict for set_local arguments"""
+@dataclasses.dataclass(frozen=True)
+class SetLocalArgs:
+    """Dataclass for set_local arguments"""
     int1: int
     int2: int
     bytes1: str
     bytes2: bytes | bytearray | tuple[int, int, int, int]
 
-class SetBoxArgs(typing.TypedDict):
-    """TypedDict for set_box arguments"""
+@dataclasses.dataclass(frozen=True)
+class SetBoxArgs:
+    """Dataclass for set_box arguments"""
     name: bytes | bytearray | tuple[int, int, int, int]
     value: str
 
-class DefaultValueArgs(typing.TypedDict):
-    """TypedDict for default_value arguments"""
-    arg_with_default: str | None
+@dataclasses.dataclass(frozen=True)
+class DefaultValueArgs:
+    """Dataclass for default_value arguments"""
+    arg_with_default: str | None = None
 
-class DefaultValueIntArgs(typing.TypedDict):
-    """TypedDict for default_value_int arguments"""
-    arg_with_default: int | None
+@dataclasses.dataclass(frozen=True)
+class DefaultValueIntArgs:
+    """Dataclass for default_value_int arguments"""
+    arg_with_default: int | None = None
 
-class DefaultValueFromAbiArgs(typing.TypedDict):
-    """TypedDict for default_value_from_abi arguments"""
-    arg_with_default: str | None
+@dataclasses.dataclass(frozen=True)
+class DefaultValueFromAbiArgs:
+    """Dataclass for default_value_from_abi arguments"""
+    arg_with_default: str | None = None
 
-class DefaultValueFromGlobalStateArgs(typing.TypedDict):
-    """TypedDict for default_value_from_global_state arguments"""
-    arg_with_default: int | None
+@dataclasses.dataclass(frozen=True)
+class DefaultValueFromGlobalStateArgs:
+    """Dataclass for default_value_from_global_state arguments"""
+    arg_with_default: int | None = None
 
-class DefaultValueFromLocalStateArgs(typing.TypedDict):
-    """TypedDict for default_value_from_local_state arguments"""
-    arg_with_default: str | None
+@dataclasses.dataclass(frozen=True)
+class DefaultValueFromLocalStateArgs:
+    """Dataclass for default_value_from_local_state arguments"""
+    arg_with_default: str | None = None
 
-class CreateAbiArgs(typing.TypedDict):
-    """TypedDict for create_abi arguments"""
+@dataclasses.dataclass(frozen=True)
+class CreateAbiArgs:
+    """Dataclass for create_abi arguments"""
     input: str
 
-class UpdateAbiArgs(typing.TypedDict):
-    """TypedDict for update_abi arguments"""
+@dataclasses.dataclass(frozen=True)
+class UpdateAbiArgs:
+    """Dataclass for update_abi arguments"""
     input: str
 
-class DeleteAbiArgs(typing.TypedDict):
-    """TypedDict for delete_abi arguments"""
+@dataclasses.dataclass(frozen=True)
+class DeleteAbiArgs:
+    """Dataclass for delete_abi arguments"""
     input: str
 
 
@@ -668,16 +708,7 @@ class _StateAppUpdate:
         last_valid_round: int | None = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
@@ -728,16 +759,7 @@ class _StateAppDelete:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
@@ -785,14 +807,8 @@ class _StateAppOptin:
         
     ) -> transactions.AppCallMethodCallParams:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.params.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -847,16 +863,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
@@ -899,16 +906,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
@@ -951,16 +949,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
@@ -1003,16 +992,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
@@ -1055,16 +1035,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
@@ -1088,7 +1059,7 @@ class StateAppParams:
 
     def call_abi_txn(
         self,
-        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -1107,16 +1078,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
@@ -1159,16 +1121,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
@@ -1211,16 +1164,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -1263,16 +1207,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -1315,16 +1250,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
@@ -1367,14 +1293,8 @@ class StateAppParams:
         
     ) -> transactions.AppCallMethodCallParams:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1414,16 +1334,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
@@ -1466,16 +1377,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
@@ -1518,16 +1420,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
@@ -1570,16 +1463,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
@@ -1622,16 +1506,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
@@ -1674,16 +1549,7 @@ class StateAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
@@ -1737,16 +1603,7 @@ class _StateAppUpdateTransaction:
         last_valid_round: int | None = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
@@ -1797,16 +1654,7 @@ class _StateAppDeleteTransaction:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
@@ -1854,14 +1702,8 @@ class _StateAppOptinTransaction:
         
     ) -> transactions.BuiltTransactions:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.create_transaction.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1916,16 +1758,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
@@ -1968,16 +1801,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
@@ -2020,16 +1844,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
@@ -2072,16 +1887,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
@@ -2124,16 +1930,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
@@ -2157,7 +1954,7 @@ class StateAppCreateTransactionParams:
 
     def call_abi_txn(
         self,
-        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -2176,16 +1973,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
@@ -2228,16 +2016,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
@@ -2280,16 +2059,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -2332,16 +2102,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -2384,16 +2145,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
@@ -2436,14 +2188,8 @@ class StateAppCreateTransactionParams:
         
     ) -> transactions.BuiltTransactions:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2483,16 +2229,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
@@ -2535,16 +2272,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
@@ -2587,16 +2315,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
@@ -2639,16 +2358,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
@@ -2691,16 +2401,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
@@ -2743,16 +2444,7 @@ class StateAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
@@ -2806,16 +2498,7 @@ class _StateAppUpdateSend:
         last_valid_round: int | None = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
                 args=method_args, # type: ignore
@@ -2867,16 +2550,7 @@ class _StateAppDeleteSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
                 args=method_args, # type: ignore
@@ -2925,14 +2599,8 @@ class _StateAppOptinSend:
         
     ) -> transactions.SendAppTransactionResult[None]:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         response = self.app_client.send.opt_in(applications.AppClientMethodCallWithSendParams(
                 method="opt_in()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2988,16 +2656,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
                 args=method_args, # type: ignore
@@ -3041,16 +2700,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
                 args=method_args, # type: ignore
@@ -3094,16 +2744,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
                 args=method_args, # type: ignore
@@ -3147,16 +2788,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
                 args=method_args, # type: ignore
@@ -3200,16 +2832,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
                 args=method_args, # type: ignore
@@ -3234,7 +2857,7 @@ class StateAppSend:
 
     def call_abi_txn(
         self,
-        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -3253,16 +2876,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
                 args=method_args, # type: ignore
@@ -3306,16 +2920,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
                 args=method_args, # type: ignore
@@ -3359,16 +2964,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -3412,16 +3008,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
                 args=method_args, # type: ignore
@@ -3465,16 +3052,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
                 args=method_args, # type: ignore
@@ -3518,14 +3096,8 @@ class StateAppSend:
         
     ) -> transactions.SendAppTransactionResult[None]:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="error()void",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3566,16 +3138,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
                 args=method_args, # type: ignore
@@ -3619,16 +3182,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
                 args=method_args, # type: ignore
@@ -3672,16 +3226,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
                 args=method_args, # type: ignore
@@ -3725,16 +3270,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[int]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
                 args=method_args, # type: ignore
@@ -3778,16 +3314,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
                 args=method_args, # type: ignore
@@ -3831,16 +3358,7 @@ class StateAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
                 args=method_args, # type: ignore
@@ -4119,7 +3637,7 @@ class StateAppMethodCallCreateParams(
     """Parameters for creating StateApp contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
@@ -4145,7 +3663,7 @@ class StateAppMethodCallUpdateParams(
     """Parameters for calling StateApp contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCallParams(
             **{
                 **self.__dict__,
@@ -4171,7 +3689,7 @@ class StateAppMethodCallDeleteParams(
     """Parameters for calling StateApp contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCallParams(
             **{
                 **self.__dict__,
@@ -4360,15 +3878,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32(uint32)uint32",
@@ -4392,15 +3902,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32_readonly(uint32)uint32",
@@ -4424,15 +3926,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64(uint64)uint64",
@@ -4456,15 +3950,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64_readonly(uint64)uint64",
@@ -4488,15 +3974,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi(string)string",
@@ -4508,7 +3986,7 @@ class StateAppFactoryCreateParams:
 
     def call_abi_txn(
             self,
-            args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -4520,15 +3998,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
@@ -4552,15 +4022,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_with_references(asset,account,application)uint64",
@@ -4584,15 +4046,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_global(uint64,uint64,string,byte[4])void",
@@ -4616,15 +4070,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_local(uint64,uint64,string,byte[4])void",
@@ -4648,15 +4094,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the set_box(byte[4],string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_box(byte[4],string)void",
@@ -4680,15 +4118,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the error()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="error()void",
@@ -4712,15 +4142,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value(string)string",
@@ -4744,15 +4166,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_int(uint64)uint64",
@@ -4776,15 +4190,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_abi(string)string",
@@ -4808,15 +4214,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_global_state(uint64)uint64",
@@ -4840,15 +4238,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_local_state(string)string",
@@ -4872,15 +4262,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
@@ -4904,15 +4286,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the update_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="update_abi(string)string",
@@ -4936,15 +4310,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the delete_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="delete_abi(string)string",
@@ -4968,15 +4334,7 @@ class StateAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the opt_in()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="opt_in()void",
@@ -5054,15 +4412,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint32(uint32)uint32 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32(uint32)uint32",
@@ -5086,15 +4436,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint32_readonly(uint32)uint32",
@@ -5118,15 +4460,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint64(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64(uint64)uint64",
@@ -5150,15 +4484,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_uint64_readonly(uint64)uint64",
@@ -5182,15 +4508,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi(string)string",
@@ -5202,7 +4520,7 @@ class StateAppFactoryCreateTransaction:
 
     def call_abi_txn(
             self,
-            args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+            args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
             *,
             on_complete: (typing.Literal[
                     OnComplete.NoOpOC,
@@ -5214,15 +4532,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_abi_txn(pay,string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_abi_txn(pay,string)string",
@@ -5246,15 +4556,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="call_with_references(asset,account,application)uint64",
@@ -5278,15 +4580,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_global(uint64,uint64,string,byte[4])void",
@@ -5310,15 +4604,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_local(uint64,uint64,string,byte[4])void",
@@ -5342,15 +4628,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the set_box(byte[4],string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="set_box(byte[4],string)void",
@@ -5374,15 +4652,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the error()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="error()void",
@@ -5406,15 +4676,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value(string)string",
@@ -5438,15 +4700,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_int(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_int(uint64)uint64",
@@ -5470,15 +4724,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_abi(string)string",
@@ -5502,15 +4748,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_global_state(uint64)uint64 ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_global_state(uint64)uint64",
@@ -5534,15 +4772,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the default_value_from_local_state(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="default_value_from_local_state(string)string",
@@ -5566,15 +4796,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
@@ -5598,15 +4820,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the update_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="update_abi(string)string",
@@ -5630,15 +4844,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the delete_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="delete_abi(string)string",
@@ -5662,15 +4868,7 @@ class StateAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the opt_in()void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="opt_in()void",
@@ -5751,15 +4949,7 @@ class StateAppFactorySendCreate:
             **kwargs
         ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create_abi(string)string",
@@ -5807,13 +4997,7 @@ class _StateAppUpdateComposer:
         last_valid_round: int | None = None,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
+        method_args = _parse_abi_args(args)
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.update.update_abi(
@@ -5867,13 +5051,7 @@ class _StateAppDeleteComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
+        method_args = _parse_abi_args(args)
     
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.delete.delete_abi(
@@ -5995,15 +5173,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6049,15 +5221,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32_readonly(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6103,15 +5269,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6157,15 +5317,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64_readonly(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6211,15 +5365,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6246,7 +5394,7 @@ class StateAppComposer:
 
     def call_abi_txn(
         self,
-        args: tuple[TransactionWithSigner, str] | CallAbiTxnArgs,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
@@ -6265,15 +5413,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_txn(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6319,15 +5461,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.call_with_references(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6373,15 +5509,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.set_global(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6427,15 +5557,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.set_local(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6481,15 +5605,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.set_box(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6582,15 +5700,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if args is not None and isinstance(args, tuple):
-            method_args = args
-        elif args is not None and isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.default_value(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6636,15 +5748,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if args is not None and isinstance(args, tuple):
-            method_args = args
-        elif args is not None and isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.default_value_int(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6690,15 +5796,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if args is not None and isinstance(args, tuple):
-            method_args = args
-        elif args is not None and isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_abi(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6744,15 +5844,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if args is not None and isinstance(args, tuple):
-            method_args = args
-        elif args is not None and isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_global_state(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6798,15 +5892,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if args is not None and isinstance(args, tuple):
-            method_args = args
-        elif args is not None and isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_local_state(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6852,15 +5940,9 @@ class StateAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "StateAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.create_abi(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

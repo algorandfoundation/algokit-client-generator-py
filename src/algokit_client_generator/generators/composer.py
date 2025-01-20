@@ -36,22 +36,15 @@ class {class_name}:
             continue
 
         # Reuse the common method params generator but strip the return type
-        method_params = _generate_common_method_params(method, PropertyType.PARAMS, operation=operation).rsplit(
-            " ->", 1
-        )[0]
+        method_params, has_args = _generate_common_method_params(method, PropertyType.PARAMS, operation=operation)
+        method_params = method_params.rsplit(" ->", 1)[0]
 
         method_params += f' -> "{context.contract_name}Composer":'
 
         args_handling = ""
         if method.abi.args:
             args_handling = f"""
-    method_args = None
-    if {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, tuple):
-        method_args = args
-    elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
-        method_args = tuple(args.values())
-    if method_args:
-        method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
+    method_args = {'_parse_abi_args(args)' if has_args else '[]'}
 """
 
         yield utils.indented(f"""
@@ -138,26 +131,17 @@ def {operation}(self) -> "{class_name}":
         if not method.abi or "no_op" not in method.on_complete:
             continue
 
-        method_params = _generate_common_method_params(method, PropertyType.PARAMS).rsplit(" ->", 1)[0]
+        method_params, has_args = _generate_common_method_params(method, PropertyType.PARAMS)
+        method_params = method_params.rsplit(" ->", 1)[0]
 
         method_params += f' -> "{context.contract_name}Composer":'
 
-        args_handling = ""
-        if method.abi.args:
-            args_handling = f"""
-    method_args = None
-    if {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, tuple):
-        method_args = args
-    elif {'args is not None and ' if all(arg.has_default for arg in method.abi.args) else ''}isinstance(args, dict):
-        method_args = tuple(args.values())
-"""
-
         yield Part.Gap1
         yield utils.indented(f"""
-{method_params}{args_handling}
+{method_params}
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
-            {'args=method_args, # type: ignore' if method.abi.args else ''}
+            {'args=args, # type: ignore' if method.abi.args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,

@@ -20,27 +20,36 @@ class BareCallAppState:
     local_int1 = beaker.LocalStateValue(stack_type=pt.TealType.uint64)
     local_int2 = beaker.LocalStateValue(stack_type=pt.TealType.uint64)
     box = BoxMapping(pt.abi.StaticBytes[Literal[4]], pt.abi.String)
-    reserved_global_bytes = beaker.ReservedGlobalStateValue(stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved global state description")
-    reserved_local_bytes = beaker.ReservedLocalStateValue(stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved local state description")
+    reserved_global_bytes = beaker.ReservedGlobalStateValue(
+        stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved global state description"
+    )
+    reserved_local_bytes = beaker.ReservedLocalStateValue(
+        stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved local state description"
+    )
 
 
 app = beaker.Application("StateApp", state=BareCallAppState)
+
 
 @app.external
 def call_abi_uint32(input: pt.abi.Uint32, *, output: pt.abi.Uint32) -> pt.Expr:
     return output.set(input.get())
 
+
 @app.external(read_only=True)
 def call_abi_uint32_readonly(input: pt.abi.Uint32, *, output: pt.abi.Uint32) -> pt.Expr:
     return output.set(input.get())
+
 
 @app.external
 def call_abi_uint64(input: pt.abi.Uint64, *, output: pt.abi.Uint64) -> pt.Expr:
     return output.set(input.get())
 
+
 @app.external(read_only=True)
 def call_abi_uint64_readonly(input: pt.abi.Uint64, *, output: pt.abi.Uint64) -> pt.Expr:
     return output.set(input.get())
+
 
 @app.external(read_only=True)
 def call_abi(value: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:
@@ -72,13 +81,10 @@ def call_abi_txn(txn: pt.abi.PaymentTransaction, value: pt.abi.String, *, output
         )
     )
 
+
 @app.external()
 def call_with_references(
-    asset: pt.abi.Asset,
-    account: pt.abi.Account,
-    application: pt.abi.Application,
-    *,
-    output: pt.abi.Uint64
+    asset: pt.abi.Asset, account: pt.abi.Account, application: pt.abi.Application, *, output: pt.abi.Uint64
 ) -> pt.Expr:
     return pt.Seq(
         pt.Assert(asset.asset_id(), comment="asset not provided"),
@@ -86,6 +92,7 @@ def call_with_references(
         pt.Assert(application.application_id(), comment="application not provided"),
         output.set(pt.Int(1)),
     )
+
 
 @app.external()
 def set_global(
@@ -121,36 +128,50 @@ def error() -> pt.Expr:
     return pt.Assert(pt.Int(0), comment="Deliberate error")
 
 
-
 @app.external(read_only=True)
 def default_value(
-    arg_with_default: pt.abi.String = "default value", *, output: pt.abi.String  # type: ignore[assignment]
+    arg_with_default: pt.abi.String = "default value",
+    *,
+    output: pt.abi.String,  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(arg_with_default.get())
+
 
 @app.external(read_only=True)
 def default_value_int(
-    arg_with_default: pt.abi.Uint64 = 123, *, output: pt.abi.Uint64  # type: ignore[assignment]
+    arg_with_default: pt.abi.Uint64 = 123,
+    *,
+    output: pt.abi.Uint64,  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(arg_with_default.get())
+
 
 @app.external(read_only=True)
 def default_value_from_abi(
-    arg_with_default: pt.abi.String = default_value, *, output: pt.abi.String  # type: ignore[assignment]
+    arg_with_default: pt.abi.String = default_value,
+    *,
+    output: pt.abi.String,  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(pt.Concat(pt.Bytes("ABI, "), arg_with_default.get()))
 
+
 @app.external(read_only=True)
 def default_value_from_global_state(
-    arg_with_default: pt.abi.Uint64 = BareCallAppState.int1, *, output: pt.abi.Uint64  # type: ignore[assignment]
+    arg_with_default: pt.abi.Uint64 = BareCallAppState.int1,
+    *,
+    output: pt.abi.Uint64,  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(arg_with_default.get())
 
+
 @app.external(read_only=True)
 def default_value_from_local_state(
-    arg_with_default: pt.abi.String = BareCallAppState.local_bytes1, *, output: pt.abi.String  # type: ignore[assignment]
+    arg_with_default: pt.abi.String = BareCallAppState.local_bytes1,
+    *,
+    output: pt.abi.String,  # type: ignore[assignment]
 ) -> pt.Expr:
     return output.set(pt.Concat(pt.Bytes("Local state, "), arg_with_default.get()))
+
 
 @app.external(
     authorize=beaker.Authorize.only_creator(),

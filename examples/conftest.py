@@ -2,9 +2,7 @@ import uuid
 
 import algokit_utils
 import pytest
-from algokit_utils.protocols import AlgorandClientProtocol
 from algosdk.v2client.algod import AlgodClient
-from algosdk.v2client.indexer import IndexerClient
 
 
 def get_unique_name() -> str:
@@ -12,18 +10,8 @@ def get_unique_name() -> str:
 
 
 @pytest.fixture(scope="session")
-def algorand() -> AlgorandClientProtocol:
+def algorand() -> algokit_utils.AlgorandClient:
     return algokit_utils.AlgorandClient.from_environment()
-
-
-@pytest.fixture(scope="session")
-def algod_client() -> AlgodClient:
-    return algokit_utils.get_algod_client(algokit_utils.get_default_localnet_config("algod"))
-
-
-@pytest.fixture(scope="session")
-def indexer_client() -> IndexerClient:
-    return algokit_utils.get_indexer_client(algokit_utils.get_default_localnet_config("indexer"))
 
 
 @pytest.fixture

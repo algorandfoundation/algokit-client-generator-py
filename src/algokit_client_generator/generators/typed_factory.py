@@ -29,19 +29,6 @@ def _generate_method_args_type(method: ContractMethod) -> str:
     return args_type
 
 
-def _generate_method_args_parser() -> str:
-    """Generate code to parse method arguments"""
-    return """
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-    """
-
-
 def _generate_common_method_params(method_name: str, args_type: str) -> str:
     """Generate common method parameters"""
     return f"""
@@ -67,7 +54,7 @@ def _generate_abi_method(method: ContractMethod, operation: str) -> DocumentPart
     yield utils.indented(f"""
     {method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
         \"\"\"Creates a new instance using the {method.abi.method.get_signature()} ABI method\"\"\"
-        {_generate_method_args_parser()}
+        method_args = _parse_abi_args(args)
         return self.app_factory.params.{operation}(
             applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
@@ -92,7 +79,7 @@ def _generate_abi_transaction_method(method: ContractMethod) -> DocumentParts:
     yield utils.indented(f"""
     {method_params} -> transactions.BuiltTransactions:
         \"\"\"Creates a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        {_generate_method_args_parser()}
+        method_args = _parse_abi_args(args)
         return self.app_factory.create_transaction.create(
             applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
@@ -126,7 +113,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     yield utils.indented(f"""
     {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        {_generate_method_args_parser()}
+        method_args = _parse_abi_args(args)
         result = self.app_factory.send.create(
             applications.AppFactoryCreateMethodCallParams(
                 method="{method.abi.method.get_signature()}",
@@ -288,7 +275,7 @@ class {class_name}(
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCall{'Create' if is_create else ''}Params:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCall{'Create' if is_create else ''}Params(
             **{{
                 **self.__dict__,

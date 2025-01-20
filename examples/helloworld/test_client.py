@@ -4,7 +4,7 @@ from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
 from algokit_utils.protocols import AlgorandClientProtocol
 
-from examples.helloworld.client import HelloWorldAppClient, HelloWorldAppFactory
+from examples.helloworld.client import HelloArgs, HelloWorldAppClient, HelloWorldAppFactory, HelloWorldCheckArgs
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     client, _ = helloworld_factory.deploy(deletable=True, updatable=True, on_update=OnUpdate.UpdateApp)
 
     # Test with dict args
-    response = client.send.hello(args={"name": "World"})
+    response = client.send.hello(args=HelloArgs(name="World"))
     assert response.abi_return == "Hello, World"
 
     # Test with tuple args
@@ -33,7 +33,7 @@ def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     assert response_2.abi_return == "Hello, World!"
 
     # Test void return
-    response_3 = client.send.hello_world_check(args={"name": "World"})
+    response_3 = client.send.hello_world_check(args=HelloWorldCheckArgs(name="World"))
     assert response_3.abi_return is None
 
 
@@ -43,14 +43,14 @@ def test_composer_with_manual_transaction(
     client, _ = helloworld_factory.deploy()
 
     # Create transactions to add manually
-    transactions = client.create_transaction.hello_world_check(args={"name": "World"})
+    transactions = client.create_transaction.hello_world_check(args=HelloWorldCheckArgs(name="World"))
 
     # Get client from creator and name
     client2 = algorand.client.get_typed_app_client_by_creator_and_name(
         HelloWorldAppClient, creator_address=default_deployer.address, app_name=client.app_name
     )
 
-    transactions2 = client2.create_transaction.hello(args={"name": "Bananas"}, sender=default_deployer.address)
+    transactions2 = client2.create_transaction.hello(args=HelloArgs(name="Bananas"), sender=default_deployer.address)
 
     # Test composition with manual transactions
     result = (
@@ -58,7 +58,7 @@ def test_composer_with_manual_transaction(
         .hello(args=("World",))
         .add_transaction(transactions.transactions[0], transactions.signers[0])
         .add_transaction(transactions2.transactions[0])
-        .hello(args={"name": "World!"})
+        .hello(args=HelloArgs(name="World!"))
         .send()
     )
 
@@ -71,7 +71,7 @@ def test_composer_with_manual_transaction(
 def test_simulate_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     client, _ = helloworld_factory.deploy()
 
-    response = client.new_group().hello(args={"name": "mate"}).simulate()
+    response = client.new_group().hello(args=HelloArgs(name="mate")).simulate()
 
     assert response.returns[0].value == "Hello, mate"
     assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  # type: ignore

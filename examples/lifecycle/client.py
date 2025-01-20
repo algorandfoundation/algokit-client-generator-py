@@ -154,17 +154,42 @@ _APP_SPEC_JSON = r"""{
 }"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
+def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+    """Helper to parse ABI args into the format expected by underlying client"""
+    if args is None:
+        return None
 
-class HelloStringStringArgs(typing.TypedDict):
-    """TypedDict for hello_string_string arguments"""
+    def convert_dataclass(value: typing.Any) -> typing.Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        elif isinstance(value, (list, tuple)):
+            return type(value)(convert_dataclass(item) for item in value)
+        return value
+
+    match args:
+        case tuple():
+            method_args = list(args)
+        case _ if dataclasses.is_dataclass(args):
+            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+        case _:
+            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+
+
+@dataclasses.dataclass(frozen=True)
+class HelloStringStringArgs:
+    """Dataclass for hello_string_string arguments"""
     name: str
 
-class CreateStringStringArgs(typing.TypedDict):
-    """TypedDict for create_string_string arguments"""
+@dataclasses.dataclass(frozen=True)
+class CreateStringStringArgs:
+    """Dataclass for create_string_string arguments"""
     greeting: str
 
-class CreateStringUint32VoidArgs(typing.TypedDict):
-    """TypedDict for create_string_uint32_void arguments"""
+@dataclasses.dataclass(frozen=True)
+class CreateStringUint32VoidArgs:
+    """Dataclass for create_string_uint32_void arguments"""
     greeting: str
     times: int
 
@@ -204,16 +229,7 @@ class LifeCycleAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -256,14 +272,8 @@ class LifeCycleAppParams:
         
     ) -> transactions.AppCallMethodCallParams:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="hello()string",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -303,16 +313,7 @@ class LifeCycleAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string)string",
                 args=method_args, # type: ignore
@@ -355,16 +356,7 @@ class LifeCycleAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
                 args=method_args, # type: ignore
@@ -425,16 +417,7 @@ class LifeCycleAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -477,14 +460,8 @@ class LifeCycleAppCreateTransactionParams:
         
     ) -> transactions.BuiltTransactions:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="hello()string",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -524,16 +501,7 @@ class LifeCycleAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string)string",
                 args=method_args, # type: ignore
@@ -576,16 +544,7 @@ class LifeCycleAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
                 args=method_args, # type: ignore
@@ -646,16 +605,7 @@ class LifeCycleAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -699,14 +649,8 @@ class LifeCycleAppSend:
         
     ) -> transactions.SendAppTransactionResult[str]:
     
-        method_args = None
-        
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="hello()string",
-                args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -747,16 +691,7 @@ class LifeCycleAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string)string",
                 args=method_args, # type: ignore
@@ -800,16 +735,7 @@ class LifeCycleAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,uint32)void",
                 args=method_args, # type: ignore
@@ -1036,7 +962,7 @@ class LifeCycleAppMethodCallCreateParams(
     """Parameters for creating LifeCycleApp contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
-        method_args = list(self.args.values()) if isinstance(self.args, dict) else self.args
+        method_args = _parse_abi_args(self.args)
         return applications.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
@@ -1230,15 +1156,7 @@ class LifeCycleAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the hello(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello(string)string",
@@ -1262,15 +1180,7 @@ class LifeCycleAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the hello()string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello()string",
@@ -1294,15 +1204,7 @@ class LifeCycleAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string)string",
@@ -1326,15 +1228,7 @@ class LifeCycleAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the create(string,uint32)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,uint32)void",
@@ -1412,15 +1306,7 @@ class LifeCycleAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the hello(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello(string)string",
@@ -1444,15 +1330,7 @@ class LifeCycleAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the hello()string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello()string",
@@ -1476,15 +1354,7 @@ class LifeCycleAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string)string",
@@ -1508,15 +1378,7 @@ class LifeCycleAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the create(string,uint32)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,uint32)void",
@@ -1597,15 +1459,7 @@ class LifeCycleAppFactorySendCreate:
             **kwargs
         ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string)string",
@@ -1642,15 +1496,7 @@ class LifeCycleAppFactorySendCreate:
             **kwargs
         ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="create(string,uint32)void",
@@ -1712,15 +1558,9 @@ class LifeCycleAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "LifeCycleAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.hello_string_string(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1813,15 +1653,9 @@ class LifeCycleAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "LifeCycleAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.create_string_string(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1867,15 +1701,9 @@ class LifeCycleAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "LifeCycleAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.create_string_uint32_void(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

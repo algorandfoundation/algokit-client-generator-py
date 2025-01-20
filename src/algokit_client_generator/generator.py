@@ -5,6 +5,7 @@ from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.generators.app_spec import generate_app_spec
 from algokit_client_generator.generators.composer import generate_composer
 from algokit_client_generator.generators.header_comments import generate_header_comments
+from algokit_client_generator.generators.helpers import generate_helpers
 from algokit_client_generator.generators.imports import generate_imports
 from algokit_client_generator.generators.typed_client import generate_typed_client
 from algokit_client_generator.generators.typed_factory import generate_typed_factory
@@ -27,6 +28,8 @@ def generate(context: GeneratorContext) -> DocumentParts:
     yield generate_imports(context)
     yield Part.Gap1
     yield generate_app_spec(context)
+    yield Part.Gap1
+    yield generate_helpers(context)
     yield Part.Gap2
     yield generate_typed_client(context)
     yield Part.Gap2

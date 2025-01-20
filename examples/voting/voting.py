@@ -3,8 +3,8 @@
 from typing import Literal, TypeAlias
 
 import beaker
-import beaker.lib.storage as storage
 import pyteal as pt
+from beaker.lib import storage
 from pyteal.types import require_type
 
 from examples.deployment_standard import deploy_time_permanence_control

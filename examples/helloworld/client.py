@@ -104,13 +104,37 @@ _APP_SPEC_JSON = r"""{
 }"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
+def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+    """Helper to parse ABI args into the format expected by underlying client"""
+    if args is None:
+        return None
 
-class HelloArgs(typing.TypedDict):
-    """TypedDict for hello arguments"""
+    def convert_dataclass(value: typing.Any) -> typing.Any:
+        if dataclasses.is_dataclass(value):
+            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        elif isinstance(value, (list, tuple)):
+            return type(value)(convert_dataclass(item) for item in value)
+        return value
+
+    match args:
+        case tuple():
+            method_args = list(args)
+        case _ if dataclasses.is_dataclass(args):
+            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+        case _:
+            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+
+
+@dataclasses.dataclass(frozen=True)
+class HelloArgs:
+    """Dataclass for hello arguments"""
     name: str
 
-class HelloWorldCheckArgs(typing.TypedDict):
-    """TypedDict for hello_world_check arguments"""
+@dataclasses.dataclass(frozen=True)
+class HelloWorldCheckArgs:
+    """Dataclass for hello_world_check arguments"""
     name: str
 
 
@@ -161,16 +185,7 @@ class HelloWorldAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -213,16 +228,7 @@ class HelloWorldAppParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.AppCallMethodCallParams:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
                 args=method_args, # type: ignore
@@ -295,16 +301,7 @@ class HelloWorldAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -347,16 +344,7 @@ class HelloWorldAppCreateTransactionParams:
         last_valid_round: int | None = None,
         
     ) -> transactions.BuiltTransactions:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
                 args=method_args, # type: ignore
@@ -429,16 +417,7 @@ class HelloWorldAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[str]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
                 args=method_args, # type: ignore
@@ -482,16 +461,7 @@ class HelloWorldAppSend:
         last_valid_round: int | None = None,
         
     ) -> transactions.SendAppTransactionResult[None]:
-    
-        method_args = None
-        
-        if isinstance(args, tuple):
-            method_args = list(args)
-        elif isinstance(args, dict):
-            method_args = list(args.values())
-        if method_args:
-            method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+        method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="hello_world_check(string)void",
                 args=method_args, # type: ignore
@@ -874,15 +844,7 @@ class HelloWorldAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the hello(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello(string)string",
@@ -906,15 +868,7 @@ class HelloWorldAppFactoryCreateParams:
             **kwargs
         ) -> transactions.AppCreateMethodCallParams:
             """Creates a new instance using the hello_world_check(string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.params.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello_world_check(string)void",
@@ -992,15 +946,7 @@ class HelloWorldAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the hello(string)string ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello(string)string",
@@ -1024,15 +970,7 @@ class HelloWorldAppFactoryCreateTransaction:
             **kwargs
         ) -> transactions.BuiltTransactions:
             """Creates a transaction using the hello_world_check(string)void ABI method"""
-            
-            method_args = None
-            if isinstance(args, tuple):
-                method_args = list(args)
-            elif isinstance(args, dict):
-                method_args = list(args.values())
-            if method_args:
-                method_args = [dataclasses.astuple(arg) if dataclasses.is_dataclass(arg) else arg for arg in method_args] # type: ignore
-        
+            method_args = _parse_abi_args(args)
             return self.app_factory.create_transaction.create(
                 applications.AppFactoryCreateMethodCallParams(
                     method="hello_world_check(string)void",
@@ -1147,15 +1085,9 @@ class HelloWorldAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "HelloWorldAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.hello(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1201,15 +1133,9 @@ class HelloWorldAppComposer:
         last_valid_round: int | None = None,
         
     ) -> "HelloWorldAppComposer":
-        method_args = None
-        if isinstance(args, tuple):
-            method_args = args
-        elif isinstance(args, dict):
-            method_args = tuple(args.values())
-    
         self._composer.add_app_call_method_call(
             self.client.params.hello_world_check(
-                args=method_args, # type: ignore
+                args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
