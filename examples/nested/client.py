@@ -43,25 +43,25 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AddArgs:
     """Dataclass for add arguments"""
     a: int
     b: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPayTxnAmountArgs:
     """Dataclass for get_pay_txn_amount arguments"""
     pay_txn: transactions.AppMethodCallTransactionArgument
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class NestedMethodCallArgs:
     """Dataclass for nested_method_call arguments"""
     _: str
-    _pay_txn: transactions.AppMethodCallTransactionArgument
+    _pay_txn: transactions.AppMethodCallTransactionArgument | None = None
     method_call: transactions.AppMethodCallTransactionArgument
 
 
@@ -158,7 +158,7 @@ class NestedContractParams:
 
     def nested_method_call(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument | None, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -297,7 +297,7 @@ class NestedContractCreateTransactionParams:
 
     def nested_method_call(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument | None, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -438,7 +438,7 @@ class NestedContractSend:
 
     def nested_method_call(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument | None, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1138,7 +1138,7 @@ class NestedContractComposer:
 
     def nested_method_call(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
+        args: tuple[str, transactions.AppMethodCallTransactionArgument | None, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,

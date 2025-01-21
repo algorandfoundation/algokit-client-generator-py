@@ -43,48 +43,48 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiUint32Args:
     """Dataclass for call_abi_uint32 arguments"""
     input: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiUint32ReadonlyArgs:
     """Dataclass for call_abi_uint32_readonly arguments"""
     input: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiUint64Args:
     """Dataclass for call_abi_uint64 arguments"""
     input: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiUint64ReadonlyArgs:
     """Dataclass for call_abi_uint64_readonly arguments"""
     input: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiArgs:
     """Dataclass for call_abi arguments"""
     value: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiTxnArgs:
     """Dataclass for call_abi_txn arguments"""
     txn: transactions.AppMethodCallTransactionArgument
     value: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CallWithReferencesArgs:
     """Dataclass for call_with_references arguments"""
     asset: int
     account: str | bytes
     application: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SetGlobalArgs:
     """Dataclass for set_global arguments"""
     int1: int
@@ -92,7 +92,7 @@ class SetGlobalArgs:
     bytes1: str
     bytes2: bytes | str | tuple[int, int, int, int]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SetLocalArgs:
     """Dataclass for set_local arguments"""
     int1: int
@@ -100,48 +100,48 @@ class SetLocalArgs:
     bytes1: str
     bytes2: bytes | str | tuple[int, int, int, int]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SetBoxArgs:
     """Dataclass for set_box arguments"""
     name: bytes | str | tuple[int, int, int, int]
     value: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueArgs:
     """Dataclass for default_value arguments"""
     arg_with_default: str | None = None
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueIntArgs:
     """Dataclass for default_value_int arguments"""
     arg_with_default: int | None = None
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromAbiArgs:
     """Dataclass for default_value_from_abi arguments"""
     arg_with_default: str | None = None
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromGlobalStateArgs:
     """Dataclass for default_value_from_global_state arguments"""
     arg_with_default: int | None = None
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromLocalStateArgs:
     """Dataclass for default_value_from_local_state arguments"""
     arg_with_default: str | None = None
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateAbiArgs:
     """Dataclass for create_abi arguments"""
     input: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateAbiArgs:
     """Dataclass for update_abi arguments"""
     input: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DeleteAbiArgs:
     """Dataclass for delete_abi arguments"""
     input: str

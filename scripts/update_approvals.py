@@ -6,9 +6,9 @@ from algokit_client_generator import generate_client
 def update_approvals() -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     for app in [
+        "nested",
         "arc56_test",
         "duplicate_structs",
-        "nested",
         "nfd",
         "reti",
         "state",

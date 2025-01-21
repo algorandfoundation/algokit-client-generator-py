@@ -3,10 +3,14 @@
 from collections.abc import Generator, Iterator
 from enum import Enum
 
+import algosdk
+
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.spec import ABIStruct, ABIStructField, ContractMethod
+
+APPL_TYPE_TXNS = [algosdk.abi.ABITransactionType.APPL, algosdk.abi.ABITransactionType.ANY]
 
 
 class PropertyType(Enum):
@@ -48,16 +52,31 @@ def _generate_common_method_params(  # noqa: C901
 
     args_type = None
     if method.abi.args:
-        # Make tuple args optional if they have defaults
-        tuple_args = []
-        for arg in method.abi.args:
-            arg_type = arg.python_type
-            if arg.has_default:
-                arg_type = f"{arg_type} | None"
-            tuple_args.append(arg_type)
+        # Track if we've seen an appl arg to make previous txn args optional
+        has_appl_to_right = False
 
-        tuple_type = f"tuple[{', '.join(tuple_args)}]"
+        # Scan args from right to left
+        args_meta = []
+        for arg in reversed(method.abi.args):
+            # Make arg optional if it has default or is a transaction with appl to right
+            is_txn_type = algosdk.abi.is_abi_transaction_type(arg.abi_type)
+            is_appl_type = is_txn_type and arg.abi_type in APPL_TYPE_TXNS
+            is_optional = arg.has_default or (has_appl_to_right and is_txn_type)
+
+            arg_type = arg.python_type
+            if is_optional:
+                arg_type = f"{arg_type} | None"
+            args_meta.append(arg_type)
+
+            if not has_appl_to_right and is_appl_type:
+                has_appl_to_right = True
+
+        # Reverse back to original order
+        args_meta.reverse()
+
+        tuple_type = f"tuple[{', '.join(args_meta)}]"
         args_type = f"{tuple_type} | {context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
+
         # Make entire args parameter optional if all args have defaults
         if all(arg.has_default for arg in method.abi.args):
             args_type = f"{args_type} | None = None"
@@ -351,7 +370,7 @@ def clear_state(self, params: applications.AppClientBareCallWithSendParams | Non
     yield Part.DecIndent
 
 
-def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
+def generate_structs_for_args(context: GeneratorContext) -> DocumentParts:
     """Generate dataclasses for each method's arguments"""
     first = True
     for method in context.methods.all_abi_methods:
@@ -362,19 +381,34 @@ def generate_method_typed_dict(context: GeneratorContext) -> DocumentParts:
             yield Part.Gap1
         first = False
 
-        # Convert to camelcase using utility function
+        # Track appl args from right to left like in TypeScript
+        has_appl_to_right = False
+        optional_args = set()
+
+        # Scan right to left to determine which args should be optional
+        for arg in reversed(method.abi.args):
+            is_txn_type = algosdk.abi.is_abi_transaction_type(arg.abi_type)
+            is_appl_type = is_txn_type and arg.abi_type in APPL_TYPE_TXNS
+
+            if is_txn_type and has_appl_to_right:
+                optional_args.add(arg.name)
+
+            if not has_appl_to_right and is_appl_type:
+                has_appl_to_right = True
+
         typed_dict_name = f"{context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
 
         yield utils.indented(f"""
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class {typed_dict_name}:
     \"\"\"Dataclass for {method.abi.client_method_name} arguments\"\"\"
 """)
         yield Part.IncIndent
 
         for arg in method.abi.args:
-            # Use None as default for optional args
-            python_type = f"{arg.python_type} | None = None" if arg.has_default else arg.python_type
+            # Make arg optional if it has default or is in optional_args set
+            is_optional = arg.has_default or arg.name in optional_args
+            python_type = f"{arg.python_type} | None = None" if is_optional else arg.python_type
             yield f"{arg.name}: {python_type}"
 
         yield Part.DecIndent
@@ -918,7 +952,7 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         \"\"\"Get a value from the map by key\"\"\"
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key)
+        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)
@@ -934,7 +968,7 @@ def generate_typed_client(context: GeneratorContext) -> DocumentParts:
 
     # Generate supporting classes
     yield Part.Gap2
-    yield generate_method_typed_dict(context)
+    yield generate_structs_for_args(context)
     yield Part.Gap2
     yield from _generate_class_methods(context, f"{context.contract_name}Params", PropertyType.PARAMS)
     yield Part.Gap2

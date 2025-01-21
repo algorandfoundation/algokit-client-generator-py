@@ -43,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -56,94 +56,94 @@ class PayoutInfo:
     amountToSegmentRoot: int
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class MintAsaArgs:
     """Dataclass for mint_asa arguments"""
     nfdName: str
     url: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DeleteFieldsArgs:
     """Dataclass for delete_fields arguments"""
     fieldNames: list[bytes | str]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateSegmentCountArgs:
     """Dataclass for update_segment_count arguments"""
     childNfdName: str
     childNfdAppID: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetFieldUpdateCostArgs:
     """Dataclass for get_field_update_cost arguments"""
     fieldAndVals: list[bytes | str]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateFieldsArgs:
     """Dataclass for update_fields arguments"""
     fieldAndVals: list[bytes | str]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ReadFieldArgs:
     """Dataclass for read_field arguments"""
     fieldName: bytes | str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class OfferForSaleArgs:
     """Dataclass for offer_for_sale arguments"""
     sellAmount: int
     reservedFor: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class PostOfferArgs:
     """Dataclass for post_offer arguments"""
     offer: int
     note: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class MintPayoutArgs:
     """Dataclass for mint_payout arguments"""
     oneYearPrice: int
     segmentPlatformCostInAlgo: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class PurchaseArgs:
     """Dataclass for purchase arguments"""
     payment: transactions.AppMethodCallTransactionArgument
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class IsAddressInFieldArgs:
     """Dataclass for is_address_in_field arguments"""
     fieldName: str
     address: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateHashArgs:
     """Dataclass for update_hash arguments"""
     hash: bytes | str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ContractLockArgs:
     """Dataclass for contract_lock arguments"""
     lock: bool
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SegmentLockArgs:
     """Dataclass for segment_lock arguments"""
     lock: bool
     usdPrice: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultOptInLockArgs:
     """Dataclass for vault_opt_in_lock arguments"""
     lock: bool
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultOptInArgs:
     """Dataclass for vault_opt_in arguments"""
     assets: list[int]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultSendArgs:
     """Dataclass for vault_send arguments"""
     amount: int
@@ -152,31 +152,31 @@ class VaultSendArgs:
     asset: int
     otherAssets: list[int]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class RenewArgs:
     """Dataclass for renew arguments"""
     payment: transactions.AppMethodCallTransactionArgument
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SetPrimaryAddressArgs:
     """Dataclass for set_primary_address arguments"""
     fieldName: str
     address: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class RegistryAddingVerifiedAddressArgs:
     """Dataclass for registry_adding_verified_address arguments"""
     fieldBeingVerified: str
     fieldSetName: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class RegistryRemovingVerifiedAddressArgs:
     """Dataclass for registry_removing_verified_address arguments"""
     fieldBeingChanged: str
     address: str
     mbrRefundDest: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateApplicationArgs:
     """Dataclass for create_application arguments"""
     nfdName: str
@@ -191,7 +191,7 @@ class CreateApplicationArgs:
     segmentRootAppId: int
     segmentRootCommissionAddr: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateApplicationArgs:
     """Dataclass for update_application arguments"""
     versionNum: str
@@ -3799,7 +3799,7 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key)
+        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)

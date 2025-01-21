@@ -43,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -175,107 +175,107 @@ class NodePoolAssignmentConfig:
     nodes: list[tuple[list[int] | tuple[int, int, int]]] | tuple[tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]]]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class InitStakingContractArgs:
     """Dataclass for init_staking_contract arguments"""
     approvalProgramSize: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class LoadStakingContractDataArgs:
     """Dataclass for load_staking_contract_data arguments"""
     offset: int
     data: bytes | str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorConfigArgs:
     """Dataclass for get_validator_config arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorStateArgs:
     """Dataclass for get_validator_state arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorOwnerAndManagerArgs:
     """Dataclass for get_validator_owner_and_manager arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolsArgs:
     """Dataclass for get_pools arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolAppIdArgs:
     """Dataclass for get_pool_app_id arguments"""
     validatorId: int
     poolId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolInfoArgs:
     """Dataclass for get_pool_info arguments"""
     poolKey: ValidatorPoolKey
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetCurMaxStakePerPoolArgs:
     """Dataclass for get_cur_max_stake_per_pool arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class DoesStakerNeedToPayMBRArgs:
     """Dataclass for does_staker_need_to_pay_m_b_r arguments"""
     staker: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetStakedPoolsForAccountArgs:
     """Dataclass for get_staked_pools_for_account arguments"""
     staker: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetTokenPayoutRatioArgs:
     """Dataclass for get_token_payout_ratio arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetNodePoolAssignmentsArgs:
     """Dataclass for get_node_pool_assignments arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AddValidatorArgs:
     """Dataclass for add_validator arguments"""
     mbrPayment: transactions.AppMethodCallTransactionArgument
     nfdName: str
     config: ValidatorConfig
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorManagerArgs:
     """Dataclass for change_validator_manager arguments"""
     validatorId: int
     manager: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorSunsetInfoArgs:
     """Dataclass for change_validator_sunset_info arguments"""
     validatorId: int
     sunsettingOn: int
     sunsettingTo: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorNFDArgs:
     """Dataclass for change_validator_n_f_d arguments"""
     validatorId: int
     nfdAppID: int
     nfdName: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorCommissionAddressArgs:
     """Dataclass for change_validator_commission_address arguments"""
     validatorId: int
     commissionAddress: str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorRewardInfoArgs:
     """Dataclass for change_validator_reward_info arguments"""
     validatorId: int
@@ -285,26 +285,26 @@ class ChangeValidatorRewardInfoArgs:
     GatingAssetMinBalance: int
     RewardPerPayout: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AddPoolArgs:
     """Dataclass for add_pool arguments"""
     mbrPayment: transactions.AppMethodCallTransactionArgument
     validatorId: int
     nodeNum: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AddStakeArgs:
     """Dataclass for add_stake arguments"""
     stakedAmountPayment: transactions.AppMethodCallTransactionArgument
     validatorId: int
     valueToVerify: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SetTokenPayoutRatioArgs:
     """Dataclass for set_token_payout_ratio arguments"""
     validatorId: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class StakeUpdatedViaRewardsArgs:
     """Dataclass for stake_updated_via_rewards arguments"""
     poolKey: ValidatorPoolKey
@@ -313,7 +313,7 @@ class StakeUpdatedViaRewardsArgs:
     validatorCommission: int
     saturatedBurnToFeeSink: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class StakeRemovedArgs:
     """Dataclass for stake_removed arguments"""
     poolKey: ValidatorPoolKey
@@ -322,21 +322,21 @@ class StakeRemovedArgs:
     rewardRemoved: int
     stakerRemoved: bool
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class FindPoolForStakerArgs:
     """Dataclass for find_pool_for_staker arguments"""
     validatorId: int
     staker: str
     amountToStake: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class MovePoolToNodeArgs:
     """Dataclass for move_pool_to_node arguments"""
     validatorId: int
     poolAppId: int
     nodeNum: int
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class EmptyTokenRewardsArgs:
     """Dataclass for empty_token_rewards arguments"""
     validatorId: int
@@ -5011,7 +5011,7 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key)
+        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)

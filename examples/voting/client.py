@@ -43,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,24 +55,24 @@ class VotingPreconditions:
     current_time: int
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class BootstrapArgs:
     """Dataclass for bootstrap arguments"""
     fund_min_bal_req: transactions.AppMethodCallTransactionArgument
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPreconditionsArgs:
     """Dataclass for get_preconditions arguments"""
     signature: bytes | str
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class VoteArgs:
     """Dataclass for vote arguments"""
     fund_min_bal_req: transactions.AppMethodCallTransactionArgument
     signature: bytes | str
     answer_ids: list[int]
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateArgs:
     """Dataclass for create arguments"""
     vote_id: str
