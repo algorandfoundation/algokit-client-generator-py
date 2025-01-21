@@ -36,7 +36,9 @@ class {class_name}:
             continue
 
         # Reuse the common method params generator but strip the return type
-        method_params, has_args = _generate_common_method_params(method, PropertyType.PARAMS, operation=operation)
+        method_params, has_args = _generate_common_method_params(
+            context, method, PropertyType.PARAMS, operation=operation
+        )
         method_params = method_params.rsplit(" ->", 1)[0]
 
         method_params += f' -> "{context.contract_name}Composer":'
@@ -67,6 +69,7 @@ class {class_name}:
             static_fee=static_fee,
             validity_window=validity_window,
             last_valid_round=last_valid_round,
+            populate_app_call_resources=populate_app_call_resources,
         )
     )
     self.composer._result_mappers.append(
@@ -131,7 +134,9 @@ def {operation}(self) -> "{class_name}":
         if not method.abi or "no_op" not in method.on_complete:
             continue
 
-        method_params, has_args = _generate_common_method_params(method, PropertyType.PARAMS)
+        method_params, has_args = _generate_common_method_params(
+            context, method, PropertyType.PARAMS, operation=operation
+        )
         method_params = method_params.rsplit(" ->", 1)[0]
 
         method_params += f' -> "{context.contract_name}Composer":'
@@ -157,6 +162,7 @@ def {operation}(self) -> "{class_name}":
             static_fee=static_fee,
             validity_window=validity_window,
             last_valid_round=last_valid_round,
+            populate_app_call_resources=populate_app_call_resources,
         )
     )
     self._result_mappers.append(
@@ -188,6 +194,7 @@ def clear_state(
     validity_window: int | None = None,
     first_valid_round: int | None = None,
     last_valid_round: int | None = None,
+    populate_app_call_resources: bool = False,
 ) -> \"{context.contract_name}Composer\":
     self._composer.add_app_call(
         self.client.params.clear_state(
@@ -207,6 +214,7 @@ def clear_state(
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
     )

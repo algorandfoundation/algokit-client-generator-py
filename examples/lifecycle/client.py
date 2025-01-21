@@ -79,8 +79,7 @@ class LifeCycleAppParams:
         return _LifeCycleAppUpdate(self.app_client)
     def hello_string_string(
         self,
-        args: tuple[str] | HelloStringStringArgs,
-        *,
+        args: tuple[str] | HelloStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -96,6 +95,7 @@ class LifeCycleAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -117,10 +117,11 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
-    def hello_string(
+    def hello__string(
         self,
             *,
         account_references: list[str] | None = None,
@@ -138,6 +139,7 @@ class LifeCycleAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -158,13 +160,13 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_string_string(
         self,
-        args: tuple[str] | CreateStringStringArgs,
-        *,
+        args: tuple[str] | CreateStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -180,6 +182,7 @@ class LifeCycleAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -201,13 +204,13 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_string_uint32_void(
         self,
-        args: tuple[str, int] | CreateStringUint32VoidArgs,
-        *,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -223,6 +226,7 @@ class LifeCycleAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -244,6 +248,7 @@ class LifeCycleAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -267,8 +272,7 @@ class LifeCycleAppCreateTransactionParams:
         return _LifeCycleAppUpdateTransaction(self.app_client)
     def hello_string_string(
         self,
-        args: tuple[str] | HelloStringStringArgs,
-        *,
+        args: tuple[str] | HelloStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -284,6 +288,7 @@ class LifeCycleAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -305,10 +310,11 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
-    def hello_string(
+    def hello__string(
         self,
             *,
         account_references: list[str] | None = None,
@@ -326,6 +332,7 @@ class LifeCycleAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -346,13 +353,13 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_string_string(
         self,
-        args: tuple[str] | CreateStringStringArgs,
-        *,
+        args: tuple[str] | CreateStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -368,6 +375,7 @@ class LifeCycleAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -389,13 +397,13 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_string_uint32_void(
         self,
-        args: tuple[str, int] | CreateStringUint32VoidArgs,
-        *,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -411,6 +419,7 @@ class LifeCycleAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -432,6 +441,7 @@ class LifeCycleAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -455,8 +465,7 @@ class LifeCycleAppSend:
         return _LifeCycleAppUpdateSend(self.app_client)
     def hello_string_string(
         self,
-        args: tuple[str] | HelloStringStringArgs,
-        *,
+        args: tuple[str] | HelloStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -472,6 +481,7 @@ class LifeCycleAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -493,11 +503,12 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
-    def hello_string(
+    def hello__string(
         self,
             *,
         account_references: list[str] | None = None,
@@ -515,6 +526,7 @@ class LifeCycleAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
     
@@ -535,14 +547,14 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def create_string_string(
         self,
-        args: tuple[str] | CreateStringStringArgs,
-        *,
+        args: tuple[str] | CreateStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -558,6 +570,7 @@ class LifeCycleAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -579,14 +592,14 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def create_string_uint32_void(
         self,
-        args: tuple[str, int] | CreateStringUint32VoidArgs,
-        *,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -602,6 +615,7 @@ class LifeCycleAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -623,6 +637,7 @@ class LifeCycleAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
@@ -651,19 +666,34 @@ class _GlobalState:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return typing.cast(GlobalStateValue, result)
+        if not result:
+            return typing.cast(GlobalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(GlobalStateValue, converted)
 
     def greeting(self) -> bytes:
             """Get the current value of the greeting key in global_state state"""
-            return typing.cast(bytes, self.app_client.state.global_state.get_value("greeting"))
+            value = self.app_client.state.global_state.get_value("greeting")
+            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
 
     def times(self) -> int:
             """Get the current value of the times key in global_state state"""
-            return typing.cast(int, self.app_client.state.global_state.get_value("times"))
+            value = self.app_client.state.global_state.get_value("times")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
 class LifeCycleAppClient:
     """Client for interacting with LifeCycleApp smart contract"""
@@ -808,16 +838,58 @@ class LifeCycleAppClient:
     def new_group(self) -> "LifeCycleAppComposer":
         return LifeCycleAppComposer(self)
 
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["hello(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["hello()string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["create(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["create(string,uint32)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
     def decode_return_value(
         self,
         method: str,
         return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+
+    def decode_return_value(
+        self,
+        method: str,
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | str:
+        """Decode ABI return value for the given method."""
         if return_value is None:
             return None
     
         arc56_method = self.app_spec.get_arc56_method(method)
-        return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+    
+        # If method returns a struct, convert the dict to appropriate dataclass
+        if (arc56_method and
+            arc56_method.returns and
+            arc56_method.returns.struct and
+            isinstance(decoded, dict)):
+            struct_class = globals().get(arc56_method.returns.struct)
+            if struct_class:
+                return struct_class(**typing.cast(dict, decoded))
+        return decoded
 
 
 @dataclasses.dataclass(frozen=True)
@@ -888,11 +960,11 @@ class LifeCycleAppFactory(applications.TypedAppFactoryProtocol):
     @property
     def app_name(self) -> str:
         return self.app_factory.app_name
-
+    
     @property
     def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
-
+    
     @property
     def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
@@ -914,6 +986,7 @@ class LifeCycleAppFactory(applications.TypedAppFactoryProtocol):
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
     ) -> tuple[LifeCycleAppClient, applications.AppFactoryDeployResponse]:
+        """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -985,8 +1058,8 @@ class LifeCycleAppFactoryParams:
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = LifeCycleAppFactoryCreateParams(app_factory)
-        self.deploy_update = LifeCycleAppFactoryUpdateParams(app_factory)
-        self.deploy_delete = LifeCycleAppFactoryDeleteParams(app_factory)
+        self.update = LifeCycleAppFactoryUpdateParams(app_factory)
+        self.delete = LifeCycleAppFactoryDeleteParams(app_factory)
 
 class LifeCycleAppFactoryCreateParams:
     """Parameters for 'create' operations of LifeCycleApp contract"""
@@ -998,12 +1071,12 @@ class LifeCycleAppFactoryCreateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
@@ -1012,100 +1085,99 @@ class LifeCycleAppFactoryCreateParams:
         )
 
     def hello_string_string(
-            self,
-            args: tuple[str] | HelloStringStringArgs,
+        self,
+        args: tuple[str] | HelloStringStringArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the hello(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="hello(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the hello(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="hello(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
-    def hello_string(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the hello()string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="hello()string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+    def hello__string(
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the hello()string ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="hello()string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def create_string_string(
-            self,
-            args: tuple[str] | CreateStringStringArgs,
+        self,
+        args: tuple[str] | CreateStringStringArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the create(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the create(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="create(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def create_string_uint32_void(
-            self,
-            args: tuple[str, int] | CreateStringUint32VoidArgs,
+        self,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the create(string,uint32)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create(string,uint32)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the create(string,uint32)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="create(string,uint32)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
 class LifeCycleAppFactoryUpdateParams:
     """Parameters for 'update' operations of LifeCycleApp contract"""
@@ -1117,12 +1189,12 @@ class LifeCycleAppFactoryUpdateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
@@ -1140,12 +1212,12 @@ class LifeCycleAppFactoryDeleteParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
@@ -1161,102 +1233,6 @@ class LifeCycleAppFactoryCreateTransaction:
         self.app_factory = app_factory
         self.create = LifeCycleAppFactoryCreateTransactionCreate(app_factory)
 
-    def hello_string_string(
-            self,
-            args: tuple[str] | HelloStringStringArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the hello(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="hello(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def hello_string(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the hello()string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="hello()string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def create_string_string(
-            self,
-            args: tuple[str] | CreateStringStringArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the create(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def create_string_uint32_void(
-            self,
-            args: tuple[str, int] | CreateStringUint32VoidArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the create(string,uint32)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create(string,uint32)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
 
 class LifeCycleAppFactoryCreateTransactionCreate:
     """Create new instances of LifeCycleApp contract"""
@@ -1268,12 +1244,12 @@ class LifeCycleAppFactoryCreateTransactionCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> Transaction:
         """Creates a new instance using a bare call"""
@@ -1300,12 +1276,12 @@ class LifeCycleAppFactorySendCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> tuple[LifeCycleAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
@@ -1315,18 +1291,18 @@ class LifeCycleAppFactorySendCreate:
         return LifeCycleAppClient(result[0]), result[1]
 
     def create_string_string(
-            self,
-            args: tuple[str] | CreateStringStringArgs,
+        self,
+        args: tuple[str] | CreateStringStringArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create(string)string ABI method"""
             method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
@@ -1352,18 +1328,18 @@ class LifeCycleAppFactorySendCreate:
             )
 
     def create_string_uint32_void(
-            self,
-            args: tuple[str, int] | CreateStringUint32VoidArgs,
+        self,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
             method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
@@ -1408,8 +1384,7 @@ class LifeCycleAppComposer:
 
     def hello_string_string(
         self,
-        args: tuple[str] | HelloStringStringArgs,
-        *,
+        args: tuple[str] | HelloStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1425,7 +1400,8 @@ class LifeCycleAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello_string_string(
@@ -1445,6 +1421,7 @@ class LifeCycleAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -1454,7 +1431,7 @@ class LifeCycleAppComposer:
         )
         return self
 
-    def hello_string(
+    def hello__string(
         self,
             *,
         account_references: list[str] | None = None,
@@ -1472,10 +1449,11 @@ class LifeCycleAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.hello_string(
+            self.client.params.hello__string(
                 
                 account_references=account_references,
                 app_references=app_references,
@@ -1492,6 +1470,7 @@ class LifeCycleAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -1503,8 +1482,7 @@ class LifeCycleAppComposer:
 
     def create_string_string(
         self,
-        args: tuple[str] | CreateStringStringArgs,
-        *,
+        args: tuple[str] | CreateStringStringArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1520,7 +1498,8 @@ class LifeCycleAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_string_string(
@@ -1540,6 +1519,7 @@ class LifeCycleAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -1551,8 +1531,7 @@ class LifeCycleAppComposer:
 
     def create_string_uint32_void(
         self,
-        args: tuple[str, int] | CreateStringUint32VoidArgs,
-        *,
+        args: tuple[str, int] | CreateStringUint32VoidArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1568,7 +1547,8 @@ class LifeCycleAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_string_uint32_void(
@@ -1588,6 +1568,7 @@ class LifeCycleAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -1615,6 +1596,7 @@ class LifeCycleAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -1634,6 +1616,7 @@ class LifeCycleAppComposer:
                     static_fee=static_fee,
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
+                    populate_app_call_resources=populate_app_call_resources,
                 )
             )
         )

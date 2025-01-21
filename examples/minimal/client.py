@@ -293,11 +293,22 @@ class AppClient:
         method: str,
         return_value: applications_abi.ABIReturn | None
     ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+        """Decode ABI return value for the given method."""
         if return_value is None:
             return None
     
         arc56_method = self.app_spec.get_arc56_method(method)
-        return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+    
+        # If method returns a struct, convert the dict to appropriate dataclass
+        if (arc56_method and
+            arc56_method.returns and
+            arc56_method.returns.struct and
+            isinstance(decoded, dict)):
+            struct_class = globals().get(arc56_method.returns.struct)
+            if struct_class:
+                return struct_class(**typing.cast(dict, decoded))
+        return decoded
 
 
 @dataclasses.dataclass(frozen=True)
@@ -356,11 +367,11 @@ class AppFactory(applications.TypedAppFactoryProtocol):
     @property
     def app_name(self) -> str:
         return self.app_factory.app_name
-
+    
     @property
     def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
-
+    
     @property
     def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
@@ -383,6 +394,7 @@ class AppFactory(applications.TypedAppFactoryProtocol):
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
     ) -> tuple[AppClient, applications.AppFactoryDeployResponse]:
+        """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -455,8 +467,8 @@ class AppFactoryParams:
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = AppFactoryCreateParams(app_factory)
-        self.deploy_update = AppFactoryUpdateParams(app_factory)
-        self.deploy_delete = AppFactoryDeleteParams(app_factory)
+        self.update = AppFactoryUpdateParams(app_factory)
+        self.delete = AppFactoryDeleteParams(app_factory)
 
 class AppFactoryCreateParams:
     """Parameters for 'create' operations of App contract"""
@@ -468,12 +480,12 @@ class AppFactoryCreateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
@@ -491,12 +503,12 @@ class AppFactoryUpdateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
@@ -514,12 +526,12 @@ class AppFactoryDeleteParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
@@ -535,6 +547,7 @@ class AppFactoryCreateTransaction:
         self.app_factory = app_factory
         self.create = AppFactoryCreateTransactionCreate(app_factory)
 
+
 class AppFactoryCreateTransactionCreate:
     """Create new instances of App contract"""
 
@@ -545,12 +558,12 @@ class AppFactoryCreateTransactionCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> Transaction:
         """Creates a new instance using a bare call"""
@@ -577,12 +590,12 @@ class AppFactorySendCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> tuple[AppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
@@ -636,6 +649,7 @@ class AppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
     ) -> "AppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -655,6 +669,7 @@ class AppComposer:
                     static_fee=static_fee,
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
+                    populate_app_call_resources=populate_app_call_resources,
                 )
             )
         )

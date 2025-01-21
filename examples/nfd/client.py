@@ -65,7 +65,7 @@ class MintAsaArgs:
 @dataclasses.dataclass(frozen=True)
 class DeleteFieldsArgs:
     """Dataclass for delete_fields arguments"""
-    fieldNames: list[bytes | bytearray]
+    fieldNames: list[bytes | str]
 
 @dataclasses.dataclass(frozen=True)
 class UpdateSegmentCountArgs:
@@ -76,17 +76,17 @@ class UpdateSegmentCountArgs:
 @dataclasses.dataclass(frozen=True)
 class GetFieldUpdateCostArgs:
     """Dataclass for get_field_update_cost arguments"""
-    fieldAndVals: list[bytes | bytearray]
+    fieldAndVals: list[bytes | str]
 
 @dataclasses.dataclass(frozen=True)
 class UpdateFieldsArgs:
     """Dataclass for update_fields arguments"""
-    fieldAndVals: list[bytes | bytearray]
+    fieldAndVals: list[bytes | str]
 
 @dataclasses.dataclass(frozen=True)
 class ReadFieldArgs:
     """Dataclass for read_field arguments"""
-    fieldName: bytes | bytearray
+    fieldName: bytes | str
 
 @dataclasses.dataclass(frozen=True)
 class OfferForSaleArgs:
@@ -120,7 +120,7 @@ class IsAddressInFieldArgs:
 @dataclasses.dataclass(frozen=True)
 class UpdateHashArgs:
     """Dataclass for update_hash arguments"""
-    hash: bytes | bytearray
+    hash: bytes | str
 
 @dataclasses.dataclass(frozen=True)
 class ContractLockArgs:
@@ -197,14 +197,13 @@ class UpdateApplicationArgs:
     versionNum: str
 
 
-class _NfdInstanceUpdate:
+class _NFDInstanceUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,
-        *,
+        args: tuple[str] | UpdateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -220,6 +219,7 @@ class _NfdInstanceUpdate:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -241,16 +241,17 @@ class _NfdInstanceUpdate:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
 
 
-class NfdInstanceParams:
+class NFDInstanceParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NfdInstanceUpdate":
-        return _NfdInstanceUpdate(self.app_client)
+    def update(self) -> "_NFDInstanceUpdate":
+        return _NFDInstanceUpdate(self.app_client)
     def gas(
         self,
             *,
@@ -269,6 +270,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -289,13 +291,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,
-        *,
+        args: tuple[str, str] | MintAsaArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -311,6 +313,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -332,13 +335,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -354,6 +357,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -375,13 +379,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,
-        *,
+        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -397,6 +401,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -418,13 +423,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
-        *,
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -440,6 +445,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -461,13 +467,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -483,6 +489,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -504,13 +511,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def read_field(
         self,
-        args: tuple[bytes | bytearray] | ReadFieldArgs,
-        *,
+        args: tuple[bytes | str] | ReadFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -526,6 +533,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -547,13 +555,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,
-        *,
+        args: tuple[int, str] | OfferForSaleArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -569,6 +577,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -590,6 +599,7 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -611,6 +621,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -631,13 +642,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,
-        *,
+        args: tuple[int, str] | PostOfferArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -653,6 +664,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -674,13 +686,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,
-        *,
+        args: tuple[int, int] | MintPayoutArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -696,6 +708,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -717,13 +730,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -739,6 +752,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -760,13 +774,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,
-        *,
+        args: tuple[str, str] | IsAddressInFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -782,6 +796,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -803,6 +818,7 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -824,6 +840,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -844,13 +861,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_hash(
         self,
-        args: tuple[bytes | bytearray] | UpdateHashArgs,
-        *,
+        args: tuple[bytes | str] | UpdateHashArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -866,6 +883,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -887,13 +905,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,
-        *,
+        args: tuple[bool] | ContractLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -909,6 +927,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -930,13 +949,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,
-        *,
+        args: tuple[bool, int] | SegmentLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -952,6 +971,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -973,13 +993,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,
-        *,
+        args: tuple[bool] | VaultOptInLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -995,6 +1015,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1016,13 +1037,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,
-        *,
+        args: tuple[list[int]] | VaultOptInArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1038,6 +1059,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1059,13 +1081,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        *,
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1081,6 +1103,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1102,13 +1125,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1124,6 +1147,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1145,13 +1169,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,
-        *,
+        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1167,6 +1191,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1188,13 +1213,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1210,6 +1235,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1231,13 +1257,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1253,6 +1279,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1274,13 +1301,13 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        *,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1296,6 +1323,7 @@ class NfdInstanceParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1317,6 +1345,7 @@ class NfdInstanceParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1324,14 +1353,13 @@ class NfdInstanceParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _NfdInstanceUpdateTransaction:
+class _NFDInstanceUpdateTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,
-        *,
+        args: tuple[str] | UpdateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1347,6 +1375,7 @@ class _NfdInstanceUpdateTransaction:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1368,16 +1397,17 @@ class _NfdInstanceUpdateTransaction:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
 
 
-class NfdInstanceCreateTransactionParams:
+class NFDInstanceCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NfdInstanceUpdateTransaction":
-        return _NfdInstanceUpdateTransaction(self.app_client)
+    def update(self) -> "_NFDInstanceUpdateTransaction":
+        return _NFDInstanceUpdateTransaction(self.app_client)
     def gas(
         self,
             *,
@@ -1396,6 +1426,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -1416,13 +1447,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,
-        *,
+        args: tuple[str, str] | MintAsaArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1438,6 +1469,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1459,13 +1491,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1481,6 +1513,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1502,13 +1535,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,
-        *,
+        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1524,6 +1557,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1545,13 +1579,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
-        *,
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1567,6 +1601,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1588,13 +1623,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1610,6 +1645,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1631,13 +1667,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def read_field(
         self,
-        args: tuple[bytes | bytearray] | ReadFieldArgs,
-        *,
+        args: tuple[bytes | str] | ReadFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1653,6 +1689,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1674,13 +1711,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,
-        *,
+        args: tuple[int, str] | OfferForSaleArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1696,6 +1733,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1717,6 +1755,7 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1738,6 +1777,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -1758,13 +1798,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,
-        *,
+        args: tuple[int, str] | PostOfferArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1780,6 +1820,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1801,13 +1842,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,
-        *,
+        args: tuple[int, int] | MintPayoutArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1823,6 +1864,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1844,13 +1886,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1866,6 +1908,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1887,13 +1930,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,
-        *,
+        args: tuple[str, str] | IsAddressInFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1909,6 +1952,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1930,6 +1974,7 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1951,6 +1996,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -1971,13 +2017,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def update_hash(
         self,
-        args: tuple[bytes | bytearray] | UpdateHashArgs,
-        *,
+        args: tuple[bytes | str] | UpdateHashArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1993,6 +2039,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2014,13 +2061,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,
-        *,
+        args: tuple[bool] | ContractLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2036,6 +2083,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2057,13 +2105,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,
-        *,
+        args: tuple[bool, int] | SegmentLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2079,6 +2127,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2100,13 +2149,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,
-        *,
+        args: tuple[bool] | VaultOptInLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2122,6 +2171,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2143,13 +2193,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,
-        *,
+        args: tuple[list[int]] | VaultOptInArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2165,6 +2215,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2186,13 +2237,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        *,
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2208,6 +2259,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2229,13 +2281,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2251,6 +2303,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2272,13 +2325,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,
-        *,
+        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2294,6 +2347,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2315,13 +2369,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2337,6 +2391,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2358,13 +2413,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2380,6 +2435,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2401,13 +2457,13 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        *,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2423,6 +2479,7 @@ class NfdInstanceCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -2444,6 +2501,7 @@ class NfdInstanceCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -2451,14 +2509,13 @@ class NfdInstanceCreateTransactionParams:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _NfdInstanceUpdateSend:
+class _NFDInstanceUpdateSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,
-        *,
+        args: tuple[str] | UpdateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2474,6 +2531,7 @@ class _NfdInstanceUpdateSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2495,17 +2553,18 @@ class _NfdInstanceUpdateSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
         return transactions.SendAppUpdateTransactionResult[None](**dataclasses.asdict(response))
 
 
-class NfdInstanceSend:
+class NFDInstanceSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NfdInstanceUpdateSend":
-        return _NfdInstanceUpdateSend(self.app_client)
+    def update(self) -> "_NFDInstanceUpdateSend":
+        return _NFDInstanceUpdateSend(self.app_client)
     def gas(
         self,
             *,
@@ -2524,6 +2583,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
     
@@ -2544,14 +2604,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,
-        *,
+        args: tuple[str, str] | MintAsaArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2567,6 +2627,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2588,14 +2649,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2611,6 +2672,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2632,14 +2694,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,
-        *,
+        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2655,6 +2717,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2676,14 +2739,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
-        *,
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2699,6 +2762,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2720,14 +2784,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def update_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2743,6 +2807,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2764,14 +2829,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def read_field(
         self,
-        args: tuple[bytes | bytearray] | ReadFieldArgs,
-        *,
+        args: tuple[bytes | str] | ReadFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2787,8 +2852,9 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
-    ) -> transactions.SendAppTransactionResult[bytes | bytearray]:
+    ) -> transactions.SendAppTransactionResult[bytes]:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="readField(byte[])byte[]",
@@ -2808,14 +2874,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bytes | bytearray](**dataclasses.asdict(response))
+        return transactions.SendAppTransactionResult[bytes](**dataclasses.asdict(response))
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,
-        *,
+        args: tuple[int, str] | OfferForSaleArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2831,6 +2897,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2852,6 +2919,7 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
@@ -2874,6 +2942,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
     
@@ -2894,14 +2963,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,
-        *,
+        args: tuple[int, str] | PostOfferArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2917,6 +2986,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2938,14 +3008,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,
-        *,
+        args: tuple[int, int] | MintPayoutArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2961,6 +3031,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[PayoutInfo]:
         method_args = _parse_abi_args(args)
@@ -2982,14 +3053,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[PayoutInfo](**(dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))).__dict__)
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3005,6 +3076,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3026,14 +3098,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,
-        *,
+        args: tuple[str, str] | IsAddressInFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3049,6 +3121,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
@@ -3070,6 +3143,7 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
@@ -3092,6 +3166,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
     
@@ -3112,14 +3187,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def update_hash(
         self,
-        args: tuple[bytes | bytearray] | UpdateHashArgs,
-        *,
+        args: tuple[bytes | str] | UpdateHashArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3135,6 +3210,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3156,14 +3232,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,
-        *,
+        args: tuple[bool] | ContractLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3179,6 +3255,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3200,14 +3277,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,
-        *,
+        args: tuple[bool, int] | SegmentLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3223,6 +3300,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3244,14 +3322,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,
-        *,
+        args: tuple[bool] | VaultOptInLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3267,6 +3345,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3288,14 +3367,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,
-        *,
+        args: tuple[list[int]] | VaultOptInArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3311,6 +3390,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3332,14 +3412,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        *,
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3355,6 +3435,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3376,14 +3457,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3399,6 +3480,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3420,14 +3502,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,
-        *,
+        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3443,6 +3525,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3464,14 +3547,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3487,6 +3570,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
@@ -3508,14 +3592,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3531,6 +3615,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
@@ -3552,14 +3637,14 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        *,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3575,6 +3660,7 @@ class NfdInstanceSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -3596,6 +3682,7 @@ class NfdInstanceSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
@@ -3604,7 +3691,7 @@ class NfdInstanceSend:
         return self.app_client.send.bare.clear_state(params)
 
 
-class NfdInstanceState:
+class NFDInstanceState:
     """Methods to access state for the current NFDInstance app"""
 
     def __init__(self, app_client: applications.AppClient):
@@ -3624,53 +3711,101 @@ class _GlobalState:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return result
-@property
+        if not result:
+            return {}
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return converted
+
+    @property
     def global_state(self) -> "_MapState[bytes, bytes]":
         """Get values from the global_state map in global_state state"""
         return _MapState(
             self.app_client.state.global_state,
-            "global_state"
+            "global_state",
+            None
         )
 
 class _BoxState:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        return result
-@property
+        if not result:
+            return {}
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.box.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return converted
+
+    @property
     def boxes(self) -> "_MapState[bytes, bytes]":
         """Get values from the boxes map in box state"""
         return _MapState(
             self.app_client.state.box,
-            "boxes"
+            "boxes",
+            None
         )
+
+KeyType = typing.TypeVar("KeyType")
+ValueType = typing.TypeVar("ValueType")
+
+class _AppClientStateMethodsProtocol(typing.Protocol):
+    def get_map(self, map_name: str) -> dict[typing.Any, typing.Any]:
+        ...
+    def get_map_value(self, map_name: str, key: typing.Any) -> typing.Any | None:
+        ...
 
 class _MapState(typing.Generic[KeyType, ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
+                struct_class: typing.Type[ValueType] | None = None):
         self._state_accessor = state_accessor
         self._map_name = map_name
+        self._struct_class = struct_class
 
     def get_map(self) -> dict[KeyType, ValueType]:
         """Get all current values in the map"""
-        return typing.cast(dict[KeyType, ValueType], self._state_accessor.get_map(self._map_name))
+        result = self._state_accessor.get_map(self._map_name)
+        if self._struct_class and result:
+            return {k: self._struct_class(**v) if isinstance(v, dict) else v
+                    for k, v in result.items()}
+        return typing.cast(dict[KeyType, ValueType], result or {})
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        return typing.cast(ValueType | None, self._state_accessor.get_map_value(self._map_name, key))
+        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key)
+        if value is not None and self._struct_class and isinstance(value, dict):
+            return self._struct_class(**value)
+        return typing.cast(ValueType | None, value)
 
 
-class NfdInstanceClient:
+class NFDInstanceClient:
     """Client for interacting with NFDInstance smart contract"""
 
     @typing.overload
@@ -3719,10 +3854,10 @@ class NfdInstanceClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = NfdInstanceParams(self.app_client)
-        self.create_transaction = NfdInstanceCreateTransactionParams(self.app_client)
-        self.send = NfdInstanceSend(self.app_client)
-        self.state = NfdInstanceState(self.app_client)
+        self.params = NFDInstanceParams(self.app_client)
+        self.create_transaction = NFDInstanceCreateTransactionParams(self.app_client)
+        self.send = NFDInstanceSend(self.app_client)
+        self.state = NFDInstanceState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -3735,8 +3870,8 @@ class NfdInstanceClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "NfdInstanceClient":
-        return NfdInstanceClient(
+    ) -> "NFDInstanceClient":
+        return NFDInstanceClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -3759,8 +3894,8 @@ class NfdInstanceClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NfdInstanceClient":
-        return NfdInstanceClient(
+    ) -> "NFDInstanceClient":
+        return NFDInstanceClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -3799,8 +3934,8 @@ class NfdInstanceClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NfdInstanceClient":
-        return NfdInstanceClient(
+    ) -> "NFDInstanceClient":
+        return NFDInstanceClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -3810,30 +3945,204 @@ class NfdInstanceClient:
             )
         )
 
-    def new_group(self) -> "NfdInstanceComposer":
-        return NfdInstanceComposer(self)
+    def new_group(self) -> "NFDInstanceComposer":
+        return NFDInstanceComposer(self)
+
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["gas()void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["mintAsa(string,string)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["deleteFields(byte[][])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["updateSegmentCount(string,uint64)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["getFieldUpdateCost(byte[][])uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["updateFields(byte[][])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["readField(byte[])byte[]"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> bytes | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["offerForSale(uint64,address)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["cancelSale()void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["postOffer(uint64,string)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> PayoutInfo | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["purchase(pay)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["isAddressInField(string,address)bool"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> bool | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["getRenewPrice()uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["updateHash(byte[])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["contractLock(bool)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["segmentLock(bool,uint64)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["vaultOptInLock(bool)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["vaultOptIn(uint64[])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["vaultSend(uint64,address,string,uint64,uint64[])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["renew(pay)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["setPrimaryAddress(string,address)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["registryAddingVerifiedAddress(string,string)bool"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> bool | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["registryRemovingVerifiedAddress(string,address,address)bool"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> bool | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["updateApplication(string)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: str,
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
 
     def decode_return_value(
         self,
         method: str,
         return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | PayoutInfo | bool | bytes | int:
+        """Decode ABI return value for the given method."""
         if return_value is None:
             return None
     
         arc56_method = self.app_spec.get_arc56_method(method)
-        return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+    
+        # If method returns a struct, convert the dict to appropriate dataclass
+        if (arc56_method and
+            arc56_method.returns and
+            arc56_method.returns.struct and
+            isinstance(decoded, dict)):
+            struct_class = globals().get(arc56_method.returns.struct)
+            if struct_class:
+                return struct_class(**typing.cast(dict, decoded))
+        return decoded
 
 
 @dataclasses.dataclass(frozen=True)
-class NfdInstanceMethodCallCreateParams(
+class NFDInstanceMethodCallCreateParams(
     applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
         tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
         typing.Literal["createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void"],
         typing.Literal[OnComplete.NoOpOC]
     ]
 ):
-    """Parameters for creating NfdInstance contract using ABI"""
+    """Parameters for creating NFDInstance contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
@@ -3845,14 +4154,14 @@ class NfdInstanceMethodCallCreateParams(
         )
 
 @dataclasses.dataclass(frozen=True)
-class NfdInstanceMethodCallUpdateParams(
+class NFDInstanceMethodCallUpdateParams(
     applications.BaseAppClientMethodCallParams[
         tuple[str] | UpdateApplicationArgs,
         typing.Literal["updateApplication(string)void"],
         typing.Literal[OnComplete.UpdateApplicationOC]
     ]
 ):
-    """Parameters for calling NfdInstance contract using ABI"""
+    """Parameters for calling NFDInstance contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
         method_args = _parse_abi_args(self.args)
@@ -3863,8 +4172,8 @@ class NfdInstanceMethodCallUpdateParams(
             }
         )
 
-class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing NfdInstanceClient smart contracts"""
+class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing NFDInstanceClient smart contracts"""
 
     def __init__(
         self,
@@ -3891,18 +4200,18 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = NfdInstanceFactoryParams(self.app_factory)
-        self.create_transaction = NfdInstanceFactoryCreateTransaction(self.app_factory)
-        self.send = NfdInstanceFactorySend(self.app_factory)
+        self.params = NFDInstanceFactoryParams(self.app_factory)
+        self.create_transaction = NFDInstanceFactoryCreateTransaction(self.app_factory)
+        self.send = NFDInstanceFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
         return self.app_factory.app_name
-
+    
     @property
     def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
-
+    
     @property
     def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
@@ -3913,8 +4222,8 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: NfdInstanceMethodCallCreateParams | None = None,
-        update_params: NfdInstanceMethodCallUpdateParams | None = None,
+        create_params: NFDInstanceMethodCallCreateParams | None = None,
+        update_params: NFDInstanceMethodCallUpdateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -3923,7 +4232,8 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[NfdInstanceClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[NFDInstanceClient, applications.AppFactoryDeployResponse]:
+        """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -3940,7 +4250,7 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return NfdInstanceClient(deploy_response[0]), deploy_response[1]
+        return NFDInstanceClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -3952,9 +4262,9 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NfdInstanceClient:
+    ) -> NFDInstanceClient:
         """Get an app client by creator address and name"""
-        return NfdInstanceClient(
+        return NFDInstanceClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -3975,9 +4285,9 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NfdInstanceClient:
+    ) -> NFDInstanceClient:
         """Get an app client by app ID"""
-        return NfdInstanceClient(
+        return NFDInstanceClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -3989,17 +4299,17 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class NfdInstanceFactoryParams:
-    """Parameters for creating transactions for NfdInstance contract"""
+class NFDInstanceFactoryParams:
+    """Parameters for creating transactions for NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NfdInstanceFactoryCreateParams(app_factory)
-        self.deploy_update = NfdInstanceFactoryUpdateParams(app_factory)
-        self.deploy_delete = NfdInstanceFactoryDeleteParams(app_factory)
+        self.create = NFDInstanceFactoryCreateParams(app_factory)
+        self.update = NFDInstanceFactoryUpdateParams(app_factory)
+        self.delete = NFDInstanceFactoryDeleteParams(app_factory)
 
-class NfdInstanceFactoryCreateParams:
-    """Parameters for 'create' operations of NfdInstance contract"""
+class NFDInstanceFactoryCreateParams:
+    """Parameters for 'create' operations of NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4008,12 +4318,12 @@ class NfdInstanceFactoryCreateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
@@ -4022,631 +4332,628 @@ class NfdInstanceFactoryCreateParams:
         )
 
     def gas(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the gas()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="gas()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the gas()void ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="gas()void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def mint_asa(
-            self,
-            args: tuple[str, str] | MintAsaArgs,
+        self,
+        args: tuple[str, str] | MintAsaArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the mintAsa(string,string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="mintAsa(string,string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the mintAsa(string,string)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="mintAsa(string,string)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def delete_fields(
-            self,
-            args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
+        self,
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the deleteFields(byte[][])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="deleteFields(byte[][])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the deleteFields(byte[][])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="deleteFields(byte[][])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def update_segment_count(
-            self,
-            args: tuple[str, int] | UpdateSegmentCountArgs,
+        self,
+        args: tuple[str, int] | UpdateSegmentCountArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateSegmentCount(string,uint64)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="updateSegmentCount(string,uint64)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def get_field_update_cost(
-            self,
-            args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
+        self,
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="getFieldUpdateCost(byte[][])uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="getFieldUpdateCost(byte[][])uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def update_fields(
-            self,
-            args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
+        self,
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the updateFields(byte[][])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateFields(byte[][])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the updateFields(byte[][])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="updateFields(byte[][])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def read_field(
-            self,
-            args: tuple[bytes | bytearray] | ReadFieldArgs,
+        self,
+        args: tuple[bytes | str] | ReadFieldArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the readField(byte[])byte[] ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="readField(byte[])byte[]",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the readField(byte[])byte[] ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="readField(byte[])byte[]",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def offer_for_sale(
-            self,
-            args: tuple[int, str] | OfferForSaleArgs,
+        self,
+        args: tuple[int, str] | OfferForSaleArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="offerForSale(uint64,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="offerForSale(uint64,address)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def cancel_sale(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the cancelSale()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="cancelSale()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the cancelSale()void ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="cancelSale()void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def post_offer(
-            self,
-            args: tuple[int, str] | PostOfferArgs,
+        self,
+        args: tuple[int, str] | PostOfferArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the postOffer(uint64,string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="postOffer(uint64,string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the postOffer(uint64,string)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="postOffer(uint64,string)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def mint_payout(
-            self,
-            args: tuple[int, int] | MintPayoutArgs,
+        self,
+        args: tuple[int, int] | MintPayoutArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def purchase(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
+        self,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the purchase(pay)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="purchase(pay)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the purchase(pay)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="purchase(pay)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def is_address_in_field(
-            self,
-            args: tuple[str, str] | IsAddressInFieldArgs,
+        self,
+        args: tuple[str, str] | IsAddressInFieldArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="isAddressInField(string,address)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="isAddressInField(string,address)bool",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def get_renew_price(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the getRenewPrice()uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="getRenewPrice()uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the getRenewPrice()uint64 ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="getRenewPrice()uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def update_hash(
-            self,
-            args: tuple[bytes | bytearray] | UpdateHashArgs,
+        self,
+        args: tuple[bytes | str] | UpdateHashArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the updateHash(byte[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateHash(byte[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the updateHash(byte[])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="updateHash(byte[])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def contract_lock(
-            self,
-            args: tuple[bool] | ContractLockArgs,
+        self,
+        args: tuple[bool] | ContractLockArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the contractLock(bool)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="contractLock(bool)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the contractLock(bool)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="contractLock(bool)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def segment_lock(
-            self,
-            args: tuple[bool, int] | SegmentLockArgs,
+        self,
+        args: tuple[bool, int] | SegmentLockArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="segmentLock(bool,uint64)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="segmentLock(bool,uint64)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def vault_opt_in_lock(
-            self,
-            args: tuple[bool] | VaultOptInLockArgs,
+        self,
+        args: tuple[bool] | VaultOptInLockArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultOptInLock(bool)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="vaultOptInLock(bool)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def vault_opt_in(
-            self,
-            args: tuple[list[int]] | VaultOptInArgs,
+        self,
+        args: tuple[list[int]] | VaultOptInArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultOptIn(uint64[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="vaultOptIn(uint64[])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def vault_send(
-            self,
-            args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
+        self,
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="vaultSend(uint64,address,string,uint64,uint64[])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def renew(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
+        self,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the renew(pay)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="renew(pay)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the renew(pay)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="renew(pay)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def set_primary_address(
-            self,
-            args: tuple[str, str] | SetPrimaryAddressArgs,
+        self,
+        args: tuple[str, str] | SetPrimaryAddressArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="setPrimaryAddress(string,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="setPrimaryAddress(string,address)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def registry_adding_verified_address(
-            self,
-            args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
+        self,
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="registryAddingVerifiedAddress(string,string)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="registryAddingVerifiedAddress(string,string)bool",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def registry_removing_verified_address(
-            self,
-            args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
+        self,
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="registryRemovingVerifiedAddress(string,address,address)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="registryRemovingVerifiedAddress(string,address,address)bool",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def create_application(
-            self,
-            args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        self,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def update_application(
-            self,
-            args: tuple[str] | UpdateApplicationArgs,
+        self,
+        args: tuple[str] | UpdateApplicationArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the updateApplication(string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateApplication(string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the updateApplication(string)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="updateApplication(string)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
-class NfdInstanceFactoryUpdateParams:
-    """Parameters for 'update' operations of NfdInstance contract"""
+class NFDInstanceFactoryUpdateParams:
+    """Parameters for 'update' operations of NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4655,12 +4962,12 @@ class NfdInstanceFactoryUpdateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
@@ -4668,8 +4975,8 @@ class NfdInstanceFactoryUpdateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class NfdInstanceFactoryDeleteParams:
-    """Parameters for 'delete' operations of NfdInstance contract"""
+class NFDInstanceFactoryDeleteParams:
+    """Parameters for 'delete' operations of NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4678,12 +4985,12 @@ class NfdInstanceFactoryDeleteParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
@@ -4692,640 +4999,16 @@ class NfdInstanceFactoryDeleteParams:
         )
 
 
-class NfdInstanceFactoryCreateTransaction:
-    """Create transactions for NfdInstance contract"""
+class NFDInstanceFactoryCreateTransaction:
+    """Create transactions for NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NfdInstanceFactoryCreateTransactionCreate(app_factory)
-
-    def gas(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the gas()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="gas()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def mint_asa(
-            self,
-            args: tuple[str, str] | MintAsaArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the mintAsa(string,string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="mintAsa(string,string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def delete_fields(
-            self,
-            args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the deleteFields(byte[][])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="deleteFields(byte[][])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def update_segment_count(
-            self,
-            args: tuple[str, int] | UpdateSegmentCountArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the updateSegmentCount(string,uint64)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateSegmentCount(string,uint64)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def get_field_update_cost(
-            self,
-            args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the getFieldUpdateCost(byte[][])uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="getFieldUpdateCost(byte[][])uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def update_fields(
-            self,
-            args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the updateFields(byte[][])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateFields(byte[][])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def read_field(
-            self,
-            args: tuple[bytes | bytearray] | ReadFieldArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the readField(byte[])byte[] ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="readField(byte[])byte[]",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def offer_for_sale(
-            self,
-            args: tuple[int, str] | OfferForSaleArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the offerForSale(uint64,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="offerForSale(uint64,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def cancel_sale(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the cancelSale()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="cancelSale()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def post_offer(
-            self,
-            args: tuple[int, str] | PostOfferArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the postOffer(uint64,string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="postOffer(uint64,string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def mint_payout(
-            self,
-            args: tuple[int, int] | MintPayoutArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def purchase(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the purchase(pay)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="purchase(pay)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def is_address_in_field(
-            self,
-            args: tuple[str, str] | IsAddressInFieldArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the isAddressInField(string,address)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="isAddressInField(string,address)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def get_renew_price(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the getRenewPrice()uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="getRenewPrice()uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def update_hash(
-            self,
-            args: tuple[bytes | bytearray] | UpdateHashArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the updateHash(byte[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateHash(byte[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def contract_lock(
-            self,
-            args: tuple[bool] | ContractLockArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the contractLock(bool)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="contractLock(bool)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def segment_lock(
-            self,
-            args: tuple[bool, int] | SegmentLockArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the segmentLock(bool,uint64)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="segmentLock(bool,uint64)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def vault_opt_in_lock(
-            self,
-            args: tuple[bool] | VaultOptInLockArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the vaultOptInLock(bool)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultOptInLock(bool)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def vault_opt_in(
-            self,
-            args: tuple[list[int]] | VaultOptInArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the vaultOptIn(uint64[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultOptIn(uint64[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def vault_send(
-            self,
-            args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def renew(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the renew(pay)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="renew(pay)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def set_primary_address(
-            self,
-            args: tuple[str, str] | SetPrimaryAddressArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the setPrimaryAddress(string,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="setPrimaryAddress(string,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def registry_adding_verified_address(
-            self,
-            args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the registryAddingVerifiedAddress(string,string)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="registryAddingVerifiedAddress(string,string)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def registry_removing_verified_address(
-            self,
-            args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="registryRemovingVerifiedAddress(string,address,address)bool",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def create_application(
-            self,
-            args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def update_application(
-            self,
-            args: tuple[str] | UpdateApplicationArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the updateApplication(string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="updateApplication(string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
+        self.create = NFDInstanceFactoryCreateTransactionCreate(app_factory)
 
 
-class NfdInstanceFactoryCreateTransactionCreate:
-    """Create new instances of NfdInstance contract"""
+class NFDInstanceFactoryCreateTransactionCreate:
+    """Create new instances of NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -5334,12 +5017,12 @@ class NfdInstanceFactoryCreateTransactionCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> Transaction:
         """Creates a new instance using a bare call"""
@@ -5348,16 +5031,16 @@ class NfdInstanceFactoryCreateTransactionCreate:
         )
 
 
-class NfdInstanceFactorySend:
-    """Send calls to NfdInstance contract"""
+class NFDInstanceFactorySend:
+    """Send calls to NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NfdInstanceFactorySendCreate(app_factory)
+        self.create = NFDInstanceFactorySendCreate(app_factory)
 
 
-class NfdInstanceFactorySendCreate:
-    """Send create calls to NfdInstance contract"""
+class NFDInstanceFactorySendCreate:
+    """Send create calls to NFDInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -5366,33 +5049,33 @@ class NfdInstanceFactorySendCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
-    ) -> tuple[NfdInstanceClient, transactions.SendAppCreateTransactionResult]:
+    ) -> tuple[NFDInstanceClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
-        return NfdInstanceClient(result[0]), result[1]
+        return NFDInstanceClient(result[0]), result[1]
 
     def create_application(
-            self,
-            args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        self,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> tuple[NfdInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> tuple[NFDInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
             method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
@@ -5405,7 +5088,7 @@ class NfdInstanceFactorySendCreate:
             )
             return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
     
-            return NfdInstanceClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
+            return NFDInstanceClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
                 app_id=result[1].app_id,
                 abi_return=return_value,
                 transaction=result[1].transaction,
@@ -5418,13 +5101,12 @@ class NfdInstanceFactorySendCreate:
             )
 
 
-class _NfdInstanceUpdateComposer:
-    def __init__(self, composer: "NfdInstanceComposer"):
+class _NFDInstanceUpdateComposer:
+    def __init__(self, composer: "NFDInstanceComposer"):
         self.composer = composer
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,
-        *,
+        args: tuple[str] | UpdateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5440,8 +5122,9 @@ class _NfdInstanceUpdateComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NfdInstanceComposer":
+    ) -> "NFDInstanceComposer":
         method_args = _parse_abi_args(args)
     
         self.composer._composer.add_app_call_method_call(
@@ -5462,6 +5145,7 @@ class _NfdInstanceUpdateComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self.composer._result_mappers.append(
@@ -5472,17 +5156,17 @@ class _NfdInstanceUpdateComposer:
         return self.composer
 
 
-class NfdInstanceComposer:
-    """Composer for creating transaction groups for NfdInstance contract calls"""
+class NFDInstanceComposer:
+    """Composer for creating transaction groups for NFDInstance contract calls"""
 
-    def __init__(self, client: "NfdInstanceClient"):
+    def __init__(self, client: "NFDInstanceClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
     @property
-    def update(self) -> "_NfdInstanceUpdateComposer":
-        return _NfdInstanceUpdateComposer(self)
+    def update(self) -> "_NFDInstanceUpdateComposer":
+        return _NFDInstanceUpdateComposer(self)
 
     def gas(
         self,
@@ -5502,8 +5186,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.gas(
                 
@@ -5522,6 +5207,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5533,8 +5219,7 @@ class NfdInstanceComposer:
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,
-        *,
+        args: tuple[str, str] | MintAsaArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5550,8 +5235,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_asa(
                 args=args, # type: ignore
@@ -5570,6 +5256,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5581,8 +5268,7 @@ class NfdInstanceComposer:
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | DeleteFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5598,8 +5284,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.delete_fields(
                 args=args, # type: ignore
@@ -5618,6 +5305,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5629,8 +5317,7 @@ class NfdInstanceComposer:
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,
-        *,
+        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5646,8 +5333,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_segment_count(
                 args=args, # type: ignore
@@ -5666,6 +5354,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5677,8 +5366,7 @@ class NfdInstanceComposer:
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | bytearray]] | GetFieldUpdateCostArgs,
-        *,
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5694,8 +5382,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_field_update_cost(
                 args=args, # type: ignore
@@ -5714,6 +5403,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5725,8 +5415,7 @@ class NfdInstanceComposer:
 
     def update_fields(
         self,
-        args: tuple[list[bytes | bytearray]] | UpdateFieldsArgs,
-        *,
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5742,8 +5431,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_fields(
                 args=args, # type: ignore
@@ -5762,6 +5452,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5773,8 +5464,7 @@ class NfdInstanceComposer:
 
     def read_field(
         self,
-        args: tuple[bytes | bytearray] | ReadFieldArgs,
-        *,
+        args: tuple[bytes | str] | ReadFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5790,8 +5480,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.read_field(
                 args=args, # type: ignore
@@ -5810,6 +5501,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5821,8 +5513,7 @@ class NfdInstanceComposer:
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,
-        *,
+        args: tuple[int, str] | OfferForSaleArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5838,8 +5529,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.offer_for_sale(
                 args=args, # type: ignore
@@ -5858,6 +5550,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5885,8 +5578,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.cancel_sale(
                 
@@ -5905,6 +5599,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5916,8 +5611,7 @@ class NfdInstanceComposer:
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,
-        *,
+        args: tuple[int, str] | PostOfferArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5933,8 +5627,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.post_offer(
                 args=args, # type: ignore
@@ -5953,6 +5648,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5964,8 +5660,7 @@ class NfdInstanceComposer:
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,
-        *,
+        args: tuple[int, int] | MintPayoutArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5981,8 +5676,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_payout(
                 args=args, # type: ignore
@@ -6001,6 +5697,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6012,8 +5709,7 @@ class NfdInstanceComposer:
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6029,8 +5725,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.purchase(
                 args=args, # type: ignore
@@ -6049,6 +5746,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6060,8 +5758,7 @@ class NfdInstanceComposer:
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,
-        *,
+        args: tuple[str, str] | IsAddressInFieldArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6077,8 +5774,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.is_address_in_field(
                 args=args, # type: ignore
@@ -6097,6 +5795,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6124,8 +5823,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_renew_price(
                 
@@ -6144,6 +5844,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6155,8 +5856,7 @@ class NfdInstanceComposer:
 
     def update_hash(
         self,
-        args: tuple[bytes | bytearray] | UpdateHashArgs,
-        *,
+        args: tuple[bytes | str] | UpdateHashArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6172,8 +5872,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_hash(
                 args=args, # type: ignore
@@ -6192,6 +5893,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6203,8 +5905,7 @@ class NfdInstanceComposer:
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,
-        *,
+        args: tuple[bool] | ContractLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6220,8 +5921,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.contract_lock(
                 args=args, # type: ignore
@@ -6240,6 +5942,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6251,8 +5954,7 @@ class NfdInstanceComposer:
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,
-        *,
+        args: tuple[bool, int] | SegmentLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6268,8 +5970,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.segment_lock(
                 args=args, # type: ignore
@@ -6288,6 +5991,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6299,8 +6003,7 @@ class NfdInstanceComposer:
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,
-        *,
+        args: tuple[bool] | VaultOptInLockArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6316,8 +6019,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in_lock(
                 args=args, # type: ignore
@@ -6336,6 +6040,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6347,8 +6052,7 @@ class NfdInstanceComposer:
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,
-        *,
+        args: tuple[list[int]] | VaultOptInArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6364,8 +6068,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in(
                 args=args, # type: ignore
@@ -6384,6 +6089,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6395,8 +6101,7 @@ class NfdInstanceComposer:
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        *,
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6412,8 +6117,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_send(
                 args=args, # type: ignore
@@ -6432,6 +6138,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6443,8 +6150,7 @@ class NfdInstanceComposer:
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6460,8 +6166,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.renew(
                 args=args, # type: ignore
@@ -6480,6 +6187,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6491,8 +6199,7 @@ class NfdInstanceComposer:
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,
-        *,
+        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6508,8 +6215,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_primary_address(
                 args=args, # type: ignore
@@ -6528,6 +6236,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6539,8 +6248,7 @@ class NfdInstanceComposer:
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6556,8 +6264,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_adding_verified_address(
                 args=args, # type: ignore
@@ -6576,6 +6285,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6587,8 +6297,7 @@ class NfdInstanceComposer:
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        *,
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6604,8 +6313,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_removing_verified_address(
                 args=args, # type: ignore
@@ -6624,6 +6334,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6635,8 +6346,7 @@ class NfdInstanceComposer:
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        *,
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -6652,8 +6362,9 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-        
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
                 args=args, # type: ignore
@@ -6672,6 +6383,7 @@ class NfdInstanceComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -6699,7 +6411,8 @@ class NfdInstanceComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
-    ) -> "NfdInstanceComposer":
+        populate_app_call_resources: bool = False,
+    ) -> "NFDInstanceComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -6718,6 +6431,7 @@ class NfdInstanceComposer:
                     static_fee=static_fee,
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
+                    populate_app_call_resources=populate_app_call_resources,
                 )
             )
         )
@@ -6725,7 +6439,7 @@ class NfdInstanceComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "NfdInstanceComposer":
+    ) -> "NFDInstanceComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

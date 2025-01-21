@@ -16,6 +16,7 @@ def update_approvals() -> None:
         "lifecycle",
         "minimal",
         "voting",
+        "global_state_struct",
     ]:
         app_path = examples / app
         app_spec = app_path / "application.json"

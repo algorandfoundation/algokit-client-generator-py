@@ -52,12 +52,6 @@ class SomeStruct:
     a: int
     b: int
 
-@dataclasses.dataclass(frozen=True)
-class SomeStruct:
-    """Struct for SomeStruct"""
-    a: int
-    b: int
-
 
 class DuplicateStructsContractParams:
     def __init__(self, app_client: applications.AppClient):
@@ -80,6 +74,7 @@ class DuplicateStructsContractParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -100,6 +95,7 @@ class DuplicateStructsContractParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -121,6 +117,7 @@ class DuplicateStructsContractParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -141,6 +138,7 @@ class DuplicateStructsContractParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -169,6 +167,7 @@ class DuplicateStructsContractCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -189,6 +188,7 @@ class DuplicateStructsContractCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -210,6 +210,7 @@ class DuplicateStructsContractCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -230,6 +231,7 @@ class DuplicateStructsContractCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -258,6 +260,7 @@ class DuplicateStructsContractSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[SomeStruct]:
     
@@ -278,6 +281,7 @@ class DuplicateStructsContractSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[SomeStruct](**(dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return)))).__dict__)
@@ -300,6 +304,7 @@ class DuplicateStructsContractSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[SomeStruct]:
     
@@ -320,6 +325,7 @@ class DuplicateStructsContractSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[SomeStruct](**(dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return)))).__dict__)
@@ -477,16 +483,46 @@ class DuplicateStructsContractClient:
     def new_group(self) -> "DuplicateStructsContractComposer":
         return DuplicateStructsContractComposer(self)
 
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["method_a_that_uses_struct()(uint64,uint64)"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> SomeStruct | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["method_b_that_uses_same_struct()(uint64,uint64)"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> SomeStruct | None: ...
+    @typing.overload
     def decode_return_value(
         self,
         method: str,
         return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+
+    def decode_return_value(
+        self,
+        method: str,
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | SomeStruct:
+        """Decode ABI return value for the given method."""
         if return_value is None:
             return None
     
         arc56_method = self.app_spec.get_arc56_method(method)
-        return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+    
+        # If method returns a struct, convert the dict to appropriate dataclass
+        if (arc56_method and
+            arc56_method.returns and
+            arc56_method.returns.struct and
+            isinstance(decoded, dict)):
+            struct_class = globals().get(arc56_method.returns.struct)
+            if struct_class:
+                return struct_class(**typing.cast(dict, decoded))
+        return decoded
 
 
 @dataclasses.dataclass(frozen=True)
@@ -531,11 +567,11 @@ class DuplicateStructsContractFactory(applications.TypedAppFactoryProtocol):
     @property
     def app_name(self) -> str:
         return self.app_factory.app_name
-
+    
     @property
     def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
-
+    
     @property
     def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
@@ -556,6 +592,7 @@ class DuplicateStructsContractFactory(applications.TypedAppFactoryProtocol):
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
     ) -> tuple[DuplicateStructsContractClient, applications.AppFactoryDeployResponse]:
+        """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -626,8 +663,8 @@ class DuplicateStructsContractFactoryParams:
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = DuplicateStructsContractFactoryCreateParams(app_factory)
-        self.deploy_update = DuplicateStructsContractFactoryUpdateParams(app_factory)
-        self.deploy_delete = DuplicateStructsContractFactoryDeleteParams(app_factory)
+        self.update = DuplicateStructsContractFactoryUpdateParams(app_factory)
+        self.delete = DuplicateStructsContractFactoryDeleteParams(app_factory)
 
 class DuplicateStructsContractFactoryCreateParams:
     """Parameters for 'create' operations of DuplicateStructsContract contract"""
@@ -639,12 +676,12 @@ class DuplicateStructsContractFactoryCreateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
@@ -653,52 +690,50 @@ class DuplicateStructsContractFactoryCreateParams:
         )
 
     def method_a_that_uses_struct(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the method_a_that_uses_struct()(uint64,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="method_a_that_uses_struct()(uint64,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the method_a_that_uses_struct()(uint64,uint64) ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="method_a_that_uses_struct()(uint64,uint64)",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def method_b_that_uses_same_struct(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the method_b_that_uses_same_struct()(uint64,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="method_b_that_uses_same_struct()(uint64,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the method_b_that_uses_same_struct()(uint64,uint64) ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="method_b_that_uses_same_struct()(uint64,uint64)",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
 class DuplicateStructsContractFactoryUpdateParams:
     """Parameters for 'update' operations of DuplicateStructsContract contract"""
@@ -710,12 +745,12 @@ class DuplicateStructsContractFactoryUpdateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
@@ -733,12 +768,12 @@ class DuplicateStructsContractFactoryDeleteParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
@@ -754,54 +789,6 @@ class DuplicateStructsContractFactoryCreateTransaction:
         self.app_factory = app_factory
         self.create = DuplicateStructsContractFactoryCreateTransactionCreate(app_factory)
 
-    def method_a_that_uses_struct(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the method_a_that_uses_struct()(uint64,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="method_a_that_uses_struct()(uint64,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def method_b_that_uses_same_struct(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the method_b_that_uses_same_struct()(uint64,uint64) ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="method_b_that_uses_same_struct()(uint64,uint64)",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
 
 class DuplicateStructsContractFactoryCreateTransactionCreate:
     """Create new instances of DuplicateStructsContract contract"""
@@ -813,12 +800,12 @@ class DuplicateStructsContractFactoryCreateTransactionCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> Transaction:
         """Creates a new instance using a bare call"""
@@ -845,12 +832,12 @@ class DuplicateStructsContractFactorySendCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> tuple[DuplicateStructsContractClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
@@ -886,6 +873,7 @@ class DuplicateStructsContractComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "DuplicateStructsContractComposer":
         self._composer.add_app_call_method_call(
@@ -906,6 +894,7 @@ class DuplicateStructsContractComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -933,6 +922,7 @@ class DuplicateStructsContractComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "DuplicateStructsContractComposer":
         self._composer.add_app_call_method_call(
@@ -953,6 +943,7 @@ class DuplicateStructsContractComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -980,6 +971,7 @@ class DuplicateStructsContractComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
     ) -> "DuplicateStructsContractComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -999,6 +991,7 @@ class DuplicateStructsContractComposer:
                     static_fee=static_fee,
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
+                    populate_app_call_resources=populate_app_call_resources,
                 )
             )
         )

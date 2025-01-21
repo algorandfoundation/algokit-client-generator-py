@@ -1,9 +1,158 @@
 import re
 from collections.abc import Iterable
+from enum import Enum
+from typing import TYPE_CHECKING
 
 from algosdk import abi
 
 from algokit_client_generator.document import DocumentParts, Part
+
+if TYPE_CHECKING:
+    from algokit_client_generator.spec import ABIStruct
+
+
+NEW_LINE = "\n"
+
+
+from typing import Protocol
+
+
+class Sanitizer(Protocol):
+    def make_safe_type_identifier(self, value: str) -> str:
+        """Convert string to a safe type identifier (PascalCase)"""
+        ...
+
+    def make_safe_method_identifier(self, value: str) -> str:
+        """Convert string to a safe method identifier (snake_case)"""
+        ...
+
+    def make_safe_variable_identifier(self, value: str) -> str:
+        """Convert string to a safe variable identifier (snake_case)"""
+        ...
+
+    def make_safe_property_identifier(self, value: str) -> str:
+        """Convert string to a safe property identifier (snake_case)"""
+        ...
+
+    def make_safe_string_type_literal(self, value: str) -> str:
+        """Convert string to a safe string literal by escaping quotes"""
+        ...
+
+    def get_safe_member_accessor(self, value: str) -> str:
+        """Get safe member accessor syntax"""
+        ...
+
+    def is_safe_variable_identifier(self, value: str) -> bool:
+        """Check if string is a safe variable identifier"""
+        ...
+
+
+class BaseSanitizer:
+    def replace_invalid_with_underscore(self, value: str) -> str:
+        return re.sub(r"[^a-z0-9_$]+", "_", value, flags=re.IGNORECASE)
+
+    def escape_quotes(self, value: str) -> str:
+        return re.sub(r'[\'"]', lambda m: f"\\{m.group(0)}", value)
+
+    def remove_enclosing_quotes(self, value: str) -> str:
+        return re.sub(r'^"|"$', "", value)
+
+    def is_safe_variable_identifier(self, value: str) -> bool:
+        return bool(re.match(r"^[a-z$_][a-z0-9_$]*$", value, re.IGNORECASE))
+
+
+class DefaultSanitizer(BaseSanitizer):
+    def make_safe_property_identifier(self, value: str) -> str:
+        safe_value = self.replace_invalid_with_underscore(value)
+        return to_snake_case(safe_value)
+
+    def make_safe_type_identifier(self, value: str) -> str:
+        safe_value = self.replace_invalid_with_underscore(value)
+        return to_pascal_case(safe_value)
+
+    def make_safe_method_identifier(self, value: str) -> str:
+        safe_value = self.replace_invalid_with_underscore(value)
+        return to_snake_case(safe_value)
+
+    def make_safe_variable_identifier(self, value: str) -> str:
+        safe_value = self.replace_invalid_with_underscore(value)
+        return to_snake_case(safe_value)
+
+    def make_safe_string_type_literal(self, value: str) -> str:
+        return self.escape_quotes(value)
+
+    def get_safe_member_accessor(self, value: str) -> str:
+        if self.is_safe_variable_identifier(value):
+            return f".{value}"
+        return f"['{self.make_safe_string_type_literal(value)}']"
+
+
+class PreservingSanitizer(BaseSanitizer):
+    def make_safe_method_identifier(self, value: str) -> str:
+        if self.is_safe_variable_identifier(value):
+            return value
+        return f'"{self.make_safe_string_type_literal(value)}"'
+
+    def make_safe_property_identifier(self, value: str) -> str:
+        if self.is_safe_variable_identifier(value):
+            return value
+        return f'"{self.make_safe_string_type_literal(value)}"'
+
+    def make_safe_type_identifier(self, value: str) -> str:
+        return self.replace_invalid_with_underscore(value)
+
+    def make_safe_variable_identifier(self, value: str) -> str:
+        return self.replace_invalid_with_underscore(value)
+
+    def make_safe_string_type_literal(self, value: str) -> str:
+        return self.escape_quotes(value)
+
+    def get_safe_member_accessor(self, value: str) -> str:
+        if self.is_safe_variable_identifier(value):
+            return f".{value}"
+        return f"['{self.remove_enclosing_quotes(value)}']"
+
+
+def get_sanitizer(*, preserve_names: bool = False) -> Sanitizer:
+    """Get appropriate sanitizer based on configuration"""
+    return PreservingSanitizer() if preserve_names else DefaultSanitizer()
+
+
+# Helper functions
+def to_pascal_case(value: str) -> str:
+    """Convert string to PascalCase"""
+    parts = value.split("_")
+    result = []
+    for part in parts:
+        if not part:
+            continue
+        # If the part is already in PascalCase (has mixed case), keep it as is
+        if any(c.isupper() for c in part[1:]):
+            result.append(part)
+        else:
+            # Otherwise capitalize the first letter
+            result.append(part[0].upper() + part[1:].lower() if part else "")
+    return "".join(result)
+
+
+def to_snake_case(text: str) -> str:
+    """Convert string to snake_case"""
+    if not text:
+        return text
+
+    chars = []
+    for i, char in enumerate(text):
+        if i > 0 and (char.isupper() or not char.isalnum()):
+            chars.append("_")
+        if char.isalnum():
+            chars.append(char.lower())
+
+    return "".join(chars).strip("_")
+
+
+class IOType(Enum):
+    INPUT = "input"
+    OUTPUT = "output"
 
 
 def get_parts(value: str) -> list[str]:
@@ -12,33 +161,47 @@ def get_parts(value: str) -> list[str]:
 
 
 def get_class_name(name: str, string_suffix: str = "") -> str:
-    parts = [p.title() for p in get_parts(name)]
+    sanitizer = get_sanitizer(preserve_names=False)
+    base_name = sanitizer.make_safe_type_identifier(name)
     if string_suffix:
-        parts.append(string_suffix.title())
-    return "".join(p for p in parts)
+        suffix = sanitizer.make_safe_type_identifier(string_suffix)
+        return f"{base_name}{suffix}"
+    return base_name
 
 
 def get_method_name(name: str, string_suffix: str = "") -> str:
-    parts = [p.lower() for p in get_parts(name)]
+    sanitizer = get_sanitizer(preserve_names=False)
+    base_name = sanitizer.make_safe_method_identifier(name)
     if string_suffix:
-        parts.append(string_suffix.lower())
-    return "_".join(p for p in parts)
+        suffix = sanitizer.make_safe_method_identifier(string_suffix)
+        return f"{base_name}_{suffix}"
+    return base_name
 
 
-def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: PLR0911, C901: ignore[PLR0911]
+def get_struct_name(struct_name: str) -> str:
+    if not struct_name.startswith("{"):
+        return struct_name
+    sanitizer = get_sanitizer(preserve_names=False)
+    cleaned = struct_name.replace("{", "").replace("}", "").strip()
+    return sanitizer.make_safe_type_identifier(cleaned)
+
+
+def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901: ignore[PLR0911]
     match abi_type:
         case abi.UintType():
             return "int"
         case abi.ArrayDynamicType() as array:
             child = array.child_type
             if isinstance(child, abi.ByteType):
-                return "bytes | bytearray"
-            return f"list[{abi_type_to_python(child)}]"
+                return "bytes | str" if io_type == IOType.INPUT else "bytes"
+            return f"list[{abi_type_to_python(child, io_type)}]"
         case abi.ArrayStaticType() as array:
             child = array.child_type
             if isinstance(child, abi.ByteType):
-                return f"bytes | bytearray | tuple[{', '.join('int' for _ in range(array.static_length))}]"
-            inner_type = abi_type_to_python(child)
+                if io_type == IOType.INPUT:
+                    return f"bytes | str | tuple[{', '.join('int' for _ in range(array.static_length))}]"
+                return "bytes"
+            inner_type = abi_type_to_python(child, io_type)
             return f"list[{inner_type}] | tuple[{', '.join(inner_type for _ in range(array.static_length))}]"
         case abi.AddressType():
             return "str"
@@ -47,7 +210,7 @@ def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: PLR0911, C901: ig
         case abi.UfixedType():
             return "decimal.Decimal"
         case abi.TupleType() as tuple_type:
-            return f"tuple[{', '.join(abi_type_to_python(t) for t in tuple_type.child_types)}]"
+            return f"tuple[{', '.join(abi_type_to_python(t, io_type) for t in tuple_type.child_types)}]"
         case abi.ByteType():
             return "int"
         case abi.StringType():
@@ -56,8 +219,12 @@ def abi_type_to_python(abi_type: abi.ABIType) -> str:  # noqa: PLR0911, C901: ig
             return "typing.Any"
 
 
-def map_abi_type_to_python(abi_type_str: str) -> str:  # noqa: PLR0911
+def map_abi_type_to_python(  # noqa: C901, PLR0911
+    abi_type_str: str, io_type: IOType = IOType.OUTPUT, structs: dict[str, "ABIStruct"] | None = None
+) -> str:
     match abi_type_str:
+        case _ if structs and abi_type_str in structs:
+            return structs[abi_type_str].struct_class_name
         case "void":
             return "None"
         case "AVMBytes":
@@ -72,18 +239,28 @@ def map_abi_type_to_python(abi_type_str: str) -> str:  # noqa: PLR0911
             return "int"
         case abi.ABIReferenceType.ACCOUNT:
             return "str | bytes"
-    if abi.is_abi_transaction_type(abi_type_str):
-        # TODO: generic TransactionWithSigner and/or allow unsigned types signed with signer used in transaction
-        return "transactions.AppMethodCallTransactionArgument"
-    abi_type = abi.ABIType.from_string(abi_type_str)
-    return abi_type_to_python(abi_type)
+        case _ if abi.is_abi_transaction_type(abi_type_str):
+            return "transactions.AppMethodCallTransactionArgument"
+        case _:
+            try:
+                abi_type = abi.ABIType.from_string(abi_type_str)
+                return abi_type_to_python(abi_type, io_type)
+            except Exception as e:
+                raise ValueError(f"Unknown ABI type: {abi_type_str}") from e
 
 
-def get_unique_symbol_by_incrementing(existing_symbols: set[str], base_name: str) -> str:
+def get_unique_symbol_by_incrementing(
+    existing_symbols: set[str], base_name: str, sanitizer: Sanitizer | None = None
+) -> str:
+    """Get a unique symbol by incrementing a number suffix if needed"""
+    if sanitizer is None:
+        sanitizer = get_sanitizer(preserve_names=False)
+
+    base_name = sanitizer.make_safe_string_type_literal(base_name)
     suffix = 0
     while True:
         suffix_str = str(suffix) if suffix else ""
-        symbol = base_name + suffix_str
+        symbol = f"{base_name}{suffix_str}"
         if symbol not in existing_symbols:
             existing_symbols.add(symbol)
             return symbol
@@ -142,24 +319,3 @@ def indented(code_block: str, indent_size: int = 4) -> DocumentParts:
     while current_indents > 0:
         yield Part.DecIndent
         current_indents -= 1
-
-
-def to_camel_case(snake_str: str) -> str:
-    """Convert snake_case to CamelCase"""
-    components = snake_str.split("_")
-    return "".join(x.title() for x in components)
-
-
-def to_snake_case(text: str) -> str:
-    """Convert CamelCase to snake_case"""
-    if not text:
-        return text
-
-    chars = []
-    for i, char in enumerate(text):
-        if i > 0 and (char.isupper() or not char.isalnum()):
-            chars.append("_")
-        if char.isalnum():
-            chars.append(char.lower())
-
-    return "".join(chars).strip("_")

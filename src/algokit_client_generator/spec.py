@@ -6,7 +6,7 @@ from pathlib import Path
 
 from algokit_utils.applications import Arc32Contract, Arc56Contract
 from algokit_utils.applications import Method as Arc56Method
-from algokit_utils.applications.app_spec.arc56 import CallEnum, CreateEnum
+from algokit_utils.applications.app_spec.arc56 import CallEnum, CreateEnum, StructField
 from algosdk.abi import Method
 
 from algokit_client_generator import utils
@@ -24,8 +24,9 @@ class ContractArg:
 @dataclasses.dataclass(kw_only=True)
 class ABIStructField:
     name: str
-    abi_type: str
+    abi_type: str | list["ABIStructField"]  # Enhanced to handle nested structs
     python_type: str
+    is_nested: bool = False
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -33,6 +34,31 @@ class ABIStruct:
     abi_name: str
     struct_class_name: str
     fields: list[ABIStructField]
+
+    def get_python_type_hints(self) -> str:
+        """Generate Python type hints for the struct"""
+        field_types = []
+        for field in self.fields:
+            if field.is_nested:
+                # For nested structs, reference the generated class name
+                assert isinstance(field.abi_type, list)
+                nested_struct = ABIStruct(
+                    abi_name=f"{self.abi_name}_{field.name}",
+                    struct_class_name=f"{self.struct_class_name}{field.name.title()}",
+                    fields=[
+                        ABIStructField(
+                            name=f.name,
+                            abi_type=f.abi_type,
+                            python_type=f.python_type,
+                            is_nested=isinstance(f.abi_type, list),
+                        )
+                        for f in field.abi_type
+                    ],
+                )
+                field_types.append(f"{field.name}: {nested_struct.struct_class_name}")
+            else:
+                field_types.append(f"{field.name}: {field.python_type}")
+        return ", ".join(field_types)
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -148,12 +174,106 @@ def find_naming_strategy(methods: list[Arc56Method]) -> Callable[[Arc56Method], 
     return use_method_signature
 
 
+def process_struct_field(
+    field_def: StructField,
+    used_module_symbols: set[str],
+    parent_name: str = "",
+    io_type: utils.IOType = utils.IOType.OUTPUT,
+) -> ABIStructField:
+    """Process a struct field, handling nested structures"""
+    field_name = field_def.name
+    field_type = field_def.type
+
+    if isinstance(field_type, list):  # Nested struct
+        nested_fields = [
+            process_struct_field(f, used_module_symbols, f"{parent_name}_{field_name}", io_type) for f in field_type
+        ]
+        return ABIStructField(
+            name=field_name, abi_type=nested_fields, python_type=f"{parent_name}{field_name.title()}", is_nested=True
+        )
+    else:  # Regular field
+        return ABIStructField(
+            name=field_name,
+            abi_type=field_type,
+            python_type=utils.map_abi_type_to_python(field_type, io_type),
+            is_nested=False,
+        )
+
+
+def process_struct(
+    struct_name: str,
+    struct_def: list[StructField],
+    used_module_symbols: set[str],
+    io_type: utils.IOType = utils.IOType.OUTPUT,
+) -> ABIStruct:
+    """Process a struct definition, including nested structs"""
+    sanitized_name = utils.get_struct_name(struct_name)
+
+    struct_class_name = utils.get_unique_symbol_by_incrementing(
+        used_module_symbols, utils.get_class_name(sanitized_name)
+    )
+
+    fields = [process_struct_field(field, used_module_symbols, struct_class_name, io_type) for field in struct_def]
+
+    return ABIStruct(
+        abi_name=struct_name,  # Keep original name for reference
+        struct_class_name=struct_class_name,
+        fields=fields,
+    )
+
+
+def get_all_structs(  # noqa: C901
+    app_spec: Arc56Contract,
+    used_module_symbols: set[str],
+) -> dict[str, ABIStruct]:
+    """Extract all structs from app spec, whether used in methods or not"""
+    structs: dict[str, ABIStruct] = {}
+
+    def get_or_create_struct(struct_name: str, io_type: utils.IOType = utils.IOType.OUTPUT) -> ABIStruct:
+        if struct_name not in structs:
+            if struct_name not in app_spec.structs:
+                raise ValueError(f"Referenced struct {struct_name} not found in app spec")
+            struct_def = app_spec.structs[struct_name]
+            abi_struct = process_struct(struct_name, struct_def, used_module_symbols, io_type)
+            structs[struct_name] = abi_struct
+        return structs[struct_name]
+
+    # Process all structs defined in app_spec
+    for struct_name in app_spec.structs:
+        get_or_create_struct(struct_name)
+
+    # Process structs from global/local/box maps
+    for maps in (app_spec.state.maps.global_state, app_spec.state.maps.local_state, app_spec.state.maps.box):
+        for map_info in maps.values():
+            if map_info.value_type in app_spec.structs:
+                get_or_create_struct(map_info.value_type)
+            if map_info.key_type in app_spec.structs:
+                get_or_create_struct(map_info.key_type, utils.IOType.INPUT)
+
+    # Process structs from state keys
+    for keys in (app_spec.state.keys.global_state, app_spec.state.keys.local_state, app_spec.state.keys.box):
+        for key_info in keys.values():
+            if key_info.value_type in app_spec.structs:
+                get_or_create_struct(key_info.value_type)
+            if key_info.key_type in app_spec.structs:
+                get_or_create_struct(key_info.key_type, utils.IOType.INPUT)
+
+    return structs
+
+
 def get_contract_methods(
     app_spec: Arc56Contract,
+    structs: dict[str, ABIStruct],
     used_module_symbols: set[str],
     used_client_symbols: set[str],
 ) -> ContractMethods:
     result = ContractMethods()
+
+    def get_type_for_value(value_type: str, io_type: utils.IOType = utils.IOType.OUTPUT) -> str:
+        """Helper to get Python type for a value, handling struct references"""
+        if value_type in structs:
+            return structs[value_type].struct_class_name
+        return utils.map_abi_type_to_python(value_type, io_type)
 
     # Handle bare actions
     if app_spec.bare_actions:
@@ -164,7 +284,6 @@ def get_contract_methods(
     for method in app_spec.methods:
         methods_by_name.setdefault(method.name, []).append(method)
 
-    structs: dict[str, ABIStruct] = {}
     for methods in methods_by_name.values():
         naming_strategy = find_naming_strategy(methods)
         for method in methods:
@@ -174,68 +293,21 @@ def get_contract_methods(
                 utils.get_class_name(method_name, "args"),
             )
 
-            # Process structs
+            # Process method parameters
             parameter_type_map: dict[str, str] = {}
             method_structs: list[ABIStruct] = []
             result_struct: ABIStruct | None = None
 
             # Handle return struct if it exists
-            if method.returns.struct:
-                struct_name = method.returns.struct
-                struct_def = app_spec.structs[struct_name]
-                if struct_name not in structs:
-                    struct_class_name = utils.get_unique_symbol_by_incrementing(
-                        used_module_symbols, utils.get_class_name(struct_name)
-                    )
-                    result_struct = ABIStruct(
-                        abi_name=struct_name,
-                        struct_class_name=struct_class_name,
-                        fields=[
-                            ABIStructField(
-                                name=field.name,
-                                abi_type=field.type if isinstance(field.type, str) else "tuple",
-                                python_type=utils.map_abi_type_to_python(
-                                    field.type if isinstance(field.type, str) else "tuple"
-                                ),
-                            )
-                            for field in struct_def
-                        ],
-                    )
-                    structs[struct_name] = result_struct
-                else:
-                    result_struct = structs[struct_name]
+            if method.returns.struct and method.returns.struct in structs:
+                result_struct = structs[method.returns.struct]
 
             # Handle argument structs
             for arg in method.args:
-                if arg.struct:
-                    struct_name = arg.struct
-                    struct_def = app_spec.structs[struct_name]
-                    if struct_name not in structs:
-                        struct_class_name = utils.get_unique_symbol_by_incrementing(
-                            used_module_symbols, utils.get_class_name(struct_name)
-                        )
-                        abi_struct = ABIStruct(
-                            abi_name=struct_name,
-                            struct_class_name=struct_class_name,
-                            fields=[
-                                ABIStructField(
-                                    name=field.name,
-                                    abi_type=field.type if isinstance(field.type, str) else "tuple",
-                                    python_type=utils.map_abi_type_to_python(
-                                        field.type if isinstance(field.type, str) else "tuple"
-                                    ),
-                                )
-                                for field in struct_def
-                            ],
-                        )
-                        structs[struct_name] = abi_struct
-                        method_structs.append(abi_struct)
-                        parameter_type_map[arg.name or f"arg{len(parameter_type_map)}"] = struct_class_name
-                    else:
-                        method_structs.append(structs[struct_name])
-                        parameter_type_map[arg.name or f"arg{len(parameter_type_map)}"] = structs[
-                            struct_name
-                        ].struct_class_name
+                if arg.struct and arg.struct in structs:
+                    abi_struct = structs[arg.struct]
+                    method_structs.append(abi_struct)
+                    parameter_type_map[arg.name or f"arg{len(parameter_type_map)}"] = abi_struct.struct_class_name
 
             # Create ABIContractMethod
             abi = ABIContractMethod(
@@ -244,7 +316,7 @@ def get_contract_methods(
                 abi_type=method.returns.type,
                 python_type=result_struct.struct_class_name
                 if result_struct
-                else utils.map_abi_type_to_python(method.returns.type),
+                else get_type_for_value(method.returns.type),
                 result_struct=result_struct,
                 structs=method_structs,
                 args=[
@@ -252,7 +324,7 @@ def get_contract_methods(
                         name=arg.name or f"arg{idx}",
                         abi_type=arg.type,
                         python_type=parameter_type_map.get(arg.name or f"arg{idx}")
-                        or utils.map_abi_type_to_python(arg.type),
+                        or get_type_for_value(arg.type, utils.IOType.INPUT),
                         desc=arg.desc,
                         has_default=arg.default_value is not None,
                     )

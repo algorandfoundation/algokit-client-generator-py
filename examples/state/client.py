@@ -90,7 +90,7 @@ class SetGlobalArgs:
     int1: int
     int2: int
     bytes1: str
-    bytes2: bytes | bytearray | tuple[int, int, int, int]
+    bytes2: bytes | str | tuple[int, int, int, int]
 
 @dataclasses.dataclass(frozen=True)
 class SetLocalArgs:
@@ -98,12 +98,12 @@ class SetLocalArgs:
     int1: int
     int2: int
     bytes1: str
-    bytes2: bytes | bytearray | tuple[int, int, int, int]
+    bytes2: bytes | str | tuple[int, int, int, int]
 
 @dataclasses.dataclass(frozen=True)
 class SetBoxArgs:
     """Dataclass for set_box arguments"""
-    name: bytes | bytearray | tuple[int, int, int, int]
+    name: bytes | str | tuple[int, int, int, int]
     value: str
 
 @dataclasses.dataclass(frozen=True)
@@ -156,8 +156,7 @@ class _StateAppUpdate:
 
     def update_abi(
         self,
-        args: tuple[str] | UpdateAbiArgs,
-        *,
+        args: tuple[str] | UpdateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -173,6 +172,7 @@ class _StateAppUpdate:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -194,6 +194,7 @@ class _StateAppUpdate:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
 
@@ -207,8 +208,7 @@ class _StateAppDelete:
 
     def delete_abi(
         self,
-        args: tuple[str] | DeleteAbiArgs,
-        *,
+        args: tuple[str] | DeleteAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -224,6 +224,7 @@ class _StateAppDelete:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -245,11 +246,12 @@ class _StateAppDelete:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
 
-class _StateAppOptin:
+class _StateAppOptIn:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -271,6 +273,7 @@ class _StateAppOptin:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -291,6 +294,7 @@ class _StateAppOptin:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -307,12 +311,11 @@ class StateAppParams:
         return _StateAppDelete(self.app_client)
 
     @property
-    def opt_in(self) -> "_StateAppOptin":
-        return _StateAppOptin(self.app_client)
+    def opt_in(self) -> "_StateAppOptIn":
+        return _StateAppOptIn(self.app_client)
     def call_abi_uint32(
         self,
-        args: tuple[int] | CallAbiUint32Args,
-        *,
+        args: tuple[int] | CallAbiUint32Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -328,6 +331,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -349,13 +353,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint32_readonly(
         self,
-        args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -371,6 +375,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -392,13 +397,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint64(
         self,
-        args: tuple[int] | CallAbiUint64Args,
-        *,
+        args: tuple[int] | CallAbiUint64Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -414,6 +419,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -435,13 +441,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint64_readonly(
         self,
-        args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -457,6 +463,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -478,13 +485,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi(
         self,
-        args: tuple[str] | CallAbiArgs,
-        *,
+        args: tuple[str] | CallAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -500,6 +507,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -521,13 +529,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_txn(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -543,6 +551,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -564,13 +573,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -586,6 +595,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -607,13 +617,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_global(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -629,6 +639,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -650,13 +661,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_local(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -672,6 +683,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -693,13 +705,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_box(
         self,
-        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-        *,
+        args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -715,6 +727,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -736,6 +749,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -757,6 +771,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -777,13 +792,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value(
         self,
-        args: tuple[str | None] | DefaultValueArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -799,6 +814,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -820,13 +836,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_int(
         self,
-        args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -842,6 +858,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -863,13 +880,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_abi(
         self,
-        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -885,6 +902,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -906,13 +924,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_global_state(
         self,
-        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -928,6 +946,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -949,13 +968,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_local_state(
         self,
-        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -971,6 +990,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -992,13 +1012,13 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_abi(
         self,
-        args: tuple[str] | CreateAbiArgs,
-        *,
+        args: tuple[str] | CreateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1014,6 +1034,7 @@ class StateAppParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1035,6 +1056,7 @@ class StateAppParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1051,8 +1073,7 @@ class _StateAppUpdateTransaction:
 
     def update_abi(
         self,
-        args: tuple[str] | UpdateAbiArgs,
-        *,
+        args: tuple[str] | UpdateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1068,6 +1089,7 @@ class _StateAppUpdateTransaction:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1089,6 +1111,7 @@ class _StateAppUpdateTransaction:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
 
@@ -1102,8 +1125,7 @@ class _StateAppDeleteTransaction:
 
     def delete_abi(
         self,
-        args: tuple[str] | DeleteAbiArgs,
-        *,
+        args: tuple[str] | DeleteAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1119,6 +1141,7 @@ class _StateAppDeleteTransaction:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1140,11 +1163,12 @@ class _StateAppDeleteTransaction:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
 
-class _StateAppOptinTransaction:
+class _StateAppOptInTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -1166,6 +1190,7 @@ class _StateAppOptinTransaction:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -1186,6 +1211,7 @@ class _StateAppOptinTransaction:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1202,12 +1228,11 @@ class StateAppCreateTransactionParams:
         return _StateAppDeleteTransaction(self.app_client)
 
     @property
-    def opt_in(self) -> "_StateAppOptinTransaction":
-        return _StateAppOptinTransaction(self.app_client)
+    def opt_in(self) -> "_StateAppOptInTransaction":
+        return _StateAppOptInTransaction(self.app_client)
     def call_abi_uint32(
         self,
-        args: tuple[int] | CallAbiUint32Args,
-        *,
+        args: tuple[int] | CallAbiUint32Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1223,6 +1248,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1244,13 +1270,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint32_readonly(
         self,
-        args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1266,6 +1292,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1287,13 +1314,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint64(
         self,
-        args: tuple[int] | CallAbiUint64Args,
-        *,
+        args: tuple[int] | CallAbiUint64Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1309,6 +1336,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1330,13 +1358,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_uint64_readonly(
         self,
-        args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1352,6 +1380,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1373,13 +1402,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi(
         self,
-        args: tuple[str] | CallAbiArgs,
-        *,
+        args: tuple[str] | CallAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1395,6 +1424,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1416,13 +1446,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_abi_txn(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1438,6 +1468,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1459,13 +1490,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1481,6 +1512,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1502,13 +1534,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_global(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1524,6 +1556,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1545,13 +1578,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_local(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1567,6 +1600,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1588,13 +1622,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def set_box(
         self,
-        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-        *,
+        args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1610,6 +1644,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1631,6 +1666,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1652,6 +1688,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -1672,13 +1709,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value(
         self,
-        args: tuple[str | None] | DefaultValueArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1694,6 +1731,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1715,13 +1753,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_int(
         self,
-        args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1737,6 +1775,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1758,13 +1797,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_abi(
         self,
-        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1780,6 +1819,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1801,13 +1841,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_global_state(
         self,
-        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1823,6 +1863,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1844,13 +1885,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def default_value_from_local_state(
         self,
-        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1866,6 +1907,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1887,13 +1929,13 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
     def create_abi(
         self,
-        args: tuple[str] | CreateAbiArgs,
-        *,
+        args: tuple[str] | CreateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1909,6 +1951,7 @@ class StateAppCreateTransactionParams:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1930,6 +1973,7 @@ class StateAppCreateTransactionParams:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
 
@@ -1946,8 +1990,7 @@ class _StateAppUpdateSend:
 
     def update_abi(
         self,
-        args: tuple[str] | UpdateAbiArgs,
-        *,
+        args: tuple[str] | UpdateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1963,6 +2006,7 @@ class _StateAppUpdateSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -1984,6 +2028,7 @@ class _StateAppUpdateSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
         return transactions.SendAppUpdateTransactionResult[str](**dataclasses.asdict(response))
@@ -1998,8 +2043,7 @@ class _StateAppDeleteSend:
 
     def delete_abi(
         self,
-        args: tuple[str] | DeleteAbiArgs,
-        *,
+        args: tuple[str] | DeleteAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2015,6 +2059,7 @@ class _StateAppDeleteSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2036,12 +2081,13 @@ class _StateAppDeleteSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
 
-class _StateAppOptinSend:
+class _StateAppOptInSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -2063,6 +2109,7 @@ class _StateAppOptinSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
     
@@ -2083,6 +2130,7 @@ class _StateAppOptinSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
@@ -2100,12 +2148,11 @@ class StateAppSend:
         return _StateAppDeleteSend(self.app_client)
 
     @property
-    def opt_in(self) -> "_StateAppOptinSend":
-        return _StateAppOptinSend(self.app_client)
+    def opt_in(self) -> "_StateAppOptInSend":
+        return _StateAppOptInSend(self.app_client)
     def call_abi_uint32(
         self,
-        args: tuple[int] | CallAbiUint32Args,
-        *,
+        args: tuple[int] | CallAbiUint32Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2121,6 +2168,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2142,14 +2190,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint32_readonly(
         self,
-        args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2165,6 +2213,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2186,14 +2235,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint64(
         self,
-        args: tuple[int] | CallAbiUint64Args,
-        *,
+        args: tuple[int] | CallAbiUint64Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2209,6 +2258,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2230,14 +2280,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi_uint64_readonly(
         self,
-        args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2253,6 +2303,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2274,14 +2325,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def call_abi(
         self,
-        args: tuple[str] | CallAbiArgs,
-        *,
+        args: tuple[str] | CallAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2297,6 +2348,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2318,14 +2370,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def call_abi_txn(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2341,6 +2393,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2362,14 +2415,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2385,6 +2438,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2406,14 +2460,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def set_global(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2429,6 +2483,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2450,14 +2505,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def set_local(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2473,6 +2528,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2494,14 +2550,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def set_box(
         self,
-        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-        *,
+        args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2517,6 +2573,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -2538,6 +2595,7 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
@@ -2560,6 +2618,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
     
@@ -2580,14 +2639,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def default_value(
         self,
-        args: tuple[str | None] | DefaultValueArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2603,6 +2662,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2624,14 +2684,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def default_value_int(
         self,
-        args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2647,6 +2707,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2668,14 +2729,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def default_value_from_abi(
         self,
-        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2691,6 +2752,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2712,14 +2774,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def default_value_from_global_state(
         self,
-        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2735,6 +2797,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
@@ -2756,14 +2819,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
     def default_value_from_local_state(
         self,
-        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2779,6 +2842,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2800,14 +2864,14 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
     def create_abi(
         self,
-        args: tuple[str] | CreateAbiArgs,
-        *,
+        args: tuple[str] | CreateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2823,6 +2887,7 @@ class StateAppSend:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -2844,6 +2909,7 @@ class StateAppSend:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
                 
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
@@ -2886,57 +2952,92 @@ class _GlobalState:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        return typing.cast(GlobalStateValue, result)
+        if not result:
+            return typing.cast(GlobalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(GlobalStateValue, converted)
 
     def bytes1(self) -> bytes:
             """Get the current value of the bytes1 key in global_state state"""
-            return typing.cast(bytes, self.app_client.state.global_state.get_value("bytes1"))
+            value = self.app_client.state.global_state.get_value("bytes1")
+            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
 
     def bytes2(self) -> bytes:
             """Get the current value of the bytes2 key in global_state state"""
-            return typing.cast(bytes, self.app_client.state.global_state.get_value("bytes2"))
+            value = self.app_client.state.global_state.get_value("bytes2")
+            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
 
     def int1(self) -> int:
             """Get the current value of the int1 key in global_state state"""
-            return typing.cast(int, self.app_client.state.global_state.get_value("int1"))
+            value = self.app_client.state.global_state.get_value("int1")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
     def int2(self) -> int:
             """Get the current value of the int2 key in global_state state"""
-            return typing.cast(int, self.app_client.state.global_state.get_value("int2"))
+            value = self.app_client.state.global_state.get_value("int2")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
     def value(self) -> int:
             """Get the current value of the value key in global_state state"""
-            return typing.cast(int, self.app_client.state.global_state.get_value("value"))
+            value = self.app_client.state.global_state.get_value("value")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
 class _LocalState:
     def __init__(self, app_client: applications.AppClient, address: str):
         self.app_client = app_client
         self.address = address
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        return typing.cast(LocalStateValue, result)
+        if not result:
+            return typing.cast(LocalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(LocalStateValue, converted)
 
     def local_bytes1(self) -> bytes:
             """Get the current value of the local_bytes1 key in local_state state"""
-            return typing.cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes1"))
+            value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
+            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
 
     def local_bytes2(self) -> bytes:
             """Get the current value of the local_bytes2 key in local_state state"""
-            return typing.cast(bytes, self.app_client.state.local_state(self.address).get_value("local_bytes2"))
+            value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
+            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
 
     def local_int1(self) -> int:
             """Get the current value of the local_int1 key in local_state state"""
-            return typing.cast(int, self.app_client.state.local_state(self.address).get_value("local_int1"))
+            value = self.app_client.state.local_state(self.address).get_value("local_int1")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
     def local_int2(self) -> int:
             """Get the current value of the local_int2 key in local_state state"""
-            return typing.cast(int, self.app_client.state.local_state(self.address).get_value("local_int2"))
+            value = self.app_client.state.local_state(self.address).get_value("local_int2")
+            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
 
 class StateAppClient:
     """Client for interacting with StateApp smart contract"""
@@ -3081,16 +3182,154 @@ class StateAppClient:
     def new_group(self) -> "StateAppComposer":
         return StateAppComposer(self)
 
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi_uint32(uint32)uint32"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi_uint32_readonly(uint32)uint32"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi_uint64(uint64)uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi_uint64_readonly(uint64)uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_abi_txn(pay,string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["call_with_references(asset,account,application)uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["set_global(uint64,uint64,string,byte[4])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["set_local(uint64,uint64,string,byte[4])void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["set_box(byte[4],string)void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["error()void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["default_value(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["default_value_int(uint64)uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["default_value_from_abi(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["default_value_from_global_state(uint64)uint64"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> int | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["default_value_from_local_state(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["create_abi(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["update_abi(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["delete_abi(string)string"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> str | None: ...
+    @typing.overload
+    def decode_return_value(
+        self,
+        method: typing.Literal["opt_in()void"],
+        return_value: applications_abi.ABIReturn | None
+    ) -> None: ...
+    @typing.overload
     def decode_return_value(
         self,
         method: str,
         return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+
+    def decode_return_value(
+        self,
+        method: str,
+        return_value: applications_abi.ABIReturn | None
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | int | str:
+        """Decode ABI return value for the given method."""
         if return_value is None:
             return None
     
         arc56_method = self.app_spec.get_arc56_method(method)
-        return return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
+    
+        # If method returns a struct, convert the dict to appropriate dataclass
+        if (arc56_method and
+            arc56_method.returns and
+            arc56_method.returns.struct and
+            isinstance(decoded, dict)):
+            struct_class = globals().get(arc56_method.returns.struct)
+            if struct_class:
+                return struct_class(**typing.cast(dict, decoded))
+        return decoded
 
 
 @dataclasses.dataclass(frozen=True)
@@ -3206,11 +3445,11 @@ class StateAppFactory(applications.TypedAppFactoryProtocol):
     @property
     def app_name(self) -> str:
         return self.app_factory.app_name
-
+    
     @property
     def app_spec(self) -> applications.Arc56Contract:
         return self.app_factory.app_spec
-
+    
     @property
     def algorand(self) -> protocols.AlgorandClientProtocol:
         return self.app_factory.algorand
@@ -3233,6 +3472,7 @@ class StateAppFactory(applications.TypedAppFactoryProtocol):
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
     ) -> tuple[StateAppClient, applications.AppFactoryDeployResponse]:
+        """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
@@ -3305,8 +3545,8 @@ class StateAppFactoryParams:
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateParams(app_factory)
-        self.deploy_update = StateAppFactoryUpdateParams(app_factory)
-        self.deploy_delete = StateAppFactoryDeleteParams(app_factory)
+        self.update = StateAppFactoryUpdateParams(app_factory)
+        self.delete = StateAppFactoryDeleteParams(app_factory)
 
 class StateAppFactoryCreateParams:
     """Parameters for 'create' operations of StateApp contract"""
@@ -3318,12 +3558,12 @@ class StateAppFactoryCreateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
@@ -3332,484 +3572,482 @@ class StateAppFactoryCreateParams:
         )
 
     def call_abi_uint32(
-            self,
-            args: tuple[int] | CallAbiUint32Args,
+        self,
+        args: tuple[int] | CallAbiUint32Args,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint32(uint32)uint32",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi_uint32(uint32)uint32",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_abi_uint32_readonly(
-            self,
-            args: tuple[int] | CallAbiUint32ReadonlyArgs,
+        self,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint32_readonly(uint32)uint32",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi_uint32_readonly(uint32)uint32",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_abi_uint64(
-            self,
-            args: tuple[int] | CallAbiUint64Args,
+        self,
+        args: tuple[int] | CallAbiUint64Args,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint64(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi_uint64(uint64)uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_abi_uint64_readonly(
-            self,
-            args: tuple[int] | CallAbiUint64ReadonlyArgs,
+        self,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint64_readonly(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi_uint64_readonly(uint64)uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_abi(
-            self,
-            args: tuple[str] | CallAbiArgs,
+        self,
+        args: tuple[str] | CallAbiArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_abi_txn(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
+        self,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_txn(pay,string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_abi_txn(pay,string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def call_with_references(
-            self,
-            args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        self,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_with_references(asset,account,application)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="call_with_references(asset,account,application)uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def set_global(
-            self,
-            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
+        self,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_global(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="set_global(uint64,uint64,string,byte[4])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def set_local(
-            self,
-            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
+        self,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_local(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="set_local(uint64,uint64,string,byte[4])void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def set_box(
-            self,
-            args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
+        self,
+        args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the set_box(byte[4],string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_box(byte[4],string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the set_box(byte[4],string)void ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="set_box(byte[4],string)void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def error(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the error()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="error()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the error()void ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="error()void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def default_value(
-            self,
-            args: tuple[str] | DefaultValueArgs | None = None,
+        self,
+        args: tuple[str] | DefaultValueArgs | None = None,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the default_value(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the default_value(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="default_value(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def default_value_int(
-            self,
-            args: tuple[int] | DefaultValueIntArgs | None = None,
+        self,
+        args: tuple[int] | DefaultValueIntArgs | None = None,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_int(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="default_value_int(uint64)uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def default_value_from_abi(
-            self,
-            args: tuple[str] | DefaultValueFromAbiArgs | None = None,
+        self,
+        args: tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the default_value_from_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the default_value_from_abi(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="default_value_from_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def default_value_from_global_state(
-            self,
-            args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
+        self,
+        args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_global_state(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="default_value_from_global_state(uint64)uint64",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def default_value_from_local_state(
-            self,
-            args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
+        self,
+        args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_local_state(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="default_value_from_local_state(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def create_abi(
-            self,
-            args: tuple[str] | CreateAbiArgs,
+        self,
+        args: tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the create_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the create_abi(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="create_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def update_abi(
-            self,
-            args: tuple[str] | UpdateAbiArgs,
+        self,
+        args: tuple[str] | UpdateAbiArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the update_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="update_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the update_abi(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="update_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def delete_abi(
-            self,
-            args: tuple[str] | DeleteAbiArgs,
+        self,
+        args: tuple[str] | DeleteAbiArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the delete_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="delete_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the delete_abi(string)string ABI method"""
+        method_args = _parse_abi_args(args)
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="delete_abi(string)string",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
     def opt_in(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.AppCreateMethodCallParams:
-            """Creates a new instance using the opt_in()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.params.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="opt_in()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> transactions.AppCreateMethodCallParams:
+        """Creates a new instance using the opt_in()void ABI method"""
+        method_args = None
+        return self.app_factory.params.create(
+            applications.AppFactoryCreateMethodCallParams(
+                method="opt_in()void",
+                args=method_args, # type: ignore
+                on_complete=on_complete,
+                **kwargs
             )
+        )
 
 class StateAppFactoryUpdateParams:
     """Parameters for 'update' operations of StateApp contract"""
@@ -3821,12 +4059,12 @@ class StateAppFactoryUpdateParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
@@ -3844,12 +4082,12 @@ class StateAppFactoryDeleteParams:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
@@ -3865,486 +4103,6 @@ class StateAppFactoryCreateTransaction:
         self.app_factory = app_factory
         self.create = StateAppFactoryCreateTransactionCreate(app_factory)
 
-    def call_abi_uint32(
-            self,
-            args: tuple[int] | CallAbiUint32Args,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi_uint32(uint32)uint32 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint32(uint32)uint32",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_abi_uint32_readonly(
-            self,
-            args: tuple[int] | CallAbiUint32ReadonlyArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint32_readonly(uint32)uint32",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_abi_uint64(
-            self,
-            args: tuple[int] | CallAbiUint64Args,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi_uint64(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint64(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_abi_uint64_readonly(
-            self,
-            args: tuple[int] | CallAbiUint64ReadonlyArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_uint64_readonly(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_abi(
-            self,
-            args: tuple[str] | CallAbiArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_abi_txn(
-            self,
-            args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_abi_txn(pay,string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_abi_txn(pay,string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def call_with_references(
-            self,
-            args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the call_with_references(asset,account,application)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="call_with_references(asset,account,application)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def set_global(
-            self,
-            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_global(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def set_local(
-            self,
-            args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_local(uint64,uint64,string,byte[4])void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def set_box(
-            self,
-            args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the set_box(byte[4],string)void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="set_box(byte[4],string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def error(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the error()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="error()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def default_value(
-            self,
-            args: tuple[str] | DefaultValueArgs | None = None,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the default_value(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def default_value_int(
-            self,
-            args: tuple[int] | DefaultValueIntArgs | None = None,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the default_value_int(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_int(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def default_value_from_abi(
-            self,
-            args: tuple[str] | DefaultValueFromAbiArgs | None = None,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the default_value_from_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def default_value_from_global_state(
-            self,
-            args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the default_value_from_global_state(uint64)uint64 ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_global_state(uint64)uint64",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def default_value_from_local_state(
-            self,
-            args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the default_value_from_local_state(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="default_value_from_local_state(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def create_abi(
-            self,
-            args: tuple[str] | CreateAbiArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the create_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="create_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def update_abi(
-            self,
-            args: tuple[str] | UpdateAbiArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the update_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="update_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def delete_abi(
-            self,
-            args: tuple[str] | DeleteAbiArgs,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the delete_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="delete_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
-    def opt_in(
-            self,
-            args: typing.Any,
-            *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> transactions.BuiltTransactions:
-            """Creates a transaction using the opt_in()void ABI method"""
-            method_args = _parse_abi_args(args)
-            return self.app_factory.create_transaction.create(
-                applications.AppFactoryCreateMethodCallParams(
-                    method="opt_in()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
-                )
-            )
-
 
 class StateAppFactoryCreateTransactionCreate:
     """Create new instances of StateApp contract"""
@@ -4356,12 +4114,12 @@ class StateAppFactoryCreateTransactionCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> Transaction:
         """Creates a new instance using a bare call"""
@@ -4388,12 +4146,12 @@ class StateAppFactorySendCreate:
         self,
         *,
         on_complete: (typing.Literal[
-                OnComplete.NoOpOC,
-                OnComplete.UpdateApplicationOC,
-                OnComplete.DeleteApplicationOC,
-                OnComplete.OptInOC,
-                OnComplete.CloseOutOC,
-            ] | None) = None,
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+] | None) = None,
         **kwargs
     ) -> tuple[StateAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
@@ -4403,18 +4161,18 @@ class StateAppFactorySendCreate:
         return StateAppClient(result[0]), result[1]
 
     def create_abi(
-            self,
-            args: tuple[str] | CreateAbiArgs,
+        self,
+        args: tuple[str] | CreateAbiArgs,
             *,
-            on_complete: (typing.Literal[
-                    OnComplete.NoOpOC,
-                    OnComplete.UpdateApplicationOC,
-                    OnComplete.DeleteApplicationOC,
-                    OnComplete.OptInOC,
-                    OnComplete.CloseOutOC,
-                ] | None) = None,
-            **kwargs
-        ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
             method_args = _parse_abi_args(args)
             result = self.app_factory.send.create(
@@ -4445,8 +4203,7 @@ class _StateAppUpdateComposer:
         self.composer = composer
     def update_abi(
         self,
-        args: tuple[str] | UpdateAbiArgs,
-        *,
+        args: tuple[str] | UpdateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4462,6 +4219,7 @@ class _StateAppUpdateComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "StateAppComposer":
         method_args = _parse_abi_args(args)
@@ -4484,6 +4242,7 @@ class _StateAppUpdateComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self.composer._result_mappers.append(
@@ -4499,8 +4258,7 @@ class _StateAppDeleteComposer:
         self.composer = composer
     def delete_abi(
         self,
-        args: tuple[str] | DeleteAbiArgs,
-        *,
+        args: tuple[str] | DeleteAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4516,6 +4274,7 @@ class _StateAppDeleteComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         method_args = _parse_abi_args(args)
@@ -4538,6 +4297,7 @@ class _StateAppDeleteComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self.composer._result_mappers.append(
@@ -4569,6 +4329,7 @@ class _StateAppOpt_inComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self.composer._composer.add_app_call_method_call(
@@ -4589,6 +4350,7 @@ class _StateAppOpt_inComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self.composer._result_mappers.append(
@@ -4621,8 +4383,7 @@ class StateAppComposer:
 
     def call_abi_uint32(
         self,
-        args: tuple[int] | CallAbiUint32Args,
-        *,
+        args: tuple[int] | CallAbiUint32Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4638,6 +4399,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4658,6 +4420,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4669,8 +4432,7 @@ class StateAppComposer:
 
     def call_abi_uint32_readonly(
         self,
-        args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint32ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4686,6 +4448,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4706,6 +4469,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4717,8 +4481,7 @@ class StateAppComposer:
 
     def call_abi_uint64(
         self,
-        args: tuple[int] | CallAbiUint64Args,
-        *,
+        args: tuple[int] | CallAbiUint64Args,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4734,6 +4497,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4754,6 +4518,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4765,8 +4530,7 @@ class StateAppComposer:
 
     def call_abi_uint64_readonly(
         self,
-        args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        *,
+        args: tuple[int] | CallAbiUint64ReadonlyArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4782,6 +4546,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4802,6 +4567,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4813,8 +4579,7 @@ class StateAppComposer:
 
     def call_abi(
         self,
-        args: tuple[str] | CallAbiArgs,
-        *,
+        args: tuple[str] | CallAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4830,6 +4595,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4850,6 +4616,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4861,8 +4628,7 @@ class StateAppComposer:
 
     def call_abi_txn(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        *,
+        args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4878,6 +4644,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4898,6 +4665,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4909,8 +4677,7 @@ class StateAppComposer:
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        *,
+        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4926,6 +4693,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4946,6 +4714,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -4957,8 +4726,7 @@ class StateAppComposer:
 
     def set_global(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetGlobalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4974,6 +4742,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -4994,6 +4763,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5005,8 +4775,7 @@ class StateAppComposer:
 
     def set_local(
         self,
-        args: tuple[int, int, str, bytes | bytearray | tuple[int, int, int, int]] | SetLocalArgs,
-        *,
+        args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5022,6 +4791,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5042,6 +4812,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5053,8 +4824,7 @@ class StateAppComposer:
 
     def set_box(
         self,
-        args: tuple[bytes | bytearray | tuple[int, int, int, int], str] | SetBoxArgs,
-        *,
+        args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5070,6 +4840,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5090,6 +4861,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5117,6 +4889,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5137,6 +4910,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5148,8 +4922,7 @@ class StateAppComposer:
 
     def default_value(
         self,
-        args: tuple[str | None] | DefaultValueArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5165,6 +4938,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5185,6 +4959,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5196,8 +4971,7 @@ class StateAppComposer:
 
     def default_value_int(
         self,
-        args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueIntArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5213,6 +4987,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5233,6 +5008,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5244,8 +5020,7 @@ class StateAppComposer:
 
     def default_value_from_abi(
         self,
-        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5261,6 +5036,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5281,6 +5057,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5292,8 +5069,7 @@ class StateAppComposer:
 
     def default_value_from_global_state(
         self,
-        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        *,
+        args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5309,6 +5085,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5329,6 +5106,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5340,8 +5118,7 @@ class StateAppComposer:
 
     def default_value_from_local_state(
         self,
-        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        *,
+        args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5357,6 +5134,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5377,6 +5155,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5388,8 +5167,7 @@ class StateAppComposer:
 
     def create_abi(
         self,
-        args: tuple[str] | CreateAbiArgs,
-        *,
+        args: tuple[str] | CreateAbiArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -5405,6 +5183,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
@@ -5425,6 +5204,7 @@ class StateAppComposer:
                 static_fee=static_fee,
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
             )
         )
         self._result_mappers.append(
@@ -5452,6 +5232,7 @@ class StateAppComposer:
         validity_window: int | None = None,
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
     ) -> "StateAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -5471,6 +5252,7 @@ class StateAppComposer:
                     static_fee=static_fee,
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
+                    populate_app_call_resources=populate_app_call_resources,
                 )
             )
         )

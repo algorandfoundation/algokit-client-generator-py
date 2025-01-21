@@ -51,5 +51,6 @@ def main() -> None:
         except Exception as e:
             logger.warning(f"Skipping example {example.name} due to error: {e}")
 
+
 if __name__ == "__main__":
     main()

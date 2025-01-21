@@ -20,7 +20,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 from algokit_utils import applications, models, protocols, transactions
 from algokit_utils.applications import abi as applications_abi
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "desc": "Returns Hello, {name}", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "desc": "Asserts {name} is \"World\"", "events": []}], "name": "HelloWorldApp", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQpieXRlY2Jsb2NrIDB4CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w2CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gImhlbGxvKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmY5YzFlZGYgLy8gImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sNAplcnIKbWFpbl9sNDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb3dvcmxkY2hlY2tjYXN0ZXJfNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl80CmludGNfMSAvLyAxCnJldHVybgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wxMgp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sMTEKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDUgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDEwCmVycgptYWluX2wxMDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQphc3NlcnQKY2FsbHN1YiB1cGRhdGVfMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIHVwZGF0ZQp1cGRhdGVfMDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGRlbGV0ZQpkZWxldGVfMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX0RFTEVUQUJMRSAvLyBUTVBMX0RFTEVUQUJMRQovLyBDaGVjayBhcHAgaXMgZGVsZXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY29uY2F0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gaGVsbG9fd29ybGRfY2hlY2sKaGVsbG93b3JsZGNoZWNrXzM6CnByb3RvIDEgMApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKcHVzaGJ5dGVzIDB4NTc2ZjcyNmM2NCAvLyAiV29ybGQiCj09CmFzc2VydApyZXRzdWIKCi8vIGhlbGxvX2Nhc3RlcgpoZWxsb2Nhc3Rlcl80Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBoZWxsb18yCmZyYW1lX2J1cnkgMApwdXNoYnl0ZXMgMHgxNTFmN2M3NSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb193b3JsZF9jaGVja19jYXN0ZXIKaGVsbG93b3JsZGNoZWNrY2FzdGVyXzU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmNhbGxzdWIgaGVsbG93b3JsZGNoZWNrXzMKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}], "name": "HelloWorld", "state": {"keys": {"box": {}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "byteCode": {"approval": "CjEYQAAYggIJbXlfc3RydWN0CgAEAAcAATEAATJnMRtBADSABAK+zhE2GgCOAQADgQBDMRkURDEYRDYaAVcCAIgAIEkVFlcGAkxQgAQVH3x1TFCwgQFDMRlA/9QxGBREgQFDigEBgAdIZWxsbywgi/9QiQ==", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 2, "patch": 0}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBzbWFydF9jb250cmFjdHMuaGVsbG9fd29ybGQuY29udHJhY3QuSGVsbG9Xb3JsZC5fX2FsZ29weV9lbnRyeXBvaW50X3dpdGhfaW5pdCgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxMwogICAgLy8gc2VsZi5teV9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZShWZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgcHVzaGJ5dGVzcyAibXlfc3RydWN0IiAweDAwMDQwMDA3MDAwMTMxMDAwMTMyIC8vICJteV9zdHJ1Y3QiLCAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfZ2xvYmFsX3B1dAoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTAKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoQVJDNENvbnRyYWN0KToKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX2JhcmVfcm91dGluZ0A2CiAgICBwdXNoYnl0ZXMgMHgwMmJlY2UxMSAvLyBtZXRob2QgImhlbGxvKHN0cmluZylzdHJpbmciCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX2hlbGxvX3JvdXRlQDUKCm1haW5fYWZ0ZXJfaWZfZWxzZUA4OgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjEwCiAgICAvLyBjbGFzcyBIZWxsb1dvcmxkKEFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX2hlbGxvX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTUKICAgIC8vIEBhYmltZXRob2QoKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTAKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTUKICAgIC8vIEBhYmltZXRob2QoKQogICAgY2FsbHN1YiBoZWxsbwogICAgZHVwCiAgICBsZW4KICAgIGl0b2IKICAgIGV4dHJhY3QgNiAyCiAgICBzd2FwCiAgICBjb25jYXQKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdANjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxMAogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUA4CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5oZWxsb193b3JsZC5jb250cmFjdC5IZWxsb1dvcmxkLmhlbGxvKG5hbWU6IGJ5dGVzKSAtPiBieXRlczoKaGVsbG86CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTUtMTYKICAgIC8vIEBhYmltZXRob2QoKQogICAgLy8gZGVmIGhlbGxvKHNlbGYsIG5hbWU6IFN0cmluZykgLT4gU3RyaW5nOgogICAgcHJvdG8gMSAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTcKICAgIC8vIHJldHVybiAiSGVsbG8sICIgKyBuYW1lCiAgICBwdXNoYnl0ZXMgIkhlbGxvLCAiCiAgICBmcmFtZV9kaWcgLTEKICAgIGNvbmNhdAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [54], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [95], "errorMessage": "can only call when creating"}, {"pc": [57], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -47,42 +47,21 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
 
 
 @dataclasses.dataclass(frozen=True)
+class Vector:
+    """Struct for Vector"""
+    x: str
+    y: str
+
+
+@dataclasses.dataclass(frozen=True)
 class HelloArgs:
     """Dataclass for hello arguments"""
     name: str
 
-@dataclasses.dataclass(frozen=True)
-class HelloWorldCheckArgs:
-    """Dataclass for hello_world_check arguments"""
-    name: str
 
-
-class _HelloWorldAppUpdate:
+class HelloWorldParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.AppUpdateParams:
-        return self.app_client.params.bare.update(params)
-
-
-class _HelloWorldAppDelete:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
-        return self.app_client.params.bare.delete(params)
-
-
-class HelloWorldAppParams:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdate":
-        return _HelloWorldAppUpdate(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDelete":
-        return _HelloWorldAppDelete(self.app_client)
     def hello(
         self,
         args: tuple[str] | HelloArgs,    *,
@@ -107,50 +86,6 @@ class HelloWorldAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="hello(string)string",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-
-    def hello_world_check(
-        self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -175,32 +110,9 @@ class HelloWorldAppParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _HelloWorldAppUpdateTransaction:
+class HelloWorldCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
-        return self.app_client.create_transaction.bare.update(params)
-
-
-class _HelloWorldAppDeleteTransaction:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
-        return self.app_client.create_transaction.bare.delete(params)
-
-
-class HelloWorldAppCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdateTransaction":
-        return _HelloWorldAppUpdateTransaction(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteTransaction":
-        return _HelloWorldAppDeleteTransaction(self.app_client)
     def hello(
         self,
         args: tuple[str] | HelloArgs,    *,
@@ -245,80 +157,13 @@ class HelloWorldAppCreateTransactionParams:
                 
             ))
 
-    def hello_world_check(
-        self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.BuiltTransactions:
-        method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-
     def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _HelloWorldAppUpdateSend:
+class HelloWorldSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.update(params)
-
-
-class _HelloWorldAppDeleteSend:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.delete(params)
-
-
-class HelloWorldAppSend:
-    def __init__(self, app_client: applications.AppClient):
-        self.app_client = app_client
-    @property
-    def update(self) -> "_HelloWorldAppUpdateSend":
-        return _HelloWorldAppUpdateSend(self.app_client)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteSend":
-        return _HelloWorldAppDeleteSend(self.app_client)
     def hello(
         self,
         args: tuple[str] | HelloArgs,    *,
@@ -364,63 +209,57 @@ class HelloWorldAppSend:
             ))
         return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
 
-    def hello_world_check(
-        self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
-
     def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class HelloWorldAppState:
-    """Methods to access state for the current HelloWorldApp app"""
+class GlobalStateValue(typing.TypedDict):
+    """Shape of global_state state key values"""
+    my_struct: Vector
+
+class HelloWorldState:
+    """Methods to access state for the current HelloWorld app"""
 
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-class HelloWorldAppClient:
-    """Client for interacting with HelloWorldApp smart contract"""
+    @property
+    def global_state(self) -> "_GlobalState":
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
+
+class _GlobalState:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+        
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {
+            "Vector": Vector
+        }
+
+    def get_all(self) -> GlobalStateValue:
+        """Get all current keyed values from global_state state"""
+        result = self.app_client.state.global_state.get_all()
+        if not result:
+            return typing.cast(GlobalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(GlobalStateValue, converted)
+
+    def my_struct(self) -> Vector:
+            """Get the current value of the my_struct key in global_state state"""
+            value = self.app_client.state.global_state.get_value("my_struct")
+            return self._struct_classes["Vector"](**value) if isinstance(value, dict) and "Vector" in self._struct_classes else typing.cast(Vector, value) # type: ignore
+
+class HelloWorldClient:
+    """Client for interacting with HelloWorld smart contract"""
 
     @typing.overload
     def __init__(self, app_client: applications.AppClient) -> None: ...
@@ -468,10 +307,10 @@ class HelloWorldAppClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = HelloWorldAppParams(self.app_client)
-        self.create_transaction = HelloWorldAppCreateTransactionParams(self.app_client)
-        self.send = HelloWorldAppSend(self.app_client)
-        self.state = HelloWorldAppState(self.app_client)
+        self.params = HelloWorldParams(self.app_client)
+        self.create_transaction = HelloWorldCreateTransactionParams(self.app_client)
+        self.send = HelloWorldSend(self.app_client)
+        self.state = HelloWorldState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -484,8 +323,8 @@ class HelloWorldAppClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "HelloWorldClient":
+        return HelloWorldClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -508,8 +347,8 @@ class HelloWorldAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "HelloWorldClient":
+        return HelloWorldClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -548,8 +387,8 @@ class HelloWorldAppClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "HelloWorldAppClient":
-        return HelloWorldAppClient(
+    ) -> "HelloWorldClient":
+        return HelloWorldClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -559,8 +398,8 @@ class HelloWorldAppClient:
             )
         )
 
-    def new_group(self) -> "HelloWorldAppComposer":
-        return HelloWorldAppComposer(self)
+    def new_group(self) -> "HelloWorldComposer":
+        return HelloWorldComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -568,12 +407,6 @@ class HelloWorldAppClient:
         method: typing.Literal["hello(string)string"],
         return_value: applications_abi.ABIReturn | None
     ) -> str | None: ...
-    @typing.overload
-    def decode_return_value(
-        self,
-        method: typing.Literal["hello_world_check(string)void"],
-        return_value: applications_abi.ABIReturn | None
-    ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
@@ -605,28 +438,14 @@ class HelloWorldAppClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating HelloWorldApp contract using bare calls"""
+class HelloWorldBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
+    """Parameters for creating HelloWorld contract using bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-@dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallUpdateParams(applications.AppClientBareCallParams):
-    """Parameters for calling HelloWorldApp contract using bare calls"""
-
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
-
-@dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallDeleteParams(applications.AppClientBareCallParams):
-    """Parameters for calling HelloWorldApp contract using bare calls"""
-
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
-
-class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing HelloWorldAppClient smart contracts"""
+class HelloWorldFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing HelloWorldClient smart contracts"""
 
     def __init__(
         self,
@@ -653,9 +472,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = HelloWorldAppFactoryParams(self.app_factory)
-        self.create_transaction = HelloWorldAppFactoryCreateTransaction(self.app_factory)
-        self.send = HelloWorldAppFactorySend(self.app_factory)
+        self.params = HelloWorldFactoryParams(self.app_factory)
+        self.create_transaction = HelloWorldFactoryCreateTransaction(self.app_factory)
+        self.send = HelloWorldFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -675,9 +494,7 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: HelloWorldAppBareCallCreateParams | None = None,
-        update_params: HelloWorldAppBareCallUpdateParams | None = None,
-        delete_params: HelloWorldAppBareCallDeleteParams | None = None,
+        create_params: HelloWorldBareCallCreateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -686,15 +503,13 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[HelloWorldAppClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[HelloWorldClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
-            update_params=update_params.to_algokit_utils_params() if update_params else None,
-            delete_params=delete_params.to_algokit_utils_params() if delete_params else None,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -705,7 +520,7 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return HelloWorldAppClient(deploy_response[0]), deploy_response[1]
+        return HelloWorldClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -717,9 +532,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
+    ) -> HelloWorldClient:
         """Get an app client by creator address and name"""
-        return HelloWorldAppClient(
+        return HelloWorldClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -740,9 +555,9 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> HelloWorldAppClient:
+    ) -> HelloWorldClient:
         """Get an app client by app ID"""
-        return HelloWorldAppClient(
+        return HelloWorldClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -754,17 +569,17 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class HelloWorldAppFactoryParams:
-    """Parameters for creating transactions for HelloWorldApp contract"""
+class HelloWorldFactoryParams:
+    """Parameters for creating transactions for HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactoryCreateParams(app_factory)
-        self.update = HelloWorldAppFactoryUpdateParams(app_factory)
-        self.delete = HelloWorldAppFactoryDeleteParams(app_factory)
+        self.create = HelloWorldFactoryCreateParams(app_factory)
+        self.update = HelloWorldFactoryUpdateParams(app_factory)
+        self.delete = HelloWorldFactoryDeleteParams(app_factory)
 
-class HelloWorldAppFactoryCreateParams:
-    """Parameters for 'create' operations of HelloWorldApp contract"""
+class HelloWorldFactoryCreateParams:
+    """Parameters for 'create' operations of HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -810,32 +625,8 @@ class HelloWorldAppFactoryCreateParams:
             )
         )
 
-    def hello_world_check(
-        self,
-        args: tuple[str] | HelloWorldCheckArgs,
-            *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
-    ) -> transactions.AppCreateMethodCallParams:
-        """Creates a new instance using the hello_world_check(string)void ABI method"""
-        method_args = _parse_abi_args(args)
-        return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
-                method="hello_world_check(string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
-            )
-        )
-
-class HelloWorldAppFactoryUpdateParams:
-    """Parameters for 'update' operations of HelloWorldApp contract"""
+class HelloWorldFactoryUpdateParams:
+    """Parameters for 'update' operations of HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -857,8 +648,8 @@ class HelloWorldAppFactoryUpdateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class HelloWorldAppFactoryDeleteParams:
-    """Parameters for 'delete' operations of HelloWorldApp contract"""
+class HelloWorldFactoryDeleteParams:
+    """Parameters for 'delete' operations of HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -881,16 +672,16 @@ class HelloWorldAppFactoryDeleteParams:
         )
 
 
-class HelloWorldAppFactoryCreateTransaction:
-    """Create transactions for HelloWorldApp contract"""
+class HelloWorldFactoryCreateTransaction:
+    """Create transactions for HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactoryCreateTransactionCreate(app_factory)
+        self.create = HelloWorldFactoryCreateTransactionCreate(app_factory)
 
 
-class HelloWorldAppFactoryCreateTransactionCreate:
-    """Create new instances of HelloWorldApp contract"""
+class HelloWorldFactoryCreateTransactionCreate:
+    """Create new instances of HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -913,16 +704,16 @@ class HelloWorldAppFactoryCreateTransactionCreate:
         )
 
 
-class HelloWorldAppFactorySend:
-    """Send calls to HelloWorldApp contract"""
+class HelloWorldFactorySend:
+    """Send calls to HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = HelloWorldAppFactorySendCreate(app_factory)
+        self.create = HelloWorldFactorySendCreate(app_factory)
 
 
-class HelloWorldAppFactorySendCreate:
-    """Send create calls to HelloWorldApp contract"""
+class HelloWorldFactorySendCreate:
+    """Send create calls to HelloWorld contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -938,39 +729,21 @@ class HelloWorldAppFactorySendCreate:
     OnComplete.CloseOutOC,
 ] | None) = None,
         **kwargs
-    ) -> tuple[HelloWorldAppClient, transactions.SendAppCreateTransactionResult]:
+    ) -> tuple[HelloWorldClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
-        return HelloWorldAppClient(result[0]), result[1]
+        return HelloWorldClient(result[0]), result[1]
 
 
-class _HelloWorldAppUpdateComposer:
-    def __init__(self, composer: "HelloWorldAppComposer"):
-        self.composer = composer
+class HelloWorldComposer:
+    """Composer for creating transaction groups for HelloWorld contract calls"""
 
-
-class _HelloWorldAppDeleteComposer:
-    def __init__(self, composer: "HelloWorldAppComposer"):
-        self.composer = composer
-
-
-class HelloWorldAppComposer:
-    """Composer for creating transaction groups for HelloWorldApp contract calls"""
-
-    def __init__(self, client: "HelloWorldAppClient"):
+    def __init__(self, client: "HelloWorldClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
-
-    @property
-    def update(self) -> "_HelloWorldAppUpdateComposer":
-        return _HelloWorldAppUpdateComposer(self)
-
-    @property
-    def delete(self) -> "_HelloWorldAppDeleteComposer":
-        return _HelloWorldAppDeleteComposer(self)
 
     def hello(
         self,
@@ -992,7 +765,7 @@ class HelloWorldAppComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "HelloWorldAppComposer":
+    ) -> "HelloWorldComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello(
                 args=args, # type: ignore
@@ -1021,55 +794,6 @@ class HelloWorldAppComposer:
         )
         return self
 
-    def hello_world_check(
-        self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> "HelloWorldAppComposer":
-        self._composer.add_app_call_method_call(
-            self.client.params.hello_world_check(
-                args=args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello_world_check(string)void", v
-            )
-        )
-        return self
-
     def clear_state(
         self,
         *,
@@ -1089,7 +813,7 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
-    ) -> "HelloWorldAppComposer":
+    ) -> "HelloWorldComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -1116,7 +840,7 @@ class HelloWorldAppComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "HelloWorldAppComposer":
+    ) -> "HelloWorldComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

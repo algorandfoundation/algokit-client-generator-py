@@ -20,7 +20,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 from algokit_utils import applications, models, protocols, transactions
 from algokit_utils.applications import abi as applications_abi
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "NestedContract", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmFwcHJvdmFsX3Byb2dyYW06CiAgICBpbnRjYmxvY2sgMSAwCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIGNhbGxzdWIgX19wdXlhX2FyYzRfcm91dGVyX18KICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuX19wdXlhX2FyYzRfcm91dGVyX18oKSAtPiB1aW50NjQ6Cl9fcHV5YV9hcmM0X3JvdXRlcl9fOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgcHJvdG8gMCAxCiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDcKICAgIHB1c2hieXRlc3MgMHhmZTZiZGY2OSAweDlmZDgzNWY4IDB4MzRhZjM5NDIgLy8gbWV0aG9kICJhZGQodWludDY0LHVpbnQ2NCl1aW50NjQiLCBtZXRob2QgImdldF9wYXlfdHhuX2Ftb3VudChwYXkpdWludDY0IiwgbWV0aG9kICJuZXN0ZWRfbWV0aG9kX2NhbGwoc3RyaW5nLHBheSxhcHBsKWJ5dGVbXSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2FkZF9yb3V0ZUAyIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUAzIF9fcHV5YV9hcmM0X3JvdXRlcl9fX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA0CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgpfX3B1eWFfYXJjNF9yb3V0ZXJfX19hZGRfcm91dGVAMjoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkQ29udHJhY3QoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fZ2V0X3BheV90eG5fYW1vdW50X3JvdXRlQDM6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGdldF9wYXlfdHhuX2Ftb3VudAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDQ6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgdHhuIEdyb3VwSW5kZXgKICAgIHB1c2hpbnQgMiAvLyAyCiAgICAtCiAgICBkdXAKICAgIGd0eG5zIFR5cGVFbnVtCiAgICBpbnRjXzAgLy8gcGF5CiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgcGF5CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIHB1c2hpbnQgNiAvLyBhcHBsCiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgYXBwbAogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIG5lc3RlZF9tZXRob2RfY2FsbAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDc6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogX19wdXlhX2FyYzRfcm91dGVyX19fYWZ0ZXJfaWZfZWxzZUAxMQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXRzdWIKCl9fcHV5YV9hcmM0X3JvdXRlcl9fX2FmdGVyX2lmX2Vsc2VAMTE6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMubmVzdGVkLm5lc3RlZC5OZXN0ZWRDb250cmFjdC5hZGQoYTogYnl0ZXMsIGI6IGJ5dGVzKSAtPiBieXRlczoKYWRkOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo1LTYKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIGFkZChzZWxmLCBhOiBhcmM0LlVJbnQ2NCwgYjogYXJjNC5VSW50NjQpIC0+IGFyYzQuVUludDY0OgogICAgcHJvdG8gMiAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjcKICAgIC8vIHJldHVybiBhcmM0LlVJbnQ2NChhLm5hdGl2ZSArIGIubmF0aXZlKQogICAgZnJhbWVfZGlnIC0yCiAgICBidG9pCiAgICBmcmFtZV9kaWcgLTEKICAgIGJ0b2kKICAgICsKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QubmVzdGVkX21ldGhvZF9jYWxsKF86IGJ5dGVzLCBfcGF5X3R4bjogdWludDY0LCBtZXRob2RfY2FsbDogdWludDY0KSAtPiBieXRlczoKbmVzdGVkX21ldGhvZF9jYWxsOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMy0xNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgbmVzdGVkX21ldGhvZF9jYWxsKAogICAgLy8gICAgIHNlbGYsIF86IGFyYzQuU3RyaW5nLCBfcGF5X3R4bjogZ3R4bi5QYXltZW50VHJhbnNhY3Rpb24sIG1ldGhvZF9jYWxsOiBndHhuLkFwcGxpY2F0aW9uQ2FsbFRyYW5zYWN0aW9uCiAgICAvLyApIC0+IGFyYzQuRHluYW1pY0J5dGVzOgogICAgcHJvdG8gMyAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjE3CiAgICAvLyByZXR1cm4gYXJjNC5EeW5hbWljQnl0ZXMobWV0aG9kX2NhbGwudHhuX2lkKQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBUeElECiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmNsZWFyX3N0YXRlX3Byb2dyYW06CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [57, 79, 105], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [151], "errorMessage": "can only call when creating"}, {"pc": [60, 82, 108], "errorMessage": "can only call when not creating"}, {"pc": [133], "errorMessage": "transaction type is appl"}, {"pc": [92, 122], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}}], "name": "ARC56Test", "state": {"keys": {"box": {"box_key": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"global_key": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"local_key": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"box_map": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"global_map": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"local_map": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "compilerInfo": {"compiler": "algod", "compilerVersion": {"commitHash": "0d10b244", "major": 3, "minor": 26, "patch": 0}}, "desc": "", "scratchVariables": {"some_number": {"slot": 200, "type": "uint64"}}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludGNibG9jayAxIFRNUExfc29tZU51bWJlcgpieXRlY2Jsb2NrIDB4NjI2Zjc4NGI2NTc5CgovLyBUaGlzIFRFQUwgd2FzIGdlbmVyYXRlZCBieSBURUFMU2NyaXB0IHYwLjEwNS4zCi8vIGh0dHBzOi8vZ2l0aHViLmNvbS9hbGdvcmFuZGZvdW5kYXRpb24vVEVBTFNjcmlwdAoKLy8gVGhpcyBjb250cmFjdCBpcyBjb21wbGlhbnQgd2l0aCBhbmQvb3IgaW1wbGVtZW50cyB0aGUgZm9sbG93aW5nIEFSQ3M6IFsgQVJDNCBdCgovLyBUaGUgZm9sbG93aW5nIHRlbiBsaW5lcyBvZiBURUFMIGhhbmRsZSBpbml0aWFsIHByb2dyYW0gZmxvdwovLyBUaGlzIHBhdHRlcm4gaXMgdXNlZCB0byBtYWtlIGl0IGVhc3kgZm9yIGFueW9uZSB0byBwYXJzZSB0aGUgc3RhcnQgb2YgdGhlIHByb2dyYW0gYW5kIGRldGVybWluZSBpZiBhIHNwZWNpZmljIGFjdGlvbiBpcyBhbGxvd2VkCi8vIEhlcmUsIGFjdGlvbiByZWZlcnMgdG8gdGhlIE9uQ29tcGxldGUgaW4gY29tYmluYXRpb24gd2l0aCB3aGV0aGVyIHRoZSBhcHAgaXMgYmVpbmcgY3JlYXRlZCBvciBjYWxsZWQKLy8gRXZlcnkgcG9zc2libGUgYWN0aW9uIGZvciB0aGlzIGNvbnRyYWN0IGlzIHJlcHJlc2VudGVkIGluIHRoZSBzd2l0Y2ggc3RhdGVtZW50Ci8vIElmIHRoZSBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoZSBjb250cmFjdCwgaXRzIHJlc3BlY3RpdmUgYnJhbmNoIHdpbGwgYmUgIipOT1RfSU1QTEVNRU5URUQiIHdoaWNoIGp1c3QgY29udGFpbnMgImVyciIKdHhuIEFwcGxpY2F0aW9uSUQKIQpwdXNoaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoICpjYWxsX05vT3AgKmNhbGxfT3B0SW4gKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqY3JlYXRlX05vT3AgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVECgoqTk9UX0lNUExFTUVOVEVEOgoJLy8gVGhlIHJlcXVlc3RlZCBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoaXMgY29udHJhY3QuIEFyZSB5b3UgdXNpbmcgdGhlIGNvcnJlY3QgT25Db21wbGV0ZT8gRGlkIHlvdSBzZXQgeW91ciBhcHAgSUQ/CgllcnIKCi8vIGZvbygoKHVpbnQ2NCx1aW50NjQpLCh1aW50NjQsdWludDY0KSkpKHVpbnQ2NCx1aW50NjQpCiphYmlfcm91dGVfZm9vOgoJLy8gVGhlIEFCSSByZXR1cm4gcHJlZml4CglwdXNoYnl0ZXMgMHgxNTFmN2M3NQoKCS8vIGlucHV0czogKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAxCglkdXAKCWxlbgoJcHVzaGludCAzMgoJPT0KCgkvLyBhcmd1bWVudCAwIChpbnB1dHMpIGZvciBmb28gbXVzdCBiZSBhICgodWludDY0LHVpbnQ2NCksKHVpbnQ2NCx1aW50NjQpKQoJYXNzZXJ0CgoJLy8gZXhlY3V0ZSBmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KQoJY2FsbHN1YiBmb28KCWNvbmNhdAoJbG9nCglpbnRjIDAgLy8gMQoJcmV0dXJuCgovLyBmb28oaW5wdXRzOiBJbnB1dHMpOiBPdXRwdXRzCmZvbzoKCXByb3RvIDEgMQoKCS8vICppZjBfY29uZGl0aW9uCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czozMAoJLy8gaW5wdXRzLnN1YnRyYWN0LmEgPCBpbnB1dHMuc3VidHJhY3QuYgoJZnJhbWVfZGlnIC0xIC8vIGlucHV0czogSW5wdXRzCglleHRyYWN0IDE2IDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAyNCA4CglidG9pCgk8CglieiAqaWYwX2VuZAoKCS8vICppZjBfY29uc2VxdWVudAoJLy8gc3VidHJhY3QuYSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiBzdWJ0cmFjdC5iCgllcnIKCippZjBfZW5kOgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzIKCS8vIHRoaXMuZ2xvYmFsS2V5LnZhbHVlID0gdGhpcy5zb21lTnVtYmVyCglwdXNoYnl0ZXMgMHg2NzZjNmY2MjYxNmM0YjY1NzkgLy8gImdsb2JhbEtleSIKCWludGMgMSAvLyBUTVBMX3NvbWVOdW1iZXIKCWFwcF9nbG9iYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzMKCS8vIHRoaXMuZ2xvYmFsTWFwKCdmb28nKS52YWx1ZSA9IHsgZm9vOiAxMywgYmFyOiAzNyB9CglwdXNoYnl0ZXMgMHg3MDAwMDM2NjZmNmYKCXB1c2hieXRlcyAweDAwMGQwMDI1CglhcHBfZ2xvYmFsX3B1dAoKCS8vIGV4YW1wbGVzL2FyYzU2X3Rlc3QvYXJjNTZfdGVzdC5hbGdvLnRzOjM1CgkvLyByZXR1cm4gewoJLy8gICAgICAgc3VtOiBpbnB1dHMuYWRkLmEgKyBpbnB1dHMuYWRkLmIsCgkvLyAgICAgICBkaWZmZXJlbmNlOiBpbnB1dHMuc3VidHJhY3QuYSAtIGlucHV0cy5zdWJ0cmFjdC5iLAoJLy8gICAgIH0KCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAwIDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCA4IDgKCWJ0b2kKCSsKCWl0b2IKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAxNiA4CglidG9pCglmcmFtZV9kaWcgLTEgLy8gaW5wdXRzOiBJbnB1dHMKCWV4dHJhY3QgMjQgOAoJYnRvaQoJLQoJaXRvYgoJY29uY2F0CglyZXRzdWIKCi8vIG9wdEluVG9BcHBsaWNhdGlvbigpdm9pZAoqYWJpX3JvdXRlX29wdEluVG9BcHBsaWNhdGlvbjoKCS8vIGV4ZWN1dGUgb3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkCgljYWxsc3ViIG9wdEluVG9BcHBsaWNhdGlvbgoJaW50YyAwIC8vIDEKCXJldHVybgoKLy8gb3B0SW5Ub0FwcGxpY2F0aW9uKCk6IHZvaWQKb3B0SW5Ub0FwcGxpY2F0aW9uOgoJcHJvdG8gMCAwCgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDIKCS8vIHRoaXMubG9jYWxLZXkodGhpcy50eG4uc2VuZGVyKS52YWx1ZSA9IHRoaXMuc29tZU51bWJlcgoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzRiNjU3OSAvLyAibG9jYWxLZXkiCglpbnRjIDEgLy8gVE1QTF9zb21lTnVtYmVyCglhcHBfbG9jYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDMKCS8vIHRoaXMubG9jYWxNYXAodGhpcy50eG4uc2VuZGVyLCAnZm9vJykudmFsdWUgPSAnYmFyJwoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NzA2NjZmNmYKCXB1c2hieXRlcyAweDAwMDM2MjYxNzIKCWFwcF9sb2NhbF9wdXQKCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czo0NAoJLy8gdGhpcy5ib3hLZXkudmFsdWUgPSAnYmF6JwoJYnl0ZWMgMCAvLyAgImJveEtleSIKCWR1cAoJYm94X2RlbAoJcG9wCglwdXNoYnl0ZXMgMHgwMDAzNjI2MTdhCglib3hfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDUKCS8vIHRoaXMuYm94TWFwKHsgYWRkOiB7IGE6IDEsIGI6IDIgfSwgc3VidHJhY3Q6IHsgYTogNCwgYjogMyB9IH0pLnZhbHVlID0gewoJLy8gICAgICAgc3VtOiAzLAoJLy8gICAgICAgZGlmZmVyZW5jZTogMSwKCS8vICAgICB9CglwdXNoYnl0ZXMgMHg3MDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyMDAwMDAwMDAwMDAwMDAwNDAwMDAwMDAwMDAwMDAwMDMKCXB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDAwMDAxCglib3hfcHV0CglyZXRzdWIKCiphYmlfcm91dGVfY3JlYXRlQXBwbGljYXRpb246CglpbnRjIDAgLy8gMQoJcmV0dXJuCgoqY3JlYXRlX05vT3A6CglwdXNoYnl0ZXMgMHhiODQ0N2IzNiAvLyBtZXRob2QgImNyZWF0ZUFwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9jcmVhdGVBcHBsaWNhdGlvbgoKCS8vIHRoaXMgY29udHJhY3QgZG9lcyBub3QgaW1wbGVtZW50IHRoZSBnaXZlbiBBQkkgbWV0aG9kIGZvciBjcmVhdGUgTm9PcAoJZXJyCgoqY2FsbF9Ob09wOgoJcHVzaGJ5dGVzIDB4Mzk2ZDU1MGUgLy8gbWV0aG9kICJmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KSIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoICphYmlfcm91dGVfZm9vCgoJLy8gdGhpcyBjb250cmFjdCBkb2VzIG5vdCBpbXBsZW1lbnQgdGhlIGdpdmVuIEFCSSBtZXRob2QgZm9yIGNhbGwgTm9PcAoJZXJyCgoqY2FsbF9PcHRJbjoKCXB1c2hieXRlcyAweDAxYTNhM2ZmIC8vIG1ldGhvZCAib3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9vcHRJblRvQXBwbGljYXRpb24KCgkvLyB0aGlzIGNvbnRyYWN0IGRvZXMgbm90IGltcGxlbWVudCB0aGUgZ2l2ZW4gQUJJIG1ldGhvZCBmb3IgY2FsbCBPcHRJbgoJZXJy", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEw"}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [1, 2], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 15}, {"pc": [3], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 16}, {"pc": [4, 5], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 17}, {"pc": [6], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 18}, {"pc": [7, 8], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 19}, {"pc": [9], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 20}, {"pc": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 21}, {"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 25}, {"pc": [37, 38, 39, 40, 41, 42], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 30}, {"pc": [43, 44, 45], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 33}, {"pc": [46], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 34}, {"pc": [47], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 35}, {"pc": [48, 49], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 36}, {"pc": [50], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 37}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 40}, {"pc": [52, 53, 54], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 43}, {"pc": [55], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 44}, {"pc": [56], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 45}, {"pc": [57], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 46}, {"pc": [58], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 47}, {"pc": [59, 60, 61], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 51}, {"pc": [62, 63], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 56}, {"pc": [64, 65, 66], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 57}, {"pc": [67], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 58}, {"pc": [68, 69], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 59}, {"pc": [70, 71, 72], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 60}, {"pc": [73], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 61}, {"pc": [74], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 62}, {"pc": [75, 76, 77], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 63}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 67}, {"pc": [79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 72}, {"pc": [90], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 73}, {"pc": [91], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 74}, {"pc": [92, 93, 94, 95, 96, 97, 98, 99], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 78}, {"pc": [100, 101, 102, 103, 104, 105], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 79}, {"pc": [106], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 80}, {"pc": [107, 108], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 87}, {"pc": [109, 110, 111], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 88}, {"pc": [112], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 89}, {"pc": [113, 114], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 90}, {"pc": [115, 116, 117], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 91}, {"pc": [118], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 92}, {"pc": [119], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 93}, {"pc": [120], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 94}, {"pc": [121, 122], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 95}, {"pc": [123, 124, 125], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 96}, {"pc": [126], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 97}, {"pc": [127, 128], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 98}, {"pc": [129, 130, 131], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 99}, {"pc": [132], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 100}, {"pc": [133], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 101}, {"pc": [134], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 102}, {"pc": [135], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 103}, {"pc": [136], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 104}, {"pc": [137, 138, 139], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 109}, {"pc": [140], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 110}, {"pc": [141], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 111}, {"pc": [142, 143, 144], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 115}, {"pc": [145, 146], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 119}, {"pc": [147, 148, 149, 150, 151, 152, 153, 154, 155, 156], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 120}, {"pc": [157], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 121}, {"pc": [158], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 122}, {"pc": [159, 160], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 126}, {"pc": [161, 162, 163, 164, 165, 166], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 127}, {"pc": [167, 168, 169, 170, 171, 172, 173], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 128}, {"pc": [174], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 129}, {"pc": [175], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 133}, {"pc": [176], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 134}, {"pc": [177], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 135}, {"pc": [178], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 136}, {"pc": [179, 180, 181, 182, 183, 184, 185], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 137}, {"pc": [186], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 138}, {"pc": [187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221], "source": "examples/arc56_test/arc56_test.algo.ts:45", "teal": 145}, {"pc": [222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239], "source": "examples/arc56_test/arc56_test.algo.ts:47", "teal": 146}, {"pc": [240], "source": "examples/arc56_test/arc56_test.algo.ts:45", "teal": 147}, {"pc": [241], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 148}, {"pc": [242], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 151}, {"pc": [243], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 152}, {"pc": [244, 245, 246, 247, 248, 249], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 155}, {"pc": [250, 251, 252], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 156}, {"pc": [253, 254, 255, 256], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 157}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 160}, {"pc": [258, 259, 260, 261, 262, 263], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 163}, {"pc": [264, 265, 266], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 164}, {"pc": [267, 268, 269, 270], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 165}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 168}, {"pc": [272, 273, 274, 275, 276, 277], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 171}, {"pc": [278, 279, 280], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 172}, {"pc": [281, 282, 283, 284], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 173}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {"some_number": {"type": "uint64"}}}"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -47,30 +47,99 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
 
 
 @dataclasses.dataclass(frozen=True)
-class AddArgs:
-    """Dataclass for add arguments"""
+class FooUint16BarUint16:
+    """Struct for { foo: uint16; bar: uint16 }"""
+    foo: int
+    bar: int
+
+@dataclasses.dataclass(frozen=True)
+class Outputs:
+    """Struct for Outputs"""
+    sum: int
+    difference: int
+
+@dataclasses.dataclass(frozen=True)
+class InputsAdd:
+    """Struct for Inputs_add"""
     a: int
     b: int
 
 @dataclasses.dataclass(frozen=True)
-class GetPayTxnAmountArgs:
-    """Dataclass for get_pay_txn_amount arguments"""
-    pay_txn: transactions.AppMethodCallTransactionArgument
+class InputsSubtract:
+    """Struct for Inputs_subtract"""
+    a: int
+    b: int
 
 @dataclasses.dataclass(frozen=True)
-class NestedMethodCallArgs:
-    """Dataclass for nested_method_call arguments"""
-    _: str
-    _pay_txn: transactions.AppMethodCallTransactionArgument
-    method_call: transactions.AppMethodCallTransactionArgument
+class Inputs:
+    """Struct for Inputs"""
+    add: InputsAdd
+    subtract: InputsSubtract
 
 
-class NestedContractParams:
+@dataclasses.dataclass(frozen=True)
+class FooArgs:
+    """Dataclass for foo arguments"""
+    inputs: Inputs
+
+
+class _ARC56TestOptIn:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-    def add(
+
+    def opt_in_to_application(
         self,
-        args: tuple[int, int] | AddArgs,    *,
+            *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
+        
+    ) -> transactions.AppCallMethodCallParams:
+    
+        return self.app_client.params.opt_in(applications.AppClientMethodCallWithSendParams(
+                method="optInToApplication()void",
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
+                
+            ))
+
+
+class ARC56TestParams:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+    @property
+    def opt_in(self) -> "_ARC56TestOptIn":
+        return _ARC56TestOptIn(self.app_client)
+    def foo(
+        self,
+        args: tuple[Inputs] | FooArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -91,7 +160,7 @@ class NestedContractParams:
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="add(uint64,uint64)uint64",
+                method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -112,9 +181,9 @@ class NestedContractParams:
                 
             ))
 
-    def get_pay_txn_amount(
+    def create_application(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,    *,
+            *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -133,54 +202,9 @@ class NestedContractParams:
         populate_app_call_resources: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
+    
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-
-    def nested_method_call(
-        self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
+                method="createApplication()void",
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -204,12 +228,63 @@ class NestedContractParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class NestedContractCreateTransactionParams:
+class _ARC56TestOptInTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-    def add(
+
+    def opt_in_to_application(
         self,
-        args: tuple[int, int] | AddArgs,    *,
+            *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
+        
+    ) -> transactions.BuiltTransactions:
+    
+        return self.app_client.create_transaction.opt_in(applications.AppClientMethodCallWithSendParams(
+                method="optInToApplication()void",
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
+                
+            ))
+
+
+class ARC56TestCreateTransactionParams:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+    @property
+    def opt_in(self) -> "_ARC56TestOptInTransaction":
+        return _ARC56TestOptInTransaction(self.app_client)
+    def foo(
+        self,
+        args: tuple[Inputs] | FooArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -230,7 +305,7 @@ class NestedContractCreateTransactionParams:
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="add(uint64,uint64)uint64",
+                method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -251,9 +326,9 @@ class NestedContractCreateTransactionParams:
                 
             ))
 
-    def get_pay_txn_amount(
+    def create_application(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,    *,
+            *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -272,54 +347,9 @@ class NestedContractCreateTransactionParams:
         populate_app_call_resources: bool = False,
         
     ) -> transactions.BuiltTransactions:
-        method_args = _parse_abi_args(args)
+    
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-
-    def nested_method_call(
-        self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.BuiltTransactions:
-        method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
+                method="createApplication()void",
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -343,57 +373,13 @@ class NestedContractCreateTransactionParams:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class NestedContractSend:
+class _ARC56TestOptInSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
-    def add(
-        self,
-        args: tuple[int, int] | AddArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> transactions.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="add(uint64,uint64)uint64",
-                args=method_args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                
-            ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
 
-    def get_pay_txn_amount(
+    def opt_in_to_application(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,    *,
+            *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -411,11 +397,10 @@ class NestedContractSend:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> transactions.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
+    ) -> transactions.SendAppTransactionResult[None]:
+    
+        response = self.app_client.send.opt_in(applications.AppClientMethodCallWithSendParams(
+                method="optInToApplication()void",
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -434,11 +419,18 @@ class NestedContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
-    def nested_method_call(
+
+class ARC56TestSend:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+    @property
+    def opt_in(self) -> "_ARC56TestOptInSend":
+        return _ARC56TestOptInSend(self.app_client)
+    def foo(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
+        args: tuple[Inputs] | FooArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -456,10 +448,10 @@ class NestedContractSend:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> transactions.SendAppTransactionResult[bytes]:
+    ) -> transactions.SendAppTransactionResult[Outputs]:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="nested_method_call(string,pay,appl)byte[]",
+                method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
                 args=method_args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -479,20 +471,239 @@ class NestedContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bytes](**dataclasses.asdict(response))
+        return transactions.SendAppTransactionResult[Outputs](**(dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return)))).__dict__)
+
+    def create_application(
+        self,
+            *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
+        
+    ) -> transactions.SendAppTransactionResult[None]:
+    
+        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
+                method="createApplication()void",
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
+                
+            ))
+        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
 
     def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class NestedContractState:
-    """Methods to access state for the current NestedContract app"""
+class GlobalStateValue(typing.TypedDict):
+    """Shape of global_state state key values"""
+    global_key: int
+
+class LocalStateValue(typing.TypedDict):
+    """Shape of local_state state key values"""
+    local_key: int
+
+class BoxStateValue(typing.TypedDict):
+    """Shape of box state key values"""
+    box_key: str
+
+class ARC56TestState:
+    """Methods to access state for the current ARC56Test app"""
 
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-class NestedContractClient:
-    """Client for interacting with NestedContract smart contract"""
+    @property
+    def global_state(self) -> "_GlobalState":
+            """Methods to access global_state for the current app"""
+            return _GlobalState(self.app_client)
+
+    def local_state(self, address: str) -> "_LocalState":
+            """Methods to access local_state for the current app"""
+            return _LocalState(self.app_client, address)
+
+    @property
+    def box(self) -> "_BoxState":
+            """Methods to access box for the current app"""
+            return _BoxState(self.app_client)
+
+class _GlobalState:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+        
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {
+            "{ foo: uint16; bar: uint16 }": FooUint16BarUint16
+        }
+
+    def get_all(self) -> GlobalStateValue:
+        """Get all current keyed values from global_state state"""
+        result = self.app_client.state.global_state.get_all()
+        if not result:
+            return typing.cast(GlobalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(GlobalStateValue, converted)
+
+    def global_key(self) -> int:
+            """Get the current value of the global_key key in global_state state"""
+            value = self.app_client.state.global_state.get_value("global_key")
+            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+
+    @property
+    def global_map(self) -> "_MapState[str, FooUint16BarUint16]":
+        """Get values from the global_map map in global_state state"""
+        return _MapState(
+            self.app_client.state.global_state,
+            "global_map",
+            self._struct_classes.get("{ foo: uint16; bar: uint16 }")
+        )
+
+class _LocalState:
+    def __init__(self, app_client: applications.AppClient, address: str):
+        self.app_client = app_client
+        self.address = address
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {}
+
+    def get_all(self) -> LocalStateValue:
+        """Get all current keyed values from local_state state"""
+        result = self.app_client.state.local_state(self.address).get_all()
+        if not result:
+            return typing.cast(LocalStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(LocalStateValue, converted)
+
+    def local_key(self) -> int:
+            """Get the current value of the local_key key in local_state state"""
+            value = self.app_client.state.local_state(self.address).get_value("local_key")
+            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+
+    @property
+    def local_map(self) -> "_MapState[bytes, str]":
+        """Get values from the local_map map in local_state state"""
+        return _MapState(
+            self.app_client.state.local_state(self.address),
+            "local_map",
+            None
+        )
+
+class _BoxState:
+    def __init__(self, app_client: applications.AppClient):
+        self.app_client = app_client
+        
+        # Pre-generated mapping of value types to their struct classes
+        self._struct_classes = {
+            "Outputs": Outputs
+        }
+
+    def get_all(self) -> BoxStateValue:
+        """Get all current keyed values from box state"""
+        result = self.app_client.state.box.get_all()
+        if not result:
+            return typing.cast(BoxStateValue, {})
+
+        converted = {}
+        for key, value in result.items():
+            key_info = self.app_client.app_spec.state.keys.box.get(key)
+            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
+            converted[key] = (
+                struct_class(**value) if struct_class and isinstance(value, dict)
+                else value
+            )
+        return typing.cast(BoxStateValue, converted)
+
+    def box_key(self) -> str:
+            """Get the current value of the box_key key in box state"""
+            value = self.app_client.state.box.get_value("box_key")
+            return self._struct_classes["string"](**value) if isinstance(value, dict) and "string" in self._struct_classes else typing.cast(str, value) # type: ignore
+
+    @property
+    def box_map(self) -> "_MapState[Inputs, Outputs]":
+        """Get values from the box_map map in box state"""
+        return _MapState(
+            self.app_client.state.box,
+            "box_map",
+            self._struct_classes.get("Outputs")
+        )
+
+KeyType = typing.TypeVar("KeyType")
+ValueType = typing.TypeVar("ValueType")
+
+class _AppClientStateMethodsProtocol(typing.Protocol):
+    def get_map(self, map_name: str) -> dict[typing.Any, typing.Any]:
+        ...
+    def get_map_value(self, map_name: str, key: typing.Any) -> typing.Any | None:
+        ...
+
+class _MapState(typing.Generic[KeyType, ValueType]):
+    """Generic class for accessing state maps with strongly typed keys and values"""
+
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
+                struct_class: typing.Type[ValueType] | None = None):
+        self._state_accessor = state_accessor
+        self._map_name = map_name
+        self._struct_class = struct_class
+
+    def get_map(self) -> dict[KeyType, ValueType]:
+        """Get all current values in the map"""
+        result = self._state_accessor.get_map(self._map_name)
+        if self._struct_class and result:
+            return {k: self._struct_class(**v) if isinstance(v, dict) else v
+                    for k, v in result.items()}
+        return typing.cast(dict[KeyType, ValueType], result or {})
+
+    def get_value(self, key: KeyType) -> ValueType | None:
+        """Get a value from the map by key"""
+        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key)
+        if value is not None and self._struct_class and isinstance(value, dict):
+            return self._struct_class(**value)
+        return typing.cast(ValueType | None, value)
+
+
+class ARC56TestClient:
+    """Client for interacting with ARC56Test smart contract"""
 
     @typing.overload
     def __init__(self, app_client: applications.AppClient) -> None: ...
@@ -540,10 +751,10 @@ class NestedContractClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = NestedContractParams(self.app_client)
-        self.create_transaction = NestedContractCreateTransactionParams(self.app_client)
-        self.send = NestedContractSend(self.app_client)
-        self.state = NestedContractState(self.app_client)
+        self.params = ARC56TestParams(self.app_client)
+        self.create_transaction = ARC56TestCreateTransactionParams(self.app_client)
+        self.send = ARC56TestSend(self.app_client)
+        self.state = ARC56TestState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -556,8 +767,8 @@ class NestedContractClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "ARC56TestClient":
+        return ARC56TestClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -580,8 +791,8 @@ class NestedContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "ARC56TestClient":
+        return ARC56TestClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -620,8 +831,8 @@ class NestedContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "ARC56TestClient":
+        return ARC56TestClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -631,27 +842,27 @@ class NestedContractClient:
             )
         )
 
-    def new_group(self) -> "NestedContractComposer":
-        return NestedContractComposer(self)
+    def new_group(self) -> "ARC56TestComposer":
+        return ARC56TestComposer(self)
 
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["add(uint64,uint64)uint64"],
+        method: typing.Literal["foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)"],
         return_value: applications_abi.ABIReturn | None
-    ) -> int | None: ...
+    ) -> Outputs | None: ...
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["get_pay_txn_amount(pay)uint64"],
+        method: typing.Literal["createApplication()void"],
         return_value: applications_abi.ABIReturn | None
-    ) -> int | None: ...
+    ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["nested_method_call(string,pay,appl)byte[]"],
+        method: typing.Literal["optInToApplication()void"],
         return_value: applications_abi.ABIReturn | None
-    ) -> bytes | None: ...
+    ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
@@ -663,7 +874,7 @@ class NestedContractClient:
         self,
         method: str,
         return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | bytes | int:
+    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | Outputs:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -683,14 +894,26 @@ class NestedContractClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class NestedContractBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating NestedContract contract using bare calls"""
+class ARC56TestMethodCallCreateParams(
+    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+        typing.Any,
+        typing.Any,
+        typing.Literal[OnComplete.NoOpOC]
+    ]
+):
+    """Parameters for creating ARC56Test contract using ABI"""
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
-        return applications.AppClientBareCallCreateParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
+        method_args = _parse_abi_args(self.args)
+        return applications.AppClientMethodCallCreateParams(
+            **{
+                **self.__dict__,
+                "args": method_args,
+            }
+        )
 
-class NestedContractFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing NestedContractClient smart contracts"""
+class ARC56TestFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing ARC56TestClient smart contracts"""
 
     def __init__(
         self,
@@ -717,9 +940,9 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = NestedContractFactoryParams(self.app_factory)
-        self.create_transaction = NestedContractFactoryCreateTransaction(self.app_factory)
-        self.send = NestedContractFactorySend(self.app_factory)
+        self.params = ARC56TestFactoryParams(self.app_factory)
+        self.create_transaction = ARC56TestFactoryCreateTransaction(self.app_factory)
+        self.send = ARC56TestFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -739,7 +962,7 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: NestedContractBareCallCreateParams | None = None,
+        create_params: ARC56TestMethodCallCreateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -748,7 +971,7 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[NestedContractClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[ARC56TestClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
@@ -765,7 +988,7 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return NestedContractClient(deploy_response[0]), deploy_response[1]
+        return ARC56TestClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -777,9 +1000,9 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NestedContractClient:
+    ) -> ARC56TestClient:
         """Get an app client by creator address and name"""
-        return NestedContractClient(
+        return ARC56TestClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -800,9 +1023,9 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NestedContractClient:
+    ) -> ARC56TestClient:
         """Get an app client by app ID"""
-        return NestedContractClient(
+        return ARC56TestClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -814,17 +1037,17 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class NestedContractFactoryParams:
-    """Parameters for creating transactions for NestedContract contract"""
+class ARC56TestFactoryParams:
+    """Parameters for creating transactions for ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactoryCreateParams(app_factory)
-        self.update = NestedContractFactoryUpdateParams(app_factory)
-        self.delete = NestedContractFactoryDeleteParams(app_factory)
+        self.create = ARC56TestFactoryCreateParams(app_factory)
+        self.update = ARC56TestFactoryUpdateParams(app_factory)
+        self.delete = ARC56TestFactoryDeleteParams(app_factory)
 
-class NestedContractFactoryCreateParams:
-    """Parameters for 'create' operations of NestedContract contract"""
+class ARC56TestFactoryCreateParams:
+    """Parameters for 'create' operations of ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -846,9 +1069,9 @@ class NestedContractFactoryCreateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-    def add(
+    def foo(
         self,
-        args: tuple[int, int] | AddArgs,
+        args: tuple[Inputs] | FooArgs,
             *,
         on_complete: (typing.Literal[
         OnComplete.NoOpOC,
@@ -859,21 +1082,20 @@ class NestedContractFactoryCreateParams:
     ] | None) = None,
         **kwargs
     ) -> transactions.AppCreateMethodCallParams:
-        """Creates a new instance using the add(uint64,uint64)uint64 ABI method"""
+        """Creates a new instance using the foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="add(uint64,uint64)uint64",
+                method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
                 **kwargs
             )
         )
 
-    def get_pay_txn_amount(
+    def create_application(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
-            *,
+        *,
         on_complete: (typing.Literal[
         OnComplete.NoOpOC,
         OnComplete.UpdateApplicationOC,
@@ -883,21 +1105,20 @@ class NestedContractFactoryCreateParams:
     ] | None) = None,
         **kwargs
     ) -> transactions.AppCreateMethodCallParams:
-        """Creates a new instance using the get_pay_txn_amount(pay)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
+        """Creates a new instance using the createApplication()void ABI method"""
+        method_args = None
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="get_pay_txn_amount(pay)uint64",
+                method="createApplication()void",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
                 **kwargs
             )
         )
 
-    def nested_method_call(
+    def opt_in_to_application(
         self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
-            *,
+        *,
         on_complete: (typing.Literal[
         OnComplete.NoOpOC,
         OnComplete.UpdateApplicationOC,
@@ -907,19 +1128,19 @@ class NestedContractFactoryCreateParams:
     ] | None) = None,
         **kwargs
     ) -> transactions.AppCreateMethodCallParams:
-        """Creates a new instance using the nested_method_call(string,pay,appl)byte[] ABI method"""
-        method_args = _parse_abi_args(args)
+        """Creates a new instance using the optInToApplication()void ABI method"""
+        method_args = None
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="nested_method_call(string,pay,appl)byte[]",
+                method="optInToApplication()void",
                 args=method_args, # type: ignore
                 on_complete=on_complete,
                 **kwargs
             )
         )
 
-class NestedContractFactoryUpdateParams:
-    """Parameters for 'update' operations of NestedContract contract"""
+class ARC56TestFactoryUpdateParams:
+    """Parameters for 'update' operations of ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -941,8 +1162,8 @@ class NestedContractFactoryUpdateParams:
             applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
         )
 
-class NestedContractFactoryDeleteParams:
-    """Parameters for 'delete' operations of NestedContract contract"""
+class ARC56TestFactoryDeleteParams:
+    """Parameters for 'delete' operations of ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -965,16 +1186,16 @@ class NestedContractFactoryDeleteParams:
         )
 
 
-class NestedContractFactoryCreateTransaction:
-    """Create transactions for NestedContract contract"""
+class ARC56TestFactoryCreateTransaction:
+    """Create transactions for ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactoryCreateTransactionCreate(app_factory)
+        self.create = ARC56TestFactoryCreateTransactionCreate(app_factory)
 
 
-class NestedContractFactoryCreateTransactionCreate:
-    """Create new instances of NestedContract contract"""
+class ARC56TestFactoryCreateTransactionCreate:
+    """Create new instances of ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -997,16 +1218,16 @@ class NestedContractFactoryCreateTransactionCreate:
         )
 
 
-class NestedContractFactorySend:
-    """Send calls to NestedContract contract"""
+class ARC56TestFactorySend:
+    """Send calls to ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactorySendCreate(app_factory)
+        self.create = ARC56TestFactorySendCreate(app_factory)
 
 
-class NestedContractFactorySendCreate:
-    """Send create calls to NestedContract contract"""
+class ARC56TestFactorySendCreate:
+    """Send create calls to ARC56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1022,25 +1243,118 @@ class NestedContractFactorySendCreate:
     OnComplete.CloseOutOC,
 ] | None) = None,
         **kwargs
-    ) -> tuple[NestedContractClient, transactions.SendAppCreateTransactionResult]:
+    ) -> tuple[ARC56TestClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         result = self.app_factory.send.bare.create(
             applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
         )
-        return NestedContractClient(result[0]), result[1]
+        return ARC56TestClient(result[0]), result[1]
+
+    def create_application(
+        self,
+        *,
+        on_complete: (typing.Literal[
+        OnComplete.NoOpOC,
+        OnComplete.UpdateApplicationOC,
+        OnComplete.DeleteApplicationOC,
+        OnComplete.OptInOC,
+        OnComplete.CloseOutOC,
+    ] | None) = None,
+        **kwargs
+    ) -> tuple[ARC56TestClient, applications.AppFactoryCreateMethodCallResult[None]]:
+            """Creates and sends a transaction using the createApplication()void ABI method"""
+            method_args = None
+            result = self.app_factory.send.create(
+                applications.AppFactoryCreateMethodCallParams(
+                    method="createApplication()void",
+                    args=method_args, # type: ignore
+                    on_complete=on_complete,
+                    **kwargs
+                )
+            )
+            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
+    
+            return ARC56TestClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
+                app_id=result[1].app_id,
+                abi_return=return_value,
+                transaction=result[1].transaction,
+                confirmation=result[1].confirmation,
+                group_id=result[1].group_id,
+                tx_ids=result[1].tx_ids,
+                transactions=result[1].transactions,
+                confirmations=result[1].confirmations,
+                app_address=result[1].app_address,
+            )
 
 
-class NestedContractComposer:
-    """Composer for creating transaction groups for NestedContract contract calls"""
+class _ARC56TestOpt_inComposer:
+    def __init__(self, composer: "ARC56TestComposer"):
+        self.composer = composer
+    def opt_in_to_application(
+        self,
+            *,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        populate_app_call_resources: bool = False,
+        
+    ) -> "ARC56TestComposer":
+        self.composer._composer.add_app_call_method_call(
+            self.composer.client.params.opt_in.opt_in_to_application(
+                
+                account_references=account_references,
+                app_references=app_references,
+                asset_references=asset_references,
+                box_references=box_references,
+                extra_fee=extra_fee,
+                first_valid_round=first_valid_round,
+                lease=lease,
+                max_fee=max_fee,
+                note=note,
+                rekey_to=rekey_to,
+                sender=sender,
+                signer=signer,
+                static_fee=static_fee,
+                validity_window=validity_window,
+                last_valid_round=last_valid_round,
+                populate_app_call_resources=populate_app_call_resources,
+            )
+        )
+        self.composer._result_mappers.append(
+            lambda v: self.composer.client.decode_return_value(
+                "optInToApplication()void", v
+            )
+        )
+        return self.composer
 
-    def __init__(self, client: "NestedContractClient"):
+
+class ARC56TestComposer:
+    """Composer for creating transaction groups for ARC56Test contract calls"""
+
+    def __init__(self, client: "ARC56TestClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
-    def add(
+    @property
+    def opt_in(self) -> "_ARC56TestOpt_inComposer":
+        return _ARC56TestOpt_inComposer(self)
+
+    def foo(
         self,
-        args: tuple[int, int] | AddArgs,    *,
+        args: tuple[Inputs] | FooArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1058,9 +1372,9 @@ class NestedContractComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "NestedContractComposer":
+    ) -> "ARC56TestComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.add(
+            self.client.params.foo(
                 args=args, # type: ignore
                 account_references=account_references,
                 app_references=app_references,
@@ -1082,14 +1396,14 @@ class NestedContractComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "add(uint64,uint64)uint64", v
+                "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)", v
             )
         )
         return self
 
-    def get_pay_txn_amount(
+    def create_application(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,    *,
+            *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1107,10 +1421,10 @@ class NestedContractComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "NestedContractComposer":
+    ) -> "ARC56TestComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.get_pay_txn_amount(
-                args=args, # type: ignore
+            self.client.params.create_application(
+                
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1131,56 +1445,7 @@ class NestedContractComposer:
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "get_pay_txn_amount(pay)uint64", v
-            )
-        )
-        return self
-
-    def nested_method_call(
-        self,
-        args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        
-    ) -> "NestedContractComposer":
-        self._composer.add_app_call_method_call(
-            self.client.params.nested_method_call(
-                args=args, # type: ignore
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "nested_method_call(string,pay,appl)byte[]", v
+                "createApplication()void", v
             )
         )
         return self
@@ -1204,7 +1469,7 @@ class NestedContractComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
-    ) -> "NestedContractComposer":
+    ) -> "ARC56TestComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -1231,7 +1496,7 @@ class NestedContractComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "NestedContractComposer":
+    ) -> "ARC56TestComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
