@@ -155,8 +155,11 @@ def _generate_method_body(
 
     def parse_struct_if_needed(method: ContractMethod) -> str:
         if method.abi and method.abi.result_struct:
-            return f"**(dataclasses.replace(response, abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return)))).__dict__"
-        return "**dataclasses.asdict(response)"
+            return (
+                f"dataclasses.replace(response, "
+                f"abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return)))"
+            )
+        return "response"
 
     def algokit_extra_args(operation: str) -> str:
         if operation == "update":
@@ -165,7 +168,7 @@ def _generate_method_body(
 
     call_params = f"""{algokit_param_type(operation)}(
             method="{method_sig}",{'''
-            args=method_args, # type: ignore''' if include_args else ''}
+            args=method_args, ''' if include_args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,
@@ -192,7 +195,8 @@ def _generate_method_body(
     else:
         response_code = f"""
     response = self.app_client.send.{operation}({call_params})
-    return {alogkit_return_type(operation, method)}({parse_struct_if_needed(method)})
+    parsed_response = {parse_struct_if_needed(method)}
+    return typing.cast({alogkit_return_type(operation, method)}, parsed_response)
 """
         return f"{body}{response_code}"
 
@@ -226,7 +230,9 @@ class {class_name}:
         yield Part.Gap1
         if property_type == PropertyType.PARAMS:
             yield utils.indented(f"""
-def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
+def bare(
+    self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None
+) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
     return self.app_client.params.bare.{operation}(params)
 """)
         elif property_type == PropertyType.CREATE_TRANSACTION:
@@ -363,7 +369,10 @@ def {operation}(self) -> "{operation_class}":
     # Add clear_state method
     yield Part.Gap1
     yield utils.indented(f"""
-def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
+def clear_state(
+    self,
+    params: applications.AppClientBareCallWithSendParams | None = None
+) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
     return self.app_client.{property_type.value}.bare.clear_state(params)
 """)
 
@@ -678,7 +687,7 @@ def new_group(self) -> "{context.contract_name}Composer":
 """)
 
 
-def generate_structs(context: GeneratorContext) -> DocumentParts:
+def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901, PLR0912
     """Generate struct classes for ABI structs"""
     first = True
     # Track generated structs by their class name to avoid duplicates
@@ -800,7 +809,7 @@ class {class_name}:
         self.app_client = app_client
         {'self.address = address' if extra_params else ''}
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {struct_mapping_str}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {struct_mapping_str}
 
     def get_all(self) -> {value_type_name or 'dict[str, typing.Any]'}:
         \"\"\"Get all current keyed values from {state_type} state\"\"\"
@@ -829,7 +838,9 @@ class {class_name}:
     def {utils.get_method_name(key_name)}(self) -> {python_type}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
         value = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}")
-        return self._struct_classes["{key_info.value_type}"](**value) if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes else typing.cast({python_type}, value) # type: ignore
+        if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes:
+            return self._struct_classes["{key_info.value_type}"](**value)  # type: ignore
+        return typing.cast({python_type}, value)
 """)
             yield Part.DecIndent
 
@@ -846,7 +857,7 @@ class {class_name}:
 def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_type}]":
     \"\"\"Get values from the {map_name} map in {state_type} state\"\"\"
     return _MapState(
-        self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}, 
+        self.app_client.state.{state_type}{'(self.address)' if extra_params else ''},
         "{map_name}",
         {f'self._struct_classes.get("{map_info.value_type}")' if is_value_struct else 'None'}
     )
@@ -894,7 +905,9 @@ class {context.contract_name}State:
         decorator = "@property" if state_type != "local_state" else ""
         yield utils.indented(f"""
     {decorator}
-def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(self{', address: str' if state_type == 'local_state' else ''}) -> "{class_name}":
+def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(
+    self{', address: str' if state_type == 'local_state' else ''}
+) -> "{class_name}":
         \"\"\"Methods to access {state_type} for the current app\"\"\"
         return {class_name}(self.app_client{', address' if state_type == 'local_state' else ''})
 """)
@@ -952,7 +965,8 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         \"\"\"Get a value from the map by key\"\"\"
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
+        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)

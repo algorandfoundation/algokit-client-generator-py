@@ -43,7 +43,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -151,7 +162,9 @@ class _StateAppUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.AppUpdateParams:
+    def bare(
+        self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None
+    ) -> transactions.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
     def update_abi(
@@ -178,7 +191,7 @@ class _StateAppUpdate:
         method_args = _parse_abi_args(args)
         return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -203,7 +216,9 @@ class _StateAppDelete:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def bare(
+        self, params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
     def delete_abi(
@@ -230,7 +245,7 @@ class _StateAppDelete:
         method_args = _parse_abi_args(args)
         return self.app_client.params.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -337,7 +352,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -381,7 +396,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -425,7 +440,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -469,7 +484,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -513,7 +528,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -557,7 +572,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -601,7 +616,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -645,7 +660,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -689,7 +704,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -733,7 +748,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -820,7 +835,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -864,7 +879,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -908,7 +923,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -952,7 +967,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -996,7 +1011,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1040,7 +1055,7 @@ class StateAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1060,7 +1075,10 @@ class StateAppParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -1095,7 +1113,7 @@ class _StateAppUpdateTransaction:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1147,7 +1165,7 @@ class _StateAppDeleteTransaction:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1254,7 +1272,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1298,7 +1316,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1342,7 +1360,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1386,7 +1404,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1430,7 +1448,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1474,7 +1492,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1518,7 +1536,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1562,7 +1580,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1606,7 +1624,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1650,7 +1668,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1737,7 +1755,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1781,7 +1799,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1825,7 +1843,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1869,7 +1887,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1913,7 +1931,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1957,7 +1975,7 @@ class StateAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1977,7 +1995,10 @@ class StateAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
@@ -2012,7 +2033,7 @@ class _StateAppUpdateSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2031,7 +2052,8 @@ class _StateAppUpdateSend:
                 populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
-        return transactions.SendAppUpdateTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppUpdateTransactionResult[str], parsed_response)
 
 
 class _StateAppDeleteSend:
@@ -2065,7 +2087,7 @@ class _StateAppDeleteSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2084,7 +2106,8 @@ class _StateAppDeleteSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
 
 class _StateAppOptInSend:
@@ -2133,7 +2156,8 @@ class _StateAppOptInSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
 
 class StateAppSend:
@@ -2174,7 +2198,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2193,7 +2217,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def call_abi_uint32_readonly(
         self,
@@ -2219,7 +2244,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint32_readonly(uint32)uint32",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2238,7 +2263,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def call_abi_uint64(
         self,
@@ -2264,7 +2290,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2283,7 +2309,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def call_abi_uint64_readonly(
         self,
@@ -2309,7 +2336,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_uint64_readonly(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2328,7 +2355,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def call_abi(
         self,
@@ -2354,7 +2382,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2373,7 +2401,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def call_abi_txn(
         self,
@@ -2399,7 +2428,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_abi_txn(pay,string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2418,7 +2447,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def call_with_references(
         self,
@@ -2444,7 +2474,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2463,7 +2493,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def set_global(
         self,
@@ -2489,7 +2520,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_global(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2508,7 +2539,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def set_local(
         self,
@@ -2534,7 +2566,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_local(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2553,7 +2585,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def set_box(
         self,
@@ -2579,7 +2612,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="set_box(byte[4],string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2598,7 +2631,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def error(
         self,
@@ -2642,7 +2676,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def default_value(
         self,
@@ -2668,7 +2703,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2687,7 +2722,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def default_value_int(
         self,
@@ -2713,7 +2749,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_int(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2732,7 +2768,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def default_value_from_abi(
         self,
@@ -2758,7 +2795,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2777,7 +2814,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def default_value_from_global_state(
         self,
@@ -2803,7 +2841,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_global_state(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2822,7 +2860,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def default_value_from_local_state(
         self,
@@ -2848,7 +2887,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="default_value_from_local_state(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2867,7 +2906,8 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def create_abi(
         self,
@@ -2893,7 +2933,7 @@ class StateAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create_abi(string)string",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2912,9 +2952,13 @@ class StateAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[str](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -2940,11 +2984,15 @@ class StateAppState:
         self.app_client = app_client
 
     @property
-    def global_state(self) -> "_GlobalState":
+    def global_state(
+        self
+    ) -> "_GlobalState":
             """Methods to access global_state for the current app"""
             return _GlobalState(self.app_client)
 
-    def local_state(self, address: str) -> "_LocalState":
+    def local_state(
+        self, address: str
+    ) -> "_LocalState":
             """Methods to access local_state for the current app"""
             return _LocalState(self.app_client, address)
 
@@ -2953,7 +3001,7 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
@@ -2974,34 +3022,44 @@ class _GlobalState:
     def bytes1(self) -> bytes:
             """Get the current value of the bytes1 key in global_state state"""
             value = self.app_client.state.global_state.get_value("bytes1")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def bytes2(self) -> bytes:
             """Get the current value of the bytes2 key in global_state state"""
             value = self.app_client.state.global_state.get_value("bytes2")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def int1(self) -> int:
             """Get the current value of the int1 key in global_state state"""
             value = self.app_client.state.global_state.get_value("int1")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def int2(self) -> int:
             """Get the current value of the int2 key in global_state state"""
             value = self.app_client.state.global_state.get_value("int2")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def value(self) -> int:
             """Get the current value of the value key in global_state state"""
             value = self.app_client.state.global_state.get_value("value")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
 class _LocalState:
     def __init__(self, app_client: applications.AppClient, address: str):
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
@@ -3022,22 +3080,30 @@ class _LocalState:
     def local_bytes1(self) -> bytes:
             """Get the current value of the local_bytes1 key in local_state state"""
             value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def local_bytes2(self) -> bytes:
             """Get the current value of the local_bytes2 key in local_state state"""
             value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def local_int1(self) -> int:
             """Get the current value of the local_int1 key in local_state state"""
             value = self.app_client.state.local_state(self.address).get_value("local_int1")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def local_int2(self) -> int:
             """Get the current value of the local_int2 key in local_state state"""
             value = self.app_client.state.local_state(self.address).get_value("local_int2")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
 class StateAppClient:
     """Client for interacting with StateApp smart contract"""
@@ -3353,7 +3419,7 @@ class StateAppMethodCallCreateParams(
 
 @dataclasses.dataclass(frozen=True)
 class StateAppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC, OnComplete.OptInOC]]):
-    """Parameters for creating StateApp contract using bare calls"""
+    """Parameters for creating StateApp contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
@@ -3379,7 +3445,7 @@ class StateAppMethodCallUpdateParams(
 
 @dataclasses.dataclass(frozen=True)
 class StateAppBareCallUpdateParams(applications.AppClientBareCallParams):
-    """Parameters for calling StateApp contract using bare calls"""
+    """Parameters for calling StateApp contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
@@ -3405,7 +3471,7 @@ class StateAppMethodCallDeleteParams(
 
 @dataclasses.dataclass(frozen=True)
 class StateAppBareCallDeleteParams(applications.AppClientBareCallParams):
-    """Parameters for calling StateApp contract using bare calls"""
+    """Parameters for calling StateApp contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
@@ -3557,41 +3623,76 @@ class StateAppFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def call_abi_uint32(
         self,
         args: tuple[int] | CallAbiUint32Args,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi_uint32(uint32)uint32",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi_uint32(uint32)uint32",
+                "args": method_args,
+                }
             )
         )
 
@@ -3599,23 +3700,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi_uint32_readonly(uint32)uint32",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi_uint32_readonly(uint32)uint32",
+                "args": method_args,
+                }
             )
         )
 
@@ -3623,23 +3742,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint64Args,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi_uint64(uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi_uint64(uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -3647,23 +3784,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi_uint64_readonly(uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi_uint64_readonly(uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -3671,23 +3826,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | CallAbiArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3695,23 +3868,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_abi_txn(pay,string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_abi_txn(pay,string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3719,23 +3910,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="call_with_references(asset,account,application)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "call_with_references(asset,account,application)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -3743,23 +3952,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="set_global(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "set_global(uint64,uint64,string,byte[4])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -3767,23 +3994,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="set_local(uint64,uint64,string,byte[4])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "set_local(uint64,uint64,string,byte[4])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -3791,46 +4036,82 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_box(byte[4],string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="set_box(byte[4],string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "set_box(byte[4],string)void",
+                "args": method_args,
+                }
             )
         )
 
     def error(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the error()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="error()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "error()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -3838,23 +4119,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueArgs | None = None,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="default_value(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "default_value(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3862,23 +4161,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | DefaultValueIntArgs | None = None,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="default_value_int(uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "default_value_int(uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -3886,23 +4203,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueFromAbiArgs | None = None,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_abi(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="default_value_from_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "default_value_from_abi(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3910,23 +4245,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="default_value_from_global_state(uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "default_value_from_global_state(uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -3934,23 +4287,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="default_value_from_local_state(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "default_value_from_local_state(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3958,23 +4329,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | CreateAbiArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create_abi(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="create_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "create_abi(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -3982,23 +4371,41 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | UpdateAbiArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the update_abi(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="update_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "update_abi(string)string",
+                "args": method_args,
+                }
             )
         )
 
@@ -4006,46 +4413,82 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DeleteAbiArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the delete_abi(string)string ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="delete_abi(string)string",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "delete_abi(string)string",
+                "args": method_args,
+                }
             )
         )
 
     def opt_in(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the opt_in()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="opt_in()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "opt_in()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4058,18 +4501,35 @@ class StateAppFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class StateAppFactoryDeleteParams:
@@ -4081,18 +4541,35 @@ class StateAppFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -4113,18 +4590,36 @@ class StateAppFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -4145,18 +4640,39 @@ class StateAppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[StateAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return StateAppClient(result[0]), result[1]
 
@@ -4164,37 +4680,58 @@ class StateAppFactorySendCreate:
         self,
         args: tuple[str] | CreateAbiArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
             method_args = _parse_abi_args(args)
-            result = self.app_factory.send.create(
+            params = {
+                k: v for k, v in locals().items()
+                if k != 'self' and v is not None
+            }
+            client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="create_abi(string)string",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
+                    **{
+                    **params,
+                    "method": "create_abi(string)string",
+                    "args": method_args,
+                    }
                 )
             )
-            return_value = None if result[1].abi_return is None else typing.cast(str, result[1].abi_return)
+            return_value = None if result.abi_return is None else typing.cast(str, result.abi_return)
     
-            return StateAppClient(result[0]), applications.AppFactoryCreateMethodCallResult[str](
-                app_id=result[1].app_id,
-                abi_return=return_value,
-                transaction=result[1].transaction,
-                confirmation=result[1].confirmation,
-                group_id=result[1].group_id,
-                tx_ids=result[1].tx_ids,
-                transactions=result[1].transactions,
-                confirmations=result[1].confirmations,
-                app_address=result[1].app_address,
+            return StateAppClient(client), applications.AppFactoryCreateMethodCallResult[str](
+                **{
+                    **result.__dict__,
+                    "app_id": result.app_id,
+                    "abi_return": return_value,
+                    "transaction": result.transaction,
+                    "confirmation": result.confirmation,
+                    "group_id": result.group_id,
+                    "tx_ids": result.tx_ids,
+                    "transactions": result.transactions,
+                    "confirmations": result.confirmations,
+                    "app_address": result.app_address,
+                }
             )
 
 
@@ -4404,7 +4941,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4453,7 +4990,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32_readonly(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4502,7 +5039,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4551,7 +5088,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64_readonly(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4600,7 +5137,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4649,7 +5186,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_txn(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4698,7 +5235,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_with_references(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4747,7 +5284,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_global(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4796,7 +5333,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_local(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4845,7 +5382,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_box(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4943,7 +5480,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4992,7 +5529,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_int(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5041,7 +5578,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_abi(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5090,7 +5627,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_global_state(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5139,7 +5676,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_local_state(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5188,7 +5725,7 @@ class StateAppComposer:
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_abi(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

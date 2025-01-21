@@ -43,7 +43,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,7 +100,9 @@ class _VotingRoundAppDelete:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def bare(
+        self, params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
 
@@ -123,7 +136,7 @@ class VotingRoundAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -210,7 +223,7 @@ class VotingRoundAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -254,7 +267,7 @@ class VotingRoundAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -298,7 +311,7 @@ class VotingRoundAppParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -318,7 +331,10 @@ class VotingRoundAppParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -360,7 +376,7 @@ class VotingRoundAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -447,7 +463,7 @@ class VotingRoundAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -491,7 +507,7 @@ class VotingRoundAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -535,7 +551,7 @@ class VotingRoundAppCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -555,7 +571,10 @@ class VotingRoundAppCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
@@ -597,7 +616,7 @@ class VotingRoundAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="bootstrap(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -616,7 +635,8 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def close(
         self,
@@ -660,7 +680,8 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def get_preconditions(
         self,
@@ -686,7 +707,7 @@ class VotingRoundAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -705,7 +726,8 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[VotingPreconditions](**(dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(
         self,
@@ -731,7 +753,7 @@ class VotingRoundAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vote(pay,byte[],uint8[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -750,7 +772,8 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def create(
         self,
@@ -776,7 +799,7 @@ class VotingRoundAppSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -795,9 +818,13 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -824,7 +851,9 @@ class VotingRoundAppState:
         self.app_client = app_client
 
     @property
-    def global_state(self) -> "_GlobalState":
+    def global_state(
+        self
+    ) -> "_GlobalState":
             """Methods to access global_state for the current app"""
             return _GlobalState(self.app_client)
 
@@ -833,7 +862,7 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
@@ -854,67 +883,93 @@ class _GlobalState:
     def close_time(self) -> int:
             """Get the current value of the close_time key in global_state state"""
             value = self.app_client.state.global_state.get_value("close_time")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def end_time(self) -> int:
             """Get the current value of the end_time key in global_state state"""
             value = self.app_client.state.global_state.get_value("end_time")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def is_bootstrapped(self) -> int:
             """Get the current value of the is_bootstrapped key in global_state state"""
             value = self.app_client.state.global_state.get_value("is_bootstrapped")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def metadata_ipfs_cid(self) -> bytes:
             """Get the current value of the metadata_ipfs_cid key in global_state state"""
             value = self.app_client.state.global_state.get_value("metadata_ipfs_cid")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def nft_asset_id(self) -> int:
             """Get the current value of the nft_asset_id key in global_state state"""
             value = self.app_client.state.global_state.get_value("nft_asset_id")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def nft_image_url(self) -> bytes:
             """Get the current value of the nft_image_url key in global_state state"""
             value = self.app_client.state.global_state.get_value("nft_image_url")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def option_counts(self) -> bytes:
             """Get the current value of the option_counts key in global_state state"""
             value = self.app_client.state.global_state.get_value("option_counts")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def quorum(self) -> int:
             """Get the current value of the quorum key in global_state state"""
             value = self.app_client.state.global_state.get_value("quorum")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def snapshot_public_key(self) -> bytes:
             """Get the current value of the snapshot_public_key key in global_state state"""
             value = self.app_client.state.global_state.get_value("snapshot_public_key")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def start_time(self) -> int:
             """Get the current value of the start_time key in global_state state"""
             value = self.app_client.state.global_state.get_value("start_time")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def total_options(self) -> int:
             """Get the current value of the total_options key in global_state state"""
             value = self.app_client.state.global_state.get_value("total_options")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def vote_id(self) -> bytes:
             """Get the current value of the vote_id key in global_state state"""
             value = self.app_client.state.global_state.get_value("vote_id")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     def voter_count(self) -> int:
             """Get the current value of the voter_count key in global_state state"""
             value = self.app_client.state.global_state.get_value("voter_count")
-            return self._struct_classes["AVMUint64"](**value) if isinstance(value, dict) and "AVMUint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+                return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
 class VotingRoundAppClient:
     """Client for interacting with VotingRoundApp smart contract"""
@@ -1140,7 +1195,7 @@ class VotingRoundAppMethodCallCreateParams(
 
 @dataclasses.dataclass(frozen=True)
 class VotingRoundAppBareCallDeleteParams(applications.AppClientBareCallParams):
-    """Parameters for calling VotingRoundApp contract using bare calls"""
+    """Parameters for calling VotingRoundApp contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
@@ -1290,64 +1345,117 @@ class VotingRoundAppFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def bootstrap(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the bootstrap(pay)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="bootstrap(pay)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "bootstrap(pay)void",
+                "args": method_args,
+                }
             )
         )
 
     def close(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the close()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="close()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "close()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -1355,23 +1463,41 @@ class VotingRoundAppFactoryCreateParams:
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -1379,23 +1505,41 @@ class VotingRoundAppFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vote(pay,byte[],uint8[])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="vote(pay,byte[],uint8[])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "vote(pay,byte[],uint8[])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -1403,23 +1547,41 @@ class VotingRoundAppFactoryCreateParams:
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -1432,18 +1594,35 @@ class VotingRoundAppFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class VotingRoundAppFactoryDeleteParams:
@@ -1455,18 +1634,35 @@ class VotingRoundAppFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -1487,18 +1683,36 @@ class VotingRoundAppFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -1519,18 +1733,39 @@ class VotingRoundAppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[VotingRoundAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return VotingRoundAppClient(result[0]), result[1]
 
@@ -1538,37 +1773,58 @@ class VotingRoundAppFactorySendCreate:
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[VotingRoundAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
             method_args = _parse_abi_args(args)
-            result = self.app_factory.send.create(
+            params = {
+                k: v for k, v in locals().items()
+                if k != 'self' and v is not None
+            }
+            client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
+                    **{
+                    **params,
+                    "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
+                    "args": method_args,
+                    }
                 )
             )
-            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
+            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return VotingRoundAppClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
-                app_id=result[1].app_id,
-                abi_return=return_value,
-                transaction=result[1].transaction,
-                confirmation=result[1].confirmation,
-                group_id=result[1].group_id,
-                tx_ids=result[1].tx_ids,
-                transactions=result[1].transactions,
-                confirmations=result[1].confirmations,
-                app_address=result[1].app_address,
+            return VotingRoundAppClient(client), applications.AppFactoryCreateMethodCallResult[None](
+                **{
+                    **result.__dict__,
+                    "app_id": result.app_id,
+                    "abi_return": return_value,
+                    "transaction": result.transaction,
+                    "confirmation": result.confirmation,
+                    "group_id": result.group_id,
+                    "tx_ids": result.tx_ids,
+                    "transactions": result.transactions,
+                    "confirmations": result.confirmations,
+                    "app_address": result.app_address,
+                }
             )
 
 
@@ -1612,7 +1868,7 @@ class VotingRoundAppComposer:
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.bootstrap(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1710,7 +1966,7 @@ class VotingRoundAppComposer:
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_preconditions(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1759,7 +2015,7 @@ class VotingRoundAppComposer:
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vote(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1808,7 +2064,7 @@ class VotingRoundAppComposer:
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

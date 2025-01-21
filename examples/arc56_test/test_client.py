@@ -7,8 +7,8 @@ from algokit_utils.models import AlgoAmount
 from algokit_utils.protocols import AlgorandClientProtocol
 
 from examples.arc56_test.client import (
-    ARC56TestClient,
-    ARC56TestFactory,
+    Arc56TestClient,
+    Arc56TestFactory,
     FooArgs,
     FooUint16BarUint16,
     Inputs,
@@ -26,12 +26,12 @@ def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
 
 
 @pytest.fixture
-def arc56_test_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> ARC56TestFactory:
-    return algorand.client.get_typed_app_factory(ARC56TestFactory, default_sender=default_deployer.address)
+def arc56_test_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> Arc56TestFactory:
+    return algorand.client.get_typed_app_factory(Arc56TestFactory, default_sender=default_deployer.address)
 
 
 @pytest.fixture
-def arc56_test_client(state_factory: ARC56TestFactory) -> ARC56TestClient:
+def arc56_test_client(state_factory: Arc56TestFactory) -> Arc56TestClient:
     client, _ = state_factory.deploy(
         deploy_time_params={"VALUE": 1}, deletable=True, updatable=True, on_update=OnUpdate.UpdateApp
     )
@@ -39,7 +39,7 @@ def arc56_test_client(state_factory: ARC56TestFactory) -> ARC56TestClient:
 
 
 def test_arc56_demo(
-    algorand: AlgorandClientProtocol, arc56_test_factory: ARC56TestFactory, default_deployer: algokit_utils.Account
+    algorand: AlgorandClientProtocol, arc56_test_factory: Arc56TestFactory, default_deployer: algokit_utils.Account
 ) -> None:
     client, result = arc56_test_factory.send.create.create_application(deploy_time_params={"someNumber": 1337})
 

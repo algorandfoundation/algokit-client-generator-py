@@ -43,14 +43,27 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 class _AppUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.AppUpdateParams:
+    def bare(
+        self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None
+    ) -> transactions.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
 
@@ -58,7 +71,9 @@ class _AppDelete:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def bare(
+        self, params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
 
@@ -73,7 +88,10 @@ class AppParams:
     def delete(self) -> "_AppDelete":
         return _AppDelete(self.app_client)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -104,7 +122,10 @@ class AppCreateTransactionParams:
     def delete(self) -> "_AppDeleteTransaction":
         return _AppDeleteTransaction(self.app_client)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
@@ -135,7 +156,10 @@ class AppSend:
     def delete(self) -> "_AppDeleteSend":
         return _AppDeleteSend(self.app_client)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -313,21 +337,21 @@ class AppClient:
 
 @dataclasses.dataclass(frozen=True)
 class AppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating App contract using bare calls"""
+    """Parameters for creating App contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
 class AppBareCallUpdateParams(applications.AppClientBareCallParams):
-    """Parameters for calling App contract using bare calls"""
+    """Parameters for calling App contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
 class AppBareCallDeleteParams(applications.AppClientBareCallParams):
-    """Parameters for calling App contract using bare calls"""
+    """Parameters for calling App contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
@@ -479,18 +503,35 @@ class AppFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class AppFactoryUpdateParams:
@@ -502,18 +543,35 @@ class AppFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class AppFactoryDeleteParams:
@@ -525,18 +583,35 @@ class AppFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -557,18 +632,36 @@ class AppFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -589,18 +682,39 @@ class AppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[AppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return AppClient(result[0]), result[1]
 

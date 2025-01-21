@@ -9,9 +9,7 @@
 import dataclasses
 import typing
 # core algosdk
-import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -43,7 +41,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -223,8 +232,8 @@ class GetCurMaxStakePerPoolArgs:
     validatorId: int
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class DoesStakerNeedToPayMBRArgs:
-    """Dataclass for does_staker_need_to_pay_m_b_r arguments"""
+class DoesStakerNeedToPayMbrArgs:
+    """Dataclass for does_staker_need_to_pay_mbr arguments"""
     staker: str
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -263,8 +272,8 @@ class ChangeValidatorSunsetInfoArgs:
     sunsettingTo: int
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class ChangeValidatorNFDArgs:
-    """Dataclass for change_validator_n_f_d arguments"""
+class ChangeValidatorNfdArgs:
+    """Dataclass for change_validator_nfd arguments"""
     validatorId: int
     nfdAppID: int
     nfdName: str
@@ -370,7 +379,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="initStakingContract(uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -414,7 +423,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="loadStakingContractData(uint64,byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -673,7 +682,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -717,7 +726,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -761,7 +770,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -805,7 +814,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -849,7 +858,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -893,7 +902,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -937,7 +946,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -957,9 +966,9 @@ class ValidatorRegistryParams:
                 
             ))
 
-    def does_staker_need_to_pay_m_b_r(
+    def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMBRArgs,    *,
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -981,7 +990,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1025,7 +1034,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1069,7 +1078,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1113,7 +1122,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1133,7 +1142,7 @@ class ValidatorRegistryParams:
                 
             ))
 
-    def get_n_f_d_registry_i_d(
+    def get_nfd_registry_id(
         self,
             *,
         account_references: list[str] | None = None,
@@ -1200,7 +1209,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1244,7 +1253,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorManager(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1288,7 +1297,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1308,9 +1317,9 @@ class ValidatorRegistryParams:
                 
             ))
 
-    def change_validator_n_f_d(
+    def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNFDArgs,    *,
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -1332,7 +1341,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1376,7 +1385,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1420,7 +1429,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1464,7 +1473,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1508,7 +1517,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1552,7 +1561,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1596,7 +1605,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1640,7 +1649,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1684,7 +1693,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1728,7 +1737,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1772,7 +1781,7 @@ class ValidatorRegistryParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1835,7 +1844,10 @@ class ValidatorRegistryParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -1866,7 +1878,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="initStakingContract(uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1910,7 +1922,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="loadStakingContractData(uint64,byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2169,7 +2181,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2213,7 +2225,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2257,7 +2269,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2301,7 +2313,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2345,7 +2357,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2389,7 +2401,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2433,7 +2445,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2453,9 +2465,9 @@ class ValidatorRegistryCreateTransactionParams:
                 
             ))
 
-    def does_staker_need_to_pay_m_b_r(
+    def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMBRArgs,    *,
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2477,7 +2489,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2521,7 +2533,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2565,7 +2577,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2609,7 +2621,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2629,7 +2641,7 @@ class ValidatorRegistryCreateTransactionParams:
                 
             ))
 
-    def get_n_f_d_registry_i_d(
+    def get_nfd_registry_id(
         self,
             *,
         account_references: list[str] | None = None,
@@ -2696,7 +2708,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2740,7 +2752,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorManager(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2784,7 +2796,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2804,9 +2816,9 @@ class ValidatorRegistryCreateTransactionParams:
                 
             ))
 
-    def change_validator_n_f_d(
+    def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNFDArgs,    *,
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -2828,7 +2840,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2872,7 +2884,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2916,7 +2928,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2960,7 +2972,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3004,7 +3016,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3048,7 +3060,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3092,7 +3104,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3136,7 +3148,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3180,7 +3192,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3224,7 +3236,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3268,7 +3280,7 @@ class ValidatorRegistryCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3331,7 +3343,10 @@ class ValidatorRegistryCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
@@ -3362,7 +3377,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="initStakingContract(uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3381,7 +3396,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def load_staking_contract_data(
         self,
@@ -3407,7 +3423,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="loadStakingContractData(uint64,byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3426,7 +3442,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def finalize_staking_contract(
         self,
@@ -3470,7 +3487,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def gas(
         self,
@@ -3514,7 +3532,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def get_mbr_amounts(
         self,
@@ -3558,7 +3577,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[MbrAmounts](**(dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[MbrAmounts], parsed_response)
 
     def get_protocol_constraints(
         self,
@@ -3602,7 +3622,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[Constraints](**(dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[Constraints], parsed_response)
 
     def get_num_validators(
         self,
@@ -3646,7 +3667,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def get_validator_config(
         self,
@@ -3672,7 +3694,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3691,7 +3713,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[ValidatorConfig](**(dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[ValidatorConfig], parsed_response)
 
     def get_validator_state(
         self,
@@ -3717,7 +3740,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3736,7 +3759,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[ValidatorCurState](**(dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[ValidatorCurState], parsed_response)
 
     def get_validator_owner_and_manager(
         self,
@@ -3762,7 +3786,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3781,7 +3805,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[tuple[str, str]](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[tuple[str, str]], parsed_response)
 
     def get_pools(
         self,
@@ -3807,7 +3832,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3826,7 +3851,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[list[tuple[int, int, int]]](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
 
     def get_pool_app_id(
         self,
@@ -3852,7 +3878,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3871,7 +3897,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def get_pool_info(
         self,
@@ -3897,7 +3924,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3916,7 +3943,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[PoolInfo](**(dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[PoolInfo], parsed_response)
 
     def get_cur_max_stake_per_pool(
         self,
@@ -3942,7 +3970,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3961,11 +3989,12 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
-    def does_staker_need_to_pay_m_b_r(
+    def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMBRArgs,    *,
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -3987,7 +4016,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4006,7 +4035,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def get_staked_pools_for_account(
         self,
@@ -4032,7 +4062,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4051,7 +4081,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[list[tuple[int, int, int]]](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
 
     def get_token_payout_ratio(
         self,
@@ -4077,7 +4108,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4096,7 +4127,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[PoolTokenPayoutRatio](**(dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def get_node_pool_assignments(
         self,
@@ -4122,7 +4154,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4141,9 +4173,10 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[NodePoolAssignmentConfig](**(dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
 
-    def get_n_f_d_registry_i_d(
+    def get_nfd_registry_id(
         self,
             *,
         account_references: list[str] | None = None,
@@ -4185,7 +4218,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def add_validator(
         self,
@@ -4211,7 +4245,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4230,7 +4264,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def change_validator_manager(
         self,
@@ -4256,7 +4291,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorManager(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4275,7 +4310,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_sunset_info(
         self,
@@ -4301,7 +4337,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4320,11 +4356,12 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
-    def change_validator_n_f_d(
+    def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNFDArgs,    *,
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -4346,7 +4383,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4365,7 +4402,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_commission_address(
         self,
@@ -4391,7 +4429,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4410,7 +4448,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_reward_info(
         self,
@@ -4436,7 +4475,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4455,7 +4494,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def add_pool(
         self,
@@ -4481,7 +4521,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4500,7 +4540,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[ValidatorPoolKey](**(dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def add_stake(
         self,
@@ -4526,7 +4567,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4545,7 +4586,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[ValidatorPoolKey](**(dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def set_token_payout_ratio(
         self,
@@ -4571,7 +4613,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4590,7 +4632,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[PoolTokenPayoutRatio](**(dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def stake_updated_via_rewards(
         self,
@@ -4616,7 +4659,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4635,7 +4678,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def stake_removed(
         self,
@@ -4661,7 +4705,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4680,7 +4724,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def find_pool_for_staker(
         self,
@@ -4706,7 +4751,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4725,7 +4770,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]], parsed_response)
 
     def move_pool_to_node(
         self,
@@ -4751,7 +4797,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4770,7 +4816,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def empty_token_rewards(
         self,
@@ -4796,7 +4843,7 @@ class ValidatorRegistrySend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4815,7 +4862,8 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def create_application(
         self,
@@ -4859,9 +4907,13 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -4883,12 +4935,16 @@ class ValidatorRegistryState:
         self.app_client = app_client
 
     @property
-    def global_state(self) -> "_GlobalState":
+    def global_state(
+        self
+    ) -> "_GlobalState":
             """Methods to access global_state for the current app"""
             return _GlobalState(self.app_client)
 
     @property
-    def box(self) -> "_BoxState":
+    def box(
+        self
+    ) -> "_BoxState":
             """Methods to access box for the current app"""
             return _BoxState(self.app_client)
 
@@ -4897,7 +4953,7 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
@@ -4918,29 +4974,37 @@ class _GlobalState:
     def staking_pool_initialized(self) -> bool:
             """Get the current value of the staking_pool_initialized key in global_state state"""
             value = self.app_client.state.global_state.get_value("staking_pool_initialized")
-            return self._struct_classes["bool"](**value) if isinstance(value, dict) and "bool" in self._struct_classes else typing.cast(bool, value) # type: ignore
+            if isinstance(value, dict) and "bool" in self._struct_classes:
+                return self._struct_classes["bool"](**value)  # type: ignore
+            return typing.cast(bool, value)
 
     def num_validators(self) -> int:
             """Get the current value of the num_validators key in global_state state"""
             value = self.app_client.state.global_state.get_value("num_validators")
-            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "uint64" in self._struct_classes:
+                return self._struct_classes["uint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def num_stakers(self) -> int:
             """Get the current value of the num_stakers key in global_state state"""
             value = self.app_client.state.global_state.get_value("num_stakers")
-            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "uint64" in self._struct_classes:
+                return self._struct_classes["uint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     def total_algo_staked(self) -> int:
             """Get the current value of the total_algo_staked key in global_state state"""
             value = self.app_client.state.global_state.get_value("total_algo_staked")
-            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "uint64" in self._struct_classes:
+                return self._struct_classes["uint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
 class _BoxState:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
             "ValidatorInfo": ValidatorInfo
         }
 
@@ -4963,7 +5027,9 @@ class _BoxState:
     def staking_pool_approval_program(self) -> bytes:
             """Get the current value of the staking_pool_approval_program key in box state"""
             value = self.app_client.state.box.get_value("staking_pool_approval_program")
-            return self._struct_classes["AVMBytes"](**value) if isinstance(value, dict) and "AVMBytes" in self._struct_classes else typing.cast(bytes, value) # type: ignore
+            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+                return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return typing.cast(bytes, value)
 
     @property
     def validator_list(self) -> "_MapState[int, ValidatorInfo]":
@@ -5011,7 +5077,8 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
+        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)
@@ -5556,41 +5623,76 @@ class ValidatorRegistryFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the initStakingContract(uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="initStakingContract(uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "initStakingContract(uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -5598,138 +5700,246 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the loadStakingContractData(uint64,byte[])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="loadStakingContractData(uint64,byte[])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "loadStakingContractData(uint64,byte[])void",
+                "args": method_args,
+                }
             )
         )
 
     def finalize_staking_contract(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the finalizeStakingContract()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="finalizeStakingContract()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "finalizeStakingContract()void",
+                "args": method_args,
+                }
             )
         )
 
     def gas(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="gas()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "gas()void",
+                "args": method_args,
+                }
             )
         )
 
     def get_mbr_amounts(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getMbrAmounts()(uint64,uint64,uint64,uint64) ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
     def get_protocol_constraints(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64) ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
     def get_num_validators(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNumValidators()uint64 ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getNumValidators()uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getNumValidators()uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -5737,23 +5947,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorConfigArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -5761,23 +5989,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorStateArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorState(uint64)(uint16,uint64,uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -5785,23 +6031,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorOwnerAndManager(uint64)(address,address) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getValidatorOwnerAndManager(uint64)(address,address)",
+                "args": method_args,
+                }
             )
         )
 
@@ -5809,23 +6073,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetPoolsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPools(uint64)(uint64,uint16,uint64)[] ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getPools(uint64)(uint64,uint16,uint64)[]",
+                "args": method_args,
+                }
             )
         )
 
@@ -5833,23 +6115,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolAppId(uint64,uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getPoolAppId(uint64,uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -5857,23 +6157,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -5881,47 +6199,83 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getCurMaxStakePerPool(uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getCurMaxStakePerPool(uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
-    def does_staker_need_to_pay_m_b_r(
+    def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMBRArgs,
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the doesStakerNeedToPayMBR(address)bool ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "doesStakerNeedToPayMBR(address)bool",
+                "args": method_args,
+                }
             )
         )
 
@@ -5929,23 +6283,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getStakedPoolsForAccount(address)(uint64,uint64,uint64)[] ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+                "args": method_args,
+                }
             )
         )
 
@@ -5953,23 +6325,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -5977,46 +6367,82 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNodePoolAssignments(uint64)((uint64[3])[8]) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
+                "args": method_args,
+                }
             )
         )
 
-    def get_n_f_d_registry_i_d(
+    def get_nfd_registry_id(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNFDRegistryID()uint64 ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getNFDRegistryID()uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getNFDRegistryID()uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -6024,23 +6450,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -6048,23 +6492,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorManager(uint64,address)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="changeValidatorManager(uint64,address)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "changeValidatorManager(uint64,address)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6072,47 +6534,83 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorSunsetInfo(uint64,uint64,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
-    def change_validator_n_f_d(
+    def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNFDArgs,
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorNFD(uint64,uint64,string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "changeValidatorNFD(uint64,uint64,string)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6120,23 +6618,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorCommissionAddress(uint64,address)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "changeValidatorCommissionAddress(uint64,address)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6144,23 +6660,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6168,23 +6702,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addPool(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -6192,23 +6744,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addStake(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -6216,23 +6786,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the setTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -6240,23 +6828,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6264,23 +6870,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6288,23 +6912,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+                "args": method_args,
+                }
             )
         )
 
@@ -6312,23 +6954,41 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the movePoolToNode(uint64,uint64,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "movePoolToNode(uint64,uint64,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6336,46 +6996,82 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the emptyTokenRewards(uint64,address)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "emptyTokenRewards(uint64,address)uint64",
+                "args": method_args,
+                }
             )
         )
 
     def create_application(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="createApplication()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "createApplication()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -6388,18 +7084,35 @@ class ValidatorRegistryFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class ValidatorRegistryFactoryDeleteParams:
@@ -6411,18 +7124,35 @@ class ValidatorRegistryFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -6443,18 +7173,36 @@ class ValidatorRegistryFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -6475,55 +7223,97 @@ class ValidatorRegistryFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[ValidatorRegistryClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return ValidatorRegistryClient(result[0]), result[1]
 
     def create_application(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[ValidatorRegistryClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
             method_args = None
-            result = self.app_factory.send.create(
+            params = {
+                k: v for k, v in locals().items()
+                if k != 'self' and v is not None
+            }
+            client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="createApplication()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
+                    **{
+                    **params,
+                    "method": "createApplication()void",
+                    "args": method_args,
+                    }
                 )
             )
-            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
+            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return ValidatorRegistryClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
-                app_id=result[1].app_id,
-                abi_return=return_value,
-                transaction=result[1].transaction,
-                confirmation=result[1].confirmation,
-                group_id=result[1].group_id,
-                tx_ids=result[1].tx_ids,
-                transactions=result[1].transactions,
-                confirmations=result[1].confirmations,
-                app_address=result[1].app_address,
+            return ValidatorRegistryClient(client), applications.AppFactoryCreateMethodCallResult[None](
+                **{
+                    **result.__dict__,
+                    "app_id": result.app_id,
+                    "abi_return": return_value,
+                    "transaction": result.transaction,
+                    "confirmation": result.confirmation,
+                    "group_id": result.group_id,
+                    "tx_ids": result.tx_ids,
+                    "transactions": result.transactions,
+                    "confirmations": result.confirmations,
+                    "app_address": result.app_address,
+                }
             )
 
 
@@ -6558,7 +7348,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.init_staking_contract(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6607,7 +7397,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.load_staking_contract_data(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6901,7 +7691,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_config(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6950,7 +7740,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_state(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6999,7 +7789,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_owner_and_manager(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7048,7 +7838,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pools(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7097,7 +7887,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_app_id(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7146,7 +7936,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_info(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7195,7 +7985,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_cur_max_stake_per_pool(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7221,9 +8011,9 @@ class ValidatorRegistryComposer:
         )
         return self
 
-    def does_staker_need_to_pay_m_b_r(
+    def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMBRArgs,    *,
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -7243,8 +8033,8 @@ class ValidatorRegistryComposer:
         
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.does_staker_need_to_pay_m_b_r(
-                args=args, # type: ignore
+            self.client.params.does_staker_need_to_pay_mbr(
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7293,7 +8083,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_staked_pools_for_account(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7342,7 +8132,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_token_payout_ratio(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7391,7 +8181,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_node_pool_assignments(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7417,7 +8207,7 @@ class ValidatorRegistryComposer:
         )
         return self
 
-    def get_n_f_d_registry_i_d(
+    def get_nfd_registry_id(
         self,
             *,
         account_references: list[str] | None = None,
@@ -7439,7 +8229,7 @@ class ValidatorRegistryComposer:
         
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.get_n_f_d_registry_i_d(
+            self.client.params.get_nfd_registry_id(
                 
                 account_references=account_references,
                 app_references=app_references,
@@ -7489,7 +8279,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_validator(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7538,7 +8328,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_manager(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7587,7 +8377,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_sunset_info(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7613,9 +8403,9 @@ class ValidatorRegistryComposer:
         )
         return self
 
-    def change_validator_n_f_d(
+    def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNFDArgs,    *,
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
         account_references: list[str] | None = None,
         app_references: list[int] | None = None,
         asset_references: list[int] | None = None,
@@ -7635,8 +8425,8 @@ class ValidatorRegistryComposer:
         
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.change_validator_n_f_d(
-                args=args, # type: ignore
+            self.client.params.change_validator_nfd(
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7685,7 +8475,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_commission_address(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7734,7 +8524,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_reward_info(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7783,7 +8573,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_pool(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7832,7 +8622,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_stake(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7881,7 +8671,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_token_payout_ratio(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7930,7 +8720,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_updated_via_rewards(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -7979,7 +8769,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_removed(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -8028,7 +8818,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.find_pool_for_staker(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -8077,7 +8867,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.move_pool_to_node(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -8126,7 +8916,7 @@ class ValidatorRegistryComposer:
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.empty_token_rewards(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

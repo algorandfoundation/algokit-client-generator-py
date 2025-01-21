@@ -43,7 +43,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -197,7 +208,7 @@ class UpdateApplicationArgs:
     versionNum: str
 
 
-class _NFDInstanceUpdate:
+class _NfdInstanceUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -225,7 +236,7 @@ class _NFDInstanceUpdate:
         method_args = _parse_abi_args(args)
         return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="updateApplication(string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -246,12 +257,12 @@ class _NFDInstanceUpdate:
             ))
 
 
-class NFDInstanceParams:
+class NfdInstanceParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NFDInstanceUpdate":
-        return _NFDInstanceUpdate(self.app_client)
+    def update(self) -> "_NfdInstanceUpdate":
+        return _NfdInstanceUpdate(self.app_client)
     def gas(
         self,
             *,
@@ -319,7 +330,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="mintAsa(string,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -363,7 +374,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="deleteFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -407,7 +418,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="updateSegmentCount(string,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -451,7 +462,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -495,7 +506,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="updateFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -539,7 +550,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="readField(byte[])byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -583,7 +594,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="offerForSale(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -670,7 +681,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="postOffer(uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -714,7 +725,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -758,7 +769,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="purchase(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -802,7 +813,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="isAddressInField(string,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -889,7 +900,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="updateHash(byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -933,7 +944,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="contractLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -977,7 +988,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="segmentLock(bool,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1021,7 +1032,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptInLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1065,7 +1076,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptIn(uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1109,7 +1120,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1153,7 +1164,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="renew(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1197,7 +1208,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="setPrimaryAddress(string,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1241,7 +1252,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1285,7 +1296,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1329,7 +1340,7 @@ class NFDInstanceParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1349,11 +1360,14 @@ class NFDInstanceParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _NFDInstanceUpdateTransaction:
+class _NfdInstanceUpdateTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -1381,7 +1395,7 @@ class _NFDInstanceUpdateTransaction:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="updateApplication(string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1402,12 +1416,12 @@ class _NFDInstanceUpdateTransaction:
             ))
 
 
-class NFDInstanceCreateTransactionParams:
+class NfdInstanceCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NFDInstanceUpdateTransaction":
-        return _NFDInstanceUpdateTransaction(self.app_client)
+    def update(self) -> "_NfdInstanceUpdateTransaction":
+        return _NfdInstanceUpdateTransaction(self.app_client)
     def gas(
         self,
             *,
@@ -1475,7 +1489,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="mintAsa(string,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1519,7 +1533,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="deleteFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1563,7 +1577,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="updateSegmentCount(string,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1607,7 +1621,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1651,7 +1665,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="updateFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1695,7 +1709,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="readField(byte[])byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1739,7 +1753,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="offerForSale(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1826,7 +1840,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="postOffer(uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1870,7 +1884,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1914,7 +1928,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="purchase(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1958,7 +1972,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="isAddressInField(string,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2045,7 +2059,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="updateHash(byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2089,7 +2103,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="contractLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2133,7 +2147,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="segmentLock(bool,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2177,7 +2191,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptInLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2221,7 +2235,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptIn(uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2265,7 +2279,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2309,7 +2323,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="renew(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2353,7 +2367,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="setPrimaryAddress(string,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2397,7 +2411,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2441,7 +2455,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2485,7 +2499,7 @@ class NFDInstanceCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2505,11 +2519,14 @@ class NFDInstanceCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _NFDInstanceUpdateSend:
+class _NfdInstanceUpdateSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -2537,7 +2554,7 @@ class _NFDInstanceUpdateSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="updateApplication(string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2556,15 +2573,16 @@ class _NFDInstanceUpdateSend:
                 populate_app_call_resources=populate_app_call_resources,
                 updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             ))
-        return transactions.SendAppUpdateTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppUpdateTransactionResult[None], parsed_response)
 
 
-class NFDInstanceSend:
+class NfdInstanceSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def update(self) -> "_NFDInstanceUpdateSend":
-        return _NFDInstanceUpdateSend(self.app_client)
+    def update(self) -> "_NfdInstanceUpdateSend":
+        return _NfdInstanceUpdateSend(self.app_client)
     def gas(
         self,
             *,
@@ -2607,7 +2625,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def mint_asa(
         self,
@@ -2633,7 +2652,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="mintAsa(string,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2652,7 +2671,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def delete_fields(
         self,
@@ -2678,7 +2698,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="deleteFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2697,7 +2717,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def update_segment_count(
         self,
@@ -2723,7 +2744,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="updateSegmentCount(string,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2742,7 +2763,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def get_field_update_cost(
         self,
@@ -2768,7 +2790,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2787,7 +2809,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def update_fields(
         self,
@@ -2813,7 +2836,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="updateFields(byte[][])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2832,7 +2855,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def read_field(
         self,
@@ -2858,7 +2882,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="readField(byte[])byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2877,7 +2901,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bytes](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bytes], parsed_response)
 
     def offer_for_sale(
         self,
@@ -2903,7 +2928,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="offerForSale(uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -2922,7 +2947,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def cancel_sale(
         self,
@@ -2966,7 +2992,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def post_offer(
         self,
@@ -2992,7 +3019,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="postOffer(uint64,string)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3011,7 +3038,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def mint_payout(
         self,
@@ -3037,7 +3065,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3056,7 +3084,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[PayoutInfo](**(dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(
         self,
@@ -3082,7 +3111,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="purchase(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3101,7 +3130,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def is_address_in_field(
         self,
@@ -3127,7 +3157,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="isAddressInField(string,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3146,7 +3176,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def get_renew_price(
         self,
@@ -3190,7 +3221,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def update_hash(
         self,
@@ -3216,7 +3248,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="updateHash(byte[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3235,7 +3267,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def contract_lock(
         self,
@@ -3261,7 +3294,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="contractLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3280,7 +3313,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def segment_lock(
         self,
@@ -3306,7 +3340,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="segmentLock(bool,uint64)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3325,7 +3359,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_opt_in_lock(
         self,
@@ -3351,7 +3386,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptInLock(bool)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3370,7 +3405,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_opt_in(
         self,
@@ -3396,7 +3432,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultOptIn(uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3415,7 +3451,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_send(
         self,
@@ -3441,7 +3478,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3460,7 +3497,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def renew(
         self,
@@ -3486,7 +3524,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="renew(pay)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3505,7 +3543,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def set_primary_address(
         self,
@@ -3531,7 +3570,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="setPrimaryAddress(string,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3550,7 +3589,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def registry_adding_verified_address(
         self,
@@ -3576,7 +3616,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3595,7 +3635,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def registry_removing_verified_address(
         self,
@@ -3621,7 +3662,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3640,7 +3681,8 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bool](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def create_application(
         self,
@@ -3666,7 +3708,7 @@ class NFDInstanceSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -3685,25 +3727,33 @@ class NFDInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
-class NFDInstanceState:
+class NfdInstanceState:
     """Methods to access state for the current NFDInstance app"""
 
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     @property
-    def global_state(self) -> "_GlobalState":
+    def global_state(
+        self
+    ) -> "_GlobalState":
             """Methods to access global_state for the current app"""
             return _GlobalState(self.app_client)
 
     @property
-    def box(self) -> "_BoxState":
+    def box(
+        self
+    ) -> "_BoxState":
             """Methods to access box for the current app"""
             return _BoxState(self.app_client)
 
@@ -3712,7 +3762,7 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from global_state state"""
@@ -3744,7 +3794,7 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from box state"""
@@ -3799,13 +3849,14 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
+        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)
 
 
-class NFDInstanceClient:
+class NfdInstanceClient:
     """Client for interacting with NFDInstance smart contract"""
 
     @typing.overload
@@ -3854,10 +3905,10 @@ class NFDInstanceClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = NFDInstanceParams(self.app_client)
-        self.create_transaction = NFDInstanceCreateTransactionParams(self.app_client)
-        self.send = NFDInstanceSend(self.app_client)
-        self.state = NFDInstanceState(self.app_client)
+        self.params = NfdInstanceParams(self.app_client)
+        self.create_transaction = NfdInstanceCreateTransactionParams(self.app_client)
+        self.send = NfdInstanceSend(self.app_client)
+        self.state = NfdInstanceState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -3870,8 +3921,8 @@ class NFDInstanceClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "NFDInstanceClient":
-        return NFDInstanceClient(
+    ) -> "NfdInstanceClient":
+        return NfdInstanceClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -3894,8 +3945,8 @@ class NFDInstanceClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NFDInstanceClient":
-        return NFDInstanceClient(
+    ) -> "NfdInstanceClient":
+        return NfdInstanceClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -3934,8 +3985,8 @@ class NFDInstanceClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NFDInstanceClient":
-        return NFDInstanceClient(
+    ) -> "NfdInstanceClient":
+        return NfdInstanceClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -3945,8 +3996,8 @@ class NFDInstanceClient:
             )
         )
 
-    def new_group(self) -> "NFDInstanceComposer":
-        return NFDInstanceComposer(self)
+    def new_group(self) -> "NfdInstanceComposer":
+        return NfdInstanceComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -4135,14 +4186,14 @@ class NFDInstanceClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class NFDInstanceMethodCallCreateParams(
+class NfdInstanceMethodCallCreateParams(
     applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
         tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
         typing.Literal["createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void"],
         typing.Literal[OnComplete.NoOpOC]
     ]
 ):
-    """Parameters for creating NFDInstance contract using ABI"""
+    """Parameters for creating NfdInstance contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
@@ -4154,14 +4205,14 @@ class NFDInstanceMethodCallCreateParams(
         )
 
 @dataclasses.dataclass(frozen=True)
-class NFDInstanceMethodCallUpdateParams(
+class NfdInstanceMethodCallUpdateParams(
     applications.BaseAppClientMethodCallParams[
         tuple[str] | UpdateApplicationArgs,
         typing.Literal["updateApplication(string)void"],
         typing.Literal[OnComplete.UpdateApplicationOC]
     ]
 ):
-    """Parameters for calling NFDInstance contract using ABI"""
+    """Parameters for calling NfdInstance contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallParams:
         method_args = _parse_abi_args(self.args)
@@ -4172,8 +4223,8 @@ class NFDInstanceMethodCallUpdateParams(
             }
         )
 
-class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing NFDInstanceClient smart contracts"""
+class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing NfdInstanceClient smart contracts"""
 
     def __init__(
         self,
@@ -4200,9 +4251,9 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = NFDInstanceFactoryParams(self.app_factory)
-        self.create_transaction = NFDInstanceFactoryCreateTransaction(self.app_factory)
-        self.send = NFDInstanceFactorySend(self.app_factory)
+        self.params = NfdInstanceFactoryParams(self.app_factory)
+        self.create_transaction = NfdInstanceFactoryCreateTransaction(self.app_factory)
+        self.send = NfdInstanceFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -4222,8 +4273,8 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: NFDInstanceMethodCallCreateParams | None = None,
-        update_params: NFDInstanceMethodCallUpdateParams | None = None,
+        create_params: NfdInstanceMethodCallCreateParams | None = None,
+        update_params: NfdInstanceMethodCallUpdateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -4232,7 +4283,7 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[NFDInstanceClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[NfdInstanceClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
@@ -4250,7 +4301,7 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return NFDInstanceClient(deploy_response[0]), deploy_response[1]
+        return NfdInstanceClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -4262,9 +4313,9 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NFDInstanceClient:
+    ) -> NfdInstanceClient:
         """Get an app client by creator address and name"""
-        return NFDInstanceClient(
+        return NfdInstanceClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -4285,9 +4336,9 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NFDInstanceClient:
+    ) -> NfdInstanceClient:
         """Get an app client by app ID"""
-        return NFDInstanceClient(
+        return NfdInstanceClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -4299,17 +4350,17 @@ class NFDInstanceFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class NFDInstanceFactoryParams:
-    """Parameters for creating transactions for NFDInstance contract"""
+class NfdInstanceFactoryParams:
+    """Parameters for creating transactions for NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NFDInstanceFactoryCreateParams(app_factory)
-        self.update = NFDInstanceFactoryUpdateParams(app_factory)
-        self.delete = NFDInstanceFactoryDeleteParams(app_factory)
+        self.create = NfdInstanceFactoryCreateParams(app_factory)
+        self.update = NfdInstanceFactoryUpdateParams(app_factory)
+        self.delete = NfdInstanceFactoryDeleteParams(app_factory)
 
-class NFDInstanceFactoryCreateParams:
-    """Parameters for 'create' operations of NFDInstance contract"""
+class NfdInstanceFactoryCreateParams:
+    """Parameters for 'create' operations of NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4317,40 +4368,75 @@ class NFDInstanceFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def gas(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="gas()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "gas()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4358,23 +4444,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | MintAsaArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintAsa(string,string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="mintAsa(string,string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "mintAsa(string,string)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4382,23 +4486,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the deleteFields(byte[][])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="deleteFields(byte[][])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "deleteFields(byte[][])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4406,23 +4528,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="updateSegmentCount(string,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "updateSegmentCount(string,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4430,23 +4570,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getFieldUpdateCost(byte[][])uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -4454,23 +4612,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateFields(byte[][])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="updateFields(byte[][])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "updateFields(byte[][])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4478,23 +4654,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the readField(byte[])byte[] ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="readField(byte[])byte[]",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "readField(byte[])byte[]",
+                "args": method_args,
+                }
             )
         )
 
@@ -4502,46 +4696,82 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[int, str] | OfferForSaleArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="offerForSale(uint64,address)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "offerForSale(uint64,address)void",
+                "args": method_args,
+                }
             )
         )
 
     def cancel_sale(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the cancelSale()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="cancelSale()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "cancelSale()void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4549,23 +4779,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[int, str] | PostOfferArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the postOffer(uint64,string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="postOffer(uint64,string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "postOffer(uint64,string)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4573,23 +4821,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[int, int] | MintPayoutArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+                "args": method_args,
+                }
             )
         )
 
@@ -4597,23 +4863,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the purchase(pay)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="purchase(pay)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "purchase(pay)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4621,46 +4905,82 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="isAddressInField(string,address)bool",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "isAddressInField(string,address)bool",
+                "args": method_args,
+                }
             )
         )
 
     def get_renew_price(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getRenewPrice()uint64 ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="getRenewPrice()uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "getRenewPrice()uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -4668,23 +4988,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateHash(byte[])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="updateHash(byte[])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "updateHash(byte[])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4692,23 +5030,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[bool] | ContractLockArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the contractLock(bool)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="contractLock(bool)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "contractLock(bool)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4716,23 +5072,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[bool, int] | SegmentLockArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="segmentLock(bool,uint64)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "segmentLock(bool,uint64)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4740,23 +5114,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[bool] | VaultOptInLockArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="vaultOptInLock(bool)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "vaultOptInLock(bool)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4764,23 +5156,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[list[int]] | VaultOptInArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="vaultOptIn(uint64[])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "vaultOptIn(uint64[])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4788,23 +5198,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4812,23 +5240,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the renew(pay)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="renew(pay)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "renew(pay)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4836,23 +5282,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="setPrimaryAddress(string,address)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "setPrimaryAddress(string,address)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4860,23 +5324,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "registryAddingVerifiedAddress(string,string)bool",
+                "args": method_args,
+                }
             )
         )
 
@@ -4884,23 +5366,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "registryRemovingVerifiedAddress(string,address,address)bool",
+                "args": method_args,
+                }
             )
         )
 
@@ -4908,23 +5408,41 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+                "args": method_args,
+                }
             )
         )
 
@@ -4932,28 +5450,46 @@ class NFDInstanceFactoryCreateParams:
         self,
         args: tuple[str] | UpdateApplicationArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateApplication(string)void ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="updateApplication(string)void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "updateApplication(string)void",
+                "args": method_args,
+                }
             )
         )
 
-class NFDInstanceFactoryUpdateParams:
-    """Parameters for 'update' operations of NFDInstance contract"""
+class NfdInstanceFactoryUpdateParams:
+    """Parameters for 'update' operations of NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4961,22 +5497,39 @@ class NFDInstanceFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
-class NFDInstanceFactoryDeleteParams:
-    """Parameters for 'delete' operations of NFDInstance contract"""
+class NfdInstanceFactoryDeleteParams:
+    """Parameters for 'delete' operations of NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -4984,31 +5537,48 @@ class NFDInstanceFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
-class NFDInstanceFactoryCreateTransaction:
-    """Create transactions for NFDInstance contract"""
+class NfdInstanceFactoryCreateTransaction:
+    """Create transactions for NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NFDInstanceFactoryCreateTransactionCreate(app_factory)
+        self.create = NfdInstanceFactoryCreateTransactionCreate(app_factory)
 
 
-class NFDInstanceFactoryCreateTransactionCreate:
-    """Create new instances of NFDInstance contract"""
+class NfdInstanceFactoryCreateTransactionCreate:
+    """Create new instances of NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -5016,31 +5586,49 @@ class NFDInstanceFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
-class NFDInstanceFactorySend:
-    """Send calls to NFDInstance contract"""
+class NfdInstanceFactorySend:
+    """Send calls to NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = NFDInstanceFactorySendCreate(app_factory)
+        self.create = NfdInstanceFactorySendCreate(app_factory)
 
 
-class NFDInstanceFactorySendCreate:
-    """Send create calls to NFDInstance contract"""
+class NfdInstanceFactorySendCreate:
+    """Send create calls to NfdInstance contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -5048,61 +5636,103 @@ class NFDInstanceFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
-    ) -> tuple[NFDInstanceClient, transactions.SendAppCreateTransactionResult]:
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+    ) -> tuple[NfdInstanceClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
-        return NFDInstanceClient(result[0]), result[1]
+        return NfdInstanceClient(result[0]), result[1]
 
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
-    ) -> tuple[NFDInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
+    ) -> tuple[NfdInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
             method_args = _parse_abi_args(args)
-            result = self.app_factory.send.create(
+            params = {
+                k: v for k, v in locals().items()
+                if k != 'self' and v is not None
+            }
+            client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
+                    **{
+                    **params,
+                    "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+                    "args": method_args,
+                    }
                 )
             )
-            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
+            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return NFDInstanceClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
-                app_id=result[1].app_id,
-                abi_return=return_value,
-                transaction=result[1].transaction,
-                confirmation=result[1].confirmation,
-                group_id=result[1].group_id,
-                tx_ids=result[1].tx_ids,
-                transactions=result[1].transactions,
-                confirmations=result[1].confirmations,
-                app_address=result[1].app_address,
+            return NfdInstanceClient(client), applications.AppFactoryCreateMethodCallResult[None](
+                **{
+                    **result.__dict__,
+                    "app_id": result.app_id,
+                    "abi_return": return_value,
+                    "transaction": result.transaction,
+                    "confirmation": result.confirmation,
+                    "group_id": result.group_id,
+                    "tx_ids": result.tx_ids,
+                    "transactions": result.transactions,
+                    "confirmations": result.confirmations,
+                    "app_address": result.app_address,
+                }
             )
 
 
-class _NFDInstanceUpdateComposer:
-    def __init__(self, composer: "NFDInstanceComposer"):
+class _NfdInstanceUpdateComposer:
+    def __init__(self, composer: "NfdInstanceComposer"):
         self.composer = composer
     def update_application(
         self,
@@ -5124,7 +5754,7 @@ class _NFDInstanceUpdateComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         method_args = _parse_abi_args(args)
     
         self.composer._composer.add_app_call_method_call(
@@ -5156,17 +5786,17 @@ class _NFDInstanceUpdateComposer:
         return self.composer
 
 
-class NFDInstanceComposer:
-    """Composer for creating transaction groups for NFDInstance contract calls"""
+class NfdInstanceComposer:
+    """Composer for creating transaction groups for NfdInstance contract calls"""
 
-    def __init__(self, client: "NFDInstanceClient"):
+    def __init__(self, client: "NfdInstanceClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
     @property
-    def update(self) -> "_NFDInstanceUpdateComposer":
-        return _NFDInstanceUpdateComposer(self)
+    def update(self) -> "_NfdInstanceUpdateComposer":
+        return _NfdInstanceUpdateComposer(self)
 
     def gas(
         self,
@@ -5188,7 +5818,7 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.gas(
                 
@@ -5237,10 +5867,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_asa(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5286,10 +5916,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.delete_fields(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5335,10 +5965,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_segment_count(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5384,10 +6014,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_field_update_cost(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5433,10 +6063,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_fields(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5482,10 +6112,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.read_field(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5531,10 +6161,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.offer_for_sale(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5580,7 +6210,7 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.cancel_sale(
                 
@@ -5629,10 +6259,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.post_offer(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5678,10 +6308,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_payout(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5727,10 +6357,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.purchase(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5776,10 +6406,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.is_address_in_field(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5825,7 +6455,7 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_renew_price(
                 
@@ -5874,10 +6504,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_hash(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5923,10 +6553,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.contract_lock(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5972,10 +6602,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.segment_lock(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6021,10 +6651,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in_lock(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6070,10 +6700,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6119,10 +6749,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_send(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6168,10 +6798,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.renew(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6217,10 +6847,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_primary_address(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6266,10 +6896,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_adding_verified_address(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6315,10 +6945,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_removing_verified_address(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6364,10 +6994,10 @@ class NFDInstanceComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -6412,7 +7042,7 @@ class NFDInstanceComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -6439,7 +7069,7 @@ class NFDInstanceComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "NFDInstanceComposer":
+    ) -> "NfdInstanceComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

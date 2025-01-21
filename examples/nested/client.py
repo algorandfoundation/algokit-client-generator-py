@@ -43,7 +43,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -92,7 +103,7 @@ class NestedContractParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="add(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -136,7 +147,7 @@ class NestedContractParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -180,7 +191,7 @@ class NestedContractParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -200,7 +211,10 @@ class NestedContractParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
@@ -231,7 +245,7 @@ class NestedContractCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="add(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -275,7 +289,7 @@ class NestedContractCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -319,7 +333,7 @@ class NestedContractCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -339,7 +353,10 @@ class NestedContractCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
@@ -370,7 +387,7 @@ class NestedContractSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="add(uint64,uint64)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -389,7 +406,8 @@ class NestedContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def get_pay_txn_amount(
         self,
@@ -415,7 +433,7 @@ class NestedContractSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -434,7 +452,8 @@ class NestedContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[int](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def nested_method_call(
         self,
@@ -460,7 +479,7 @@ class NestedContractSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -479,9 +498,13 @@ class NestedContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[bytes](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[bytes], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -684,7 +707,7 @@ class NestedContractClient:
 
 @dataclasses.dataclass(frozen=True)
 class NestedContractBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
-    """Parameters for creating NestedContract contract using bare calls"""
+    """Parameters for creating NestedContract contract with bare calls"""
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
@@ -832,41 +855,76 @@ class NestedContractFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def add(
         self,
         args: tuple[int, int] | AddArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the add(uint64,uint64)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="add(uint64,uint64)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "add(uint64,uint64)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -874,23 +932,41 @@ class NestedContractFactoryCreateParams:
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the get_pay_txn_amount(pay)uint64 ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="get_pay_txn_amount(pay)uint64",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "get_pay_txn_amount(pay)uint64",
+                "args": method_args,
+                }
             )
         )
 
@@ -898,23 +974,41 @@ class NestedContractFactoryCreateParams:
         self,
         args: tuple[str, transactions.AppMethodCallTransactionArgument, transactions.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the nested_method_call(string,pay,appl)byte[] ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="nested_method_call(string,pay,appl)byte[]",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "nested_method_call(string,pay,appl)byte[]",
+                "args": method_args,
+                }
             )
         )
 
@@ -927,18 +1021,35 @@ class NestedContractFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 class NestedContractFactoryDeleteParams:
@@ -950,18 +1061,35 @@ class NestedContractFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -982,18 +1110,36 @@ class NestedContractFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
@@ -1014,18 +1160,39 @@ class NestedContractFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[NestedContractClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return NestedContractClient(result[0]), result[1]
 
@@ -1061,7 +1228,7 @@ class NestedContractComposer:
     ) -> "NestedContractComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1110,7 +1277,7 @@ class NestedContractComposer:
     ) -> "NestedContractComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pay_txn_amount(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1159,7 +1326,7 @@ class NestedContractComposer:
     ) -> "NestedContractComposer":
         self._composer.add_app_call_method_call(
             self.client.params.nested_method_call(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,

@@ -43,7 +43,18 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg for arg in method_args] if method_args else None
+    return [
+        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        for arg in method_args
+    ] if method_args else None
+
+ON_COMPLETE_TYPES = typing.Literal[
+    OnComplete.NoOpOC,
+    OnComplete.UpdateApplicationOC,
+    OnComplete.DeleteApplicationOC,
+    OnComplete.OptInOC,
+    OnComplete.CloseOutOC,
+]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -83,7 +94,7 @@ class FooArgs:
     inputs: Inputs
 
 
-class _ARC56TestOptIn:
+class _Arc56TestOptIn:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -131,12 +142,12 @@ class _ARC56TestOptIn:
             ))
 
 
-class ARC56TestParams:
+class Arc56TestParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def opt_in(self) -> "_ARC56TestOptIn":
-        return _ARC56TestOptIn(self.app_client)
+    def opt_in(self) -> "_Arc56TestOptIn":
+        return _Arc56TestOptIn(self.app_client)
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,    *,
@@ -161,7 +172,7 @@ class ARC56TestParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
                 method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -224,11 +235,14 @@ class ARC56TestParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.AppCallParams:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.AppCallParams:
         return self.app_client.params.bare.clear_state(params)
 
 
-class _ARC56TestOptInTransaction:
+class _Arc56TestOptInTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -276,12 +290,12 @@ class _ARC56TestOptInTransaction:
             ))
 
 
-class ARC56TestCreateTransactionParams:
+class Arc56TestCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def opt_in(self) -> "_ARC56TestOptInTransaction":
-        return _ARC56TestOptInTransaction(self.app_client)
+    def opt_in(self) -> "_Arc56TestOptInTransaction":
+        return _Arc56TestOptInTransaction(self.app_client)
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,    *,
@@ -306,7 +320,7 @@ class ARC56TestCreateTransactionParams:
         method_args = _parse_abi_args(args)
         return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
                 method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -369,11 +383,14 @@ class ARC56TestCreateTransactionParams:
                 
             ))
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(params)
 
 
-class _ARC56TestOptInSend:
+class _Arc56TestOptInSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
@@ -419,15 +436,16 @@ class _ARC56TestOptInSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
 
-class ARC56TestSend:
+class Arc56TestSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
     @property
-    def opt_in(self) -> "_ARC56TestOptInSend":
-        return _ARC56TestOptInSend(self.app_client)
+    def opt_in(self) -> "_Arc56TestOptInSend":
+        return _Arc56TestOptInSend(self.app_client)
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,    *,
@@ -452,7 +470,7 @@ class ARC56TestSend:
         method_args = _parse_abi_args(args)
         response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
                 method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                args=method_args, # type: ignore
+                args=method_args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -471,7 +489,8 @@ class ARC56TestSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[Outputs](**(dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return)))).__dict__)
+        parsed_response = dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return)))
+        return typing.cast(transactions.SendAppTransactionResult[Outputs], parsed_response)
 
     def create_application(
         self,
@@ -515,9 +534,13 @@ class ARC56TestSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        return transactions.SendAppTransactionResult[None](**dataclasses.asdict(response))
+        parsed_response = response
+        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
-    def clear_state(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+    def clear_state(
+        self,
+        params: applications.AppClientBareCallWithSendParams | None = None
+    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
         return self.app_client.send.bare.clear_state(params)
 
 
@@ -533,23 +556,29 @@ class BoxStateValue(typing.TypedDict):
     """Shape of box state key values"""
     box_key: str
 
-class ARC56TestState:
+class Arc56TestState:
     """Methods to access state for the current ARC56Test app"""
 
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     @property
-    def global_state(self) -> "_GlobalState":
+    def global_state(
+        self
+    ) -> "_GlobalState":
             """Methods to access global_state for the current app"""
             return _GlobalState(self.app_client)
 
-    def local_state(self, address: str) -> "_LocalState":
+    def local_state(
+        self, address: str
+    ) -> "_LocalState":
             """Methods to access local_state for the current app"""
             return _LocalState(self.app_client, address)
 
     @property
-    def box(self) -> "_BoxState":
+    def box(
+        self
+    ) -> "_BoxState":
             """Methods to access box for the current app"""
             return _BoxState(self.app_client)
 
@@ -558,7 +587,7 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
             "{ foo: uint16; bar: uint16 }": FooUint16BarUint16
         }
 
@@ -581,7 +610,9 @@ class _GlobalState:
     def global_key(self) -> int:
             """Get the current value of the global_key key in global_state state"""
             value = self.app_client.state.global_state.get_value("global_key")
-            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "uint64" in self._struct_classes:
+                return self._struct_classes["uint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     @property
     def global_map(self) -> "_MapState[str, FooUint16BarUint16]":
@@ -597,7 +628,7 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {}
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
@@ -618,7 +649,9 @@ class _LocalState:
     def local_key(self) -> int:
             """Get the current value of the local_key key in local_state state"""
             value = self.app_client.state.local_state(self.address).get_value("local_key")
-            return self._struct_classes["uint64"](**value) if isinstance(value, dict) and "uint64" in self._struct_classes else typing.cast(int, value) # type: ignore
+            if isinstance(value, dict) and "uint64" in self._struct_classes:
+                return self._struct_classes["uint64"](**value)  # type: ignore
+            return typing.cast(int, value)
 
     @property
     def local_map(self) -> "_MapState[bytes, str]":
@@ -634,7 +667,7 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes = {
+        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
             "Outputs": Outputs
         }
 
@@ -657,7 +690,9 @@ class _BoxState:
     def box_key(self) -> str:
             """Get the current value of the box_key key in box state"""
             value = self.app_client.state.box.get_value("box_key")
-            return self._struct_classes["string"](**value) if isinstance(value, dict) and "string" in self._struct_classes else typing.cast(str, value) # type: ignore
+            if isinstance(value, dict) and "string" in self._struct_classes:
+                return self._struct_classes["string"](**value)  # type: ignore
+            return typing.cast(str, value)
 
     @property
     def box_map(self) -> "_MapState[Inputs, Outputs]":
@@ -696,13 +731,14 @@ class _MapState(typing.Generic[KeyType, ValueType]):
 
     def get_value(self, key: KeyType) -> ValueType | None:
         """Get a value from the map by key"""
-        value = self._state_accessor.get_map_value(self._map_name, dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key) # type: ignore
+        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
         return typing.cast(ValueType | None, value)
 
 
-class ARC56TestClient:
+class Arc56TestClient:
     """Client for interacting with ARC56Test smart contract"""
 
     @typing.overload
@@ -751,10 +787,10 @@ class ARC56TestClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = ARC56TestParams(self.app_client)
-        self.create_transaction = ARC56TestCreateTransactionParams(self.app_client)
-        self.send = ARC56TestSend(self.app_client)
-        self.state = ARC56TestState(self.app_client)
+        self.params = Arc56TestParams(self.app_client)
+        self.create_transaction = Arc56TestCreateTransactionParams(self.app_client)
+        self.send = Arc56TestSend(self.app_client)
+        self.state = Arc56TestState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -767,8 +803,8 @@ class ARC56TestClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: applications.AppLookup | None = None,
-    ) -> "ARC56TestClient":
-        return ARC56TestClient(
+    ) -> "Arc56TestClient":
+        return Arc56TestClient(
             applications.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -791,8 +827,8 @@ class ARC56TestClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "ARC56TestClient":
-        return ARC56TestClient(
+    ) -> "Arc56TestClient":
+        return Arc56TestClient(
             applications.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -831,8 +867,8 @@ class ARC56TestClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "ARC56TestClient":
-        return ARC56TestClient(
+    ) -> "Arc56TestClient":
+        return Arc56TestClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -842,8 +878,8 @@ class ARC56TestClient:
             )
         )
 
-    def new_group(self) -> "ARC56TestComposer":
-        return ARC56TestComposer(self)
+    def new_group(self) -> "Arc56TestComposer":
+        return Arc56TestComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -894,14 +930,14 @@ class ARC56TestClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class ARC56TestMethodCallCreateParams(
+class Arc56TestMethodCallCreateParams(
     applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
         typing.Any,
         typing.Any,
         typing.Literal[OnComplete.NoOpOC]
     ]
 ):
-    """Parameters for creating ARC56Test contract using ABI"""
+    """Parameters for creating Arc56Test contract using ABI"""
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
@@ -912,8 +948,8 @@ class ARC56TestMethodCallCreateParams(
             }
         )
 
-class ARC56TestFactory(applications.TypedAppFactoryProtocol):
-    """Factory for deploying and managing ARC56TestClient smart contracts"""
+class Arc56TestFactory(applications.TypedAppFactoryProtocol):
+    """Factory for deploying and managing Arc56TestClient smart contracts"""
 
     def __init__(
         self,
@@ -940,9 +976,9 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
                 deploy_time_params=deploy_time_params,
             )
         )
-        self.params = ARC56TestFactoryParams(self.app_factory)
-        self.create_transaction = ARC56TestFactoryCreateTransaction(self.app_factory)
-        self.send = ARC56TestFactorySend(self.app_factory)
+        self.params = Arc56TestFactoryParams(self.app_factory)
+        self.create_transaction = Arc56TestFactoryCreateTransaction(self.app_factory)
+        self.send = Arc56TestFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -962,7 +998,7 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
         deploy_time_params: models.TealTemplateParams | None = None,
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
-        create_params: ARC56TestMethodCallCreateParams | None = None,
+        create_params: Arc56TestMethodCallCreateParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -971,7 +1007,7 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
-    ) -> tuple[ARC56TestClient, applications.AppFactoryDeployResponse]:
+    ) -> tuple[Arc56TestClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             deploy_time_params=deploy_time_params,
@@ -988,7 +1024,7 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
             populate_app_call_resources=populate_app_call_resources,
         )
 
-        return ARC56TestClient(deploy_response[0]), deploy_response[1]
+        return Arc56TestClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -1000,9 +1036,9 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
         app_lookup_cache: applications.AppLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> ARC56TestClient:
+    ) -> Arc56TestClient:
         """Get an app client by creator address and name"""
-        return ARC56TestClient(
+        return Arc56TestClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -1023,9 +1059,9 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> ARC56TestClient:
+    ) -> Arc56TestClient:
         """Get an app client by app ID"""
-        return ARC56TestClient(
+        return Arc56TestClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -1037,17 +1073,17 @@ class ARC56TestFactory(applications.TypedAppFactoryProtocol):
         )
 
 
-class ARC56TestFactoryParams:
-    """Parameters for creating transactions for ARC56Test contract"""
+class Arc56TestFactoryParams:
+    """Parameters for creating transactions for Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = ARC56TestFactoryCreateParams(app_factory)
-        self.update = ARC56TestFactoryUpdateParams(app_factory)
-        self.delete = ARC56TestFactoryDeleteParams(app_factory)
+        self.create = Arc56TestFactoryCreateParams(app_factory)
+        self.update = Arc56TestFactoryUpdateParams(app_factory)
+        self.delete = Arc56TestFactoryDeleteParams(app_factory)
 
-class ARC56TestFactoryCreateParams:
-    """Parameters for 'create' operations of ARC56Test contract"""
+class Arc56TestFactoryCreateParams:
+    """Parameters for 'create' operations of Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1055,92 +1091,163 @@ class ARC56TestFactoryCreateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
             *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64) ABI method"""
         method_args = _parse_abi_args(args)
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+                "args": method_args,
+                }
             )
         )
 
     def create_application(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="createApplication()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "createApplication()void",
+                "args": method_args,
+                }
             )
         )
 
     def opt_in_to_application(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the optInToApplication()void ABI method"""
         method_args = None
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="optInToApplication()void",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{
+                **params,
+                "method": "optInToApplication()void",
+                "args": method_args,
+                }
             )
         )
 
-class ARC56TestFactoryUpdateParams:
-    """Parameters for 'update' operations of ARC56Test contract"""
+class Arc56TestFactoryUpdateParams:
+    """Parameters for 'update' operations of Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1148,22 +1255,39 @@ class ARC56TestFactoryUpdateParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
-class ARC56TestFactoryDeleteParams:
-    """Parameters for 'delete' operations of ARC56Test contract"""
+class Arc56TestFactoryDeleteParams:
+    """Parameters for 'delete' operations of Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1171,31 +1295,48 @@ class ARC56TestFactoryDeleteParams:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
-class ARC56TestFactoryCreateTransaction:
-    """Create transactions for ARC56Test contract"""
+class Arc56TestFactoryCreateTransaction:
+    """Create transactions for Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = ARC56TestFactoryCreateTransactionCreate(app_factory)
+        self.create = Arc56TestFactoryCreateTransactionCreate(app_factory)
 
 
-class ARC56TestFactoryCreateTransactionCreate:
-    """Create new instances of ARC56Test contract"""
+class Arc56TestFactoryCreateTransactionCreate:
+    """Create new instances of Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1203,31 +1344,49 @@ class ARC56TestFactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 
 
-class ARC56TestFactorySend:
-    """Send calls to ARC56Test contract"""
+class Arc56TestFactorySend:
+    """Send calls to Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
-        self.create = ARC56TestFactorySendCreate(app_factory)
+        self.create = Arc56TestFactorySendCreate(app_factory)
 
 
-class ARC56TestFactorySendCreate:
-    """Send create calls to ARC56Test contract"""
+class Arc56TestFactorySendCreate:
+    """Send create calls to Arc56Test contract"""
 
     def __init__(self, app_factory: applications.AppFactory):
         self.app_factory = app_factory
@@ -1235,60 +1394,102 @@ class ARC56TestFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-] | None) = None,
-        **kwargs
-    ) -> tuple[ARC56TestClient, transactions.SendAppCreateTransactionResult]:
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+    ) -> tuple[Arc56TestClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
+        params = {
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
-        return ARC56TestClient(result[0]), result[1]
+        return Arc56TestClient(result[0]), result[1]
 
     def create_application(
         self,
         *,
-        on_complete: (typing.Literal[
-        OnComplete.NoOpOC,
-        OnComplete.UpdateApplicationOC,
-        OnComplete.DeleteApplicationOC,
-        OnComplete.OptInOC,
-        OnComplete.CloseOutOC,
-    ] | None) = None,
-        **kwargs
-    ) -> tuple[ARC56TestClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        first_valid_round: int | None = None,
+        lease: bytes | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        note: bytes | None = None,
+        rekey_to: str | None = None,
+        sender: str | None = None,
+        signer: TransactionSigner | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        last_valid_round: int | None = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None
+    ) -> tuple[Arc56TestClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
             method_args = None
-            result = self.app_factory.send.create(
+            params = {
+                k: v for k, v in locals().items()
+                if k != 'self' and v is not None
+            }
+            client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
-                    method="createApplication()void",
-                    args=method_args, # type: ignore
-                    on_complete=on_complete,
-                    **kwargs
+                    **{
+                    **params,
+                    "method": "createApplication()void",
+                    "args": method_args,
+                    }
                 )
             )
-            return_value = None if result[1].abi_return is None else typing.cast(None, result[1].abi_return)
+            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return ARC56TestClient(result[0]), applications.AppFactoryCreateMethodCallResult[None](
-                app_id=result[1].app_id,
-                abi_return=return_value,
-                transaction=result[1].transaction,
-                confirmation=result[1].confirmation,
-                group_id=result[1].group_id,
-                tx_ids=result[1].tx_ids,
-                transactions=result[1].transactions,
-                confirmations=result[1].confirmations,
-                app_address=result[1].app_address,
+            return Arc56TestClient(client), applications.AppFactoryCreateMethodCallResult[None](
+                **{
+                    **result.__dict__,
+                    "app_id": result.app_id,
+                    "abi_return": return_value,
+                    "transaction": result.transaction,
+                    "confirmation": result.confirmation,
+                    "group_id": result.group_id,
+                    "tx_ids": result.tx_ids,
+                    "transactions": result.transactions,
+                    "confirmations": result.confirmations,
+                    "app_address": result.app_address,
+                }
             )
 
 
-class _ARC56TestOpt_inComposer:
-    def __init__(self, composer: "ARC56TestComposer"):
+class _Arc56TestOpt_inComposer:
+    def __init__(self, composer: "Arc56TestComposer"):
         self.composer = composer
     def opt_in_to_application(
         self,
@@ -1310,7 +1511,7 @@ class _ARC56TestOpt_inComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "ARC56TestComposer":
+    ) -> "Arc56TestComposer":
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.opt_in.opt_in_to_application(
                 
@@ -1340,17 +1541,17 @@ class _ARC56TestOpt_inComposer:
         return self.composer
 
 
-class ARC56TestComposer:
-    """Composer for creating transaction groups for ARC56Test contract calls"""
+class Arc56TestComposer:
+    """Composer for creating transaction groups for Arc56Test contract calls"""
 
-    def __init__(self, client: "ARC56TestClient"):
+    def __init__(self, client: "Arc56TestClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
 
     @property
-    def opt_in(self) -> "_ARC56TestOpt_inComposer":
-        return _ARC56TestOpt_inComposer(self)
+    def opt_in(self) -> "_Arc56TestOpt_inComposer":
+        return _Arc56TestOpt_inComposer(self)
 
     def foo(
         self,
@@ -1372,10 +1573,10 @@ class ARC56TestComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "ARC56TestComposer":
+    ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.foo(
-                args=args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -1421,7 +1622,7 @@ class ARC56TestComposer:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> "ARC56TestComposer":
+    ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
                 
@@ -1469,7 +1670,7 @@ class ARC56TestComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
-    ) -> "ARC56TestComposer":
+    ) -> "Arc56TestComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
                 applications.AppClientBareCallWithSendParams(
@@ -1496,7 +1697,7 @@ class ARC56TestComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "ARC56TestComposer":
+    ) -> "Arc56TestComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

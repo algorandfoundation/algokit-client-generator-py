@@ -1,7 +1,7 @@
 import re
 from collections.abc import Iterable
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from algosdk import abi
 
@@ -12,9 +12,6 @@ if TYPE_CHECKING:
 
 
 NEW_LINE = "\n"
-
-
-from typing import Protocol
 
 
 class Sanitizer(Protocol):
@@ -120,34 +117,20 @@ def get_sanitizer(*, preserve_names: bool = False) -> Sanitizer:
 
 # Helper functions
 def to_pascal_case(value: str) -> str:
-    """Convert string to PascalCase"""
-    parts = value.split("_")
-    result = []
-    for part in parts:
-        if not part:
-            continue
-        # If the part is already in PascalCase (has mixed case), keep it as is
-        if any(c.isupper() for c in part[1:]):
-            result.append(part)
-        else:
-            # Otherwise capitalize the first letter
-            result.append(part[0].upper() + part[1:].lower() if part else "")
-    return "".join(result)
+    """Convert string to PascalCase, handling both snake_case and existing PascalCase inputs"""
+    # First split on underscores
+    words = value.split("_")
+    split_words = []
+    for word in words:
+        if word:
+            parts = get_parts(word)
+            split_words.extend(parts)
+    return "".join(word.capitalize() for word in split_words)
 
 
 def to_snake_case(text: str) -> str:
     """Convert string to snake_case"""
-    if not text:
-        return text
-
-    chars = []
-    for i, char in enumerate(text):
-        if i > 0 and (char.isupper() or not char.isalnum()):
-            chars.append("_")
-        if char.isalnum():
-            chars.append(char.lower())
-
-    return "".join(chars).strip("_")
+    return "_".join([c.lower() for c in get_parts(text)]).lstrip("_")
 
 
 class IOType(Enum):
@@ -186,7 +169,7 @@ def get_struct_name(struct_name: str) -> str:
     return sanitizer.make_safe_type_identifier(cleaned)
 
 
-def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901: ignore[PLR0911]
+def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901, PLR0912: ignore[PLR0911]
     match abi_type:
         case abi.UintType():
             return "int"
@@ -255,7 +238,6 @@ def get_unique_symbol_by_incrementing(
     """Get a unique symbol by incrementing a number suffix if needed"""
     if sanitizer is None:
         sanitizer = get_sanitizer(preserve_names=False)
-
     base_name = sanitizer.make_safe_string_type_literal(base_name)
     suffix = 0
     while True:

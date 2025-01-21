@@ -146,7 +146,7 @@ def {operation}(self) -> "{class_name}":
 {method_params}
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
-            {'args=args, # type: ignore' if method.abi.args else ''}
+            {'args=args, ' if method.abi.args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,

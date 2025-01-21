@@ -7,16 +7,7 @@ from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.spec import ContractMethod
 
 # Constants
-ON_COMPLETE_TYPE = """typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]"""
-
 OPERATION_PREFIXES = {"create": "create", "update_application": "update", "delete_application": "delete"}
-
 OPERATION_SUFFIXES = {"create": "Create", "update_application": "Update", "delete_application": "Delete"}
 
 
@@ -43,8 +34,27 @@ def _generate_method_params(method_name: str, args_type: str) -> str:
 def {method_name}(
     self,
     {args_param}
-    on_complete: ({ON_COMPLETE_TYPE} | None) = None,
-    **kwargs
+    account_references: list[str] | None = None,
+    app_references: list[int] | None = None,
+    asset_references: list[int] | None = None,
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+    extra_fee: models.AlgoAmount | None = None,
+    first_valid_round: int | None = None,
+    lease: bytes | None = None,
+    max_fee: models.AlgoAmount | None = None,
+    note: bytes | None = None,
+    rekey_to: str | None = None,
+    sender: str | None = None,
+    signer: TransactionSigner | None = None,
+    static_fee: models.AlgoAmount | None = None,
+    validity_window: int | None = None,
+    last_valid_round: int | None = None,
+    extra_program_pages: int | None = None,
+    schema: transactions.AppCreateSchema | None = None,
+    deploy_time_params: models.TealTemplateParams | None = None,
+    updatable: bool | None = None,
+    deletable: bool | None = None,
+    on_complete: (ON_COMPLETE_TYPES | None) = None
 )"""
 
 
@@ -62,42 +72,20 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
 {method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
     method_args = {'_parse_abi_args(args)' if args_type != 'None' else 'None'}
+    params = {{
+        k: v for k, v in locals().items()
+        if k != 'self' and v is not None
+    }}
     return self.app_factory.params.{operation}(
         applications.AppFactoryCreateMethodCallParams(
-            method="{method_sig}",
-            args=method_args, # type: ignore
-            on_complete=on_complete,
-            **kwargs
+            **{{
+            **params,
+            "method": "{method_sig}",
+            "args": method_args,
+            }}
         )
     )
 """)
-    yield Part.DecIndent
-
-
-def _generate_abi_transaction_method(context: GeneratorContext, method: ContractMethod) -> Iterator[DocumentParts]:
-    """Generate an ABI transaction method"""
-    if not method.abi:
-        return
-
-    args_type = _generate_method_args_type(context, method)
-    method_params = _generate_method_params(method.abi.client_method_name, args_type)
-
-    yield Part.IncIndent
-    yield utils.indented(f"{method_params} -> transactions.BuiltTransactions:")
-    yield Part.IncIndent
-    yield utils.docstring(f"Creates a transaction using the {method.abi.method.get_signature()} ABI method")
-    yield utils.indented(f"""
-method_args = {'_parse_abi_args(args)' if args_type != 'None' else 'None'}
-return self.app_factory.create_transaction.create(
-    applications.AppFactoryCreateMethodCallParams(
-        method=\"{method.abi.method.get_signature()}\",
-        args=method_args, # type: ignore
-        on_complete=on_complete,
-        **kwargs
-        )
-    )
-""")
-    yield Part.DecIndent
     yield Part.DecIndent
 
 
@@ -123,28 +111,36 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
         method_args = {'_parse_abi_args(args)' if args_type != 'None' else 'None'}
-        result = self.app_factory.send.create(
+        params = {{
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }}
+        client, result = self.app_factory.send.create(
             applications.AppFactoryCreateMethodCallParams(
-                method="{method.abi.method.get_signature()}",
-                args=method_args, # type: ignore
-                on_complete=on_complete,
-                **kwargs
+                **{{
+                **params,
+                "method": "{method.abi.method.get_signature()}",
+                "args": method_args,
+                }}
             )
         )
-        return_value = None if result[1].abi_return is None else typing.cast({return_type}, result[1].abi_return)
+        return_value = None if result.abi_return is None else typing.cast({return_type}, result.abi_return)
 
-        return {context.contract_name}Client(result[0]), applications.AppFactoryCreateMethodCallResult[{return_type}](
-            app_id=result[1].app_id,
-            abi_return=return_value,
-            transaction=result[1].transaction,
-            confirmation=result[1].confirmation,
-            group_id=result[1].group_id,
-            tx_ids=result[1].tx_ids,
-            transactions=result[1].transactions,
-            confirmations=result[1].confirmations,
-            app_address=result[1].app_address,
+        return {context.contract_name}Client(client), applications.AppFactoryCreateMethodCallResult[{return_type}](
+            **{{
+                **result.__dict__,
+                "app_id": result.app_id,
+                "abi_return": return_value,
+                "transaction": result.transaction,
+                "confirmation": result.confirmation,
+                "group_id": result.group_id,
+                "tx_ids": result.tx_ids,
+                "transactions": result.transactions,
+                "confirmations": result.confirmations,
+                "app_address": result.app_address,
+            }}
         )
-""")
+""")  # noqa: E501
 
 
 def _generate_operation_params_class(context: GeneratorContext, operation: str) -> Iterator[DocumentParts]:
@@ -162,12 +158,35 @@ class {class_name}:
     def bare(
         self,
         *,
-        on_complete: ({ON_COMPLETE_TYPE} | None) = None,
-        **kwargs
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
     ) -> transactions.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
+        params = {{
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }}
         return self.app_factory.params.bare.{method_name}(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 """)
 
@@ -232,16 +251,23 @@ def generate_factory_deploy_types(
     # Generate ABI method params class
     if abi_methods:
         yield Part.Gap1
-        yield from _generate_abi_params_class(context, abi_methods, is_create, type_suffix)
+        yield from _generate_abi_params_class(
+            context=context,
+            abi_methods=abi_methods,
+            is_create=is_create,
+            type_suffix=type_suffix,
+        )
 
     # Generate bare method params class
     if bare_methods:
         yield Part.Gap1
-        yield from _generate_bare_params_class(context, bare_methods, is_create, type_suffix)
+        yield from _generate_bare_params_class(
+            context=context, bare_methods=bare_methods, is_create=is_create, type_suffix=type_suffix
+        )
 
 
 def _generate_abi_params_class(
-    context: GeneratorContext, abi_methods: list[ContractMethod], is_create: bool, type_suffix: str
+    *, context: GeneratorContext, abi_methods: list[ContractMethod], is_create: bool, type_suffix: str
 ) -> Iterator[DocumentParts]:
     """Generate ABI params class with proper indentation"""
     # Build method signature and args unions
@@ -296,7 +322,7 @@ class {class_name}(
 
 
 def _generate_bare_params_class(
-    context: GeneratorContext, bare_methods: list[ContractMethod], is_create: bool, type_suffix: str
+    *, context: GeneratorContext, bare_methods: list[ContractMethod], is_create: bool, type_suffix: str
 ) -> Iterator[DocumentParts]:
     """Generate bare params class with proper indentation"""
     on_complete_options = {
@@ -319,7 +345,7 @@ def _generate_bare_params_class(
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
 class {class_name}({', '.join(base_classes)}):
-    \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using bare calls\"\"\"
+    \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCall{'Create' if is_create else ''}Params:
         return applications.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
@@ -549,12 +575,36 @@ class {context.contract_name}FactoryCreateTransactionCreate:
     def bare(
         self,
         *,
-        on_complete: ({ON_COMPLETE_TYPE} | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> Transaction:
         \"\"\"Creates a new instance using a bare call\"\"\"
+        params = {{
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }}
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateParams(**params)
         )
 """)
 
@@ -571,12 +621,39 @@ class {context.contract_name}FactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: ({ON_COMPLETE_TYPE} | None) = None,
-        **kwargs
+        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        extra_program_pages: int | None = None,
+        schema: transactions.AppCreateSchema | None = None,
+        max_rounds_to_wait: int | None = None,
+        suppress_log: bool | None = None,
+        populate_app_call_resources: bool | None = None,
+        signer: TransactionSigner | None = None,
+        rekey_to: str | None = None,
+        lease: bytes | None = None,
+        static_fee: models.AlgoAmount | None = None,
+        extra_fee: models.AlgoAmount | None = None,
+        max_fee: models.AlgoAmount | None = None,
+        validity_window: int | None = None,
+        first_valid_round: int | None = None,
+        last_valid_round: int | None = None,
+        sender: str | None = None,
+        note: bytes | None = None,
+        args: list[bytes] | None = None,
+        account_references: list[str] | None = None,
+        app_references: list[int] | None = None,
+        asset_references: list[int] | None = None,
+        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
+        deploy_time_params: models.TealTemplateParams | None = None,
+        updatable: bool | None = None,
+        deletable: bool | None = None,
     ) -> tuple[{context.contract_name}Client, transactions.SendAppCreateTransactionResult]:
         \"\"\"Creates a new instance using a bare call\"\"\"
+        params = {{
+            k: v for k, v in locals().items()
+            if k != 'self' and v is not None
+        }}
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(on_complete=on_complete, **kwargs)
+            applications.AppFactoryCreateWithSendParams(**params)
         )
         return {context.contract_name}Client(result[0]), result[1]
 """)
