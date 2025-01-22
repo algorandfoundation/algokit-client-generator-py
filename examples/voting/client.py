@@ -726,7 +726,7 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(

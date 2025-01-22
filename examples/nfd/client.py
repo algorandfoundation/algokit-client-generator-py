@@ -3084,7 +3084,7 @@ class NfdInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(

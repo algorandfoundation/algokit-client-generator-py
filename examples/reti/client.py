@@ -9,7 +9,9 @@
 import dataclasses
 import typing
 # core algosdk
+import algosdk
 from algosdk.transaction import OnComplete
+from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -3577,7 +3579,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[MbrAmounts], parsed_response)
 
     def get_protocol_constraints(
@@ -3622,7 +3624,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[Constraints], parsed_response)
 
     def get_num_validators(
@@ -3713,7 +3715,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorConfig], parsed_response)
 
     def get_validator_state(
@@ -3759,7 +3761,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorCurState], parsed_response)
 
     def get_validator_owner_and_manager(
@@ -3943,7 +3945,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolInfo], parsed_response)
 
     def get_cur_max_stake_per_pool(
@@ -4127,7 +4129,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def get_node_pool_assignments(
@@ -4173,7 +4175,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
 
     def get_nfd_registry_id(
@@ -4540,7 +4542,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def add_stake(
@@ -4586,7 +4588,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def set_token_payout_ratio(
@@ -4632,7 +4634,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))  # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def stake_updated_via_rewards(

@@ -167,7 +167,8 @@ def _generate_method_body(
         if method.abi and method.abi.result_struct:
             return (
                 f"dataclasses.replace(response, "
-                f"abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return))) # type: ignore"
+                f"abi_return={method.abi.result_struct.struct_class_name}("
+                f"**typing.cast(dict, response.abi_return)))  # type: ignore"
             )
         return "response"
 
