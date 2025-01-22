@@ -232,7 +232,7 @@ class _NfdInstanceUpdate:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> transactions.AppCallMethodCallParams:
+    ) -> transactions.AppUpdateMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="updateApplication(string)void",
@@ -3084,7 +3084,7 @@ class NfdInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))
+        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(
@@ -4223,7 +4223,7 @@ class NfdInstanceMethodCallUpdateParams(
             }
         )
 
-class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
+class NfdInstanceFactory(applications.TypedAppFactoryProtocol[NfdInstanceMethodCallCreateParams, NfdInstanceMethodCallUpdateParams, None]):
     """Factory for deploying and managing NfdInstanceClient smart contracts"""
 
     def __init__(
@@ -4275,6 +4275,7 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: NfdInstanceMethodCallCreateParams | None = None,
         update_params: NfdInstanceMethodCallUpdateParams | None = None,
+        delete_params: None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -4291,6 +4292,7 @@ class NfdInstanceFactory(applications.TypedAppFactoryProtocol):
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
             update_params=update_params.to_algokit_utils_params() if update_params else None,
+            delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -4425,7 +4427,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4435,7 +4436,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "gas()void",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -4467,7 +4468,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintAsa(string,string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4477,7 +4477,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "mintAsa(string,string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4509,7 +4509,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the deleteFields(byte[][])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4519,7 +4518,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "deleteFields(byte[][])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4551,7 +4550,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4561,7 +4559,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateSegmentCount(string,uint64)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4593,7 +4591,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4603,7 +4600,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "getFieldUpdateCost(byte[][])uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4635,7 +4632,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateFields(byte[][])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4645,7 +4641,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateFields(byte[][])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4677,7 +4673,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the readField(byte[])byte[] ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4687,7 +4682,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "readField(byte[])byte[]",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4719,7 +4714,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4729,7 +4723,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "offerForSale(uint64,address)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4760,7 +4754,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the cancelSale()void ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4770,7 +4763,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "cancelSale()void",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -4802,7 +4795,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the postOffer(uint64,string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4812,7 +4804,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "postOffer(uint64,string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4844,7 +4836,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4854,7 +4845,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4886,7 +4877,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the purchase(pay)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4896,7 +4886,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "purchase(pay)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4928,7 +4918,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4938,7 +4927,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "isAddressInField(string,address)bool",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4969,7 +4958,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getRenewPrice()uint64 ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4979,7 +4967,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "getRenewPrice()uint64",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -5011,7 +4999,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateHash(byte[])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5021,7 +5008,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateHash(byte[])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5053,7 +5040,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the contractLock(bool)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5063,7 +5049,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "contractLock(bool)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5095,7 +5081,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5105,7 +5090,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "segmentLock(bool,uint64)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5137,7 +5122,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5147,7 +5131,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultOptInLock(bool)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5179,7 +5163,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5189,7 +5172,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultOptIn(uint64[])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5221,7 +5204,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5231,7 +5213,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5263,7 +5245,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the renew(pay)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5273,7 +5254,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "renew(pay)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5305,7 +5286,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5315,7 +5295,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "setPrimaryAddress(string,address)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5347,7 +5327,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5357,7 +5336,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "registryAddingVerifiedAddress(string,string)bool",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5389,7 +5368,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5399,7 +5377,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "registryRemovingVerifiedAddress(string,address,address)bool",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5431,7 +5409,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5441,7 +5418,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5473,7 +5450,6 @@ class NfdInstanceFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateApplication(string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -5483,7 +5459,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateApplication(string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -5699,7 +5675,6 @@ class NfdInstanceFactorySendCreate:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[NfdInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-            method_args = _parse_abi_args(args)
             params = {
                 k: v for k, v in locals().items()
                 if k != 'self' and v is not None
@@ -5709,7 +5684,7 @@ class NfdInstanceFactorySendCreate:
                     **{
                     **params,
                     "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                    "args": method_args,
+                    "args": _parse_abi_args(args), # type: ignore
                     }
                 )
             )

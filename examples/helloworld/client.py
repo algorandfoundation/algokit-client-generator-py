@@ -651,7 +651,7 @@ class HelloWorldAppBareCallDeleteParams(applications.AppClientBareCallParams):
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class HelloWorldAppFactory(applications.TypedAppFactoryProtocol):
+class HelloWorldAppFactory(applications.TypedAppFactoryProtocol[HelloWorldAppBareCallCreateParams, HelloWorldAppBareCallUpdateParams, HelloWorldAppBareCallDeleteParams]):
     """Factory for deploying and managing HelloWorldAppClient smart contracts"""
 
     def __init__(
@@ -856,7 +856,6 @@ class HelloWorldAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -866,7 +865,7 @@ class HelloWorldAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -898,7 +897,6 @@ class HelloWorldAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello_world_check(string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -908,7 +906,7 @@ class HelloWorldAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello_world_check(string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )

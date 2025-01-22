@@ -18,7 +18,7 @@ typing-extensions = ">=4.6.0"
 type = "git"
 url = "https://github.com/algorandfoundation/algokit-utils-py.git"
 reference = "prerelease/typed_client_methods"
-resolved_reference = "9fd3d10d36be9fcfe5f9f2a282ad23392b549595"
+resolved_reference = "a22e479a7653765efc67d44bef490fe36bf14a74"
 
 [[package]]
 name = "anyio"

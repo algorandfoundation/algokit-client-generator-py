@@ -39,6 +39,14 @@ OPERATION_TO_RETURN_PARAMS_TYPE = {
     "close_out": "transactions.AppCallParams",
 }
 
+OPERATION_TO_METHOD_CALL_PARAMS_TYPE = {
+    "update": "transactions.AppUpdateMethodCallParams",
+    "delete": "transactions.AppDeleteMethodCallParams",
+    "opt_in": "transactions.AppCallMethodCallParams",
+    "close_out": "transactions.AppCallMethodCallParams",
+    "call": "transactions.AppCallMethodCallParams",
+}
+
 
 def _generate_common_method_params(  # noqa: C901
     context: GeneratorContext,
@@ -119,7 +127,9 @@ def {method.abi.client_method_name}(
     elif property_type == PropertyType.CREATE_TRANSACTION:
         return_type = "transactions.BuiltTransactions"
     elif property_type == PropertyType.PARAMS:
-        return_type = "transactions.AppCallMethodCallParams" if method.abi else "transactions.AppCallParams"
+        return_type = (
+            OPERATION_TO_METHOD_CALL_PARAMS_TYPE[operation or "call"] if method.abi else "transactions.AppCallParams"
+        )
 
     params += f" -> {return_type}:"
 
@@ -157,7 +167,7 @@ def _generate_method_body(
         if method.abi and method.abi.result_struct:
             return (
                 f"dataclasses.replace(response, "
-                f"abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return)))"
+                f"abi_return={method.abi.result_struct.struct_class_name}(**typing.cast(dict, response.abi_return))) # type: ignore"
             )
         return "response"
 

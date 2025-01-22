@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from dataclasses import dataclass
 from typing import Literal
 
 from algokit_client_generator import utils
@@ -9,6 +10,13 @@ from algokit_client_generator.spec import ContractMethod
 # Constants
 OPERATION_PREFIXES = {"create": "create", "update_application": "update", "delete_application": "delete"}
 OPERATION_SUFFIXES = {"create": "Create", "update_application": "Update", "delete_application": "Delete"}
+
+
+@dataclass
+class TypeNames:
+    create: list[str]
+    update: list[str]
+    delete: list[str]
 
 
 def _generate_method_args_type(context: GeneratorContext, method: ContractMethod) -> str:
@@ -71,7 +79,6 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
     yield utils.indented(f"""
 {method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
-    method_args = {'_parse_abi_args(args)' if args_type != 'None' else 'None'}
     params = {{
         k: v for k, v in locals().items()
         if k != 'self' and v is not None
@@ -81,7 +88,7 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
             **{{
             **params,
             "method": "{method_sig}",
-            "args": method_args,
+            "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'}, # type: ignore
             }}
         )
     )
@@ -110,7 +117,6 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     yield utils.indented(f"""
     {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        method_args = {'_parse_abi_args(args)' if args_type != 'None' else 'None'}
         params = {{
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -120,7 +126,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
                 **{{
                 **params,
                 "method": "{method.abi.method.get_signature()}",
-                "args": method_args,
+                "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'}, # type: ignore
                 }}
             )
         )
@@ -197,16 +203,15 @@ class {class_name}:
                 yield _generate_abi_method(context, method, operation)
 
 
-def _generate_deploy_params(context: GeneratorContext) -> tuple[list[str], list[str]]:
+def _generate_deploy_params(context: GeneratorContext) -> tuple[list[str], list[str], TypeNames]:
     """Generate deploy parameters and their forwarding code"""
     deploy_param_types = []
     argument_forwarding = []
+    type_names = TypeNames(create=[], update=[], delete=[])
 
     # Helper function to process each method type
-    def process_method_type(method_type: str, prefix: str) -> None:
-        methods = getattr(context.methods, method_type)
-        if not methods:
-            return
+    def get_and_process_method_type(method_type: str, prefix: str) -> list[str]:
+        methods = getattr(context.methods, method_type) or []
 
         type_names = []
         if any(m.abi for m in methods):
@@ -214,21 +219,30 @@ def _generate_deploy_params(context: GeneratorContext) -> tuple[list[str], list[
         if any(not m.abi for m in methods):
             type_names.append(f"{context.contract_name}BareCall{prefix}Params")
 
-        if type_names:
-            param_name = f"{method_type.split('_')[0]}_params"
-            deploy_param_types.append(f"{param_name}: {' | '.join(type_names)} | None = None")
-            argument_forwarding.append(f"{param_name}={param_name}.to_algokit_utils_params() if {param_name} else None")
+        param_name = f"{method_type.split('_')[0]}_params"
+        deploy_param_types.append(
+            f"{param_name}: {(' | '.join(type_names) + ' | None') if type_names else 'None'} = None"
+        )
+        argument_forwarding.append(
+            f"{param_name}={param_name}{f'.to_algokit_utils_params() if {param_name} else None' if type_names else ''}"
+            if param_name
+            else "None"
+        )
+
+        return type_names
 
     # Process each method type
-    process_method_type("create", "Create")
-    process_method_type("update_application", "Update")
-    process_method_type("delete_application", "Delete")
+    type_names.create = get_and_process_method_type("create", "Create")
+    type_names.update = get_and_process_method_type("update_application", "Update")
+    type_names.delete = get_and_process_method_type("delete_application", "Delete")
 
-    return deploy_param_types, argument_forwarding
+    return deploy_param_types, argument_forwarding, type_names
 
 
 def generate_factory_deploy_types(
-    context: GeneratorContext, param_type: Literal["create", "update_application", "delete_application"]
+    context: GeneratorContext,
+    param_type: Literal["create", "update_application", "delete_application"],
+    deploy_params: list[str],
 ) -> Iterator[DocumentParts]:
     """Generate factory deploy types with proper indentation"""
     methods = getattr(context.methods, param_type)
@@ -236,7 +250,6 @@ def generate_factory_deploy_types(
         return
 
     # Check if type is used in deploy params
-    deploy_params, _ = _generate_deploy_params(context)
     param_prefix = OPERATION_PREFIXES[param_type]
     if not any(param.startswith(f"{param_prefix}_params:") for param in deploy_params):
         return
@@ -353,10 +366,19 @@ class {class_name}({', '.join(base_classes)}):
 
 
 def generate_factory_class(  # noqa: PLR0915
-    context: GeneratorContext, deploy_params: list[str], argument_forwarding: list[str]
+    context: GeneratorContext, deploy_params: list[str], argument_forwarding: list[str], type_names: TypeNames
 ) -> Iterator[DocumentParts]:
     """Generate the main factory class"""
-    yield f"class {context.contract_name}Factory(applications.TypedAppFactoryProtocol):"
+    create_type_names = " | ".join(type_names.create)
+    update_type_names = " | ".join(type_names.update)
+    delete_type_names = " | ".join(type_names.delete)
+    yield (
+        f"class {context.contract_name}Factory("
+        f"applications.TypedAppFactoryProtocol["
+        f"{create_type_names or 'None'}, "
+        f"{update_type_names or 'None'}, "
+        f"{delete_type_names or 'None'}]):"
+    )
     yield Part.IncIndent
 
     # Class docstring
@@ -668,16 +690,16 @@ class {context.contract_name}FactorySendCreate:
 
 def generate_typed_factory(context: GeneratorContext) -> DocumentParts:
     """Generate the complete typed factory with proper structure"""
-    deploy_param_types, argument_forwarding = _generate_deploy_params(context)
+    deploy_param_types, argument_forwarding, type_names = _generate_deploy_params(context)
 
     # Generate deploy types if needed
     for param_type in ["create", "update_application", "delete_application"]:
         if any(param.startswith(f"{OPERATION_PREFIXES[param_type]}_params:") for param in deploy_param_types):
-            yield from generate_factory_deploy_types(context, param_type)  # type: ignore  # noqa: PGH003
+            yield from generate_factory_deploy_types(context, param_type, deploy_param_types)  # type: ignore  # noqa: PGH003
 
     # Generate main factory components
     yield Part.Gap1
-    yield from generate_factory_class(context, deploy_param_types, argument_forwarding)
+    yield from generate_factory_class(context, deploy_param_types, argument_forwarding, type_names)
     yield Part.Gap2
     yield from generate_factory_params(context)
     yield Part.Gap2

@@ -265,7 +265,7 @@ def join(delimiter: str, items: Iterable[str]) -> DocumentParts:
 
 
 def string_literal(value: str) -> str:
-    return f'"{value}"'  # TODO escape quotes
+    return f'"{value}"'
 
 
 def docstring(value: str) -> DocumentParts:

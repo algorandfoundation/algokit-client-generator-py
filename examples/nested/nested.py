@@ -1,3 +1,5 @@
+# type: ignore
+
 from algopy import ARC4Contract, arc4, gtxn
 
 

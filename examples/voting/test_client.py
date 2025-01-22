@@ -150,6 +150,7 @@ def test_struct_mapping(random_voting_round_app: RandomVotingAppDeployment) -> N
 def test_global_state(random_voting_round_app: RandomVotingAppDeployment) -> None:
     client = random_voting_round_app.client
     test_account = random_voting_round_app.test_account
+    question_counts = random_voting_round_app.question_counts
     total_question_options = random_voting_round_app.total_question_options
     state = client.state.global_state.get_all()
 
@@ -163,8 +164,7 @@ def test_global_state(random_voting_round_app: RandomVotingAppDeployment) -> Non
     assert state["nft_image_url"] == b"ipfs://cid"
     assert state["nft_asset_id"] == 0
     assert state["total_options"] == total_question_options
-    # TODO: decode
-    # assert state['option_counts'] == question_counts
+    assert algosdk.abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
 
 
 def test_works_with_separate_transactions(random_voting_round_app: RandomVotingAppDeployment) -> None:

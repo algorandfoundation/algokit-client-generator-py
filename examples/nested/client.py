@@ -712,7 +712,7 @@ class NestedContractBareCallCreateParams(applications.AppClientCreateSchema, app
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-class NestedContractFactory(applications.TypedAppFactoryProtocol):
+class NestedContractFactory(applications.TypedAppFactoryProtocol[NestedContractBareCallCreateParams, None, None]):
     """Factory for deploying and managing NestedContractClient smart contracts"""
 
     def __init__(
@@ -763,6 +763,8 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: NestedContractBareCallCreateParams | None = None,
+        update_params: None = None,
+        delete_params: None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -778,6 +780,8 @@ class NestedContractFactory(applications.TypedAppFactoryProtocol):
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
+            update_params=update_params,
+            delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -913,7 +917,6 @@ class NestedContractFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the add(uint64,uint64)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -923,7 +926,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "add(uint64,uint64)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -955,7 +958,6 @@ class NestedContractFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the get_pay_txn_amount(pay)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -965,7 +967,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "get_pay_txn_amount(pay)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -997,7 +999,6 @@ class NestedContractFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the nested_method_call(string,pay,appl)byte[] ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1007,7 +1008,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "nested_method_call(string,pay,appl)byte[]",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )

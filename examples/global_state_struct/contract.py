@@ -1,3 +1,5 @@
+# type: ignore
+
 from algopy import ARC4Contract, GlobalState, String, arc4
 from algopy.arc4 import abimethod
 

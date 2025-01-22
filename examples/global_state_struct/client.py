@@ -469,7 +469,7 @@ class HelloWorldBareCallCreateParams(applications.AppClientCreateSchema, applica
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-class HelloWorldFactory(applications.TypedAppFactoryProtocol):
+class HelloWorldFactory(applications.TypedAppFactoryProtocol[HelloWorldBareCallCreateParams, None, None]):
     """Factory for deploying and managing HelloWorldClient smart contracts"""
 
     def __init__(
@@ -520,6 +520,8 @@ class HelloWorldFactory(applications.TypedAppFactoryProtocol):
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: HelloWorldBareCallCreateParams | None = None,
+        update_params: None = None,
+        delete_params: None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -535,6 +537,8 @@ class HelloWorldFactory(applications.TypedAppFactoryProtocol):
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
+            update_params=update_params,
+            delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -670,7 +674,6 @@ class HelloWorldFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -680,7 +683,7 @@ class HelloWorldFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )

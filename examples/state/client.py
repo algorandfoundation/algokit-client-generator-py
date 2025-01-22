@@ -187,7 +187,7 @@ class _StateAppUpdate:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
-    ) -> transactions.AppCallMethodCallParams:
+    ) -> transactions.AppUpdateMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
                 method="update_abi(string)string",
@@ -241,7 +241,7 @@ class _StateAppDelete:
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
         
-    ) -> transactions.AppCallMethodCallParams:
+    ) -> transactions.AppDeleteMethodCallParams:
         method_args = _parse_abi_args(args)
         return self.app_client.params.delete(applications.AppClientMethodCallWithSendParams(
                 method="delete_abi(string)string",
@@ -3476,7 +3476,7 @@ class StateAppBareCallDeleteParams(applications.AppClientBareCallParams):
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class StateAppFactory(applications.TypedAppFactoryProtocol):
+class StateAppFactory(applications.TypedAppFactoryProtocol[StateAppMethodCallCreateParams | StateAppBareCallCreateParams, StateAppMethodCallUpdateParams | StateAppBareCallUpdateParams, StateAppMethodCallDeleteParams | StateAppBareCallDeleteParams]):
     """Factory for deploying and managing StateAppClient smart contracts"""
 
     def __init__(
@@ -3681,7 +3681,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3691,7 +3690,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint32(uint32)uint32",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3723,7 +3722,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3733,7 +3731,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint32_readonly(uint32)uint32",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3765,7 +3763,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3775,7 +3772,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint64(uint64)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3807,7 +3804,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3817,7 +3813,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint64_readonly(uint64)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3849,7 +3845,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3859,7 +3854,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3891,7 +3886,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3901,7 +3895,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_txn(pay,string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3933,7 +3927,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3943,7 +3936,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_with_references(asset,account,application)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -3975,7 +3968,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -3985,7 +3977,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_global(uint64,uint64,string,byte[4])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4017,7 +4009,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4027,7 +4018,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_local(uint64,uint64,string,byte[4])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4059,7 +4050,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the set_box(byte[4],string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4069,7 +4059,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_box(byte[4],string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4100,7 +4090,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the error()void ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4110,7 +4099,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "error()void",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -4142,7 +4131,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4152,7 +4140,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4184,7 +4172,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4194,7 +4181,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_int(uint64)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4226,7 +4213,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_abi(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4236,7 +4222,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_abi(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4268,7 +4254,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4278,7 +4263,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_global_state(uint64)uint64",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4310,7 +4295,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4320,7 +4304,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_local_state(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4352,7 +4336,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create_abi(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4362,7 +4345,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create_abi(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4394,7 +4377,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the update_abi(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4404,7 +4386,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "update_abi(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4436,7 +4418,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the delete_abi(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4446,7 +4427,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "delete_abi(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -4477,7 +4458,6 @@ class StateAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the opt_in()void ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -4487,7 +4467,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "opt_in()void",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -4703,7 +4683,6 @@ class StateAppFactorySendCreate:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[StateAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
-            method_args = _parse_abi_args(args)
             params = {
                 k: v for k, v in locals().items()
                 if k != 'self' and v is not None
@@ -4713,7 +4692,7 @@ class StateAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create_abi(string)string",
-                    "args": method_args,
+                    "args": _parse_abi_args(args), # type: ignore
                     }
                 )
             )

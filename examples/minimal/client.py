@@ -356,7 +356,7 @@ class AppBareCallDeleteParams(applications.AppClientBareCallParams):
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class AppFactory(applications.TypedAppFactoryProtocol):
+class AppFactory(applications.TypedAppFactoryProtocol[AppBareCallCreateParams, AppBareCallUpdateParams, AppBareCallDeleteParams]):
     """Factory for deploying and managing AppClient smart contracts"""
 
     def __init__(

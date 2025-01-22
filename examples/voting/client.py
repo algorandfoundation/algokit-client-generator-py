@@ -726,7 +726,7 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))
+        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(
@@ -1200,7 +1200,7 @@ class VotingRoundAppBareCallDeleteParams(applications.AppClientBareCallParams):
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class VotingRoundAppFactory(applications.TypedAppFactoryProtocol):
+class VotingRoundAppFactory(applications.TypedAppFactoryProtocol[VotingRoundAppMethodCallCreateParams, None, VotingRoundAppBareCallDeleteParams]):
     """Factory for deploying and managing VotingRoundAppClient smart contracts"""
 
     def __init__(
@@ -1251,6 +1251,7 @@ class VotingRoundAppFactory(applications.TypedAppFactoryProtocol):
         on_update: applications.OnUpdate = applications.OnUpdate.Fail,
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: VotingRoundAppMethodCallCreateParams | None = None,
+        update_params: None = None,
         delete_params: VotingRoundAppBareCallDeleteParams | None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
@@ -1267,6 +1268,7 @@ class VotingRoundAppFactory(applications.TypedAppFactoryProtocol):
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
+            update_params=update_params,
             delete_params=delete_params.to_algokit_utils_params() if delete_params else None,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
@@ -1403,7 +1405,6 @@ class VotingRoundAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the bootstrap(pay)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1413,7 +1414,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "bootstrap(pay)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1444,7 +1445,6 @@ class VotingRoundAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the close()void ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1454,7 +1454,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "close()void",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -1486,7 +1486,6 @@ class VotingRoundAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1496,7 +1495,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1528,7 +1527,6 @@ class VotingRoundAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vote(pay,byte[],uint8[])void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1538,7 +1536,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "vote(pay,byte[],uint8[])void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1570,7 +1568,6 @@ class VotingRoundAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1580,7 +1577,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1796,7 +1793,6 @@ class VotingRoundAppFactorySendCreate:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[VotingRoundAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-            method_args = _parse_abi_args(args)
             params = {
                 k: v for k, v in locals().items()
                 if k != 'self' and v is not None
@@ -1806,7 +1802,7 @@ class VotingRoundAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                    "args": method_args,
+                    "args": _parse_abi_args(args), # type: ignore
                     }
                 )
             )

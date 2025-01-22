@@ -957,7 +957,7 @@ class LifeCycleAppBareCallUpdateParams(applications.AppClientBareCallParams):
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class LifeCycleAppFactory(applications.TypedAppFactoryProtocol):
+class LifeCycleAppFactory(applications.TypedAppFactoryProtocol[LifeCycleAppMethodCallCreateParams | LifeCycleAppBareCallCreateParams, LifeCycleAppBareCallUpdateParams, None]):
     """Factory for deploying and managing LifeCycleAppClient smart contracts"""
 
     def __init__(
@@ -1009,6 +1009,7 @@ class LifeCycleAppFactory(applications.TypedAppFactoryProtocol):
         on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
         create_params: LifeCycleAppMethodCallCreateParams | LifeCycleAppBareCallCreateParams | None = None,
         update_params: LifeCycleAppBareCallUpdateParams | None = None,
+        delete_params: None = None,
         existing_deployments: applications.AppLookup | None = None,
         ignore_cache: bool = False,
         updatable: bool | None = None,
@@ -1025,6 +1026,7 @@ class LifeCycleAppFactory(applications.TypedAppFactoryProtocol):
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
             update_params=update_params.to_algokit_utils_params() if update_params else None,
+            delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
             updatable=updatable,
@@ -1160,7 +1162,6 @@ class LifeCycleAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1170,7 +1171,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1201,7 +1202,6 @@ class LifeCycleAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello()string ABI method"""
-        method_args = None
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1211,7 +1211,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello()string",
-                "args": method_args,
+                "args": None, # type: ignore
                 }
             )
         )
@@ -1243,7 +1243,6 @@ class LifeCycleAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create(string)string ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1253,7 +1252,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string)string",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1285,7 +1284,6 @@ class LifeCycleAppFactoryCreateParams:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the create(string,uint32)void ABI method"""
-        method_args = _parse_abi_args(args)
         params = {
             k: v for k, v in locals().items()
             if k != 'self' and v is not None
@@ -1295,7 +1293,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string,uint32)void",
-                "args": method_args,
+                "args": _parse_abi_args(args), # type: ignore
                 }
             )
         )
@@ -1511,7 +1509,6 @@ class LifeCycleAppFactorySendCreate:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create(string)string ABI method"""
-            method_args = _parse_abi_args(args)
             params = {
                 k: v for k, v in locals().items()
                 if k != 'self' and v is not None
@@ -1521,7 +1518,7 @@ class LifeCycleAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string)string",
-                    "args": method_args,
+                    "args": _parse_abi_args(args), # type: ignore
                     }
                 )
             )
@@ -1569,7 +1566,6 @@ class LifeCycleAppFactorySendCreate:
         on_complete: (ON_COMPLETE_TYPES | None) = None
     ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
-            method_args = _parse_abi_args(args)
             params = {
                 k: v for k, v in locals().items()
                 if k != 'self' and v is not None
@@ -1579,7 +1575,7 @@ class LifeCycleAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string,uint32)void",
-                    "args": method_args,
+                    "args": _parse_abi_args(args), # type: ignore
                     }
                 )
             )
