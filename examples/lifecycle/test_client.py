@@ -2,7 +2,7 @@ import algokit_utils
 import algosdk
 import pytest
 from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.clients import AlgorandClient
 
 from examples.lifecycle.client import (
     CreateStringStringArgs,
@@ -14,14 +14,14 @@ from examples.lifecycle.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def lifecycle_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> LifeCycleAppFactory:
+def lifecycle_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> LifeCycleAppFactory:
     return algorand.client.get_typed_app_factory(LifeCycleAppFactory, default_sender=default_deployer.address)
 
 

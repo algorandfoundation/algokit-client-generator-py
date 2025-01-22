@@ -17,7 +17,7 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions
+from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [], "name": "App", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "desc": "An app that has no abi methods", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQp0eG4gTnVtQXBwQXJncwppbnRjXzAgLy8gMAo9PQpibnogbWFpbl9sMgplcnIKbWFpbl9sMjoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQpibnogbWFpbl9sOAp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sNwp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNSAvLyBEZWxldGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sNgplcnIKbWFpbl9sNjoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDc6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIHVwZGF0ZV8wCmludGNfMSAvLyAxCnJldHVybgptYWluX2w4Ogp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAo9PQphc3NlcnQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyB1cGRhdGUKdXBkYXRlXzA6CnByb3RvIDAgMAp0eG4gU2VuZGVyCmdsb2JhbCBDcmVhdG9yQWRkcmVzcwo9PQovLyB1bmF1dGhvcml6ZWQKYXNzZXJ0CnB1c2hpbnQgVE1QTF9VUERBVEFCTEUgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKcmV0c3ViCgovLyBkZWxldGUKZGVsZXRlXzE6CnByb3RvIDAgMAp0eG4gU2VuZGVyCmdsb2JhbCBDcmVhdG9yQWRkcmVzcwo9PQovLyB1bmF1dGhvcml6ZWQKYXNzZXJ0CnB1c2hpbnQgVE1QTF9ERUxFVEFCTEUgLy8gVE1QTF9ERUxFVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIGRlbGV0YWJsZQphc3NlcnQKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
@@ -179,7 +179,7 @@ class AppClient:
     def __init__(
         self,
         *,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -192,7 +192,7 @@ class AppClient:
         self,
         app_client: applications.AppClient | None = None,
         *,
-        algorand: protocols.AlgorandClientProtocol | None = None,
+        algorand: clients.AlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -227,7 +227,7 @@ class AppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
@@ -252,7 +252,7 @@ class AppClient:
     
     @staticmethod
     def from_network(
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -288,7 +288,7 @@ class AppClient:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_client.algorand
 
     def clone(
@@ -336,32 +336,35 @@ class AppClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
+class AppBareCallCreateParams(applications.AppClientBareCallCreateParams):
     """Parameters for creating App contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallUpdateParams(applications.AppClientBareCallParams):
+class AppBareCallUpdateParams(applications.AppClientBareCallCreateParams):
     """Parameters for calling App contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallDeleteParams(applications.AppClientBareCallParams):
+class AppBareCallDeleteParams(applications.AppClientBareCallCreateParams):
     """Parameters for calling App contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class AppFactory(applications.TypedAppFactoryProtocol[AppBareCallCreateParams, AppBareCallUpdateParams, AppBareCallDeleteParams]):
+class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppBareCallUpdateParams, AppBareCallDeleteParams]):
     """Factory for deploying and managing AppClient smart contracts"""
 
     def __init__(
         self,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -397,7 +400,7 @@ class AppFactory(applications.TypedAppFactoryProtocol[AppBareCallCreateParams, A
         return self.app_factory.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_factory.algorand
 
     def deploy(

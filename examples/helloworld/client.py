@@ -17,7 +17,7 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions
+from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "desc": "Returns Hello, {name}", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "desc": "Asserts {name} is \"World\"", "events": []}], "name": "HelloWorldApp", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQpieXRlY2Jsb2NrIDB4CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w2CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gImhlbGxvKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmY5YzFlZGYgLy8gImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sNAplcnIKbWFpbl9sNDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb3dvcmxkY2hlY2tjYXN0ZXJfNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl80CmludGNfMSAvLyAxCnJldHVybgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wxMgp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sMTEKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDUgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDEwCmVycgptYWluX2wxMDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQphc3NlcnQKY2FsbHN1YiB1cGRhdGVfMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIHVwZGF0ZQp1cGRhdGVfMDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGRlbGV0ZQpkZWxldGVfMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX0RFTEVUQUJMRSAvLyBUTVBMX0RFTEVUQUJMRQovLyBDaGVjayBhcHAgaXMgZGVsZXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY29uY2F0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gaGVsbG9fd29ybGRfY2hlY2sKaGVsbG93b3JsZGNoZWNrXzM6CnByb3RvIDEgMApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKcHVzaGJ5dGVzIDB4NTc2ZjcyNmM2NCAvLyAiV29ybGQiCj09CmFzc2VydApyZXRzdWIKCi8vIGhlbGxvX2Nhc3RlcgpoZWxsb2Nhc3Rlcl80Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBoZWxsb18yCmZyYW1lX2J1cnkgMApwdXNoYnl0ZXMgMHgxNTFmN2M3NSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb193b3JsZF9jaGVja19jYXN0ZXIKaGVsbG93b3JsZGNoZWNrY2FzdGVyXzU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmNhbGxzdWIgaGVsbG93b3JsZGNoZWNrXzMKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
@@ -455,7 +455,7 @@ class HelloWorldAppClient:
     def __init__(
         self,
         *,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -468,7 +468,7 @@ class HelloWorldAppClient:
         self,
         app_client: applications.AppClient | None = None,
         *,
-        algorand: protocols.AlgorandClientProtocol | None = None,
+        algorand: clients.AlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -503,7 +503,7 @@ class HelloWorldAppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
@@ -528,7 +528,7 @@ class HelloWorldAppClient:
     
     @staticmethod
     def from_network(
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -564,7 +564,7 @@ class HelloWorldAppClient:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_client.algorand
 
     def clone(
@@ -631,32 +631,35 @@ class HelloWorldAppClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
+class HelloWorldAppBareCallCreateParams(applications.AppClientBareCallCreateParams):
     """Parameters for creating HelloWorldApp contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallUpdateParams(applications.AppClientBareCallParams):
+class HelloWorldAppBareCallUpdateParams(applications.AppClientBareCallCreateParams):
     """Parameters for calling HelloWorldApp contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallDeleteParams(applications.AppClientBareCallParams):
+class HelloWorldAppBareCallDeleteParams(applications.AppClientBareCallCreateParams):
     """Parameters for calling HelloWorldApp contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
         return applications.AppClientBareCallParams(**self.__dict__)
 
-class HelloWorldAppFactory(applications.TypedAppFactoryProtocol[HelloWorldAppBareCallCreateParams, HelloWorldAppBareCallUpdateParams, HelloWorldAppBareCallDeleteParams]):
+class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCallCreateParams, HelloWorldAppBareCallUpdateParams, HelloWorldAppBareCallDeleteParams]):
     """Factory for deploying and managing HelloWorldAppClient smart contracts"""
 
     def __init__(
         self,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -692,7 +695,7 @@ class HelloWorldAppFactory(applications.TypedAppFactoryProtocol[HelloWorldAppBar
         return self.app_factory.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_factory.algorand
 
     def deploy(

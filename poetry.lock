@@ -17,8 +17,8 @@ typing-extensions = ">=4.6.0"
 [package.source]
 type = "git"
 url = "https://github.com/algorandfoundation/algokit-utils-py.git"
-reference = "prerelease/typed_client_methods"
-resolved_reference = "a22e479a7653765efc67d44bef490fe36bf14a74"
+reference = "prerelease/ts-feature-parity"
+resolved_reference = "06a59a9c09a64256ab29af470855067e66b53127"
 
 [[package]]
 name = "anyio"
@@ -2107,4 +2107,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "921a8b22c4e0e5fabdf6aa5b86dc9114707beb06be6800c00570a6740ae6fa0f"
+content-hash = "851ae23103a8e5f23e4d6a99e7345ae2d559b8312a3a541308630087a5ccfd6d"

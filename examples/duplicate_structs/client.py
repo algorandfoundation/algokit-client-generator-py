@@ -17,7 +17,7 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions
+from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_a_that_uses_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_b_that_uses_same_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}], "name": "DuplicateStructsContract", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"SomeStruct": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, "desc": "\n        This contract is to be used as a test artifact to verify behavior around struct generation to ensure that \n        the scenarios similar to whats outlined in this contract can not result in a typed client with duplicate struct \n        definitions.\n    ", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5hcHByb3ZhbF9wcm9ncmFtOgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDYKICAgIG1ldGhvZCAibWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdCgpKHVpbnQ2NCx1aW50NjQpIgogICAgbWV0aG9kICJtZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSh1aW50NjQsdWludDY0KSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAyIG1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDMKICAgIGVyciAvLyByZWplY3QgdHJhbnNhY3Rpb24KCm1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAyOgogICAgLy8gY29udHJhY3QucHk6MTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gaXMgbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIG1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3QKICAgIGJ5dGUgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludCAxCiAgICByZXR1cm4KCm1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDM6CiAgICAvLyBjb250cmFjdC5weToyNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBpcyBub3QgY3JlYXRpbmcKICAgIGNhbGxzdWIgbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0CiAgICBieXRlIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnQgMQogICAgcmV0dXJuCgptYWluX2JhcmVfcm91dGluZ0A2OgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIHJlamVjdCB0cmFuc2FjdGlvbgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBpcyBjcmVhdGluZwogICAgaW50IDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5kZWxlZ2F0b3JfY29udHJhY3QuY29udHJhY3QuRHVwbGljYXRlU3RydWN0c0NvbnRyYWN0Lm1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3QoKSAtPiBieXRlczoKbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdDoKICAgIC8vIGNvbnRyYWN0LnB5OjE5LTIwCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgLy8gZGVmIG1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3Qoc2VsZikgLT4gU29tZVN0cnVjdDoKICAgIHByb3RvIDAgMQogICAgLy8gY29udHJhY3QucHk6MjEtMjQKICAgIC8vIHJldHVybiBTb21lU3RydWN0KAogICAgLy8gICAgIGFyYzQuVUludDY0KDEpLAogICAgLy8gICAgIGFyYzQuVUludDY0KDIpLAogICAgLy8gKQogICAgYnl0ZSAweDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyCiAgICByZXRzdWIKCgovLyBzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5tZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSAtPiBieXRlczoKbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0OgogICAgLy8gY29udHJhY3QucHk6MjYtMjcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICAvLyBkZWYgbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0KHNlbGYpIC0+IFNvbWVTdHJ1Y3Q6CiAgICBwcm90byAwIDEKICAgIC8vIGNvbnRyYWN0LnB5OjI4LTMxCiAgICAvLyByZXR1cm4gU29tZVN0cnVjdCgKICAgIC8vICAgICBhcmM0LlVJbnQ2NCgzKSwKICAgIC8vICAgICBhcmM0LlVJbnQ2NCg0KSwKICAgIC8vICkKICAgIGJ5dGUgMHgwMDAwMDAwMDAwMDAwMDAzMDAwMDAwMDAwMDAwMDAwNAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5jbGVhcl9zdGF0ZV9wcm9ncmFtOgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgaW50IDEKICAgIHJldHVybgo="}}"""
@@ -372,7 +372,7 @@ class DuplicateStructsContractClient:
     def __init__(
         self,
         *,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -385,7 +385,7 @@ class DuplicateStructsContractClient:
         self,
         app_client: applications.AppClient | None = None,
         *,
-        algorand: protocols.AlgorandClientProtocol | None = None,
+        algorand: clients.AlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -420,7 +420,7 @@ class DuplicateStructsContractClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
@@ -445,7 +445,7 @@ class DuplicateStructsContractClient:
     
     @staticmethod
     def from_network(
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -481,7 +481,7 @@ class DuplicateStructsContractClient:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_client.algorand
 
     def clone(
@@ -548,18 +548,19 @@ class DuplicateStructsContractClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class DuplicateStructsContractBareCallCreateParams(applications.AppClientCreateSchema, applications.AppClientBareCallParams, applications.BaseOnCompleteParams[typing.Literal[OnComplete.NoOpOC]]):
+class DuplicateStructsContractBareCallCreateParams(applications.AppClientBareCallCreateParams):
     """Parameters for creating DuplicateStructsContract contract with bare calls"""
+    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
         return applications.AppClientBareCallCreateParams(**self.__dict__)
 
-class DuplicateStructsContractFactory(applications.TypedAppFactoryProtocol[DuplicateStructsContractBareCallCreateParams, None, None]):
+class DuplicateStructsContractFactory(protocols.TypedAppFactoryProtocol[DuplicateStructsContractBareCallCreateParams, None, None]):
     """Factory for deploying and managing DuplicateStructsContractClient smart contracts"""
 
     def __init__(
         self,
-        algorand: protocols.AlgorandClientProtocol,
+        algorand: clients.AlgorandClient,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -595,7 +596,7 @@ class DuplicateStructsContractFactory(applications.TypedAppFactoryProtocol[Dupli
         return self.app_factory.app_spec
     
     @property
-    def algorand(self) -> protocols.AlgorandClientProtocol:
+    def algorand(self) -> clients.AlgorandClient:
         return self.app_factory.algorand
 
     def deploy(

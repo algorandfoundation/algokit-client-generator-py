@@ -4,7 +4,7 @@ import algokit_utils.applications
 import pytest
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.clients import AlgorandClient
 
 from examples.state.client import (
     CallAbiArgs,
@@ -22,14 +22,14 @@ from examples.state.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def state_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> StateAppFactory:
+def state_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> StateAppFactory:
     return algorand.client.get_typed_app_factory(StateAppFactory, default_sender=default_deployer.address)
 
 

@@ -2,13 +2,13 @@ import algokit_utils
 import pytest
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.clients import AlgorandClient
 
 from examples.helloworld.client import HelloArgs, HelloWorldAppClient, HelloWorldAppFactory, HelloWorldCheckArgs
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -16,7 +16,7 @@ def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
 
 @pytest.fixture
 def helloworld_factory(
-    algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> HelloWorldAppFactory:
     return algorand.client.get_typed_app_factory(HelloWorldAppFactory, default_sender=default_deployer.address)
 
@@ -38,7 +38,7 @@ def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
 
 
 def test_composer_with_manual_transaction(
-    helloworld_factory: HelloWorldAppFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    helloworld_factory: HelloWorldAppFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> None:
     client, _ = helloworld_factory.deploy()
 
@@ -72,9 +72,10 @@ def test_simulate_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     client, _ = helloworld_factory.deploy()
 
     response = client.new_group().hello(args=HelloArgs(name="mate")).simulate()
-
+    
     assert response.returns[0].value == "Hello, mate"
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  # type: ignore[call-overload]
+    assert response.simulate_response
+    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  
 
 
 def test_can_be_cloned(helloworld_factory: HelloWorldAppFactory) -> None:

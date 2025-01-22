@@ -4,7 +4,7 @@ import algokit_utils.applications
 import pytest
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.clients import AlgorandClient
 
 from examples.arc56_test.client import (
     Arc56TestClient,
@@ -19,14 +19,14 @@ from examples.arc56_test.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def arc56_test_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> Arc56TestFactory:
+def arc56_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> Arc56TestFactory:
     return algorand.client.get_typed_app_factory(Arc56TestFactory, default_sender=default_deployer.address)
 
 
@@ -39,7 +39,7 @@ def arc56_test_client(state_factory: Arc56TestFactory) -> Arc56TestClient:
 
 
 def test_arc56_demo(
-    algorand: AlgorandClientProtocol, arc56_test_factory: Arc56TestFactory, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, arc56_test_factory: Arc56TestFactory, default_deployer: algokit_utils.Account
 ) -> None:
     client, result = arc56_test_factory.send.create.create_application(deploy_time_params={"someNumber": 1337})
 

@@ -455,7 +455,7 @@ def __init__(self, app_client: applications.AppClient) -> None: ...
 def __init__(
     self,
     *,
-    algorand: protocols.AlgorandClientProtocol,
+    algorand: clients.AlgorandClient,
     app_id: int,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -473,7 +473,7 @@ def __init__(
     self,
     app_client: applications.AppClient | None = None,
     *,
-    algorand: protocols.AlgorandClientProtocol | None = None,
+    algorand: clients.AlgorandClient | None = None,
     app_id: int | None = None,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -513,7 +513,7 @@ def generate_static_methods(context: GeneratorContext) -> DocumentParts:
 def from_creator_and_name(
     creator_address: str,
     app_name: str,
-    algorand: protocols.AlgorandClientProtocol,
+    algorand: clients.AlgorandClient,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
@@ -538,7 +538,7 @@ def from_creator_and_name(
 
 @staticmethod
 def from_network(
-    algorand: protocols.AlgorandClientProtocol,
+    algorand: clients.AlgorandClient,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
@@ -579,7 +579,7 @@ def app_spec(self) -> applications.Arc56Contract:
     return self.app_client.app_spec
 
 @property
-def algorand(self) -> protocols.AlgorandClientProtocol:
+def algorand(self) -> clients.AlgorandClient:
     return self.app_client.algorand
 """)
 

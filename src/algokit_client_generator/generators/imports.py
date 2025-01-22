@@ -17,6 +17,6 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions
+from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
 """)

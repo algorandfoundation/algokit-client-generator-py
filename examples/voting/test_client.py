@@ -10,7 +10,7 @@ import algokit_utils.applications
 import algokit_utils.transactions
 import algosdk
 import pytest
-from algokit_utils import AlgorandClientProtocol
+from algokit_utils import AlgorandClient
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
 from algosdk.v2client.algod import AlgodClient
@@ -27,14 +27,14 @@ from examples.voting.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def voting_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> VotingRoundAppFactory:
+def voting_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> VotingRoundAppFactory:
     return algorand.client.get_typed_app_factory(VotingRoundAppFactory, default_sender=default_deployer.address)
 
 
@@ -48,7 +48,7 @@ def voting_app_client(voting_factory: VotingRoundAppFactory) -> VotingRoundAppCl
 
 @dataclass
 class RandomVotingAppDeployment:
-    algorand: AlgorandClientProtocol
+    algorand: AlgorandClient
     algod: AlgodClient
     client: VotingRoundAppClient
     total_question_options: int

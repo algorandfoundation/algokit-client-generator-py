@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-algokit-utils = {git = "https://github.com/algorandfoundation/algokit-utils-py.git", rev = "prerelease/typed_client_methods"}
+algokit-utils = {git = "https://github.com/algorandfoundation/algokit-utils-py.git", rev = "prerelease/ts-feature-parity"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8.6"

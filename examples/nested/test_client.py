@@ -3,26 +3,26 @@ import base64
 import algokit_utils
 import pytest
 from algokit_utils.models import AlgoAmount
-from algokit_utils.protocols import AlgorandClientProtocol
+from algokit_utils.clients import AlgorandClient
 from algokit_utils.transactions import PaymentParams
 
 from examples.nested.client import AddArgs, GetPayTxnAmountArgs, NestedContractFactory, NestedMethodCallArgs
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClientProtocol) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def nested_factory(algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account) -> NestedContractFactory:
+def nested_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> NestedContractFactory:
     return algorand.client.get_typed_app_factory(NestedContractFactory, default_sender=default_deployer.address)
 
 
 def test_nested_method_call_with_obj_args_without_pay_txn(
-    nested_factory: NestedContractFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    nested_factory: NestedContractFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
@@ -37,7 +37,7 @@ def test_nested_method_call_with_obj_args_without_pay_txn(
 
 
 def test_nested_method_call_with_tuple_args_without_pay_txn(
-    nested_factory: NestedContractFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    nested_factory: NestedContractFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
@@ -52,7 +52,7 @@ def test_nested_method_call_with_tuple_args_without_pay_txn(
 
 
 def test_nested_method_call_with_obj_args_with_pay_txn(
-    nested_factory: NestedContractFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    nested_factory: NestedContractFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
@@ -69,7 +69,7 @@ def test_nested_method_call_with_obj_args_with_pay_txn(
 
 
 def test_nested_method_call_with_tuple_args_with_pay_txn(
-    nested_factory: NestedContractFactory, algorand: AlgorandClientProtocol, default_deployer: algokit_utils.Account
+    nested_factory: NestedContractFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(

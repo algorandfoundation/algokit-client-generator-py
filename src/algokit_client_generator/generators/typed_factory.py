@@ -318,10 +318,10 @@ class {class_name}(
     {create_schema}applications.BaseAppClientMethodCallParams[
         {args_union_str},
         {method_sig_str},
-        typing.Literal[{on_complete_str}]
     ]
 ):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
+    on_complete: typing.Literal[{on_complete_str}] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientMethodCall{'Create' if is_create else ''}Params:
         method_args = _parse_abi_args(self.args)
@@ -338,27 +338,19 @@ def _generate_bare_params_class(
     *, context: GeneratorContext, bare_methods: list[ContractMethod], is_create: bool, type_suffix: str
 ) -> Iterator[DocumentParts]:
     """Generate bare params class with proper indentation"""
-    on_complete_options = {
+    on_complete_options = ", ".join(
         f"OnComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}OC"
         for method in bare_methods
         for on_complete in method.on_complete
-    }
-
-    base_classes = []
-    if is_create:
-        base_classes.append("applications.AppClientCreateSchema")
-    base_classes.append("applications.AppClientBareCallParams")
-    if is_create and on_complete_options:
-        base_classes.append(
-            f"applications.BaseOnCompleteParams[typing.Literal[{', '.join(sorted(on_complete_options))}]]"
-        )
+    )
 
     class_name = f"{context.contract_name}BareCall{type_suffix}Params"
 
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
-class {class_name}({', '.join(base_classes)}):
+class {class_name}(applications.AppClientBareCallCreateParams):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
+    on_complete: typing.Literal[{on_complete_options}] | None = None
 
     def to_algokit_utils_params(self) -> applications.AppClientBareCall{'Create' if is_create else ''}Params:
         return applications.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
@@ -374,7 +366,7 @@ def generate_factory_class(  # noqa: PLR0915
     delete_type_names = " | ".join(type_names.delete)
     yield (
         f"class {context.contract_name}Factory("
-        f"applications.TypedAppFactoryProtocol["
+        f"protocols.TypedAppFactoryProtocol["
         f"{create_type_names or 'None'}, "
         f"{update_type_names or 'None'}, "
         f"{delete_type_names or 'None'}]):"
@@ -389,7 +381,7 @@ def generate_factory_class(  # noqa: PLR0915
     yield utils.indented(f"""
 def __init__(
     self,
-    algorand: protocols.AlgorandClientProtocol,
+    algorand: clients.AlgorandClient,
     *,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -429,7 +421,7 @@ def app_spec(self) -> applications.Arc56Contract:
     return self.app_factory.app_spec
 
 @property
-def algorand(self) -> protocols.AlgorandClientProtocol:
+def algorand(self) -> clients.AlgorandClient:
     return self.app_factory.algorand
 """)
 
