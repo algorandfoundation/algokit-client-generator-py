@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: ignore-errors
 
 from algopy import ARC4Contract, arc4, gtxn
 

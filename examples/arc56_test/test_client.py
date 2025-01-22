@@ -60,7 +60,7 @@ def test_arc56_demo(
     assert bob_outputs.abi_return.difference == 5
 
     # Overwrite some of the transaction fields
-    result = client.send.foo(
+    client.send.foo(
         args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
         validity_window=50,
         note=b"Hello world",
@@ -70,7 +70,7 @@ def test_arc56_demo(
     another_client, _ = arc56_test_factory.send.create.create_application(deploy_time_params={"someNumber": 1338})
 
     # composer together multiple appClients
-    result = (
+    call_result = (
         algorand.new_group()
         .add_app_call_method_call(
             client.params.foo(
@@ -87,7 +87,10 @@ def test_arc56_demo(
         .send()
     )
 
-    decoded = client.decode_return_value("foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)", result.returns[0])
+    assert call_result.returns
+    decoded = client.decode_return_value(
+        "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)", call_result.returns[0]
+    )
     assert decoded
     assert decoded.sum == 3
     assert decoded.difference == 5

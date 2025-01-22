@@ -489,7 +489,7 @@ class Arc56TestSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[Outputs], parsed_response)
 
     def create_application(
@@ -1162,7 +1162,7 @@ class Arc56TestFactoryCreateParams:
                 **{
                 **params,
                 "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1202,7 +1202,7 @@ class Arc56TestFactoryCreateParams:
                 **{
                 **params,
                 "method": "createApplication()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -1242,7 +1242,7 @@ class Arc56TestFactoryCreateParams:
                 **{
                 **params,
                 "method": "optInToApplication()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -1466,7 +1466,7 @@ class Arc56TestFactorySendCreate:
                     **{
                     **params,
                     "method": "createApplication()void",
-                    "args": None, # type: ignore
+                    "args": None,
                     }
                 )
             )
@@ -1531,6 +1531,7 @@ class _Arc56TestOpt_inComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                
             )
         )
         self.composer._result_mappers.append(

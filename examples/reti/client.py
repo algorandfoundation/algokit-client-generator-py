@@ -3579,7 +3579,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[MbrAmounts], parsed_response)
 
     def get_protocol_constraints(
@@ -3624,7 +3624,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[Constraints], parsed_response)
 
     def get_num_validators(
@@ -3715,7 +3715,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorConfig], parsed_response)
 
     def get_validator_state(
@@ -3761,7 +3761,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorCurState], parsed_response)
 
     def get_validator_owner_and_manager(
@@ -3945,7 +3945,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolInfo], parsed_response)
 
     def get_cur_max_stake_per_pool(
@@ -4129,7 +4129,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def get_node_pool_assignments(
@@ -4175,7 +4175,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
 
     def get_nfd_registry_id(
@@ -4542,7 +4542,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def add_stake(
@@ -4588,7 +4588,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def set_token_payout_ratio(
@@ -4634,7 +4634,7 @@ class ValidatorRegistrySend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def stake_updated_via_rewards(
@@ -5696,7 +5696,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "initStakingContract(uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5737,7 +5737,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "loadStakingContractData(uint64,byte[])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5777,7 +5777,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "finalizeStakingContract()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5817,7 +5817,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "gas()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5857,7 +5857,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5897,7 +5897,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5937,7 +5937,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getNumValidators()uint64",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5978,7 +5978,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6019,7 +6019,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6060,7 +6060,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getValidatorOwnerAndManager(uint64)(address,address)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6101,7 +6101,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getPools(uint64)(uint64,uint16,uint64)[]",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6142,7 +6142,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getPoolAppId(uint64,uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6183,7 +6183,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6224,7 +6224,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getCurMaxStakePerPool(uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6265,7 +6265,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "doesStakerNeedToPayMBR(address)bool",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6306,7 +6306,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6347,7 +6347,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6388,7 +6388,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6428,7 +6428,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "getNFDRegistryID()uint64",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -6469,7 +6469,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6510,7 +6510,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "changeValidatorManager(uint64,address)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6551,7 +6551,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6592,7 +6592,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "changeValidatorNFD(uint64,uint64,string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6633,7 +6633,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "changeValidatorCommissionAddress(uint64,address)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6674,7 +6674,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6715,7 +6715,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6756,7 +6756,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6797,7 +6797,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6838,7 +6838,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6879,7 +6879,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6920,7 +6920,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -6961,7 +6961,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "movePoolToNode(uint64,uint64,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -7002,7 +7002,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "emptyTokenRewards(uint64,address)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -7042,7 +7042,7 @@ class ValidatorRegistryFactoryCreateParams:
                 **{
                 **params,
                 "method": "createApplication()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -7266,7 +7266,7 @@ class ValidatorRegistryFactorySendCreate:
                     **{
                     **params,
                     "method": "createApplication()void",
-                    "args": None, # type: ignore
+                    "args": None,
                     }
                 )
             )

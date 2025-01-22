@@ -79,16 +79,17 @@ def test_deploy_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:
     )
 
     assert client.app_id
-    assert response.operation_performed == "create" and response.create_response
+    assert response.operation_performed == "create"
+    assert response.create_response
     assert response.create_response.abi_return == "greeting_1"
 
-    response = client.send.hello_string_string(args=HelloStringStringArgs(name="1 Arg"))
+    call_response = client.send.hello_string_string(args=HelloStringStringArgs(name="1 Arg"))
 
-    assert response.abi_return == "greeting, 1 Arg\n"
+    assert call_response.abi_return == "greeting, 1 Arg\n"
 
 
 def test_deploy_create_2arg(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, response = lifecycle_factory.deploy(
+    client, _ = lifecycle_factory.deploy(
         create_params=LifeCycleAppMethodCallCreateParams(
             args=CreateStringUint32VoidArgs(greeting="Deploy Greetings", times=2), method="create(string,uint32)void"
         )
@@ -96,6 +97,7 @@ def test_deploy_create_2arg(lifecycle_factory: LifeCycleAppFactory) -> None:
 
     assert client.app_id
 
-    response = client.send.hello_string_string(args=HelloStringStringArgs(name="2 Arg"))
+    call_response = client.send.hello_string_string(args=HelloStringStringArgs(name="2 Arg"))
 
-    assert response.abi_return == "Deploy Greetings, 2 Arg\nDeploy Greetings, 2 Arg\n"
+    assert call_response.abi_return
+    assert call_response.abi_return == "Deploy Greetings, 2 Arg\nDeploy Greetings, 2 Arg\n"

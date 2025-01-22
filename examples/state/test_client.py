@@ -74,8 +74,8 @@ def test_readonly_methods_dont_consume_algos(state_factory: StateAppFactory) -> 
     result = client.send.call_abi(args=CallAbiArgs(value="oh hi"), sender=low_funds_account.address)
     assert result.abi_return == "Hello, oh hi"
 
-    # If we can invoke this method twice it confirms that we are still above the min balance + single tx amount and the previous call
-    # did not consume algos
+    # If we can invoke this method twice it confirms that we are still above the min balance + single tx amount and the
+    # previous call did not consume algos
     result2 = client.send.call_abi(args=CallAbiArgs(value="oh hi 2"), sender=low_funds_account.address)
     assert result2.abi_return == "Hello, oh hi 2"
 

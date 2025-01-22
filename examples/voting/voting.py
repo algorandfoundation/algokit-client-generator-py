@@ -210,7 +210,7 @@ app = beaker.Application("VotingRoundApp", state=VotingState()).apply(
 
 
 @app.create()
-def create(
+def create(  # noqa: PLR0913
     vote_id: pt.abi.String,
     snapshot_public_key: pt.abi.DynamicBytes,
     metadata_ipfs_cid: pt.abi.String,

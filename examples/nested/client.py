@@ -926,7 +926,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "add(uint64,uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -967,7 +967,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "get_pay_txn_amount(pay)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1008,7 +1008,7 @@ class NestedContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "nested_method_call(string,pay,appl)byte[]",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )

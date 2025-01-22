@@ -3690,7 +3690,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint32(uint32)uint32",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3731,7 +3731,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint32_readonly(uint32)uint32",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3772,7 +3772,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint64(uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3813,7 +3813,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_uint64_readonly(uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3854,7 +3854,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3895,7 +3895,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_abi_txn(pay,string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3936,7 +3936,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "call_with_references(asset,account,application)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -3977,7 +3977,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_global(uint64,uint64,string,byte[4])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4018,7 +4018,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_local(uint64,uint64,string,byte[4])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4059,7 +4059,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "set_box(byte[4],string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4099,7 +4099,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "error()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -4140,7 +4140,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4181,7 +4181,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_int(uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4222,7 +4222,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_abi(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4263,7 +4263,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_global_state(uint64)uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4304,7 +4304,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "default_value_from_local_state(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4345,7 +4345,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create_abi(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4386,7 +4386,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "update_abi(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4427,7 +4427,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "delete_abi(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4467,7 +4467,7 @@ class StateAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "opt_in()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -4692,7 +4692,7 @@ class StateAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create_abi(string)string",
-                    "args": _parse_abi_args(args), # type: ignore
+                    "args": _parse_abi_args(args),
                     }
                 )
             )
@@ -4738,11 +4738,9 @@ class _StateAppUpdateComposer:
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "StateAppComposer":
-        method_args = _parse_abi_args(args)
-    
-        self.composer._composer.add_app_call_method_call(
+        self.composer._composer.add_app_update_method_call(
             self.composer.client.params.update.update_abi(
-                args=method_args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4759,6 +4757,7 @@ class _StateAppUpdateComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             )
         )
         self.composer._result_mappers.append(
@@ -4793,11 +4792,9 @@ class _StateAppDeleteComposer:
         populate_app_call_resources: bool = False,
         
     ) -> "StateAppComposer":
-        method_args = _parse_abi_args(args)
-    
-        self.composer._composer.add_app_call_method_call(
+        self.composer._composer.add_app_delete_method_call(
             self.composer.client.params.delete.delete_abi(
-                args=method_args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -4814,6 +4811,7 @@ class _StateAppDeleteComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                
             )
         )
         self.composer._result_mappers.append(
@@ -4867,6 +4865,7 @@ class _StateAppOpt_inComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                
             )
         )
         self.composer._result_mappers.append(

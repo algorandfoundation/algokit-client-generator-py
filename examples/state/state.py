@@ -1,3 +1,5 @@
+# type: ignore
+
 from typing import Literal
 
 import beaker

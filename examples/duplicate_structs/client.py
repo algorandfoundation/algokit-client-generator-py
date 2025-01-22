@@ -301,7 +301,7 @@ class DuplicateStructsContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[SomeStruct], parsed_response)
 
     def method_b_that_uses_same_struct(
@@ -346,7 +346,7 @@ class DuplicateStructsContractSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=SomeStruct(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[SomeStruct], parsed_response)
 
     def clear_state(
@@ -767,7 +767,7 @@ class DuplicateStructsContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "method_a_that_uses_struct()(uint64,uint64)",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -807,7 +807,7 @@ class DuplicateStructsContractFactoryCreateParams:
                 **{
                 **params,
                 "method": "method_b_that_uses_same_struct()(uint64,uint64)",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )

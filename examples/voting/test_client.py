@@ -1,4 +1,4 @@
-# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="call-overload"
 
 import base64
 import random
@@ -69,9 +69,9 @@ def random_voting_round_app(
 ) -> RandomVotingAppDeployment:
     algod = voting_factory.algorand.client.algod
     status = algod.status()
-    last_round = status["last-round"]  # type: ignore
-    round = algod.block_info(last_round)
-    current_time = round["block"]["ts"]  # type: ignore
+    last_round = status["last-round"]
+    last_round = algod.block_info(last_round)
+    current_time = last_round["block"]["ts"]
 
     voter = default_deployer
     quorum = random.randint(1, 1000)

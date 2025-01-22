@@ -88,7 +88,7 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
             **{{
             **params,
             "method": "{method_sig}",
-            "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'}, # type: ignore
+            "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
             }}
         )
     )
@@ -126,7 +126,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
                 **{{
                 **params,
                 "method": "{method.abi.method.get_signature()}",
-                "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'}, # type: ignore
+                "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
                 }}
             )
         )

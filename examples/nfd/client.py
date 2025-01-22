@@ -3084,7 +3084,7 @@ class NfdInstanceSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(
@@ -4436,7 +4436,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "gas()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -4477,7 +4477,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "mintAsa(string,string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4518,7 +4518,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "deleteFields(byte[][])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4559,7 +4559,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateSegmentCount(string,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4600,7 +4600,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "getFieldUpdateCost(byte[][])uint64",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4641,7 +4641,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateFields(byte[][])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4682,7 +4682,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "readField(byte[])byte[]",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4723,7 +4723,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "offerForSale(uint64,address)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4763,7 +4763,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "cancelSale()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -4804,7 +4804,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "postOffer(uint64,string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4845,7 +4845,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4886,7 +4886,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "purchase(pay)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4927,7 +4927,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "isAddressInField(string,address)bool",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -4967,7 +4967,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "getRenewPrice()uint64",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -5008,7 +5008,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateHash(byte[])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5049,7 +5049,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "contractLock(bool)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5090,7 +5090,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "segmentLock(bool,uint64)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5131,7 +5131,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultOptInLock(bool)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5172,7 +5172,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultOptIn(uint64[])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5213,7 +5213,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5254,7 +5254,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "renew(pay)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5295,7 +5295,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "setPrimaryAddress(string,address)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5336,7 +5336,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "registryAddingVerifiedAddress(string,string)bool",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5377,7 +5377,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "registryRemovingVerifiedAddress(string,address,address)bool",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5418,7 +5418,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5459,7 +5459,7 @@ class NfdInstanceFactoryCreateParams:
                 **{
                 **params,
                 "method": "updateApplication(string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -5684,7 +5684,7 @@ class NfdInstanceFactorySendCreate:
                     **{
                     **params,
                     "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                    "args": _parse_abi_args(args), # type: ignore
+                    "args": _parse_abi_args(args),
                     }
                 )
             )
@@ -5730,11 +5730,9 @@ class _NfdInstanceUpdateComposer:
         populate_app_call_resources: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "NfdInstanceComposer":
-        method_args = _parse_abi_args(args)
-    
-        self.composer._composer.add_app_call_method_call(
+        self.composer._composer.add_app_update_method_call(
             self.composer.client.params.update.update_application(
-                args=method_args, # type: ignore
+                args=args,
                 account_references=account_references,
                 app_references=app_references,
                 asset_references=asset_references,
@@ -5751,6 +5749,7 @@ class _NfdInstanceUpdateComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
             )
         )
         self.composer._result_mappers.append(

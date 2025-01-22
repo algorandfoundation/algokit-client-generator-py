@@ -6,6 +6,13 @@ from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.generators.typed_client import PropertyType, _generate_common_method_params
 from algokit_client_generator.spec import ContractMethod
 
+OPERATION_TO_METHOD_CALL_PREFIX = {
+    "update": "update",
+    "delete": "delete",
+    "opt_in": "call",
+    "call": "call",
+}
+
 
 def get_operation_composer_class_name(contract_name: str, operation: str) -> str:
     """Get the class name for a specific operation composer"""
@@ -34,26 +41,16 @@ class {class_name}:
     for method in methods:
         if not method.abi:
             continue
-
         # Reuse the common method params generator but strip the return type
-        method_params, has_args = _generate_common_method_params(
-            context, method, PropertyType.PARAMS, operation=operation
-        )
+        method_params, _ = _generate_common_method_params(context, method, PropertyType.PARAMS, operation=operation)
         method_params = method_params.rsplit(" ->", 1)[0]
-
         method_params += f' -> "{context.contract_name}Composer":'
 
-        args_handling = ""
-        if method.abi.args:
-            args_handling = f"""
-    method_args = {'_parse_abi_args(args)' if has_args else '[]'}
-"""
-
         yield utils.indented(f"""
-{method_params}{args_handling}
-    self.composer._composer.add_app_call_method_call(
+{method_params}
+    self.composer._composer.add_app_{OPERATION_TO_METHOD_CALL_PREFIX[operation]}_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
-            {'args=method_args, # type: ignore' if method.abi.args else ''}
+            {'args=args,' if method.abi.args else ''}
             account_references=account_references,
             app_references=app_references,
             asset_references=asset_references,
@@ -70,6 +67,9 @@ class {class_name}:
             validity_window=validity_window,
             last_valid_round=last_valid_round,
             populate_app_call_resources=populate_app_call_resources,
+            {'updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params'
+             if operation == 'update'
+             else ''}
         )
     )
     self.composer._result_mappers.append(

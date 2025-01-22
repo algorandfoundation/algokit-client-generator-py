@@ -865,7 +865,7 @@ class HelloWorldAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -906,7 +906,7 @@ class HelloWorldAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello_world_check(string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )

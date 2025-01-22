@@ -726,7 +726,7 @@ class VotingRoundAppSend:
                 populate_app_call_resources=populate_app_call_resources,
                 
             ))
-        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return)))  # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(
@@ -1414,7 +1414,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "bootstrap(pay)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1454,7 +1454,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "close()void",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -1495,7 +1495,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1536,7 +1536,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "vote(pay,byte[],uint8[])void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1577,7 +1577,7 @@ class VotingRoundAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1802,7 +1802,7 @@ class VotingRoundAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
-                    "args": _parse_abi_args(args), # type: ignore
+                    "args": _parse_abi_args(args),
                     }
                 )
             )

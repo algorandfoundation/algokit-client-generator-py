@@ -683,7 +683,7 @@ class HelloWorldFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )

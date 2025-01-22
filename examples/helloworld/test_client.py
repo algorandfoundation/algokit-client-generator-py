@@ -74,7 +74,7 @@ def test_simulate_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     response = client.new_group().hello(args=HelloArgs(name="mate")).simulate()
 
     assert response.returns[0].value == "Hello, mate"
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  # type: ignore
+    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  # type: ignore[call-overload]
 
 
 def test_can_be_cloned(helloworld_factory: HelloWorldAppFactory) -> None:

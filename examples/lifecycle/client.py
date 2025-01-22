@@ -1171,7 +1171,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1211,7 +1211,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "hello()string",
-                "args": None, # type: ignore
+                "args": None,
                 }
             )
         )
@@ -1252,7 +1252,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string)string",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1293,7 +1293,7 @@ class LifeCycleAppFactoryCreateParams:
                 **{
                 **params,
                 "method": "create(string,uint32)void",
-                "args": _parse_abi_args(args), # type: ignore
+                "args": _parse_abi_args(args),
                 }
             )
         )
@@ -1518,7 +1518,7 @@ class LifeCycleAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string)string",
-                    "args": _parse_abi_args(args), # type: ignore
+                    "args": _parse_abi_args(args),
                     }
                 )
             )
@@ -1575,7 +1575,7 @@ class LifeCycleAppFactorySendCreate:
                     **{
                     **params,
                     "method": "create(string,uint32)void",
-                    "args": _parse_abi_args(args), # type: ignore
+                    "args": _parse_abi_args(args),
                     }
                 )
             )
