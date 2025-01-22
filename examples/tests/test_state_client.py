@@ -7,14 +7,14 @@ from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.conftest import get_unique_name
-from examples.state.client import (
+from examples.tests.conftest import get_unique_name
+from examples.smart_contracts.artifacts.state.state_client import (
     CreateAbiArgs,
     DeleteAbiArgs,
     Deploy,
     DeployCreate,
     Input,
-    StateAppClient,
+    StateClient,
     UpdateAbiArgs,
 )
 
@@ -22,8 +22,8 @@ from examples.state.client import (
 @pytest.fixture()
 def state_app_client(
     algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: Account
-) -> StateAppClient:
-    return StateAppClient(
+) -> StateClient:
+    return StateClient(
         algod_client=algod_client,
         indexer_client=indexer_client,
         creator=funded_account,
@@ -33,19 +33,19 @@ def state_app_client(
 
 
 @pytest.fixture()
-def deployed_state_app_client(state_app_client: StateAppClient) -> StateAppClient:
+def deployed_state_app_client(state_app_client: StateClient) -> StateClient:
     state_app_client.deploy(allow_delete=True, allow_update=True, on_update=OnUpdate.UpdateApp)
     return state_app_client
 
 
-def test_call_abi(deployed_state_app_client: StateAppClient) -> None:
+def test_call_abi(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.call_abi(value="there")
 
     assert response.return_value == "Hello, there"
     assert response.confirmed_round is None
 
 
-def test_call_abi_txn(deployed_state_app_client: StateAppClient, algod_client: AlgodClient) -> None:
+def test_call_abi_txn(deployed_state_app_client: StateClient, algod_client: AlgodClient) -> None:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
@@ -61,7 +61,7 @@ def test_call_abi_txn(deployed_state_app_client: StateAppClient, algod_client: A
     assert response.confirmed_round is None
 
 
-def test_set_global(deployed_state_app_client: StateAppClient) -> None:
+def test_set_global(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.set_global(
         int1=1, int2=2, bytes1="test", bytes2=bytes("test", encoding="utf8")
     )
@@ -69,14 +69,14 @@ def test_set_global(deployed_state_app_client: StateAppClient) -> None:
     assert response.return_value is None
 
 
-def test_set_local(deployed_state_app_client: StateAppClient) -> None:
+def test_set_local(deployed_state_app_client: StateClient) -> None:
     deployed_state_app_client.opt_in_opt_in()
     response = deployed_state_app_client.set_local(int1=1, int2=2, bytes1="test", bytes2=b"test")
 
     assert response.return_value is None
 
 
-def test_set_box(deployed_state_app_client: StateAppClient) -> None:
+def test_set_box(deployed_state_app_client: StateClient) -> None:
     algokit_utils.transfer(
         deployed_state_app_client.algod_client,
         algokit_utils.TransferParameters(
@@ -92,12 +92,12 @@ def test_set_box(deployed_state_app_client: StateAppClient) -> None:
     assert response.return_value is None
 
 
-def test_error(deployed_state_app_client: StateAppClient) -> None:
+def test_error(deployed_state_app_client: StateClient) -> None:
     with pytest.raises(algokit_utils.LogicError):
         deployed_state_app_client.error()
 
 
-def test_create_abi(state_app_client: StateAppClient) -> None:
+def test_create_abi(state_app_client: StateClient) -> None:
     state_app_client.app_client.template_values = {"VALUE": 1, "UPDATABLE": 1, "DELETABLE": 1}
 
     response = state_app_client.create_create_abi(input="test")
@@ -105,35 +105,41 @@ def test_create_abi(state_app_client: StateAppClient) -> None:
     assert response.return_value == "test"
 
 
-def test_update_abi(deployed_state_app_client: StateAppClient) -> None:
+def test_update_abi(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.update_update_abi(input="test")
 
     assert response.return_value == "test"
 
 
-def test_delete_abi(deployed_state_app_client: StateAppClient) -> None:
+def test_delete_abi(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.delete_delete_abi(input="test")
 
     assert response.return_value == "test"
 
 
-def test_opt_in(deployed_state_app_client: StateAppClient) -> None:
+def test_opt_in(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.opt_in_opt_in()
 
     assert response.confirmed_round
 
 
-def test_default_arg(deployed_state_app_client: StateAppClient) -> None:
+# FIXME
+@pytest.mark.skip(reason="Default args are not supported yet in Algorand Python."
+                         "https://github.com/algorandfoundation/puya/pull/371")
+def test_default_arg(deployed_state_app_client: StateClient) -> None:
     assert deployed_state_app_client.default_value(arg_with_default="test").return_value == "test"
     assert deployed_state_app_client.default_value().return_value == "default value"
 
 
-def test_default_arg_abi(deployed_state_app_client: StateAppClient) -> None:
+# FIXME
+@pytest.mark.skip(reason="Default args are not supported yet in Algorand Python."
+                         "https://github.com/algorandfoundation/puya/pull/371")
+def test_default_arg_abi(deployed_state_app_client: StateClient) -> None:
     assert deployed_state_app_client.default_value_from_abi(arg_with_default="test").return_value == "ABI, test"
     assert deployed_state_app_client.default_value_from_abi().return_value == "ABI, default value"
 
 
-def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
+def test_clear_state(deployed_state_app_client: StateClient) -> None:
     response = deployed_state_app_client.opt_in_opt_in()
     assert response.confirmed_round
 
@@ -141,7 +147,7 @@ def test_clear_state(deployed_state_app_client: StateAppClient) -> None:
     assert clear_response.confirmed_round
 
 
-def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
+def test_get_global_state(deployed_state_app_client: StateClient) -> None:
     int1_expected = 1
     int2_expected = 2
     deployed_state_app_client.set_global(int1=int1_expected, int2=int2_expected, bytes1="test", bytes2=b"test")
@@ -154,7 +160,7 @@ def test_get_global_state(deployed_state_app_client: StateAppClient) -> None:
     assert response.value == 1
 
 
-def test_get_local_state(deployed_state_app_client: StateAppClient) -> None:
+def test_get_local_state(deployed_state_app_client: StateClient) -> None:
     int1_expected = 1
     int2_expected = 2
     deployed_state_app_client.opt_in_opt_in()
@@ -167,7 +173,7 @@ def test_get_local_state(deployed_state_app_client: StateAppClient) -> None:
     assert response.local_int2 == int2_expected
 
 
-def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
+def test_deploy_create_1arg(state_app_client: StateClient) -> None:
     response = state_app_client.deploy(
         allow_update=True,
         allow_delete=True,
@@ -211,7 +217,7 @@ def test_deploy_create_1arg(state_app_client: StateAppClient) -> None:
     assert response.delete_response.return_value == "Deploy Delete"
 
 
-def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
+def test_struct_args(deployed_state_app_client: StateClient) -> None:
     age = 42
     response = deployed_state_app_client.structs(name_age=Input(name="World", age=age))
 
@@ -219,7 +225,7 @@ def test_struct_args(deployed_state_app_client: StateAppClient) -> None:
     assert response.return_value.result == age * 2
 
 
-def test_compose(deployed_state_app_client: StateAppClient) -> None:
+def test_compose(deployed_state_app_client: StateClient) -> None:
     response = (
         deployed_state_app_client.compose()
         .opt_in_opt_in()
@@ -233,7 +239,7 @@ def test_compose(deployed_state_app_client: StateAppClient) -> None:
     assert set_local_response.return_value is None
 
 
-def test_call_references(deployed_state_app_client: StateAppClient) -> None:
+def test_call_references(deployed_state_app_client: StateClient) -> None:
     asset_id = 1234
     _, account = deployed_state_app_client.app_client.resolve_signer_sender()
     response = deployed_state_app_client.call_with_references(

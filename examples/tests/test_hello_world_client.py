@@ -4,12 +4,12 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.helloworld.client import HelloWorldAppClient
+from examples.smart_contracts.artifacts.hello_world.hello_world_client import HelloWorldClient
 
 
 @pytest.fixture(scope="session")
-def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) -> HelloWorldAppClient:
-    client = HelloWorldAppClient(
+def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) -> HelloWorldClient:
+    client = HelloWorldClient(
         algod_client=algod_client,
         indexer_client=indexer_client,
         creator=get_localnet_default_account(algod_client),
@@ -19,13 +19,13 @@ def helloworld_client(algod_client: AlgodClient, indexer_client: IndexerClient) 
     return client
 
 
-def test_hello(helloworld_client: HelloWorldAppClient) -> None:
+def test_hello(helloworld_client: HelloWorldClient) -> None:
     response = helloworld_client.hello(name="friend")
 
     assert response.return_value == "Hello, friend"
 
 
-def test_hello_check_args(helloworld_client: HelloWorldAppClient) -> None:
+def test_hello_check_args(helloworld_client: HelloWorldClient) -> None:
     response = helloworld_client.hello_world_check(name="World")
 
     assert response.return_value is None
@@ -35,7 +35,7 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
     account = get_localnet_default_account(algod_client)
     signer = AccountTransactionSigner(account.private_key)
 
-    helloworld_client = HelloWorldAppClient(
+    helloworld_client = HelloWorldClient(
         algod_client=algod_client, signer=signer, template_values={"UPDATABLE": 1, "DELETABLE": 1}
     )
 
@@ -49,7 +49,7 @@ def test_lifecycle(algod_client: AlgodClient) -> None:
     assert helloworld_client.delete_bare()
 
 
-def test_compose(helloworld_client: HelloWorldAppClient) -> None:
+def test_compose(helloworld_client: HelloWorldClient) -> None:
     response = (helloworld_client.compose().hello(name="there").hello_world_check(name="World")).execute()
 
     hello_response, check_response = response.abi_results
@@ -57,7 +57,7 @@ def test_compose(helloworld_client: HelloWorldAppClient) -> None:
     assert check_response.return_value is None
 
 
-def test_simulate_hello(helloworld_client: HelloWorldAppClient) -> None:
+def test_simulate_hello(helloworld_client: HelloWorldClient) -> None:
     response = helloworld_client.compose().hello(name="mate").simulate()
 
     assert response.abi_results[0].return_value == "Hello, mate"

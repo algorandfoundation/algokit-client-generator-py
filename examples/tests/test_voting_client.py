@@ -12,8 +12,8 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
-from examples.conftest import get_unique_name
-from examples.voting.client import CreateArgs, DeployCreate, VotingPreconditions, VotingRoundAppClient
+from examples.tests.conftest import get_unique_name
+from examples.smart_contracts.artifacts.voting.voting_client import CreateArgs, DeployCreate, VotingPreconditions, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 
