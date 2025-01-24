@@ -29,7 +29,7 @@ class LifeCycle(ImmutabilityControlARC4Contract):
     @arc4.abimethod
     def hello(self, name: String) -> String:
         result = String("")
-        for i in urange(self.times):
+        for i in urange(self.times):  # noqa: B007
             result += self.greeting + String(", ") + name + String("\n")
 
         return result
@@ -37,7 +37,7 @@ class LifeCycle(ImmutabilityControlARC4Contract):
     @arc4.abimethod(name="hello")
     def hello_no_arg(self) -> String:
         result = String("")
-        for i in urange(self.times):
+        for i in urange(self.times):  # noqa: B007
             result += self.greeting + String(", mystery person\n")
 
         return result

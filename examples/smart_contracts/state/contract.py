@@ -56,18 +56,18 @@ class State(ExampleARC4Contract):
         self.value = TemplateVar[UInt64](VALUE_TEMPLATE_NAME)
 
     @arc4.abimethod(create="require")
-    def create_abi(self, input: String) -> String:
+    def create_abi(self, input: String) -> String:  # noqa: A002
         self.authorize_creator()
         return input
 
     @arc4.abimethod(allow_actions=["UpdateApplication"])
-    def update_abi(self, input: String) -> String:
+    def update_abi(self, input: String) -> String:  # noqa: A002
         self.authorize_creator()
         assert TemplateVar[bool](UPDATABLE_TEMPLATE_NAME), "Check app is updatable"
         return input
 
     @arc4.abimethod(allow_actions=["DeleteApplication"])
-    def delete_abi(self, input: String) -> String:
+    def delete_abi(self, input: String) -> String:  # noqa: A002
         self.authorize_creator()
         assert TemplateVar[bool](DELETABLE_TEMPLATE_NAME), "Check app is deletable"
         return input
@@ -78,7 +78,7 @@ class State(ExampleARC4Contract):
 
     @arc4.abimethod(readonly=True)
     def error(self) -> None:
-        assert False, "Deliberate error"
+        assert False, "Deliberate error"  # noqa: PT015, B011
 
     @arc4.abimethod(readonly=True)
     def call_abi(self, value: String) -> String:
@@ -91,7 +91,6 @@ class State(ExampleARC4Contract):
     @arc4.abimethod
     def call_with_references(self, asset: Asset, account: Account, application: Application) -> UInt64:
         assert asset, "asset not provided"
-        # FIXME: The original check is for an empty address, while this __bool__ checks against ZeroAddress.
         assert account, "account not provided"
         assert application, "application not provided"
         return UInt64(1)
@@ -100,8 +99,7 @@ class State(ExampleARC4Contract):
     # FIXME: Uncomment this.
     # def default_value(self, arg_with_default: String = String("default value")) -> String:
     def default_value(self, arg_with_default: String) -> String:
-        arg_with_default = arg_with_default or String("default_string")
-        return arg_with_default
+        return arg_with_default or String("default_string")
 
     @arc4.abimethod(readonly=True)
     # FIXME: Uncomment this.

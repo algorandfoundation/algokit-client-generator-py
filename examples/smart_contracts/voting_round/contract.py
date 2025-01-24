@@ -131,7 +131,7 @@ class VotingRound(PermanenceControlARC4Contract):
         self.votes = BoxMap(arc4.Address, VoteIndexArray, key_prefix=b"")
 
     @arc4.abimethod(create="require")
-    def create(
+    def create(  # noqa: PLR0913
         self,
         vote_id: arc4.String,
         snapshot_public_key: arc4.DynamicBytes,
@@ -180,8 +180,6 @@ class VotingRound(PermanenceControlARC4Contract):
             + UInt64(400)
             +
             # TallyBox Value
-            # app.state.total_options.get()
-            #    * (pt.Int(pt.abi.make(VoteCount).type_spec().byte_length_static() * beaker.consts.BOX_BYTE_MIN_BALANCE))
             self.total_options.value * UInt64(8) * UInt64(400)
         )
 
@@ -246,12 +244,6 @@ class VotingRound(PermanenceControlARC4Contract):
 
         assert answer_ids.length == self.option_counts.value.length, "Number of answers incorrect"
 
-        # (min_bal_req := UInt64ScratchVar()).store(
-        #     pt.Int(beaker.consts.BOX_FLAT_MIN_BALANCE)
-        #     + (pt.Int(32 + 2) + pt.Int(
-        #         VoteIndex().type_spec().byte_length_static()) * answer_ids.length())
-        #     * pt.Int(beaker.consts.BOX_BYTE_MIN_BALANCE)
-        # ),
         min_bal_req = UInt64(2_500) + (UInt64(32 + 2) + answer_ids.length) * UInt64(400)
         assert fund_min_bal_req.receiver == Global.current_application_address, "Payment must be to app address"
         log(min_bal_req)
