@@ -16,9 +16,7 @@ def main() -> None:
     smart_contracts = pathlib.Path(__file__).parent / "smart_contracts"
     artifacts = smart_contracts / "artifacts"
 
-    # FIXME
-    # for app in ["hello_world", "lifecycle", "minimal", "state", "voting"]:
-    for app in ["hello_world", "lifecycle", "minimal", "state"]:
+    for app in ["hello_world", "lifecycle", "minimal", "state", "voting_round"]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
         subprocess.run(
@@ -36,6 +34,7 @@ def main() -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            check=False,
         )
 
 

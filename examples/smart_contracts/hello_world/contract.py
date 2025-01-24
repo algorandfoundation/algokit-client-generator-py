@@ -1,4 +1,4 @@
-from algopy import arc4, String
+from algopy import String, arc4
 
 from examples.smart_contracts.base.contract import ExampleARC4Contract
 

@@ -12,8 +12,13 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 from nacl.signing import SigningKey
 
+from examples.smart_contracts.artifacts.voting_round.voting_round_client import (
+    CreateArgs,
+    DeployCreate,
+    VotingPreconditions,
+    VotingRoundClient,
+)
 from examples.tests.conftest import get_unique_name
-from examples.smart_contracts.artifacts.voting.voting_client import CreateArgs, DeployCreate, VotingPreconditions, VotingRoundAppClient
 
 NUM_QUESTIONS = 10
 
@@ -56,7 +61,7 @@ def deploy_voting_client(
     indexer_client: IndexerClient,
     funded_account: Account,
     deploy_create_args: DeployCreate[CreateArgs],
-) -> VotingRoundAppClient:
+) -> VotingRoundClient:
     algokit_utils.transfer(
         client=algod_client,
         parameters=algokit_utils.TransferParameters(
@@ -66,7 +71,7 @@ def deploy_voting_client(
         ),
     )
 
-    client = VotingRoundAppClient(
+    client = VotingRoundClient(
         algod_client=algod_client, indexer_client=indexer_client, creator=funded_account, app_name=get_unique_name()
     )
     client.deploy(allow_delete=True, create_args=deploy_create_args)
@@ -98,7 +103,7 @@ def voter_signature(voter: Account) -> bytes:
 
 
 @pytest.fixture()
-def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoundAppClient) -> TransactionWithSigner:
+def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoundClient) -> TransactionWithSigner:
     from_account = algokit_utils.get_localnet_default_account(algod_client)
     payment = algosdk.transaction.PaymentTxn(
         sender=from_account.address,
@@ -112,17 +117,17 @@ def fund_min_bal_req(algod_client: AlgodClient, deploy_voting_client: VotingRoun
 
 @pytest.fixture()
 def bootstrap_response(
-    deploy_voting_client: VotingRoundAppClient,
+    deploy_voting_client: VotingRoundClient,
     fund_min_bal_req: TransactionWithSigner,
 ) -> algokit_utils.ABITransactionResponse[None]:
     return deploy_voting_client.bootstrap(
         fund_min_bal_req=fund_min_bal_req,
-        transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, "V")]),
+        transaction_parameters=algokit_utils.TransactionParameters(boxes=[(0, b"V")]),
     )
 
 
 def test_get_preconditions(
-    deploy_voting_client: VotingRoundAppClient, algod_client: AlgodClient, voter: Account, voter_signature: bytes
+    deploy_voting_client: VotingRoundClient, algod_client: AlgodClient, voter: Account, voter_signature: bytes
 ) -> None:
     sp = algod_client.suggested_params()
     sp.fee = 12000
@@ -144,7 +149,7 @@ def test_get_preconditions(
 
 
 def test_vote(
-    deploy_voting_client: VotingRoundAppClient,
+    deploy_voting_client: VotingRoundClient,
     algod_client: AlgodClient,
     voter: Account,
     voter_signature: bytes,
@@ -182,7 +187,7 @@ def test_vote(
 
 
 def test_create(algod_client: AlgodClient, funded_account: Account, create_args: CreateArgs) -> None:
-    voting_round_app_client = VotingRoundAppClient(
+    voting_round_app_client = VotingRoundClient(
         algod_client=algod_client,
         signer=funded_account,
         template_values={"VALUE": 1, "DELETABLE": 1},
@@ -215,7 +220,7 @@ def test_boostrap(
 
 
 def test_close(
-    deploy_voting_client: VotingRoundAppClient,
+    deploy_voting_client: VotingRoundClient,
     bootstrap_response: algokit_utils.ABITransactionResponse[None],
 ) -> None:
     # bootstrap app
@@ -231,7 +236,7 @@ def test_close(
 
 def test_compose(
     algod_client: AlgodClient,
-    deploy_voting_client: VotingRoundAppClient,
+    deploy_voting_client: VotingRoundClient,
     fund_min_bal_req: TransactionWithSigner,
     voter: Account,
     voter_signature: bytes,

@@ -8,7 +8,7 @@ def to_camel_case(s: str) -> str:
     return "".join([x.capitalize() for x in s.split("_")])
 
 
-@pytest.mark.parametrize("app", ["hello_world", "lifecycle", "minimal", "state", "voting"])
+@pytest.mark.parametrize("app", ["hello_world", "lifecycle", "minimal", "state", "voting_round"])
 def test_generate_clients(app: str) -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     app_path = examples / app

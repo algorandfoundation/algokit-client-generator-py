@@ -1,4 +1,4 @@
-from algopy import arc4, String, UInt64, urange, op
+from algopy import String, UInt64, arc4, urange
 
 from examples.smart_contracts.base.contract import ImmutabilityControlARC4Contract
 

@@ -9,9 +9,7 @@ def to_camel_case(s: str) -> str:
 
 def update_approvals() -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
-    # FIXME
-    # for app in ["hello_world", "lifecycle", "minimal", "state", "voting"]:
-    for app in ["hello_world", "lifecycle", "minimal", "state"]:
+    for app in ["hello_world", "lifecycle", "minimal", "state", "voting_round"]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
         approved_path = app_path / f"{app}_client.py"

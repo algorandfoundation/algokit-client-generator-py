@@ -3,13 +3,13 @@ import pytest
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.tests.conftest import get_unique_name
 from examples.smart_contracts.artifacts.lifecycle.lifecycle_client import (
     CreateStringStringArgs,
     CreateStringUint32VoidArgs,
     DeployCreate,
     LifeCycleClient,
 )
+from examples.tests.conftest import get_unique_name
 
 
 @pytest.fixture(scope="session")

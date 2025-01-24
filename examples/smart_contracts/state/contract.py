@@ -1,9 +1,21 @@
 from typing import Literal
 
-from algopy import UInt64, Bytes, BoxMap, LocalState, arc4, TemplateVar, String, gtxn, op, Asset, Account, Application, Txn
+from algopy import (
+    Account,
+    Application,
+    Asset,
+    BoxMap,
+    Bytes,
+    LocalState,
+    String,
+    TemplateVar,
+    Txn,
+    UInt64,
+    arc4,
+    gtxn,
+)
 
-from examples.smart_contracts.base.contract import ExampleARC4Contract, UPDATABLE_TEMPLATE_NAME, DELETABLE_TEMPLATE_NAME
-
+from examples.smart_contracts.base.contract import DELETABLE_TEMPLATE_NAME, UPDATABLE_TEMPLATE_NAME, ExampleARC4Contract
 
 VALUE_TEMPLATE_NAME = "VALUE"
 
@@ -103,14 +115,18 @@ class State(ExampleARC4Contract):
         return Output(arc4.String(String("Hello, ") + name_age.name.native), arc4.UInt64(name_age.age.native * 2))
 
     @arc4.abimethod
-    def set_global(self, int1: UInt64, int2: UInt64, bytes1: String, bytes2: arc4.StaticArray[arc4.Byte, Literal[4]]) -> None:
+    def set_global(
+        self, int1: UInt64, int2: UInt64, bytes1: String, bytes2: arc4.StaticArray[arc4.Byte, Literal[4]]
+    ) -> None:
         self.int1 = int1
         self.int2 = int2
         self.bytes1 = bytes1.bytes
         self.bytes2 = bytes2.bytes
 
     @arc4.abimethod
-    def set_local(self, int1: UInt64, int2: UInt64, bytes1: String, bytes2: arc4.StaticArray[arc4.Byte, Literal[4]]) -> None:
+    def set_local(
+        self, int1: UInt64, int2: UInt64, bytes1: String, bytes2: arc4.StaticArray[arc4.Byte, Literal[4]]
+    ) -> None:
         self.local_int1[Txn.sender] = int1
         self.local_int2[Txn.sender] = int2
         self.local_bytes1[Txn.sender] = bytes1.bytes

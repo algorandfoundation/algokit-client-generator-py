@@ -7,7 +7,6 @@ from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 
-from examples.tests.conftest import get_unique_name
 from examples.smart_contracts.artifacts.state.state_client import (
     CreateAbiArgs,
     DeleteAbiArgs,
@@ -17,12 +16,11 @@ from examples.smart_contracts.artifacts.state.state_client import (
     StateClient,
     UpdateAbiArgs,
 )
+from examples.tests.conftest import get_unique_name
 
 
 @pytest.fixture()
-def state_app_client(
-    algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: Account
-) -> StateClient:
+def state_app_client(algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: Account) -> StateClient:
     return StateClient(
         algod_client=algod_client,
         indexer_client=indexer_client,
@@ -124,16 +122,20 @@ def test_opt_in(deployed_state_app_client: StateClient) -> None:
 
 
 # FIXME
-@pytest.mark.skip(reason="Default args are not supported yet in Algorand Python."
-                         "https://github.com/algorandfoundation/puya/pull/371")
+@pytest.mark.skip(
+    reason="Default args are not supported yet in Algorand Python."
+    "https://github.com/algorandfoundation/puya/pull/371"
+)
 def test_default_arg(deployed_state_app_client: StateClient) -> None:
     assert deployed_state_app_client.default_value(arg_with_default="test").return_value == "test"
     assert deployed_state_app_client.default_value().return_value == "default value"
 
 
 # FIXME
-@pytest.mark.skip(reason="Default args are not supported yet in Algorand Python."
-                         "https://github.com/algorandfoundation/puya/pull/371")
+@pytest.mark.skip(
+    reason="Default args are not supported yet in Algorand Python."
+    "https://github.com/algorandfoundation/puya/pull/371"
+)
 def test_default_arg_abi(deployed_state_app_client: StateClient) -> None:
     assert deployed_state_app_client.default_value_from_abi(arg_with_default="test").return_value == "ABI, test"
     assert deployed_state_app_client.default_value_from_abi().return_value == "ABI, default value"

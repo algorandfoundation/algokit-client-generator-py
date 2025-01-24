@@ -1,4 +1,4 @@
-from algopy import ARC4Contract, arc4, TemplateVar, Txn, Global, subroutine, UInt64, String, Bytes
+from algopy import ARC4Contract, Global, String, TemplateVar, Txn, UInt64, arc4, subroutine
 
 DELETABLE_TEMPLATE_NAME = "DELETABLE"
 UPDATABLE_TEMPLATE_NAME = "UPDATABLE"
@@ -14,9 +14,8 @@ class BaseARC4Contract(ARC4Contract):
         if i == UInt64(0):
             return String("0")
         else:
-            return (
-                (self.itoa(i // UInt64(10)) if (i // UInt64(10)) > UInt64(0) else String("")) +
-                String.from_bytes(String("0123456789").bytes[i % UInt64(10)])
+            return (self.itoa(i // UInt64(10)) if (i // UInt64(10)) > UInt64(0) else String("")) + String.from_bytes(
+                String("0123456789").bytes[i % UInt64(10)]
             )
 
 
