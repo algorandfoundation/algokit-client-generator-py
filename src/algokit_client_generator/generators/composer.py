@@ -67,6 +67,7 @@ class {class_name}:
             validity_window=validity_window,
             last_valid_round=last_valid_round,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             {'updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params'
              if operation == 'update'
              else ''}
@@ -163,6 +164,7 @@ def {operation}(self) -> "{class_name}":
             validity_window=validity_window,
             last_valid_round=last_valid_round,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
         )
     )
     self._result_mappers.append(
@@ -195,6 +197,7 @@ def clear_state(
     first_valid_round: int | None = None,
     last_valid_round: int | None = None,
     populate_app_call_resources: bool = False,
+    cover_app_call_inner_txn_fees: bool = False,
 ) -> \"{context.contract_name}Composer\":
     self._composer.add_app_call(
         self.client.params.clear_state(
@@ -215,6 +218,7 @@ def clear_state(
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
     )
@@ -237,7 +241,7 @@ def simulate(
     extra_opcode_budget: int | None = None,
     exec_trace_config: SimulateTraceConfig | None = None,
     simulation_round: int | None = None,
-    skip_signatures: int | None = None,
+    skip_signatures: bool | None = None,
 ) -> transactions.SendAtomicTransactionComposerResults:
     return self._composer.simulate(
         allow_more_logs=allow_more_logs,
@@ -254,11 +258,13 @@ def send(
     max_rounds_to_wait: int | None = None,
     suppress_log: bool | None = None,
     populate_app_call_resources: bool | None = None,
+    cover_app_call_inner_txn_fees: bool | None = None,
 ) -> transactions.SendAtomicTransactionComposerResults:
     return self._composer.send(
         max_rounds_to_wait=max_rounds_to_wait,
         suppress_log=suppress_log,
         populate_app_call_resources=populate_app_call_resources,
+        cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
     )
 """)
     yield Part.DecIndent

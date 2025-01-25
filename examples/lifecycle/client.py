@@ -19,6 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 # utils
 from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
+from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "desc": "The greeting", "name": "greeting"}], "name": "create", "returns": {"type": "string", "desc": "The formatted greeting"}, "desc": "ABI create method with 1 argument", "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "desc": "ABI create method with 2 arguments", "events": []}], "name": "LifeCycleApp", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMSAxMApieXRlY2Jsb2NrIDB4IDB4NzQ2OTZkNjU3MyAweDY3NzI2NTY1NzQ2OTZlNjcgMHgxNTFmN2M3NQp0eG4gTnVtQXBwQXJncwppbnRjXzAgLy8gMAo9PQpibnogbWFpbl9sMTAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgwMmJlY2UxMSAvLyAiaGVsbG8oc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDkKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhhYjA2YzFhOCAvLyAiaGVsbG8oKXN0cmluZyIKPT0KYm56IG1haW5fbDgKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg5N2YxZmMxMSAvLyAiY3JlYXRlKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w3CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NjAxOTMyNjQgLy8gImNyZWF0ZShzdHJpbmcsdWludDMyKXZvaWQiCj09CmJueiBtYWluX2w2CmVycgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CiYmCmFzc2VydApjYWxsc3ViIGNyZWF0ZWNhc3Rlcl8xMQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAo9PQomJgphc3NlcnQKY2FsbHN1YiBjcmVhdGVjYXN0ZXJfMTAKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDg6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgaGVsbG9jYXN0ZXJfOQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sOToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl84CmludGNfMSAvLyAxCnJldHVybgptYWluX2wxMDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQpibnogbWFpbl9sMTYKdHhuIE9uQ29tcGxldGlvbgppbnRjXzEgLy8gT3B0SW4KPT0KYm56IG1haW5fbDE1CnR4biBPbkNvbXBsZXRpb24KcHVzaGludCA0IC8vIFVwZGF0ZUFwcGxpY2F0aW9uCj09CmJueiBtYWluX2wxNAplcnIKbWFpbl9sMTQ6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIHVwZGF0ZV8yCmludGNfMSAvLyAxCnJldHVybgptYWluX2wxNToKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgYmFyZWNyZWF0ZV81CmludGNfMSAvLyAxCnJldHVybgptYWluX2wxNjoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgYmFyZWNyZWF0ZV81CmludGNfMSAvLyAxCnJldHVybgoKLy8gaW50X3RvX2FzY2lpCmludHRvYXNjaWlfMDoKcHJvdG8gMSAxCnB1c2hieXRlcyAweDMwMzEzMjMzMzQzNTM2MzczODM5IC8vICIwMTIzNDU2Nzg5IgpmcmFtZV9kaWcgLTEKaW50Y18xIC8vIDEKZXh0cmFjdDMKcmV0c3ViCgovLyBpdG9hCml0b2FfMToKcHJvdG8gMSAxCmZyYW1lX2RpZyAtMQppbnRjXzAgLy8gMAo9PQpibnogaXRvYV8xX2w1CmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKLwppbnRjXzAgLy8gMAo+CmJueiBpdG9hXzFfbDQKYnl0ZWNfMCAvLyAiIgppdG9hXzFfbDM6CmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKJQpjYWxsc3ViIGludHRvYXNjaWlfMApjb25jYXQKYiBpdG9hXzFfbDYKaXRvYV8xX2w0OgpmcmFtZV9kaWcgLTEKaW50Y18yIC8vIDEwCi8KY2FsbHN1YiBpdG9hXzEKYiBpdG9hXzFfbDMKaXRvYV8xX2w1OgpwdXNoYnl0ZXMgMHgzMCAvLyAiMCIKaXRvYV8xX2w2OgpyZXRzdWIKCi8vIHVwZGF0ZQp1cGRhdGVfMjoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzM6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCmJ5dGVjXzAgLy8gIiIKc3RvcmUgMAppbnRjXzAgLy8gMApzdG9yZSAxCmhlbGxvXzNfbDE6CmxvYWQgMQpieXRlY18xIC8vICJ0aW1lcyIKYXBwX2dsb2JhbF9nZXQKPApieiBoZWxsb18zX2wzCmxvYWQgMApieXRlY18yIC8vICJncmVldGluZyIKYXBwX2dsb2JhbF9nZXQKY29uY2F0CnB1c2hieXRlcyAweDJjMjAgLy8gIiwgIgpjb25jYXQKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmNvbmNhdApwdXNoYnl0ZXMgMHgwYSAvLyAiXG4iCmNvbmNhdApzdG9yZSAwCmxvYWQgMQppbnRjXzEgLy8gMQorCnN0b3JlIDEKYiBoZWxsb18zX2wxCmhlbGxvXzNfbDM6CmxvYWQgMApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzQ6CnByb3RvIDAgMQpieXRlY18wIC8vICIiCmJ5dGVjXzAgLy8gIiIKc3RvcmUgMgppbnRjXzAgLy8gMApzdG9yZSAzCmhlbGxvXzRfbDE6CmxvYWQgMwpieXRlY18xIC8vICJ0aW1lcyIKYXBwX2dsb2JhbF9nZXQKPApieiBoZWxsb180X2wzCmxvYWQgMgpieXRlY18yIC8vICJncmVldGluZyIKYXBwX2dsb2JhbF9nZXQKY29uY2F0CnB1c2hieXRlcyAweDJjMjA2ZDc5NzM3NDY1NzI3OTIwNzA2NTcyNzM2ZjZlMGEgLy8gIiwgbXlzdGVyeSBwZXJzb25cbiIKY29uY2F0CnN0b3JlIDIKbG9hZCAzCmludGNfMSAvLyAxCisKc3RvcmUgMwpiIGhlbGxvXzRfbDEKaGVsbG9fNF9sMzoKbG9hZCAyCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gYmFyZV9jcmVhdGUKYmFyZWNyZWF0ZV81Ogpwcm90byAwIDAKYnl0ZWNfMiAvLyAiZ3JlZXRpbmciCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYgLy8gIkhlbGxvIgphcHBfZ2xvYmFsX3B1dApieXRlY18xIC8vICJ0aW1lcyIKaW50Y18xIC8vIDEKYXBwX2dsb2JhbF9wdXQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyBjcmVhdGUKY3JlYXRlXzY6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCmJ5dGVjXzIgLy8gImdyZWV0aW5nIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKYXBwX2dsb2JhbF9wdXQKYnl0ZWNfMSAvLyAidGltZXMiCmludGNfMSAvLyAxCmFwcF9nbG9iYWxfcHV0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApwdXNoYnl0ZXMgMHg1ZiAvLyAiXyIKY29uY2F0CmJ5dGVjXzEgLy8gInRpbWVzIgphcHBfZ2xvYmFsX2dldApjYWxsc3ViIGl0b2FfMQpjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjcmVhdGUKY3JlYXRlXzc6CnByb3RvIDIgMApieXRlY18yIC8vICJncmVldGluZyIKZnJhbWVfZGlnIC0yCmV4dHJhY3QgMiAwCmFwcF9nbG9iYWxfcHV0CmJ5dGVjXzEgLy8gInRpbWVzIgpmcmFtZV9kaWcgLTEKYXBwX2dsb2JhbF9wdXQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyBoZWxsb19jYXN0ZXIKaGVsbG9jYXN0ZXJfODoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgaGVsbG9fMwpmcmFtZV9idXJ5IDAKYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb19jYXN0ZXIKaGVsbG9jYXN0ZXJfOToKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKY2FsbHN1YiBoZWxsb180CmZyYW1lX2J1cnkgMApieXRlY18zIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGNyZWF0ZV9jYXN0ZXIKY3JlYXRlY2FzdGVyXzEwOgpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBjcmVhdGVfNgpmcmFtZV9idXJ5IDAKYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBjcmVhdGVfY2FzdGVyCmNyZWF0ZWNhc3Rlcl8xMToKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKaW50Y18wIC8vIDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQzMgpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKY2FsbHN1YiBjcmVhdGVfNwpyZXRzdWI=", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDEKY2FsbHN1YiBjbGVhcl8wCmludGNfMCAvLyAxCnJldHVybgoKLy8gY2xlYXIKY2xlYXJfMDoKcHJvdG8gMCAwCmludGNfMCAvLyAxCnJldHVybg=="}}"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
@@ -109,6 +110,7 @@ class LifeCycleAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -131,6 +133,7 @@ class LifeCycleAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -153,6 +156,7 @@ class LifeCycleAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
     
@@ -174,6 +178,7 @@ class LifeCycleAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -196,6 +201,7 @@ class LifeCycleAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -218,6 +224,7 @@ class LifeCycleAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -240,6 +247,7 @@ class LifeCycleAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -262,6 +270,7 @@ class LifeCycleAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -305,6 +314,7 @@ class LifeCycleAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -327,6 +337,7 @@ class LifeCycleAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -349,6 +360,7 @@ class LifeCycleAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
     
@@ -370,6 +382,7 @@ class LifeCycleAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -392,6 +405,7 @@ class LifeCycleAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -414,6 +428,7 @@ class LifeCycleAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -436,6 +451,7 @@ class LifeCycleAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -458,6 +474,7 @@ class LifeCycleAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -501,6 +518,7 @@ class LifeCycleAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -523,6 +541,7 @@ class LifeCycleAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -547,6 +566,7 @@ class LifeCycleAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
     
@@ -568,6 +588,7 @@ class LifeCycleAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -592,6 +613,7 @@ class LifeCycleAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -614,6 +636,7 @@ class LifeCycleAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -638,6 +661,7 @@ class LifeCycleAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -660,6 +684,7 @@ class LifeCycleAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -737,7 +762,7 @@ class LifeCycleAppClient:
     def __init__(
         self,
         *,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -750,7 +775,7 @@ class LifeCycleAppClient:
         self,
         app_client: applications.AppClient | None = None,
         *,
-        algorand: clients.AlgorandClient | None = None,
+        algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -785,7 +810,7 @@ class LifeCycleAppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
@@ -810,7 +835,7 @@ class LifeCycleAppClient:
     
     @staticmethod
     def from_network(
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -846,7 +871,7 @@ class LifeCycleAppClient:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> clients.AlgorandClient:
+    def algorand(self) -> _AlgoKitAlgorandClient:
         return self.app_client.algorand
 
     def clone(
@@ -964,7 +989,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
 
     def __init__(
         self,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -1000,7 +1025,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         return self.app_factory.app_spec
     
     @property
-    def algorand(self) -> clients.AlgorandClient:
+    def algorand(self) -> _AlgoKitAlgorandClient:
         return self.app_factory.algorand
 
     def deploy(
@@ -1020,6 +1045,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
     ) -> tuple[LifeCycleAppClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -1037,6 +1063,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
         )
 
         return LifeCycleAppClient(deploy_response[0]), deploy_response[1]
@@ -1454,6 +1481,7 @@ class LifeCycleAppFactorySendCreate:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
         signer: TransactionSigner | None = None,
         rekey_to: str | None = None,
         lease: bytes | None = None,
@@ -1635,6 +1663,7 @@ class LifeCycleAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
@@ -1656,6 +1685,7 @@ class LifeCycleAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1684,6 +1714,7 @@ class LifeCycleAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
@@ -1705,6 +1736,7 @@ class LifeCycleAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1733,6 +1765,7 @@ class LifeCycleAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
@@ -1754,6 +1787,7 @@ class LifeCycleAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1782,6 +1816,7 @@ class LifeCycleAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
@@ -1803,6 +1838,7 @@ class LifeCycleAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1831,6 +1867,7 @@ class LifeCycleAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -1851,6 +1888,7 @@ class LifeCycleAppComposer:
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
                     populate_app_call_resources=populate_app_call_resources,
+                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 )
             )
         )
@@ -1873,7 +1911,7 @@ class LifeCycleAppComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: int | None = None,
+        skip_signatures: bool | None = None,
     ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -1890,9 +1928,11 @@ class LifeCycleAppComposer:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.send(
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
         )

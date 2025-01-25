@@ -117,6 +117,7 @@ def {method.abi.client_method_name}(
     first_valid_round: int | None = None,
     last_valid_round: int | None = None,
     populate_app_call_resources: bool = False,
+    cover_app_call_inner_txn_fees: bool = False,
     {algokit_extra_args(operation)}
 )"""
 
@@ -196,6 +197,7 @@ def _generate_method_body(
             validity_window=validity_window,
             last_valid_round=last_valid_round,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             {algokit_extra_args(operation)}
         )"""
 
@@ -455,7 +457,7 @@ def __init__(self, app_client: applications.AppClient) -> None: ...
 def __init__(
     self,
     *,
-    algorand: clients.AlgorandClient,
+    algorand: _AlgoKitAlgorandClient,
     app_id: int,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -473,7 +475,7 @@ def __init__(
     self,
     app_client: applications.AppClient | None = None,
     *,
-    algorand: clients.AlgorandClient | None = None,
+    algorand: _AlgoKitAlgorandClient | None = None,
     app_id: int | None = None,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -513,7 +515,7 @@ def generate_static_methods(context: GeneratorContext) -> DocumentParts:
 def from_creator_and_name(
     creator_address: str,
     app_name: str,
-    algorand: clients.AlgorandClient,
+    algorand: _AlgoKitAlgorandClient,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
@@ -538,7 +540,7 @@ def from_creator_and_name(
 
 @staticmethod
 def from_network(
-    algorand: clients.AlgorandClient,
+    algorand: _AlgoKitAlgorandClient,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
     default_signer: TransactionSigner | None = None,
@@ -579,7 +581,7 @@ def app_spec(self) -> applications.Arc56Contract:
     return self.app_client.app_spec
 
 @property
-def algorand(self) -> clients.AlgorandClient:
+def algorand(self) -> _AlgoKitAlgorandClient:
     return self.app_client.algorand
 """)
 

@@ -2,7 +2,7 @@ import algokit_utils
 import algosdk
 import pytest
 from algokit_utils.models import AlgoAmount
-from algokit_utils.clients import AlgorandClient
+from algokit_utils import AlgorandClient
 
 from examples.lifecycle.client import (
     CreateStringStringArgs,

@@ -381,7 +381,7 @@ def generate_factory_class(  # noqa: PLR0915
     yield utils.indented(f"""
 def __init__(
     self,
-    algorand: clients.AlgorandClient,
+    algorand: _AlgoKitAlgorandClient,
     *,
     app_name: str | None = None,
     default_sender: str | bytes | None = None,
@@ -421,7 +421,7 @@ def app_spec(self) -> applications.Arc56Contract:
     return self.app_factory.app_spec
 
 @property
-def algorand(self) -> clients.AlgorandClient:
+def algorand(self) -> _AlgoKitAlgorandClient:
     return self.app_factory.algorand
 """)
 
@@ -444,6 +444,7 @@ def algorand(self) -> clients.AlgorandClient:
     yield "max_rounds_to_wait: int | None = None,"
     yield "suppress_log: bool = False,"
     yield "populate_app_call_resources: bool = False,"
+    yield "cover_app_call_inner_txn_fees: bool = False,"
     yield Part.DecIndent
     yield f") -> tuple[{context.contract_name}Client, applications.AppFactoryDeployResponse]:"
 
@@ -465,6 +466,7 @@ def algorand(self) -> clients.AlgorandClient:
     yield "max_rounds_to_wait=max_rounds_to_wait,"
     yield "suppress_log=suppress_log,"
     yield "populate_app_call_resources=populate_app_call_resources,"
+    yield "cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,"
     yield Part.DecIndent
     yield ")"
     yield Part.NewLine
@@ -641,6 +643,7 @@ class {context.contract_name}FactorySendCreate:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
         signer: TransactionSigner | None = None,
         rekey_to: str | None = None,
         lease: bytes | None = None,

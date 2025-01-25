@@ -1,7 +1,7 @@
 import algokit_utils
 import pytest
 from algokit_utils.models import AlgoAmount
-from algokit_utils.clients import AlgorandClient
+from algokit_utils import AlgorandClient
 
 from examples.minimal.client import AppFactory
 

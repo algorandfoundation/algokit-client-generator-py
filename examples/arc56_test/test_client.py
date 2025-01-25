@@ -4,7 +4,7 @@ import algokit_utils.applications
 import pytest
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils.clients import AlgorandClient
+from algokit_utils import AlgorandClient
 
 from examples.arc56_test.client import (
     Arc56TestClient,

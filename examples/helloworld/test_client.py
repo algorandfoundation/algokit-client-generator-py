@@ -2,7 +2,7 @@ import algokit_utils
 import pytest
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils.clients import AlgorandClient
+from algokit_utils import AlgorandClient
 
 from examples.helloworld.client import HelloArgs, HelloWorldAppClient, HelloWorldAppFactory, HelloWorldCheckArgs
 

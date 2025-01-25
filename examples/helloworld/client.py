@@ -19,6 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 # utils
 from algokit_utils import applications, models, protocols, transactions, clients
 from algokit_utils.applications import abi as applications_abi
+from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "desc": "Returns Hello, {name}", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "desc": "Asserts {name} is \"World\"", "events": []}], "name": "HelloWorldApp", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQpieXRlY2Jsb2NrIDB4CnR4biBOdW1BcHBBcmdzCmludGNfMCAvLyAwCj09CmJueiBtYWluX2w2CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gImhlbGxvKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w1CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmY5YzFlZGYgLy8gImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sNAplcnIKbWFpbl9sNDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb3dvcmxkY2hlY2tjYXN0ZXJfNQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl80CmludGNfMSAvLyAxCnJldHVybgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CmJueiBtYWluX2wxMgp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sMTEKdHhuIE9uQ29tcGxldGlvbgpwdXNoaW50IDUgLy8gRGVsZXRlQXBwbGljYXRpb24KPT0KYm56IG1haW5fbDEwCmVycgptYWluX2wxMDoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQphc3NlcnQKY2FsbHN1YiB1cGRhdGVfMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CmFzc2VydAppbnRjXzEgLy8gMQpyZXR1cm4KCi8vIHVwZGF0ZQp1cGRhdGVfMDoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGRlbGV0ZQpkZWxldGVfMToKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX0RFTEVUQUJMRSAvLyBUTVBMX0RFTEVUQUJMRQovLyBDaGVjayBhcHAgaXMgZGVsZXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzI6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwIC8vICJIZWxsbywgIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY29uY2F0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gaGVsbG9fd29ybGRfY2hlY2sKaGVsbG93b3JsZGNoZWNrXzM6CnByb3RvIDEgMApmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKcHVzaGJ5dGVzIDB4NTc2ZjcyNmM2NCAvLyAiV29ybGQiCj09CmFzc2VydApyZXRzdWIKCi8vIGhlbGxvX2Nhc3RlcgpoZWxsb2Nhc3Rlcl80Ogpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBoZWxsb18yCmZyYW1lX2J1cnkgMApwdXNoYnl0ZXMgMHgxNTFmN2M3NSAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb193b3JsZF9jaGVja19jYXN0ZXIKaGVsbG93b3JsZGNoZWNrY2FzdGVyXzU6CnByb3RvIDAgMApieXRlY18wIC8vICIiCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmNhbGxzdWIgaGVsbG93b3JsZGNoZWNrXzMKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
 APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
@@ -117,6 +118,7 @@ class HelloWorldAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -139,6 +141,7 @@ class HelloWorldAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -161,6 +164,7 @@ class HelloWorldAppParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -183,6 +187,7 @@ class HelloWorldAppParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -238,6 +243,7 @@ class HelloWorldAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -260,6 +266,7 @@ class HelloWorldAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -282,6 +289,7 @@ class HelloWorldAppCreateTransactionParams:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -304,6 +312,7 @@ class HelloWorldAppCreateTransactionParams:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
 
@@ -359,6 +368,7 @@ class HelloWorldAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
@@ -381,6 +391,7 @@ class HelloWorldAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -405,6 +416,7 @@ class HelloWorldAppSend:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
@@ -427,6 +439,7 @@ class HelloWorldAppSend:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 
             ))
         parsed_response = response
@@ -455,7 +468,7 @@ class HelloWorldAppClient:
     def __init__(
         self,
         *,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -468,7 +481,7 @@ class HelloWorldAppClient:
         self,
         app_client: applications.AppClient | None = None,
         *,
-        algorand: clients.AlgorandClient | None = None,
+        algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -503,7 +516,7 @@ class HelloWorldAppClient:
     def from_creator_and_name(
         creator_address: str,
         app_name: str,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
@@ -528,7 +541,7 @@ class HelloWorldAppClient:
     
     @staticmethod
     def from_network(
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
         default_signer: TransactionSigner | None = None,
@@ -564,7 +577,7 @@ class HelloWorldAppClient:
         return self.app_client.app_spec
     
     @property
-    def algorand(self) -> clients.AlgorandClient:
+    def algorand(self) -> _AlgoKitAlgorandClient:
         return self.app_client.algorand
 
     def clone(
@@ -659,7 +672,7 @@ class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCa
 
     def __init__(
         self,
-        algorand: clients.AlgorandClient,
+        algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
         default_sender: str | bytes | None = None,
@@ -695,7 +708,7 @@ class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCa
         return self.app_factory.app_spec
     
     @property
-    def algorand(self) -> clients.AlgorandClient:
+    def algorand(self) -> _AlgoKitAlgorandClient:
         return self.app_factory.algorand
 
     def deploy(
@@ -715,6 +728,7 @@ class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCa
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
     ) -> tuple[HelloWorldAppClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -732,6 +746,7 @@ class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCa
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
         )
 
         return HelloWorldAppClient(deploy_response[0]), deploy_response[1]
@@ -1068,6 +1083,7 @@ class HelloWorldAppFactorySendCreate:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
         signer: TransactionSigner | None = None,
         rekey_to: str | None = None,
         lease: bytes | None = None,
@@ -1144,6 +1160,7 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call_method_call(
@@ -1165,6 +1182,7 @@ class HelloWorldAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1193,6 +1211,7 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
         
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call_method_call(
@@ -1214,6 +1233,7 @@ class HelloWorldAppComposer:
                 validity_window=validity_window,
                 last_valid_round=last_valid_round,
                 populate_app_call_resources=populate_app_call_resources,
+                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
             )
         )
         self._result_mappers.append(
@@ -1242,6 +1262,7 @@ class HelloWorldAppComposer:
         first_valid_round: int | None = None,
         last_valid_round: int | None = None,
         populate_app_call_resources: bool = False,
+        cover_app_call_inner_txn_fees: bool = False,
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -1262,6 +1283,7 @@ class HelloWorldAppComposer:
                     validity_window=validity_window,
                     last_valid_round=last_valid_round,
                     populate_app_call_resources=populate_app_call_resources,
+                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
                 )
             )
         )
@@ -1284,7 +1306,7 @@ class HelloWorldAppComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: int | None = None,
+        skip_signatures: bool | None = None,
     ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -1301,9 +1323,11 @@ class HelloWorldAppComposer:
         max_rounds_to_wait: int | None = None,
         suppress_log: bool | None = None,
         populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> transactions.SendAtomicTransactionComposerResults:
         return self._composer.send(
             max_rounds_to_wait=max_rounds_to_wait,
             suppress_log=suppress_log,
             populate_app_call_resources=populate_app_call_resources,
+            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
         )

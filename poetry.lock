@@ -2,7 +2,7 @@
 
 [[package]]
 name = "algokit-utils"
-version = "2.3.2"
+version = "2.4.0"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
 python-versions = "^3.10"
@@ -18,7 +18,7 @@ typing-extensions = ">=4.6.0"
 type = "git"
 url = "https://github.com/algorandfoundation/algokit-utils-py.git"
 reference = "prerelease/ts-feature-parity"
-resolved_reference = "06a59a9c09a64256ab29af470855067e66b53127"
+resolved_reference = "8da2dfeb04a1138763f0e0042993f0842ea32bfe"
 
 [[package]]
 name = "anyio"
