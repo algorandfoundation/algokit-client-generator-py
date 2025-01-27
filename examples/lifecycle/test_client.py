@@ -15,7 +15,7 @@ from examples.lifecycle.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -23,7 +23,7 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 @pytest.fixture
 def lifecycle_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
 ) -> LifeCycleAppFactory:
     return algorand.client.get_typed_app_factory(
         LifeCycleAppFactory, default_sender=default_deployer.address
@@ -31,11 +31,11 @@ def lifecycle_factory(
 
 
 def test_create_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, create_response = lifecycle_factory.send.create.bare(
+    client, create_result = lifecycle_factory.send.create.bare(
         compilation_params={"updatable": True}
     )
     assert (
-        create_response.transaction.application_call.on_complete
+        create_result.transaction.application_call.on_complete
         == algosdk.transaction.OnComplete.NoOpOC
     )
 
@@ -44,14 +44,14 @@ def test_create_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
 
 
 def test_create_bare_optin(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, create_response = lifecycle_factory.send.create.bare(
-        common_params=CommonAppFactoryCallParams(
+    client, create_result = lifecycle_factory.send.create.bare(
+        params=CommonAppFactoryCallParams(
             on_complete=algosdk.transaction.OnComplete.OptInOC
         ),
         compilation_params={"updatable": True},
     )
     assert (
-        create_response.transaction.application_call.on_complete
+        create_result.transaction.application_call.on_complete
         == algosdk.transaction.OnComplete.OptInOC
     )
 
@@ -70,23 +70,23 @@ def test_deploy_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
 
 
 def test_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, create_response = lifecycle_factory.send.create.create_string_string(
+    client, create_result = lifecycle_factory.send.create.create_string_string(
         args=CreateStringStringArgs(greeting="Greetings"),
         compilation_params={"updatable": True},
     )
-    assert create_response.abi_return is not None
-    assert create_response.abi_return == "Greetings_1"
+    assert create_result.abi_return is not None
+    assert create_result.abi_return == "Greetings_1"
 
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="1 Arg"))
     assert response.abi_return == "Greetings, 1 Arg\n"
 
 
 def test_create_2arg(lifecycle_factory: LifeCycleAppFactory) -> None:
-    client, create_response = lifecycle_factory.send.create.create_string_uint32_void(
+    client, create_result = lifecycle_factory.send.create.create_string_uint32_void(
         args=CreateStringUint32VoidArgs(greeting="Greetings", times=2),
         compilation_params={"updatable": True},
     )
-    assert create_response.abi_return is None
+    assert create_result.abi_return is None
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="2 Arg"))
     assert response.abi_return == "Greetings, 2 Arg\nGreetings, 2 Arg\n"
 
@@ -101,8 +101,8 @@ def test_deploy_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:
 
     assert client.app_id
     assert response.operation_performed == OperationPerformed.Create
-    assert response.create_response
-    assert response.create_response.abi_return == "greeting_1"
+    assert response.create_result
+    assert response.create_result.abi_return == "greeting_1"
 
     call_response = client.send.hello_string_string(
         args=HelloStringStringArgs(name="1 Arg")

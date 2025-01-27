@@ -23,7 +23,7 @@ from examples.state.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -31,7 +31,7 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 @pytest.fixture
 def state_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
 ) -> StateAppFactory:
     return algorand.client.get_typed_app_factory(
         StateAppFactory, default_sender=default_deployer.address
@@ -41,19 +41,21 @@ def state_factory(
 @pytest.fixture
 def deployed_state_app_client(state_factory: StateAppFactory) -> StateAppClient:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
-        deletable=True,
-        updatable=True,
+        compilation_params={
+            "deploy_time_params": {"VALUE": 1},
+            "deletable": True,
+            "updatable": True,
+        },
         on_update=OnUpdate.UpdateApp,
     )
     return client
 
 
 def test_exposes_state_correctly(
-    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+    state_factory: StateAppFactory, default_deployer: algokit_utils.SigningAccount
 ) -> None:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
+        compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.send.set_global(
         args=SetGlobalArgs(int1=1, bytes1="asdf", bytes2=b"\x01\x02\x03\x04", int2=2)
@@ -77,7 +79,7 @@ def test_exposes_state_correctly(
 
 def test_readonly_methods_dont_consume_algos(state_factory: StateAppFactory) -> None:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
+        compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
     tx_cost = AlgoAmount.from_micro_algo(1_000)
@@ -89,7 +91,7 @@ def test_readonly_methods_dont_consume_algos(state_factory: StateAppFactory) -> 
 
     result = client.send.call_abi(
         args=CallAbiArgs(value="oh hi"),
-        common_params=CommonAppCallParams(sender=low_funds_account.address),
+        params=CommonAppCallParams(sender=low_funds_account.address),
     )
     assert result.abi_return == "Hello, oh hi"
 
@@ -97,14 +99,14 @@ def test_readonly_methods_dont_consume_algos(state_factory: StateAppFactory) -> 
     # previous call did not consume algos
     result2 = client.send.call_abi(
         args=CallAbiArgs(value="oh hi 2"),
-        common_params=CommonAppCallParams(sender=low_funds_account.address),
+        params=CommonAppCallParams(sender=low_funds_account.address),
     )
     assert result2.abi_return == "Hello, oh hi 2"
 
 
 def test_arguments_with_defaults(state_factory: StateAppFactory) -> None:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
+        compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
     client.send.set_global(
@@ -159,10 +161,10 @@ def test_arguments_with_defaults(state_factory: StateAppFactory) -> None:
 
 
 def test_methods_can_be_composed(
-    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+    state_factory: StateAppFactory, default_deployer: algokit_utils.SigningAccount
 ) -> None:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
+        compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.new_group().opt_in.opt_in().set_local(
         args=SetLocalArgs(
@@ -178,10 +180,10 @@ def test_methods_can_be_composed(
 
 
 def test_call_with_references(
-    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+    state_factory: StateAppFactory, default_deployer: algokit_utils.SigningAccount
 ) -> None:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
+        compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.send.call_with_references(
         args=CallWithReferencesArgs(

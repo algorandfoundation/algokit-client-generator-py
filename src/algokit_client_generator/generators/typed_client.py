@@ -20,31 +20,31 @@ class PropertyType(Enum):
 
 
 OPERATION_TO_PARAMS_CLASS = {
-    "update": "applications.AppClientBareCallWithCompilationAndSendParams",
-    "delete": "applications.AppClientBareCallWithSendParams",
-    "opt_in": "applications.AppClientBareCallWithSendParams",
-    "close_out": "applications.AppClientBareCallWithSendParams",
+    "update": "algokit_utils.AppClientBareCallWithCompilationAndSendParams",
+    "delete": "algokit_utils.AppClientBareCallWithSendParams",
+    "opt_in": "algokit_utils.AppClientBareCallWithSendParams",
+    "close_out": "algokit_utils.AppClientBareCallWithSendParams",
 }
 
 CLEAR_STATE_PROPERTY_TO_RETURN_CLASS = {
-    PropertyType.SEND: "transactions.SendAppTransactionResult[applications_abi.ABIReturn]",
+    PropertyType.SEND: "algokit_utils.SendAppTransactionResult[algokit_utils.ABIReturn]",
     PropertyType.CREATE_TRANSACTION: "Transaction",
-    PropertyType.PARAMS: "transactions.AppCallParams",
+    PropertyType.PARAMS: "algokit_utils.AppCallParams",
 }
 
 OPERATION_TO_RETURN_PARAMS_TYPE = {
-    "update": "transactions.AppUpdateParams",
-    "delete": "transactions.AppCallParams",
-    "opt_in": "transactions.AppCallParams",
-    "close_out": "transactions.AppCallParams",
+    "update": "algokit_utils.AppUpdateParams",
+    "delete": "algokit_utils.AppCallParams",
+    "opt_in": "algokit_utils.AppCallParams",
+    "close_out": "algokit_utils.AppCallParams",
 }
 
 OPERATION_TO_METHOD_CALL_PARAMS_TYPE = {
-    "update": "transactions.AppUpdateMethodCallParams",
-    "delete": "transactions.AppDeleteMethodCallParams",
-    "opt_in": "transactions.AppCallMethodCallParams",
-    "close_out": "transactions.AppCallMethodCallParams",
-    "call": "transactions.AppCallMethodCallParams",
+    "update": "algokit_utils.AppUpdateMethodCallParams",
+    "delete": "algokit_utils.AppDeleteMethodCallParams",
+    "opt_in": "algokit_utils.AppCallMethodCallParams",
+    "close_out": "algokit_utils.AppCallMethodCallParams",
+    "call": "algokit_utils.AppCallMethodCallParams",
 }
 
 
@@ -74,15 +74,15 @@ class CommonAppCallParams:
     account_references: list[str] | None = None
     app_references: list[int] | None = None
     asset_references: list[int] | None = None
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
-    extra_fee: models.AlgoAmount | None = None
+    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
+    extra_fee: algokit_utils.AlgoAmount | None = None
     lease: bytes | None = None
-    max_fee: models.AlgoAmount | None = None
+    max_fee: algokit_utils.AlgoAmount | None = None
     note: bytes | None = None
     rekey_to: str | None = None
     sender: str | None = None
     signer: TransactionSigner | None = None
-    static_fee: models.AlgoAmount | None = None
+    static_fee: algokit_utils.AlgoAmount | None = None
     validity_window: int | None = None
     first_valid_round: int | None = None
     last_valid_round: int | None = None
@@ -139,12 +139,12 @@ def _generate_common_method_params(  # noqa: C901
     params = []
     if args_type:
         params.append(f"args: {args_type}")
-    params.append("common_params: CommonAppCallParams | None = None")
+    params.append("params: CommonAppCallParams | None = None")
 
     if property_type == PropertyType.SEND:
-        params.append("send_params: models.SendParams | None = None")
+        params.append("send_params: algokit_utils.SendParams | None = None")
     if operation == "update":
-        params.append("compilation_params: applications.AppClientCompilationParams | None = None")
+        params.append("compilation_params: algokit_utils.AppClientCompilationParams | None = None")
 
     # Join parameters with proper indentation and line breaks
     params_str = ",\n    ".join(params)
@@ -157,12 +157,12 @@ def {method.abi.client_method_name}(
     # Add return type annotation if needed
     return_type = method.abi.python_type
     if property_type == PropertyType.SEND:
-        return_type = f"transactions.SendAppTransactionResult[{return_type}]"
+        return_type = f"algokit_utils.SendAppTransactionResult[{return_type}]"
     elif property_type == PropertyType.CREATE_TRANSACTION:
-        return_type = "transactions.BuiltTransactions"
+        return_type = "algokit_utils.BuiltTransactions"
     elif property_type == PropertyType.PARAMS:
         return_type = (
-            OPERATION_TO_METHOD_CALL_PARAMS_TYPE[operation or "call"] if method.abi else "transactions.AppCallParams"
+            OPERATION_TO_METHOD_CALL_PARAMS_TYPE[operation or "call"] if method.abi else "algokit_utils.AppCallParams"
         )
 
     params_def += f" -> {return_type}:"
@@ -180,17 +180,17 @@ def _generate_method_body(
 ) -> str:
     """Generate the common method body shared across different generator methods"""
     body = "    method_args = _parse_abi_args(args)" if include_args else ""
-    body += "\n    common_params = common_params or CommonAppCallParams()"
+    body += "\n    params = params or CommonAppCallParams()"
     if operation == "update":
-        body += "\n    compilation_params = compilation_params or applications.AppClientCompilationParams()"
+        body += "\n    compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()"
     method_sig = method.abi.method.get_signature() if method.abi else ""
 
     def alogkit_return_type(operation: str, method: ContractMethod) -> str:
         return_type = f"{method.abi.python_type}" if method.abi else ""
         if operation == "update":
-            return_type = f"transactions.SendAppUpdateTransactionResult[{return_type}]"
+            return_type = f"algokit_utils.SendAppUpdateTransactionResult[{return_type}]"
         else:
-            return_type = f"transactions.SendAppTransactionResult[{return_type}]"
+            return_type = f"algokit_utils.SendAppTransactionResult[{return_type}]"
         return return_type
 
     def parse_struct_if_needed(method: ContractMethod) -> str:
@@ -202,8 +202,8 @@ def _generate_method_body(
             )
         return "response"
 
-    call_params = f"""applications.AppClientMethodCallParams(**{{
-        **dataclasses.asdict(common_params),
+    call_params = f"""algokit_utils.AppClientMethodCallParams(**{{
+        **dataclasses.asdict(params),
         "method": "{method_sig}",{'''
         "args": method_args, ''' if include_args else ''}
     }})"""
@@ -242,7 +242,7 @@ def generate_operation_class(
 
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent
@@ -253,23 +253,23 @@ class {class_name}:
         if property_type == PropertyType.PARAMS:
             yield utils.indented(f"""
 def bare(
-    self, params: applications.AppClientBareCallParams | None = None
+    self, params: algokit_utils.AppClientBareCallParams | None = None
 ) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
     return self.app_client.params.bare.{operation}(params)
 """)
         elif property_type == PropertyType.CREATE_TRANSACTION:
             yield utils.indented(f"""
-def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
+def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
     return self.app_client.create_transaction.bare.{operation}(params)
 """)
         else:  # SEND
             yield utils.indented(f"""
 def bare(
     self,
-    params: applications.AppClientBareCallParams | None = None,
-    send_params: models.SendParams | None = None,
-    {'compilation_params: applications.AppClientCompilationParams | None = None' if operation == 'update' else ''}
-) -> transactions.SendAppTransactionResult:
+    params: algokit_utils.AppClientBareCallParams | None = None,
+    send_params: algokit_utils.SendParams | None = None,
+    {'compilation_params: algokit_utils.AppClientCompilationParams | None = None' if operation == 'update' else ''}
+) -> algokit_utils.SendAppTransactionResult:
     return self.app_client.send.bare.{operation}(
         params=params,
         send_params=send_params,
@@ -337,7 +337,7 @@ def _generate_class_methods(
     # Then generate the main class with properties
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent
@@ -395,8 +395,8 @@ def {operation}(self) -> "{operation_class}":
     yield utils.indented(f"""
 def clear_state(
     self,
-    params: applications.AppClientBareCallParams | None = None,
-    {'send_params: models.SendParams | None = None' if property_type == PropertyType.SEND else ''}
+    params: algokit_utils.AppClientBareCallParams | None = None,
+    {'send_params: algokit_utils.SendParams | None = None' if property_type == PropertyType.SEND else ''}
 ) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
     return self.app_client.{property_type.value}.bare.clear_state(
         params,
@@ -463,7 +463,7 @@ def generate_constructor_overloads(context: GeneratorContext) -> DocumentParts:
     """Generate constructor overloads"""
     yield utils.indented("""
 @typing.overload
-def __init__(self, app_client: applications.AppClient) -> None: ...
+def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
 
 @typing.overload
 def __init__(
@@ -472,7 +472,7 @@ def __init__(
     algorand: _AlgoKitAlgorandClient,
     app_id: int,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
@@ -485,12 +485,12 @@ def generate_constructor(context: GeneratorContext) -> DocumentParts:
     yield utils.indented(f"""
 def __init__(
     self,
-    app_client: applications.AppClient | None = None,
+    app_client: algokit_utils.AppClient | None = None,
     *,
     algorand: _AlgoKitAlgorandClient | None = None,
     app_id: int | None = None,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
@@ -498,8 +498,8 @@ def __init__(
     if app_client:
         self.app_client = app_client
     elif algorand and app_id:
-        self.app_client = applications.AppClient(
-            applications.AppClientParams(
+        self.app_client = algokit_utils.AppClient(
+            algokit_utils.AppClientParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_id=app_id,
@@ -528,15 +528,15 @@ def from_creator_and_name(
     creator_address: str,
     app_name: str,
     algorand: _AlgoKitAlgorandClient,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
     ignore_cache: bool | None = None,
-    app_lookup_cache: applications.AppLookup | None = None,
+    app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
 ) -> \"{context.contract_name}Client\":
     return {context.contract_name}Client(
-        applications.AppClient.from_creator_and_name(
+        algokit_utils.AppClient.from_creator_and_name(
             creator_address=creator_address,
             app_name=app_name,
             app_spec=APP_SPEC,
@@ -554,13 +554,13 @@ def from_creator_and_name(
 def from_network(
     algorand: _AlgoKitAlgorandClient,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
 ) -> \"{context.contract_name}Client\":
     return {context.contract_name}Client(
-        applications.AppClient.from_network(
+        algokit_utils.AppClient.from_network(
             app_spec=APP_SPEC,
             algorand=algorand,
             app_name=app_name,
@@ -589,7 +589,7 @@ def app_name(self) -> str:
     return self.app_client.app_name
 
 @property
-def app_spec(self) -> applications.Arc56Contract:
+def app_spec(self) -> algokit_utils.Arc56Contract:
     return self.app_client.app_spec
 
 @property
@@ -604,7 +604,7 @@ def generate_clone_method(context: GeneratorContext) -> DocumentParts:
 def clone(
     self,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
@@ -648,12 +648,12 @@ def generate_decode_return_value(context: GeneratorContext) -> DocumentParts:
 def decode_return_value(
     self,
     method: typing.Literal["{signature}"],
-    return_value: applications_abi.ABIReturn | None
+    return_value: algokit_utils.ABIReturn | None
 ) -> {overload_return}: ...
 """)
 
     # Create union of all possible return types
-    base_union = "applications_abi.ABIValue | applications_abi.ABIStruct"
+    base_union = "algokit_utils.ABIValue | algokit_utils.ABIStruct"
     return_union = f"{base_union}{' | None' if 'None' not in return_types else ''}" + (
         f" | {' | '.join(sorted(return_types))}" if return_types else ""
     )
@@ -664,7 +664,7 @@ def decode_return_value(
 def decode_return_value(
     self,
     method: str,
-    return_value: applications_abi.ABIReturn | None
+    return_value: algokit_utils.ABIReturn | None
 ) -> {base_union} | None: ...
 """)
 
@@ -673,7 +673,7 @@ def decode_return_value(
 def decode_return_value(
     self,
     method: str,
-    return_value: applications_abi.ABIReturn | None
+    return_value: algokit_utils.ABIReturn | None
 ) -> {return_union}:
     \"\"\"Decode ABI return value for the given method.\"\"\"
     if return_value is None:
@@ -825,7 +825,7 @@ def _generate_state_class(  # noqa: PLR0913
 
     yield utils.indented(f"""
 class {class_name}:
-    def __init__(self, app_client: applications.AppClient{extra_params}):
+    def __init__(self, app_client: algokit_utils.AppClient{extra_params}):
         self.app_client = app_client
         {'self.address = address' if extra_params else ''}
         # Pre-generated mapping of value types to their struct classes
@@ -908,7 +908,7 @@ def generate_state_methods(context: GeneratorContext) -> DocumentParts:
 class {context.contract_name}State:
     \"\"\"Methods to access state for the current {context.app_spec.name} app\"\"\"
 
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 """)
     yield Part.IncIndent

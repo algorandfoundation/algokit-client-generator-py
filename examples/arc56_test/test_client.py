@@ -20,7 +20,7 @@ from examples.arc56_test.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -28,7 +28,7 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 @pytest.fixture
 def arc56_test_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
 ) -> Arc56TestFactory:
     return algorand.client.get_typed_app_factory(
         Arc56TestFactory, default_sender=default_deployer.address
@@ -38,9 +38,11 @@ def arc56_test_factory(
 @pytest.fixture
 def arc56_test_client(state_factory: Arc56TestFactory) -> Arc56TestClient:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1},
-        deletable=True,
-        updatable=True,
+        compilation_params={
+            "deploy_time_params": {"VALUE": 1},
+            "deletable": True,
+            "updatable": True,
+        },
         on_update=OnUpdate.UpdateApp,
     )
     return client
@@ -49,7 +51,7 @@ def arc56_test_client(state_factory: Arc56TestFactory) -> Arc56TestClient:
 def test_arc56_demo(
     algorand: AlgorandClient,
     arc56_test_factory: Arc56TestFactory,
-    default_deployer: algokit_utils.Account,
+    default_deployer: algokit_utils.SigningAccount,
 ) -> None:
     client, result = arc56_test_factory.send.create.create_application(
         compilation_params={"deploy_time_params": {"someNumber": 1337}}
@@ -74,7 +76,7 @@ def test_arc56_demo(
         args=FooArgs(
             inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))
         ),
-        common_params=CommonAppCallParams(sender=bob.address),
+        params=CommonAppCallParams(sender=bob.address),
     )
     assert bob_outputs.abi_return
     assert bob_outputs.abi_return.sum == 3
@@ -85,7 +87,7 @@ def test_arc56_demo(
         args=FooArgs(
             inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))
         ),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             validity_window=50,
             note=b"Hello world",
         ),
@@ -106,7 +108,7 @@ def test_arc56_demo(
                         add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5)
                     )
                 ),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     validity_window=50,
                     note=b"Hello world",
                 ),
@@ -119,7 +121,7 @@ def test_arc56_demo(
                         add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5)
                     )
                 ),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     validity_window=50,
                     note=b"Hello world",
                 ),

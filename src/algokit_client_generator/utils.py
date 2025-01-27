@@ -223,7 +223,7 @@ def map_abi_type_to_python(  # noqa: C901, PLR0911
         case abi.ABIReferenceType.ACCOUNT:
             return "str | bytes"
         case _ if abi.is_abi_transaction_type(abi_type_str):
-            return "transactions.AppMethodCallTransactionArgument"
+            return "algokit_utils.AppMethodCallTransactionArgument"
         case _:
             try:
                 abi_type = abi.ABIType.from_string(abi_type_str)

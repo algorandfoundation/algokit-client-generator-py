@@ -16,12 +16,11 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions, clients
-from algokit_utils.applications import abi as applications_abi
+import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}}], "name": "ARC56Test", "state": {"keys": {"box": {"box_key": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"global_key": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"local_key": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"box_map": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"global_map": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"local_map": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "compilerInfo": {"compiler": "algod", "compilerVersion": {"commitHash": "0d10b244", "major": 3, "minor": 26, "patch": 0}}, "desc": "", "scratchVariables": {"some_number": {"slot": 200, "type": "uint64"}}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludGNibG9jayAxIFRNUExfc29tZU51bWJlcgpieXRlY2Jsb2NrIDB4NjI2Zjc4NGI2NTc5CgovLyBUaGlzIFRFQUwgd2FzIGdlbmVyYXRlZCBieSBURUFMU2NyaXB0IHYwLjEwNS4zCi8vIGh0dHBzOi8vZ2l0aHViLmNvbS9hbGdvcmFuZGZvdW5kYXRpb24vVEVBTFNjcmlwdAoKLy8gVGhpcyBjb250cmFjdCBpcyBjb21wbGlhbnQgd2l0aCBhbmQvb3IgaW1wbGVtZW50cyB0aGUgZm9sbG93aW5nIEFSQ3M6IFsgQVJDNCBdCgovLyBUaGUgZm9sbG93aW5nIHRlbiBsaW5lcyBvZiBURUFMIGhhbmRsZSBpbml0aWFsIHByb2dyYW0gZmxvdwovLyBUaGlzIHBhdHRlcm4gaXMgdXNlZCB0byBtYWtlIGl0IGVhc3kgZm9yIGFueW9uZSB0byBwYXJzZSB0aGUgc3RhcnQgb2YgdGhlIHByb2dyYW0gYW5kIGRldGVybWluZSBpZiBhIHNwZWNpZmljIGFjdGlvbiBpcyBhbGxvd2VkCi8vIEhlcmUsIGFjdGlvbiByZWZlcnMgdG8gdGhlIE9uQ29tcGxldGUgaW4gY29tYmluYXRpb24gd2l0aCB3aGV0aGVyIHRoZSBhcHAgaXMgYmVpbmcgY3JlYXRlZCBvciBjYWxsZWQKLy8gRXZlcnkgcG9zc2libGUgYWN0aW9uIGZvciB0aGlzIGNvbnRyYWN0IGlzIHJlcHJlc2VudGVkIGluIHRoZSBzd2l0Y2ggc3RhdGVtZW50Ci8vIElmIHRoZSBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoZSBjb250cmFjdCwgaXRzIHJlc3BlY3RpdmUgYnJhbmNoIHdpbGwgYmUgIipOT1RfSU1QTEVNRU5URUQiIHdoaWNoIGp1c3QgY29udGFpbnMgImVyciIKdHhuIEFwcGxpY2F0aW9uSUQKIQpwdXNoaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoICpjYWxsX05vT3AgKmNhbGxfT3B0SW4gKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqY3JlYXRlX05vT3AgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVECgoqTk9UX0lNUExFTUVOVEVEOgoJLy8gVGhlIHJlcXVlc3RlZCBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoaXMgY29udHJhY3QuIEFyZSB5b3UgdXNpbmcgdGhlIGNvcnJlY3QgT25Db21wbGV0ZT8gRGlkIHlvdSBzZXQgeW91ciBhcHAgSUQ/CgllcnIKCi8vIGZvbygoKHVpbnQ2NCx1aW50NjQpLCh1aW50NjQsdWludDY0KSkpKHVpbnQ2NCx1aW50NjQpCiphYmlfcm91dGVfZm9vOgoJLy8gVGhlIEFCSSByZXR1cm4gcHJlZml4CglwdXNoYnl0ZXMgMHgxNTFmN2M3NQoKCS8vIGlucHV0czogKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAxCglkdXAKCWxlbgoJcHVzaGludCAzMgoJPT0KCgkvLyBhcmd1bWVudCAwIChpbnB1dHMpIGZvciBmb28gbXVzdCBiZSBhICgodWludDY0LHVpbnQ2NCksKHVpbnQ2NCx1aW50NjQpKQoJYXNzZXJ0CgoJLy8gZXhlY3V0ZSBmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KQoJY2FsbHN1YiBmb28KCWNvbmNhdAoJbG9nCglpbnRjIDAgLy8gMQoJcmV0dXJuCgovLyBmb28oaW5wdXRzOiBJbnB1dHMpOiBPdXRwdXRzCmZvbzoKCXByb3RvIDEgMQoKCS8vICppZjBfY29uZGl0aW9uCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czozMAoJLy8gaW5wdXRzLnN1YnRyYWN0LmEgPCBpbnB1dHMuc3VidHJhY3QuYgoJZnJhbWVfZGlnIC0xIC8vIGlucHV0czogSW5wdXRzCglleHRyYWN0IDE2IDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAyNCA4CglidG9pCgk8CglieiAqaWYwX2VuZAoKCS8vICppZjBfY29uc2VxdWVudAoJLy8gc3VidHJhY3QuYSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiBzdWJ0cmFjdC5iCgllcnIKCippZjBfZW5kOgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzIKCS8vIHRoaXMuZ2xvYmFsS2V5LnZhbHVlID0gdGhpcy5zb21lTnVtYmVyCglwdXNoYnl0ZXMgMHg2NzZjNmY2MjYxNmM0YjY1NzkgLy8gImdsb2JhbEtleSIKCWludGMgMSAvLyBUTVBMX3NvbWVOdW1iZXIKCWFwcF9nbG9iYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzMKCS8vIHRoaXMuZ2xvYmFsTWFwKCdmb28nKS52YWx1ZSA9IHsgZm9vOiAxMywgYmFyOiAzNyB9CglwdXNoYnl0ZXMgMHg3MDAwMDM2NjZmNmYKCXB1c2hieXRlcyAweDAwMGQwMDI1CglhcHBfZ2xvYmFsX3B1dAoKCS8vIGV4YW1wbGVzL2FyYzU2X3Rlc3QvYXJjNTZfdGVzdC5hbGdvLnRzOjM1CgkvLyByZXR1cm4gewoJLy8gICAgICAgc3VtOiBpbnB1dHMuYWRkLmEgKyBpbnB1dHMuYWRkLmIsCgkvLyAgICAgICBkaWZmZXJlbmNlOiBpbnB1dHMuc3VidHJhY3QuYSAtIGlucHV0cy5zdWJ0cmFjdC5iLAoJLy8gICAgIH0KCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAwIDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCA4IDgKCWJ0b2kKCSsKCWl0b2IKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAxNiA4CglidG9pCglmcmFtZV9kaWcgLTEgLy8gaW5wdXRzOiBJbnB1dHMKCWV4dHJhY3QgMjQgOAoJYnRvaQoJLQoJaXRvYgoJY29uY2F0CglyZXRzdWIKCi8vIG9wdEluVG9BcHBsaWNhdGlvbigpdm9pZAoqYWJpX3JvdXRlX29wdEluVG9BcHBsaWNhdGlvbjoKCS8vIGV4ZWN1dGUgb3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkCgljYWxsc3ViIG9wdEluVG9BcHBsaWNhdGlvbgoJaW50YyAwIC8vIDEKCXJldHVybgoKLy8gb3B0SW5Ub0FwcGxpY2F0aW9uKCk6IHZvaWQKb3B0SW5Ub0FwcGxpY2F0aW9uOgoJcHJvdG8gMCAwCgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDIKCS8vIHRoaXMubG9jYWxLZXkodGhpcy50eG4uc2VuZGVyKS52YWx1ZSA9IHRoaXMuc29tZU51bWJlcgoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzRiNjU3OSAvLyAibG9jYWxLZXkiCglpbnRjIDEgLy8gVE1QTF9zb21lTnVtYmVyCglhcHBfbG9jYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDMKCS8vIHRoaXMubG9jYWxNYXAodGhpcy50eG4uc2VuZGVyLCAnZm9vJykudmFsdWUgPSAnYmFyJwoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NzA2NjZmNmYKCXB1c2hieXRlcyAweDAwMDM2MjYxNzIKCWFwcF9sb2NhbF9wdXQKCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czo0NAoJLy8gdGhpcy5ib3hLZXkudmFsdWUgPSAnYmF6JwoJYnl0ZWMgMCAvLyAgImJveEtleSIKCWR1cAoJYm94X2RlbAoJcG9wCglwdXNoYnl0ZXMgMHgwMDAzNjI2MTdhCglib3hfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDUKCS8vIHRoaXMuYm94TWFwKHsgYWRkOiB7IGE6IDEsIGI6IDIgfSwgc3VidHJhY3Q6IHsgYTogNCwgYjogMyB9IH0pLnZhbHVlID0gewoJLy8gICAgICAgc3VtOiAzLAoJLy8gICAgICAgZGlmZmVyZW5jZTogMSwKCS8vICAgICB9CglwdXNoYnl0ZXMgMHg3MDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyMDAwMDAwMDAwMDAwMDAwNDAwMDAwMDAwMDAwMDAwMDMKCXB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDAwMDAxCglib3hfcHV0CglyZXRzdWIKCiphYmlfcm91dGVfY3JlYXRlQXBwbGljYXRpb246CglpbnRjIDAgLy8gMQoJcmV0dXJuCgoqY3JlYXRlX05vT3A6CglwdXNoYnl0ZXMgMHhiODQ0N2IzNiAvLyBtZXRob2QgImNyZWF0ZUFwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9jcmVhdGVBcHBsaWNhdGlvbgoKCS8vIHRoaXMgY29udHJhY3QgZG9lcyBub3QgaW1wbGVtZW50IHRoZSBnaXZlbiBBQkkgbWV0aG9kIGZvciBjcmVhdGUgTm9PcAoJZXJyCgoqY2FsbF9Ob09wOgoJcHVzaGJ5dGVzIDB4Mzk2ZDU1MGUgLy8gbWV0aG9kICJmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KSIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoICphYmlfcm91dGVfZm9vCgoJLy8gdGhpcyBjb250cmFjdCBkb2VzIG5vdCBpbXBsZW1lbnQgdGhlIGdpdmVuIEFCSSBtZXRob2QgZm9yIGNhbGwgTm9PcAoJZXJyCgoqY2FsbF9PcHRJbjoKCXB1c2hieXRlcyAweDAxYTNhM2ZmIC8vIG1ldGhvZCAib3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9vcHRJblRvQXBwbGljYXRpb24KCgkvLyB0aGlzIGNvbnRyYWN0IGRvZXMgbm90IGltcGxlbWVudCB0aGUgZ2l2ZW4gQUJJIG1ldGhvZCBmb3IgY2FsbCBPcHRJbgoJZXJy", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEw"}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [1, 2], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 15}, {"pc": [3], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 16}, {"pc": [4, 5], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 17}, {"pc": [6], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 18}, {"pc": [7, 8], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 19}, {"pc": [9], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 20}, {"pc": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 21}, {"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 25}, {"pc": [37, 38, 39, 40, 41, 42], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 30}, {"pc": [43, 44, 45], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 33}, {"pc": [46], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 34}, {"pc": [47], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 35}, {"pc": [48, 49], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 36}, {"pc": [50], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 37}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 40}, {"pc": [52, 53, 54], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 43}, {"pc": [55], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 44}, {"pc": [56], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 45}, {"pc": [57], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 46}, {"pc": [58], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 47}, {"pc": [59, 60, 61], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 51}, {"pc": [62, 63], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 56}, {"pc": [64, 65, 66], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 57}, {"pc": [67], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 58}, {"pc": [68, 69], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 59}, {"pc": [70, 71, 72], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 60}, {"pc": [73], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 61}, {"pc": [74], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 62}, {"pc": [75, 76, 77], "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 63}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "source": "examples/arc56_test/arc56_test.algo.ts:30", "teal": 67}, {"pc": [79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 72}, {"pc": [90], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 73}, {"pc": [91], "source": "examples/arc56_test/arc56_test.algo.ts:32", "teal": 74}, {"pc": [92, 93, 94, 95, 96, 97, 98, 99], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 78}, {"pc": [100, 101, 102, 103, 104, 105], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 79}, {"pc": [106], "source": "examples/arc56_test/arc56_test.algo.ts:33", "teal": 80}, {"pc": [107, 108], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 87}, {"pc": [109, 110, 111], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 88}, {"pc": [112], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 89}, {"pc": [113, 114], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 90}, {"pc": [115, 116, 117], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 91}, {"pc": [118], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 92}, {"pc": [119], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 93}, {"pc": [120], "source": "examples/arc56_test/arc56_test.algo.ts:36", "teal": 94}, {"pc": [121, 122], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 95}, {"pc": [123, 124, 125], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 96}, {"pc": [126], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 97}, {"pc": [127, 128], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 98}, {"pc": [129, 130, 131], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 99}, {"pc": [132], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 100}, {"pc": [133], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 101}, {"pc": [134], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 102}, {"pc": [135], "source": "examples/arc56_test/arc56_test.algo.ts:37", "teal": 103}, {"pc": [136], "source": "examples/arc56_test/arc56_test.algo.ts:29", "teal": 104}, {"pc": [137, 138, 139], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 109}, {"pc": [140], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 110}, {"pc": [141], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 111}, {"pc": [142, 143, 144], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 115}, {"pc": [145, 146], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 119}, {"pc": [147, 148, 149, 150, 151, 152, 153, 154, 155, 156], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 120}, {"pc": [157], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 121}, {"pc": [158], "source": "examples/arc56_test/arc56_test.algo.ts:42", "teal": 122}, {"pc": [159, 160], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 126}, {"pc": [161, 162, 163, 164, 165, 166], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 127}, {"pc": [167, 168, 169, 170, 171, 172, 173], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 128}, {"pc": [174], "source": "examples/arc56_test/arc56_test.algo.ts:43", "teal": 129}, {"pc": [175], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 133}, {"pc": [176], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 134}, {"pc": [177], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 135}, {"pc": [178], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 136}, {"pc": [179, 180, 181, 182, 183, 184, 185], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 137}, {"pc": [186], "source": "examples/arc56_test/arc56_test.algo.ts:44", "teal": 138}, {"pc": [187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221], "source": "examples/arc56_test/arc56_test.algo.ts:45", "teal": 145}, {"pc": [222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239], "source": "examples/arc56_test/arc56_test.algo.ts:47", "teal": 146}, {"pc": [240], "source": "examples/arc56_test/arc56_test.algo.ts:45", "teal": 147}, {"pc": [241], "source": "examples/arc56_test/arc56_test.algo.ts:41", "teal": 148}, {"pc": [242], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 151}, {"pc": [243], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 152}, {"pc": [244, 245, 246, 247, 248, 249], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 155}, {"pc": [250, 251, 252], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 156}, {"pc": [253, 254, 255, 256], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 157}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 160}, {"pc": [258, 259, 260, 261, 262, 263], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 163}, {"pc": [264, 265, 266], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 164}, {"pc": [267, 268, 269, 270], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 165}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 168}, {"pc": [272, 273, 274, 275, 276, 277], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 171}, {"pc": [278, 279, 280], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 172}, {"pc": [281, 282, 283, 284], "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 173}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "source": "examples/arc56_test/arc56_test.algo.ts:11", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {"some_number": {"type": "uint64"}}}"""
-APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     """Helper to parse ABI args into the format expected by underlying client"""
@@ -44,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
     return [
-        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
         for arg in method_args
     ] if method_args else None
 
@@ -117,15 +116,15 @@ class CommonAppCallParams:
     account_references: list[str] | None = None
     app_references: list[int] | None = None
     asset_references: list[int] | None = None
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
-    extra_fee: models.AlgoAmount | None = None
+    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
+    extra_fee: algokit_utils.AlgoAmount | None = None
     lease: bytes | None = None
-    max_fee: models.AlgoAmount | None = None
+    max_fee: algokit_utils.AlgoAmount | None = None
     note: bytes | None = None
     rekey_to: str | None = None
     sender: str | None = None
     signer: TransactionSigner | None = None
-    static_fee: models.AlgoAmount | None = None
+    static_fee: algokit_utils.AlgoAmount | None = None
     validity_window: int | None = None
     first_valid_round: int | None = None
     last_valid_round: int | None = None
@@ -137,23 +136,23 @@ class CommonAppFactoryCallParams(CommonAppCallParams):
 
 
 class _Arc56TestOptIn:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def opt_in_to_application(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.opt_in(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "optInToApplication()void",
         }))
 
 
 class Arc56TestParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -163,32 +162,32 @@ class Arc56TestParams:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
             "args": method_args,
         }))
 
     def create_application(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "createApplication()void",
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
-    ) -> transactions.AppCallParams:
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.clear_state(
             params,
             
@@ -196,23 +195,23 @@ class Arc56TestParams:
 
 
 class _Arc56TestOptInTransaction:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def opt_in_to_application(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "optInToApplication()void",
         }))
 
 
 class Arc56TestCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -222,30 +221,30 @@ class Arc56TestCreateTransactionParams:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
             "args": method_args,
         }))
 
     def create_application(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "createApplication()void",
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
     ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(
@@ -255,26 +254,26 @@ class Arc56TestCreateTransactionParams:
 
 
 class _Arc56TestOptInSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def opt_in_to_application(
         self,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.opt_in(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "optInToApplication()void",
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
 
 class Arc56TestSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -284,38 +283,38 @@ class Arc56TestSend:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[Outputs]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[Outputs]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=Outputs(**typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(transactions.SendAppTransactionResult[Outputs], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[Outputs], parsed_response)
 
     def create_application(
         self,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "createApplication()void",
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[algokit_utils.ABIReturn]:
         return self.app_client.send.bare.clear_state(
             params,
             send_params=send_params,
@@ -337,7 +336,7 @@ class BoxStateValue(typing.TypedDict):
 class Arc56TestState:
     """Methods to access state for the current ARC56Test app"""
 
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -361,7 +360,7 @@ class Arc56TestState:
             return _BoxState(self.app_client)
 
 class _GlobalState:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
@@ -402,7 +401,7 @@ class _GlobalState:
         )
 
 class _LocalState:
-    def __init__(self, app_client: applications.AppClient, address: str):
+    def __init__(self, app_client: algokit_utils.AppClient, address: str):
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
@@ -441,7 +440,7 @@ class _LocalState:
         )
 
 class _BoxState:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
@@ -520,7 +519,7 @@ class Arc56TestClient:
     """Client for interacting with ARC56Test smart contract"""
 
     @typing.overload
-    def __init__(self, app_client: applications.AppClient) -> None: ...
+    def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
     
     @typing.overload
     def __init__(
@@ -529,7 +528,7 @@ class Arc56TestClient:
         algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -537,12 +536,12 @@ class Arc56TestClient:
 
     def __init__(
         self,
-        app_client: applications.AppClient | None = None,
+        app_client: algokit_utils.AppClient | None = None,
         *,
         algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -550,8 +549,8 @@ class Arc56TestClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = applications.AppClient(
-                applications.AppClientParams(
+            self.app_client = algokit_utils.AppClient(
+                algokit_utils.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -575,15 +574,15 @@ class Arc56TestClient:
         creator_address: str,
         app_name: str,
         algorand: _AlgoKitAlgorandClient,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
     ) -> "Arc56TestClient":
         return Arc56TestClient(
-            applications.AppClient.from_creator_and_name(
+            algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -601,13 +600,13 @@ class Arc56TestClient:
     def from_network(
         algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> "Arc56TestClient":
         return Arc56TestClient(
-            applications.AppClient.from_network(
+            algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -631,7 +630,7 @@ class Arc56TestClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -641,7 +640,7 @@ class Arc56TestClient:
     def clone(
         self,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -663,32 +662,32 @@ class Arc56TestClient:
     def decode_return_value(
         self,
         method: typing.Literal["foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> Outputs | None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["createApplication()void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["optInToApplication()void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None: ...
 
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | Outputs:
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | Outputs:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -709,7 +708,7 @@ class Arc56TestClient:
 
 @dataclasses.dataclass(frozen=True)
 class Arc56TestMethodCallCreateParams(
-    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+    algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         typing.Any,
         typing.Any,
     ]
@@ -717,16 +716,16 @@ class Arc56TestMethodCallCreateParams(
     """Parameters for creating Arc56Test contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
-        return applications.AppClientMethodCallCreateParams(
+        return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
             }
         )
 
-class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCreateParams, None, None]):
+class Arc56TestFactory(algokit_utils.TypedAppFactoryProtocol[Arc56TestMethodCallCreateParams, None, None]):
     """Factory for deploying and managing Arc56TestClient smart contracts"""
 
     def __init__(
@@ -734,24 +733,20 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
         algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         version: str | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ):
-        self.app_factory = applications.AppFactory(
-            params=applications.AppFactoryParams(
+        self.app_factory = algokit_utils.AppFactory(
+            params=algokit_utils.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
                 default_sender=default_sender,
                 default_signer=default_signer,
                 version=version,
-                updatable=updatable,
-                deletable=deletable,
-                deploy_time_params=deploy_time_params,
+                compilation_params=compilation_params,
             )
         )
         self.params = Arc56TestFactoryParams(self.app_factory)
@@ -763,7 +758,7 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -773,25 +768,19 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
     def deploy(
         self,
         *,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
-        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
+        on_update: algokit_utils.OnUpdate | None = None,
+        on_schema_break: algokit_utils.OnSchemaBreak | None = None,
         create_params: Arc56TestMethodCallCreateParams | None = None,
         update_params: None = None,
         delete_params: None = None,
-        existing_deployments: applications.AppLookup | None = None,
+        existing_deployments: algokit_utils.ApplicationLookup | None = None,
         ignore_cache: bool = False,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
         app_name: str | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool = False,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-    ) -> tuple[Arc56TestClient, applications.AppFactoryDeployResponse]:
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+    ) -> tuple[Arc56TestClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
-            deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
@@ -799,13 +788,9 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
             delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
-            updatable=updatable,
-            deletable=deletable,
             app_name=app_name,
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            compilation_params=compilation_params,
+            send_params=send_params,
         )
 
         return Arc56TestClient(deploy_response[0]), deploy_response[1]
@@ -814,10 +799,10 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
         self,
         creator_address: str,
         app_name: str,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> Arc56TestClient:
@@ -839,7 +824,7 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
         self,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -860,7 +845,7 @@ class Arc56TestFactory(protocols.TypedAppFactoryProtocol[Arc56TestMethodCallCrea
 class Arc56TestFactoryParams:
     """Parameters for creating transactions for Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = Arc56TestFactoryCreateParams(app_factory)
         self.update = Arc56TestFactoryUpdateParams(app_factory)
@@ -869,34 +854,34 @@ class Arc56TestFactoryParams:
 class Arc56TestFactoryCreateParams:
     """Parameters for 'create' operations of Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64) ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
@@ -907,15 +892,15 @@ class Arc56TestFactoryCreateParams:
     def create_application(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "createApplication()void",
                 "args": None,
                 }
@@ -926,15 +911,15 @@ class Arc56TestFactoryCreateParams:
     def opt_in_to_application(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the optInToApplication()void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "optInToApplication()void",
                 "args": None,
                 }
@@ -945,44 +930,44 @@ class Arc56TestFactoryCreateParams:
 class Arc56TestFactoryUpdateParams:
     """Parameters for 'update' operations of Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppUpdateParams:
+    ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 class Arc56TestFactoryDeleteParams:
     """Parameters for 'delete' operations of Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppDeleteParams:
+    ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 
 class Arc56TestFactoryCreateTransaction:
     """Create transactions for Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = Arc56TestFactoryCreateTransactionCreate(app_factory)
 
@@ -990,24 +975,24 @@ class Arc56TestFactoryCreateTransaction:
 class Arc56TestFactoryCreateTransactionCreate:
     """Create new instances of Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
 
 
 class Arc56TestFactorySend:
     """Send calls to Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = Arc56TestFactorySendCreate(app_factory)
 
@@ -1015,20 +1000,20 @@ class Arc56TestFactorySend:
 class Arc56TestFactorySendCreate:
     """Send create calls to Arc56Test contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None,
-    ) -> tuple[Arc56TestClient, transactions.SendAppCreateTransactionResult]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+    ) -> tuple[Arc56TestClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
             compilation_params=compilation_params
         )
@@ -1037,16 +1022,16 @@ class Arc56TestFactorySendCreate:
     def create_application(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> tuple[Arc56TestClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> tuple[Arc56TestClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
-            common_params = common_params or CommonAppFactoryCallParams()
+            params = params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
-                applications.AppFactoryCreateMethodCallParams(
+                algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
-                    **dataclasses.asdict(common_params),
+                    **dataclasses.asdict(params),
                     "method": "createApplication()void",
                     "args": None,
                     }
@@ -1056,7 +1041,7 @@ class Arc56TestFactorySendCreate:
             )
             return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return Arc56TestClient(client), applications.AppFactoryCreateMethodCallResult[None](
+            return Arc56TestClient(client), algokit_utils.AppFactoryCreateMethodCallResult[None](
                 **{
                     **result.__dict__,
                     "app_id": result.app_id,
@@ -1077,12 +1062,12 @@ class _Arc56TestOpt_inComposer:
         self.composer = composer
     def opt_in_to_application(
         self,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.opt_in.opt_in_to_application(
                 
-                common_params=common_params,
+                params=params,
                 
             )
         )
@@ -1100,7 +1085,7 @@ class Arc56TestComposer:
     def __init__(self, client: "Arc56TestClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def opt_in(self) -> "_Arc56TestOpt_inComposer":
@@ -1109,12 +1094,12 @@ class Arc56TestComposer:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.foo(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1126,12 +1111,12 @@ class Arc56TestComposer:
 
     def create_application(
         self,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
                 
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1145,14 +1130,14 @@ class Arc56TestComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        common_params: CommonAppCallParams | None = None,
+        params: CommonAppCallParams | None = None,
     ) -> "Arc56TestComposer":
-        common_params=common_params or CommonAppCallParams()
+        params=params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallParams(
+                algokit_utils.AppClientBareCallParams(
                     **{
-                        **dataclasses.asdict(common_params),
+                        **dataclasses.asdict(params),
                         "args": args
                     }
                 )
@@ -1166,7 +1151,7 @@ class Arc56TestComposer:
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> transactions.TransactionComposer:
+    def composer(self) -> algokit_utils.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -1178,7 +1163,7 @@ class Arc56TestComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: bool | None = None,
-    ) -> transactions.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -1191,6 +1176,6 @@ class Arc56TestComposer:
     
     def send(
         self,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAtomicTransactionComposerResults:
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)

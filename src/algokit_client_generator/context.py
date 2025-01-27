@@ -1,12 +1,11 @@
 import algokit_utils
-import algokit_utils.applications
 
 from algokit_client_generator import utils
 from algokit_client_generator.spec import ABIStruct, get_all_structs, get_contract_methods
 
 
 class GeneratorContext:
-    def __init__(self, app_spec: algokit_utils.applications.Arc56Contract, *, preserve_names: bool = False):
+    def __init__(self, app_spec: algokit_utils.Arc56Contract, *, preserve_names: bool = False):
         self.app_spec = app_spec
         self.structs: dict[str, ABIStruct] = {}
         self.sanitizer = utils.get_sanitizer(preserve_names=preserve_names)
@@ -14,7 +13,7 @@ class GeneratorContext:
         # Reserved module-level symbols to avoid naming conflicts
         self.used_module_symbols = {
             "_APP_SPEC_JSON",  # Used in app_spec.py to store raw JSON
-            "APP_SPEC",  # Used throughout as applications.Arc56Contract instance
+            "APP_SPEC",  # Used throughout as algokit_utils.Arc56Contract instance
             "DeployCreate",  # Used in typed_factory.py for deployment types
             "Deploy",  # Used in typed_factory.py for deployment types
             "Composer",  # Used in composer.py for transaction composition
@@ -23,8 +22,8 @@ class GeneratorContext:
         # Reserved client method/property names to avoid naming conflicts
         self.used_client_symbols = {
             "__init__",  # Constructor in typed_client.py
-            "app_spec",  # Property in typed_client.py returning applications.Arc56Contract
-            "app_client",  # Internal applications.AppClient instance in typed_client.py
+            "app_spec",  # Property in typed_client.py returning algokit_utils.Arc56Contract
+            "app_client",  # Internal algokit_utils.AppClient instance in typed_client.py
             "app_id",  # Property in typed_client.py returning application ID
             "app_address",  # Property in typed_client.py returning application address
             "no_op",  # Used for no-op transaction methods

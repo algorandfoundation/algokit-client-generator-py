@@ -16,12 +16,11 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions, clients
-from algokit_utils.applications import abi as applications_abi
+import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [], "name": "App", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "desc": "An app that has no abi methods", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMQp0eG4gTnVtQXBwQXJncwppbnRjXzAgLy8gMAo9PQpibnogbWFpbl9sMgplcnIKbWFpbl9sMjoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQpibnogbWFpbl9sOAp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sNwp0eG4gT25Db21wbGV0aW9uCnB1c2hpbnQgNSAvLyBEZWxldGVBcHBsaWNhdGlvbgo9PQpibnogbWFpbl9sNgplcnIKbWFpbl9sNjoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KYXNzZXJ0CmNhbGxzdWIgZGVsZXRlXzEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDc6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIHVwZGF0ZV8wCmludGNfMSAvLyAxCnJldHVybgptYWluX2w4Ogp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAo9PQphc3NlcnQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyB1cGRhdGUKdXBkYXRlXzA6CnByb3RvIDAgMAp0eG4gU2VuZGVyCmdsb2JhbCBDcmVhdG9yQWRkcmVzcwo9PQovLyB1bmF1dGhvcml6ZWQKYXNzZXJ0CnB1c2hpbnQgVE1QTF9VUERBVEFCTEUgLy8gVE1QTF9VUERBVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQphc3NlcnQKcmV0c3ViCgovLyBkZWxldGUKZGVsZXRlXzE6CnByb3RvIDAgMAp0eG4gU2VuZGVyCmdsb2JhbCBDcmVhdG9yQWRkcmVzcwo9PQovLyB1bmF1dGhvcml6ZWQKYXNzZXJ0CnB1c2hpbnQgVE1QTF9ERUxFVEFCTEUgLy8gVE1QTF9ERUxFVEFCTEUKLy8gQ2hlY2sgYXBwIGlzIGRlbGV0YWJsZQphc3NlcnQKcmV0c3Vi", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
-APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     """Helper to parse ABI args into the format expected by underlying client"""
@@ -44,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
     return [
-        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
         for arg in method_args
     ] if method_args else None
 
@@ -80,15 +79,15 @@ class CommonAppCallParams:
     account_references: list[str] | None = None
     app_references: list[int] | None = None
     asset_references: list[int] | None = None
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
-    extra_fee: models.AlgoAmount | None = None
+    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
+    extra_fee: algokit_utils.AlgoAmount | None = None
     lease: bytes | None = None
-    max_fee: models.AlgoAmount | None = None
+    max_fee: algokit_utils.AlgoAmount | None = None
     note: bytes | None = None
     rekey_to: str | None = None
     sender: str | None = None
     signer: TransactionSigner | None = None
-    static_fee: models.AlgoAmount | None = None
+    static_fee: algokit_utils.AlgoAmount | None = None
     validity_window: int | None = None
     first_valid_round: int | None = None
     last_valid_round: int | None = None
@@ -100,27 +99,27 @@ class CommonAppFactoryCallParams(CommonAppCallParams):
 
 
 class _AppUpdate:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallParams | None = None
-    ) -> transactions.AppUpdateParams:
+        self, params: algokit_utils.AppClientBareCallParams | None = None
+    ) -> algokit_utils.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
 
 class _AppDelete:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallParams | None = None
-    ) -> transactions.AppCallParams:
+        self, params: algokit_utils.AppClientBareCallParams | None = None
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
 
 class AppParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -133,9 +132,9 @@ class AppParams:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
-    ) -> transactions.AppCallParams:
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.clear_state(
             params,
             
@@ -143,23 +142,23 @@ class AppParams:
 
 
 class _AppUpdateTransaction:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
+    def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.update(params)
 
 
 class _AppDeleteTransaction:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
+    def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
 class AppCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -172,7 +171,7 @@ class AppCreateTransactionParams:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
     ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(
@@ -182,15 +181,15 @@ class AppCreateTransactionParams:
 
 
 class _AppUpdateSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.SendAppTransactionResult:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult:
         return self.app_client.send.bare.update(
             params=params,
             send_params=send_params,
@@ -199,15 +198,15 @@ class _AppUpdateSend:
 
 
 class _AppDeleteSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
         
-    ) -> transactions.SendAppTransactionResult:
+    ) -> algokit_utils.SendAppTransactionResult:
         return self.app_client.send.bare.delete(
             params=params,
             send_params=send_params,
@@ -216,7 +215,7 @@ class _AppDeleteSend:
 
 
 class AppSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -229,9 +228,9 @@ class AppSend:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[algokit_utils.ABIReturn]:
         return self.app_client.send.bare.clear_state(
             params,
             send_params=send_params,
@@ -241,14 +240,14 @@ class AppSend:
 class AppState:
     """Methods to access state for the current App app"""
 
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
 class AppClient:
     """Client for interacting with App smart contract"""
 
     @typing.overload
-    def __init__(self, app_client: applications.AppClient) -> None: ...
+    def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
     
     @typing.overload
     def __init__(
@@ -257,7 +256,7 @@ class AppClient:
         algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -265,12 +264,12 @@ class AppClient:
 
     def __init__(
         self,
-        app_client: applications.AppClient | None = None,
+        app_client: algokit_utils.AppClient | None = None,
         *,
         algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -278,8 +277,8 @@ class AppClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = applications.AppClient(
-                applications.AppClientParams(
+            self.app_client = algokit_utils.AppClient(
+                algokit_utils.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -303,15 +302,15 @@ class AppClient:
         creator_address: str,
         app_name: str,
         algorand: _AlgoKitAlgorandClient,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
     ) -> "AppClient":
         return AppClient(
-            applications.AppClient.from_creator_and_name(
+            algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -329,13 +328,13 @@ class AppClient:
     def from_network(
         algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> "AppClient":
         return AppClient(
-            applications.AppClient.from_network(
+            algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -359,7 +358,7 @@ class AppClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -369,7 +368,7 @@ class AppClient:
     def clone(
         self,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -390,8 +389,8 @@ class AppClient:
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None:
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -411,30 +410,30 @@ class AppClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallCreateParams(applications.AppClientBareCallCreateParams):
+class AppBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for creating App contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
-        return applications.AppClientBareCallCreateParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
+        return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallUpdateParams(applications.AppClientBareCallCreateParams):
+class AppBareCallUpdateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for calling App contract with bare calls"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallParams:
+        return algokit_utils.AppClientBareCallParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class AppBareCallDeleteParams(applications.AppClientBareCallCreateParams):
+class AppBareCallDeleteParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for calling App contract with bare calls"""
     on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallParams:
+        return algokit_utils.AppClientBareCallParams(**self.__dict__)
 
-class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppBareCallUpdateParams, AppBareCallDeleteParams]):
+class AppFactory(algokit_utils.TypedAppFactoryProtocol[AppBareCallCreateParams, AppBareCallUpdateParams, AppBareCallDeleteParams]):
     """Factory for deploying and managing AppClient smart contracts"""
 
     def __init__(
@@ -442,24 +441,20 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
         algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         version: str | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ):
-        self.app_factory = applications.AppFactory(
-            params=applications.AppFactoryParams(
+        self.app_factory = algokit_utils.AppFactory(
+            params=algokit_utils.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
                 default_sender=default_sender,
                 default_signer=default_signer,
                 version=version,
-                updatable=updatable,
-                deletable=deletable,
-                deploy_time_params=deploy_time_params,
+                compilation_params=compilation_params,
             )
         )
         self.params = AppFactoryParams(self.app_factory)
@@ -471,7 +466,7 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -481,25 +476,19 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
     def deploy(
         self,
         *,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
-        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
+        on_update: algokit_utils.OnUpdate | None = None,
+        on_schema_break: algokit_utils.OnSchemaBreak | None = None,
         create_params: AppBareCallCreateParams | None = None,
         update_params: AppBareCallUpdateParams | None = None,
         delete_params: AppBareCallDeleteParams | None = None,
-        existing_deployments: applications.AppLookup | None = None,
+        existing_deployments: algokit_utils.ApplicationLookup | None = None,
         ignore_cache: bool = False,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
         app_name: str | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool = False,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-    ) -> tuple[AppClient, applications.AppFactoryDeployResponse]:
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+    ) -> tuple[AppClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
-            deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
@@ -507,13 +496,9 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
             delete_params=delete_params.to_algokit_utils_params() if delete_params else None,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
-            updatable=updatable,
-            deletable=deletable,
             app_name=app_name,
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            compilation_params=compilation_params,
+            send_params=send_params,
         )
 
         return AppClient(deploy_response[0]), deploy_response[1]
@@ -522,10 +507,10 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
         self,
         creator_address: str,
         app_name: str,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> AppClient:
@@ -547,7 +532,7 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
         self,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -568,7 +553,7 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
 class AppFactoryParams:
     """Parameters for creating transactions for App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = AppFactoryCreateParams(app_factory)
         self.update = AppFactoryUpdateParams(app_factory)
@@ -577,62 +562,62 @@ class AppFactoryParams:
 class AppFactoryCreateParams:
     """Parameters for 'create' operations of App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
 class AppFactoryUpdateParams:
     """Parameters for 'update' operations of App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppUpdateParams:
+    ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 class AppFactoryDeleteParams:
     """Parameters for 'delete' operations of App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppDeleteParams:
+    ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 
 class AppFactoryCreateTransaction:
     """Create transactions for App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = AppFactoryCreateTransactionCreate(app_factory)
 
@@ -640,24 +625,24 @@ class AppFactoryCreateTransaction:
 class AppFactoryCreateTransactionCreate:
     """Create new instances of App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
 
 
 class AppFactorySend:
     """Send calls to App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = AppFactorySendCreate(app_factory)
 
@@ -665,20 +650,20 @@ class AppFactorySend:
 class AppFactorySendCreate:
     """Send create calls to App contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None,
-    ) -> tuple[AppClient, transactions.SendAppCreateTransactionResult]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+    ) -> tuple[AppClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
             compilation_params=compilation_params
         )
@@ -701,7 +686,7 @@ class AppComposer:
     def __init__(self, client: "AppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def update(self) -> "_AppUpdateComposer":
@@ -715,14 +700,14 @@ class AppComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        common_params: CommonAppCallParams | None = None,
+        params: CommonAppCallParams | None = None,
     ) -> "AppComposer":
-        common_params=common_params or CommonAppCallParams()
+        params=params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallParams(
+                algokit_utils.AppClientBareCallParams(
                     **{
-                        **dataclasses.asdict(common_params),
+                        **dataclasses.asdict(params),
                         "args": args
                     }
                 )
@@ -736,7 +721,7 @@ class AppComposer:
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> transactions.TransactionComposer:
+    def composer(self) -> algokit_utils.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -748,7 +733,7 @@ class AppComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: bool | None = None,
-    ) -> transactions.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -761,6 +746,6 @@ class AppComposer:
     
     def send(
         self,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAtomicTransactionComposerResults:
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)

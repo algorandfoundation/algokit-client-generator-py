@@ -52,7 +52,7 @@ class {class_name}:
     self.composer._composer.add_app_{OPERATION_TO_METHOD_CALL_PREFIX[operation]}_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
             {'args=args,' if method.abi.args else ''}
-            common_params=common_params,
+            params=params,
             {compilation_params}
         )
     )
@@ -100,7 +100,7 @@ class {context.contract_name}Composer:
     def __init__(self, client: "{context.contract_name}Client"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 """)
     yield Part.IncIndent
 
@@ -131,7 +131,7 @@ def {operation}(self) -> "{class_name}":
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
             {'args=args, ' if method.abi.args else ''}
-            common_params=common_params,
+            params=params,
         )
     )
     self._result_mappers.append(
@@ -149,14 +149,14 @@ def clear_state(
     self,
     *,
     args: list[bytes] | None = None,
-    common_params: CommonAppCallParams | None = None,
+    params: CommonAppCallParams | None = None,
 ) -> \"{context.contract_name}Composer\":
-    common_params=common_params or CommonAppCallParams()
+    params=params or CommonAppCallParams()
     self._composer.add_app_call(
         self.client.params.clear_state(
-            applications.AppClientBareCallParams(
+            algokit_utils.AppClientBareCallParams(
                 **{{
-                    **dataclasses.asdict(common_params),
+                    **dataclasses.asdict(params),
                     "args": args
                 }}
             )
@@ -170,7 +170,7 @@ def add_transaction(
     self._composer.add_transaction(txn, signer)
     return self
 
-def composer(self) -> transactions.TransactionComposer:
+def composer(self) -> algokit_utils.TransactionComposer:
     return self._composer
 
 def simulate(
@@ -182,7 +182,7 @@ def simulate(
     exec_trace_config: SimulateTraceConfig | None = None,
     simulation_round: int | None = None,
     skip_signatures: bool | None = None,
-) -> transactions.SendAtomicTransactionComposerResults:
+) -> algokit_utils.SendAtomicTransactionComposerResults:
     return self._composer.simulate(
         allow_more_logs=allow_more_logs,
         allow_empty_signatures=allow_empty_signatures,
@@ -195,8 +195,8 @@ def simulate(
 
 def send(
     self,
-    send_params: models.SendParams | None = None
-) -> transactions.SendAtomicTransactionComposerResults:
+    send_params: algokit_utils.SendParams | None = None
+) -> algokit_utils.SendAtomicTransactionComposerResults:
     return self._composer.send(send_params)
 """)
     yield Part.DecIndent

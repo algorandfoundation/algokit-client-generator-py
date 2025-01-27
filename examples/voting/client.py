@@ -16,12 +16,11 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions, clients
-from algokit_utils.applications import abi as applications_abi
+import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication"], "create": []}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "vote_id"}, {"type": "byte[]", "name": "snapshot_public_key"}, {"type": "string", "name": "metadata_ipfs_cid"}, {"type": "uint64", "name": "start_time"}, {"type": "uint64", "name": "end_time"}, {"type": "uint8[]", "name": "option_counts"}, {"type": "uint64", "name": "quorum"}, {"type": "string", "name": "nft_image_url"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}], "name": "bootstrap", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "close", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "desc": "The signature for the given voter account", "name": "signature"}], "name": "get_preconditions", "returns": {"type": "(uint64,uint64,uint64,uint64)", "desc": "The precondition values", "struct": "VotingPreconditions"}, "desc": "Returns the calculated pre-conditions for the voting round.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}, {"type": "byte[]", "name": "signature"}, {"type": "uint8[]", "name": "answer_ids"}], "name": "vote", "returns": {"type": "void"}, "events": []}], "name": "VotingRoundApp", "state": {"keys": {"box": {}, "global": {"close_time": {"key": "Y2xvc2VfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the time the vote was closed"}, "end_time": {"key": "ZW5kX3RpbWU=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the ending time of voting"}, "is_bootstrapped": {"key": "aXNfYm9vdHN0cmFwcGVk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "Whether or not the contract has been bootstrapped with answers"}, "metadata_ipfs_cid": {"key": "bWV0YWRhdGFfaXBmc19jaWQ=", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS content ID of the voting metadata file"}, "nft_asset_id": {"key": "bmZ0X2Fzc2V0X2lk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The asset ID of a result NFT if one has been created"}, "nft_image_url": {"key": "bmZ0X2ltYWdlX3VybA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS URL of the default image to use as the media of the result NFT"}, "option_counts": {"key": "b3B0aW9uX2NvdW50cw==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The number of options for each question"}, "quorum": {"key": "cXVvcnVt", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters to reach quorum"}, "snapshot_public_key": {"key": "c25hcHNob3RfcHVibGljX2tleQ==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The public key of the Ed25519 compatible private key that was used to encrypt entries in the vote gating snapshot"}, "start_time": {"key": "c3RhcnRfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the starting time of voting"}, "total_options": {"key": "dG90YWxfb3B0aW9ucw==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The total number of options"}, "vote_id": {"key": "dm90ZV9pZA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The identifier of this voting round"}, "voter_count": {"key": "dm90ZXJfY291bnQ=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters who have voted"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 5, "ints": 8}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"VotingPreconditions": [{"name": "is_voting_open", "type": "uint64"}, {"name": "is_allowed_to_vote", "type": "uint64"}, {"name": "has_already_voted", "type": "uint64"}, {"name": "current_time", "type": "uint64"}]}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMSAxMCA1CmJ5dGVjYmxvY2sgMHggMHgwNjgxMDEgMHg3NjZmNzQ2NTVmNjk2NCAweDZmNzA3NDY5NmY2ZTVmNjM2Zjc1NmU3NDczIDB4Njk3MzVmNjI2ZjZmNzQ3Mzc0NzI2MTcwNzA2NTY0IDB4NzY2Zjc0NjU3MjVmNjM2Zjc1NmU3NCAweDYzNmM2ZjczNjU1Zjc0Njk2ZDY1IDB4NzQ2Zjc0NjE2YzVmNmY3MDc0Njk2ZjZlNzMgMHg1NiAweDczNmU2MTcwNzM2ODZmNzQ1ZjcwNzU2MjZjNjk2MzVmNmI2NTc5IDB4NmQ2NTc0NjE2NDYxNzQ2MTVmNjk3MDY2NzM1ZjYzNjk2NCAweDczNzQ2MTcyNzQ1Zjc0Njk2ZDY1IDB4NjU2ZTY0NWY3NDY5NmQ2NSAweDcxNzU2ZjcyNzU2ZCAweDZlNjY3NDVmNjk2ZDYxNjc2NTVmNzU3MjZjIDB4NmU2Njc0NWY2MTczNzM2NTc0NWY2OTY0IDB4MmMKdHhuIE51bUFwcEFyZ3MKaW50Y18wIC8vIDAKPT0KYm56IG1haW5fbDEyCnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YWU4OTdmNmIgLy8gImNyZWF0ZShzdHJpbmcsYnl0ZVtdLHN0cmluZyx1aW50NjQsdWludDY0LHVpbnQ4W10sdWludDY0LHN0cmluZyl2b2lkIgo9PQpibnogbWFpbl9sMTEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhhNGU4ZDE2NCAvLyAiYm9vdHN0cmFwKHBheSl2b2lkIgo9PQpibnogbWFpbl9sMTAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg5NjU2MDQ3YSAvLyAiY2xvc2UoKXZvaWQiCj09CmJueiBtYWluX2w5CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4YmNiMTU4OTYgLy8gImdldF9wcmVjb25kaXRpb25zKGJ5dGVbXSkodWludDY0LHVpbnQ2NCx1aW50NjQsdWludDY0KSIKPT0KYm56IG1haW5fbDgKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg4NGE1M2M2ZSAvLyAidm90ZShwYXksYnl0ZVtdLHVpbnQ4W10pdm9pZCIKPT0KYm56IG1haW5fbDcKZXJyCm1haW5fbDc6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgdm90ZWNhc3Rlcl8xNAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sODoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBnZXRwcmVjb25kaXRpb25zY2FzdGVyXzEzCmludGNfMSAvLyAxCnJldHVybgptYWluX2w5Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CiYmCmFzc2VydApjYWxsc3ViIGNsb3NlY2FzdGVyXzEyCmludGNfMSAvLyAxCnJldHVybgptYWluX2wxMDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBib290c3RyYXBjYXN0ZXJfMTEKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDExOgp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CiYmCmFzc2VydApjYWxsc3ViIGNyZWF0ZWNhc3Rlcl8xMAppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sMTI6CnR4biBPbkNvbXBsZXRpb24KaW50Y18zIC8vIERlbGV0ZUFwcGxpY2F0aW9uCj09CmJueiBtYWluX2wxNAplcnIKbWFpbl9sMTQ6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIGRlbGV0ZV8wCmludGNfMSAvLyAxCnJldHVybgoKLy8gZGVsZXRlCmRlbGV0ZV8wOgpwcm90byAwIDAKdHhuIFNlbmRlcgpnbG9iYWwgQ3JlYXRvckFkZHJlc3MKPT0KLy8gdW5hdXRob3JpemVkCmFzc2VydApwdXNoaW50IFRNUExfREVMRVRBQkxFIC8vIFRNUExfREVMRVRBQkxFCi8vIENoZWNrIGFwcCBpcyBkZWxldGFibGUKYXNzZXJ0CnJldHN1YgoKLy8gY3JlYXRlCmNyZWF0ZV8xOgpwcm90byA4IDAKaW50Y18wIC8vIDAKZHVwCmJ5dGVjXzAgLy8gIiIKaW50Y18wIC8vIDAKZHVwbiAyCnB1c2hpbnQgMjgwMCAvLyAyODAwCmludGNfMiAvLyAxMAorCnN0b3JlIDAKY3JlYXRlXzFfbDE6CmxvYWQgMApnbG9iYWwgT3Bjb2RlQnVkZ2V0Cj4KYm56IGNyZWF0ZV8xX2w1CmZyYW1lX2RpZyAtNQpmcmFtZV9kaWcgLTQKPD0KLy8gRW5kIHRpbWUgc2hvdWxkIGJlIGFmdGVyIHN0YXJ0IHRpbWUKYXNzZXJ0CmZyYW1lX2RpZyAtNApnbG9iYWwgTGF0ZXN0VGltZXN0YW1wCj49Ci8vIEVuZCB0aW1lIHNob3VsZCBiZSBpbiB0aGUgZnV0dXJlCmFzc2VydAppbnRjXzAgLy8gMApieXRlY18yIC8vICJ2b3RlX2lkIgphcHBfZ2xvYmFsX2dldF9leApzdG9yZSAyCnN0b3JlIDEKbG9hZCAyCiEKYXNzZXJ0CmJ5dGVjXzIgLy8gInZvdGVfaWQiCmZyYW1lX2RpZyAtOApleHRyYWN0IDIgMAphcHBfZ2xvYmFsX3B1dAppbnRjXzAgLy8gMApieXRlYyA5IC8vICJzbmFwc2hvdF9wdWJsaWNfa2V5IgphcHBfZ2xvYmFsX2dldF9leApzdG9yZSA0CnN0b3JlIDMKbG9hZCA0CiEKYXNzZXJ0CmJ5dGVjIDkgLy8gInNuYXBzaG90X3B1YmxpY19rZXkiCmZyYW1lX2RpZyAtNwpleHRyYWN0IDIgMAphcHBfZ2xvYmFsX3B1dAppbnRjXzAgLy8gMApieXRlYyAxMCAvLyAibWV0YWRhdGFfaXBmc19jaWQiCmFwcF9nbG9iYWxfZ2V0X2V4CnN0b3JlIDYKc3RvcmUgNQpsb2FkIDYKIQphc3NlcnQKYnl0ZWMgMTAgLy8gIm1ldGFkYXRhX2lwZnNfY2lkIgpmcmFtZV9kaWcgLTYKZXh0cmFjdCAyIDAKYXBwX2dsb2JhbF9wdXQKaW50Y18wIC8vIDAKYnl0ZWMgMTEgLy8gInN0YXJ0X3RpbWUiCmFwcF9nbG9iYWxfZ2V0X2V4CnN0b3JlIDgKc3RvcmUgNwpsb2FkIDgKIQphc3NlcnQKYnl0ZWMgMTEgLy8gInN0YXJ0X3RpbWUiCmZyYW1lX2RpZyAtNQphcHBfZ2xvYmFsX3B1dAppbnRjXzAgLy8gMApieXRlYyAxMiAvLyAiZW5kX3RpbWUiCmFwcF9nbG9iYWxfZ2V0X2V4CnN0b3JlIDEwCnN0b3JlIDkKbG9hZCAxMAohCmFzc2VydApieXRlYyAxMiAvLyAiZW5kX3RpbWUiCmZyYW1lX2RpZyAtNAphcHBfZ2xvYmFsX3B1dAppbnRjXzAgLy8gMApieXRlYyAxMyAvLyAicXVvcnVtIgphcHBfZ2xvYmFsX2dldF9leApzdG9yZSAxMgpzdG9yZSAxMQpsb2FkIDEyCiEKYXNzZXJ0CmJ5dGVjIDEzIC8vICJxdW9ydW0iCmZyYW1lX2RpZyAtMgphcHBfZ2xvYmFsX3B1dApieXRlYyA0IC8vICJpc19ib290c3RyYXBwZWQiCmludGNfMCAvLyAwCmFwcF9nbG9iYWxfcHV0CmJ5dGVjIDUgLy8gInZvdGVyX2NvdW50IgppbnRjXzAgLy8gMAphcHBfZ2xvYmFsX3B1dApieXRlYyA2IC8vICJjbG9zZV90aW1lIgppbnRjXzAgLy8gMAphcHBfZ2xvYmFsX3B1dAppbnRjXzAgLy8gMApieXRlYyAxNCAvLyAibmZ0X2ltYWdlX3VybCIKYXBwX2dsb2JhbF9nZXRfZXgKc3RvcmUgMTQKc3RvcmUgMTMKbG9hZCAxNAohCmFzc2VydApieXRlYyAxNCAvLyAibmZ0X2ltYWdlX3VybCIKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmFwcF9nbG9iYWxfcHV0CmJ5dGVjIDE1IC8vICJuZnRfYXNzZXRfaWQiCmludGNfMCAvLyAwCmFwcF9nbG9iYWxfcHV0CmZyYW1lX2RpZyAtMwppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQxNgpmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKLy8gb3B0aW9uX2NvdW50cyBzaG91bGQgYmUgbm9uLWVtcHR5CmFzc2VydApmcmFtZV9kaWcgLTMKaW50Y18wIC8vIDAKZXh0cmFjdF91aW50MTYKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCnB1c2hpbnQgMTEyIC8vIDExMgo8PQovLyBDYW4ndCBoYXZlIG1vcmUgdGhhbiAxMTIgcXVlc3Rpb25zCmFzc2VydAppbnRjXzAgLy8gMApieXRlY18zIC8vICJvcHRpb25fY291bnRzIgphcHBfZ2xvYmFsX2dldF9leApzdG9yZSAxNgpzdG9yZSAxNQpsb2FkIDE2CiEKYXNzZXJ0CmJ5dGVjXzMgLy8gIm9wdGlvbl9jb3VudHMiCmZyYW1lX2RpZyAtMwphcHBfZ2xvYmFsX3B1dApieXRlY18zIC8vICJvcHRpb25fY291bnRzIgphcHBfZ2xvYmFsX2dldApmcmFtZV9idXJ5IDIKaW50Y18wIC8vIDAKc3RvcmUgMTgKZnJhbWVfZGlnIDIKaW50Y18wIC8vIDAKZXh0cmFjdF91aW50MTYKZnJhbWVfYnVyeSAzCmZyYW1lX2RpZyAzCnN0b3JlIDE5CmludGNfMCAvLyAwCnN0b3JlIDIwCmNyZWF0ZV8xX2wzOgpsb2FkIDIwCmxvYWQgMTkKPApieiBjcmVhdGVfMV9sNgpmcmFtZV9kaWcgMgppbnRjXzEgLy8gMQpsb2FkIDIwCioKcHVzaGludCAyIC8vIDIKKwpnZXRieXRlCmZyYW1lX2J1cnkgNApsb2FkIDE4CmZyYW1lX2RpZyA0CisKc3RvcmUgMTgKbG9hZCAyMAppbnRjXzEgLy8gMQorCnN0b3JlIDIwCmIgY3JlYXRlXzFfbDMKY3JlYXRlXzFfbDU6Cml0eG5fYmVnaW4KcHVzaGludCA2IC8vIGFwcGwKaXR4bl9maWVsZCBUeXBlRW51bQppbnRjXzAgLy8gMAppdHhuX2ZpZWxkIEZlZQppbnRjXzMgLy8gRGVsZXRlQXBwbGljYXRpb24KaXR4bl9maWVsZCBPbkNvbXBsZXRpb24KYnl0ZWNfMSAvLyAweDA2ODEwMQppdHhuX2ZpZWxkIEFwcHJvdmFsUHJvZ3JhbQpieXRlY18xIC8vIDB4MDY4MTAxCml0eG5fZmllbGQgQ2xlYXJTdGF0ZVByb2dyYW0KaXR4bl9zdWJtaXQKYiBjcmVhdGVfMV9sMQpjcmVhdGVfMV9sNjoKbG9hZCAxOApzdG9yZSAxNwpsb2FkIDE3CnB1c2hpbnQgMTI4IC8vIDEyOAo8PQovLyBDYW4ndCBoYXZlIG1vcmUgdGhhbiAxMjggdm90ZSBvcHRpb25zCmFzc2VydAppbnRjXzAgLy8gMApieXRlYyA3IC8vICJ0b3RhbF9vcHRpb25zIgphcHBfZ2xvYmFsX2dldF9leApzdG9yZSAyMgpzdG9yZSAyMQpsb2FkIDIyCiEKYXNzZXJ0CmJ5dGVjIDcgLy8gInRvdGFsX29wdGlvbnMiCmxvYWQgMTcKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBib290c3RyYXAKYm9vdHN0cmFwXzI6CnByb3RvIDEgMAppbnRjXzAgLy8gMAp0eG4gU2VuZGVyCmdsb2JhbCBDcmVhdG9yQWRkcmVzcwo9PQovLyB1bmF1dGhvcml6ZWQKYXNzZXJ0CmJ5dGVjIDQgLy8gImlzX2Jvb3RzdHJhcHBlZCIKYXBwX2dsb2JhbF9nZXQKIQovLyBBbHJlYWR5IGJvb3RzdHJhcHBlZAphc3NlcnQKYnl0ZWMgNCAvLyAiaXNfYm9vdHN0cmFwcGVkIgppbnRjXzEgLy8gMQphcHBfZ2xvYmFsX3B1dApwdXNoaW50IDIwMzkwMCAvLyAyMDM5MDAKYnl0ZWMgNyAvLyAidG90YWxfb3B0aW9ucyIKYXBwX2dsb2JhbF9nZXQKcHVzaGludCAzMjAwIC8vIDMyMDAKKgorCnN0b3JlIDIzCmZyYW1lX2RpZyAtMQpndHhucyBSZWNlaXZlcgpnbG9iYWwgQ3VycmVudEFwcGxpY2F0aW9uQWRkcmVzcwo9PQovLyBQYXltZW50IG11c3QgYmUgdG8gYXBwIGFkZHJlc3MKYXNzZXJ0CmxvYWQgMjMKaXRvYgpsb2cKZnJhbWVfZGlnIC0xCmd0eG5zIEFtb3VudApsb2FkIDIzCj09Ci8vIFBheW1lbnQgbXVzdCBiZSBmb3IgdGhlIGV4YWN0IG1pbiBiYWxhbmNlIHJlcXVpcmVtZW50CmFzc2VydApieXRlYyA4IC8vICJWIgpieXRlYyA3IC8vICJ0b3RhbF9vcHRpb25zIgphcHBfZ2xvYmFsX2dldApwdXNoaW50IDggLy8gOAoqCmJveF9jcmVhdGUKcG9wCnJldHN1YgoKLy8gY2xvc2UKY2xvc2VfMzoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKaW50Y18wIC8vIDAKZHVwbiAyCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCAyMDAwMCAvLyAyMDAwMAppbnRjXzIgLy8gMTAKKwpzdG9yZSAyNApjbG9zZV8zX2wxOgpsb2FkIDI0Cmdsb2JhbCBPcGNvZGVCdWRnZXQKPgpibnogY2xvc2VfM19sMTcKYnl0ZWMgNiAvLyAiY2xvc2VfdGltZSIKYXBwX2dsb2JhbF9nZXQKaW50Y18wIC8vIDAKPT0KLy8gQWxyZWFkeSBjbG9zZWQKYXNzZXJ0CmJ5dGVjIDYgLy8gImNsb3NlX3RpbWUiCmdsb2JhbCBMYXRlc3RUaW1lc3RhbXAKYXBwX2dsb2JhbF9wdXQKcHVzaGJ5dGVzIDB4N2IyMjczNzQ2MTZlNjQ2MTcyNjQyMjNhMjI2MTcyNjMzNjM5MjIyYzIyNjQ2NTczNjM3MjY5NzA3NDY5NmY2ZTIyM2EyMjU0Njg2OTczMjA2OTczMjA2MTIwNzY2Zjc0Njk2ZTY3MjA3MjY1NzM3NTZjNzQyMDRlNDY1NDIwNjY2ZjcyMjA3NjZmNzQ2OTZlNjcyMDcyNmY3NTZlNjQyMDc3Njk3NDY4MjA0OTQ0MjAgLy8gIntcInN0YW5kYXJkXCI6XCJhcmM2OVwiLFwiZGVzY3JpcHRpb25cIjpcIlRoaXMgaXMgYSB2b3RpbmcgcmVzdWx0IE5GVCBmb3Igdm90aW5nIHJvdW5kIHdpdGggSUQgIgpieXRlY18yIC8vICJ2b3RlX2lkIgphcHBfZ2xvYmFsX2dldApjb25jYXQKcHVzaGJ5dGVzIDB4MmUyMjJjMjI3MDcyNmY3MDY1NzI3NDY5NjU3MzIyM2E3YjIyNmQ2NTc0NjE2NDYxNzQ2MTIyM2EyMjY5NzA2NjczM2EyZjJmIC8vICIuXCIsXCJwcm9wZXJ0aWVzXCI6e1wibWV0YWRhdGFcIjpcImlwZnM6Ly8iCmNvbmNhdApieXRlYyAxMCAvLyAibWV0YWRhdGFfaXBmc19jaWQiCmFwcF9nbG9iYWxfZ2V0CmNvbmNhdApwdXNoYnl0ZXMgMHgyMjJjMjI2OTY0MjIzYTIyIC8vICJcIixcImlkXCI6XCIiCmNvbmNhdApieXRlY18yIC8vICJ2b3RlX2lkIgphcHBfZ2xvYmFsX2dldApjb25jYXQKcHVzaGJ5dGVzIDB4MjIyYzIyNzE3NTZmNzI3NTZkMjIzYSAvLyAiXCIsXCJxdW9ydW1cIjoiCmNvbmNhdApieXRlYyAxMyAvLyAicXVvcnVtIgphcHBfZ2xvYmFsX2dldApjYWxsc3ViIGl0b2FfNwpjb25jYXQKcHVzaGJ5dGVzIDB4MmMyMjc2NmY3NDY1NzI0MzZmNzU2ZTc0MjIzYSAvLyAiLFwidm90ZXJDb3VudFwiOiIKY29uY2F0CmJ5dGVjIDUgLy8gInZvdGVyX2NvdW50IgphcHBfZ2xvYmFsX2dldApjYWxsc3ViIGl0b2FfNwpjb25jYXQKcHVzaGJ5dGVzIDB4MmMyMjc0NjE2YzZjNjk2NTczMjIzYTViIC8vICIsXCJ0YWxsaWVzXCI6WyIKY29uY2F0CnN0b3JlIDI1CmJ5dGVjXzMgLy8gIm9wdGlvbl9jb3VudHMiCmFwcF9nbG9iYWxfZ2V0CmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMAppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQxNgpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKc3RvcmUgMjYKaW50Y18wIC8vIDAKc3RvcmUgMjcKaW50Y18wIC8vIDAKc3RvcmUgMjgKaW50Y18wIC8vIDAKc3RvcmUgMjkKY2xvc2VfM19sMzoKbG9hZCAyOQpsb2FkIDI2CjwKYnogY2xvc2VfM19sMTgKZnJhbWVfZGlnIDAKaW50Y18xIC8vIDEKbG9hZCAyOQoqCnB1c2hpbnQgMiAvLyAyCisKZ2V0Ynl0ZQpmcmFtZV9idXJ5IDIKZnJhbWVfZGlnIDIKc3RvcmUgMzAKaW50Y18wIC8vIDAKc3RvcmUgMzEKY2xvc2VfM19sNToKbG9hZCAzMQpsb2FkIDMwCjwKYm56IGNsb3NlXzNfbDcKbG9hZCAyOQppbnRjXzEgLy8gMQorCnN0b3JlIDI5CmIgY2xvc2VfM19sMwpjbG9zZV8zX2w3OgpwdXNoaW50IDggLy8gOApsb2FkIDI4CioKc3RvcmUgMzIKYnl0ZWMgOCAvLyAiViIKbG9hZCAzMgpwdXNoaW50IDggLy8gOApib3hfZXh0cmFjdApidG9pCnN0b3JlIDI3CmxvYWQgMjUKbG9hZCAzMQppbnRjXzAgLy8gMAo9PQpibnogY2xvc2VfM19sMTYKYnl0ZWNfMCAvLyAiIgpjbG9zZV8zX2w5Ogpjb25jYXQKbG9hZCAyNwpjYWxsc3ViIGl0b2FfNwpjb25jYXQKbG9hZCAzMQpsb2FkIDMwCmludGNfMSAvLyAxCi0KPT0KYm56IGNsb3NlXzNfbDEyCmJ5dGVjIDE2IC8vICIsIgpjbG9zZV8zX2wxMToKY29uY2F0CnN0b3JlIDI1CmxvYWQgMjgKaW50Y18xIC8vIDEKKwpzdG9yZSAyOApsb2FkIDMxCmludGNfMSAvLyAxCisKc3RvcmUgMzEKYiBjbG9zZV8zX2w1CmNsb3NlXzNfbDEyOgpwdXNoYnl0ZXMgMHg1ZCAvLyAiXSIKbG9hZCAyOQpsb2FkIDI2CmludGNfMSAvLyAxCi0KPT0KYm56IGNsb3NlXzNfbDE1CmJ5dGVjIDE2IC8vICIsIgpjbG9zZV8zX2wxNDoKY29uY2F0CmIgY2xvc2VfM19sMTEKY2xvc2VfM19sMTU6CmJ5dGVjXzAgLy8gIiIKYiBjbG9zZV8zX2wxNApjbG9zZV8zX2wxNjoKcHVzaGJ5dGVzIDB4NWIgLy8gIlsiCmIgY2xvc2VfM19sOQpjbG9zZV8zX2wxNzoKaXR4bl9iZWdpbgpwdXNoaW50IDYgLy8gYXBwbAppdHhuX2ZpZWxkIFR5cGVFbnVtCmludGNfMCAvLyAwCml0eG5fZmllbGQgRmVlCmludGNfMyAvLyBEZWxldGVBcHBsaWNhdGlvbgppdHhuX2ZpZWxkIE9uQ29tcGxldGlvbgpieXRlY18xIC8vIDB4MDY4MTAxCml0eG5fZmllbGQgQXBwcm92YWxQcm9ncmFtCmJ5dGVjXzEgLy8gMHgwNjgxMDEKaXR4bl9maWVsZCBDbGVhclN0YXRlUHJvZ3JhbQppdHhuX3N1Ym1pdApiIGNsb3NlXzNfbDEKY2xvc2VfM19sMTg6Cml0eG5fYmVnaW4KcHVzaGludCAzIC8vIGFjZmcKaXR4bl9maWVsZCBUeXBlRW51bQppbnRjXzEgLy8gMQppdHhuX2ZpZWxkIENvbmZpZ0Fzc2V0VG90YWwKaW50Y18wIC8vIDAKaXR4bl9maWVsZCBDb25maWdBc3NldERlY2ltYWxzCmludGNfMCAvLyAwCml0eG5fZmllbGQgQ29uZmlnQXNzZXREZWZhdWx0RnJvemVuCnB1c2hieXRlcyAweDViNTY0ZjU0NDUyMDUyNDU1MzU1NGM1NDVkMjAgLy8gIltWT1RFIFJFU1VMVF0gIgpieXRlY18yIC8vICJ2b3RlX2lkIgphcHBfZ2xvYmFsX2dldApjb25jYXQKaXR4bl9maWVsZCBDb25maWdBc3NldE5hbWUKcHVzaGJ5dGVzIDB4NTY0ZjU0NDU1MjUzNGM1NCAvLyAiVk9URVJTTFQiCml0eG5fZmllbGQgQ29uZmlnQXNzZXRVbml0TmFtZQpieXRlYyAxNCAvLyAibmZ0X2ltYWdlX3VybCIKYXBwX2dsb2JhbF9nZXQKaXR4bl9maWVsZCBDb25maWdBc3NldFVSTApsb2FkIDI1CnB1c2hieXRlcyAweDVkN2Q3ZCAvLyAiXX19Igpjb25jYXQKaXR4bl9maWVsZCBOb3RlCml0eG5fc3VibWl0CmJ5dGVjIDE1IC8vICJuZnRfYXNzZXRfaWQiCml0eG4gQ3JlYXRlZEFzc2V0SUQKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBhbGxvd2VkX3RvX3ZvdGUKYWxsb3dlZHRvdm90ZV80Ogpwcm90byAxIDEKcHVzaGludCAyMDAwIC8vIDIwMDAKaW50Y18yIC8vIDEwCisKc3RvcmUgMzMKYWxsb3dlZHRvdm90ZV80X2wxOgpsb2FkIDMzCmdsb2JhbCBPcGNvZGVCdWRnZXQKPgpieiBhbGxvd2VkdG92b3RlXzRfbDMKaXR4bl9iZWdpbgpwdXNoaW50IDYgLy8gYXBwbAppdHhuX2ZpZWxkIFR5cGVFbnVtCmludGNfMCAvLyAwCml0eG5fZmllbGQgRmVlCmludGNfMyAvLyBEZWxldGVBcHBsaWNhdGlvbgppdHhuX2ZpZWxkIE9uQ29tcGxldGlvbgpieXRlY18xIC8vIDB4MDY4MTAxCml0eG5fZmllbGQgQXBwcm92YWxQcm9ncmFtCmJ5dGVjXzEgLy8gMHgwNjgxMDEKaXR4bl9maWVsZCBDbGVhclN0YXRlUHJvZ3JhbQppdHhuX3N1Ym1pdApiIGFsbG93ZWR0b3ZvdGVfNF9sMQphbGxvd2VkdG92b3RlXzRfbDM6CnR4biBTZW5kZXIKZnJhbWVfZGlnIC0xCmJ5dGVjIDkgLy8gInNuYXBzaG90X3B1YmxpY19rZXkiCmFwcF9nbG9iYWxfZ2V0CmVkMjU1MTl2ZXJpZnlfYmFyZQpyZXRzdWIKCi8vIHZvdGluZ19vcGVuCnZvdGluZ29wZW5fNToKcHJvdG8gMCAxCmJ5dGVjIDQgLy8gImlzX2Jvb3RzdHJhcHBlZCIKYXBwX2dsb2JhbF9nZXQKaW50Y18xIC8vIDEKPT0KYnl0ZWMgNiAvLyAiY2xvc2VfdGltZSIKYXBwX2dsb2JhbF9nZXQKaW50Y18wIC8vIDAKPT0KJiYKZ2xvYmFsIExhdGVzdFRpbWVzdGFtcApieXRlYyAxMSAvLyAic3RhcnRfdGltZSIKYXBwX2dsb2JhbF9nZXQKPj0KJiYKZ2xvYmFsIExhdGVzdFRpbWVzdGFtcApieXRlYyAxMiAvLyAiZW5kX3RpbWUiCmFwcF9nbG9iYWxfZ2V0CjwKJiYKcmV0c3ViCgovLyBhbHJlYWR5X3ZvdGVkCmFscmVhZHl2b3RlZF82Ogpwcm90byAwIDEKYnl0ZWNfMCAvLyAiIgp0eG4gU2VuZGVyCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KcHVzaGludCAzMiAvLyAzMgo9PQphc3NlcnQKZnJhbWVfZGlnIDAKYm94X2xlbgpzdG9yZSAzNQpzdG9yZSAzNApsb2FkIDM1CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGl0b2EKaXRvYV83Ogpwcm90byAxIDEKZnJhbWVfZGlnIC0xCmludGNfMCAvLyAwCj09CmJueiBpdG9hXzdfbDUKZnJhbWVfZGlnIC0xCmludGNfMiAvLyAxMAovCmludGNfMCAvLyAwCj4KYm56IGl0b2FfN19sNApieXRlY18wIC8vICIiCml0b2FfN19sMzoKcHVzaGJ5dGVzIDB4MzAzMTMyMzMzNDM1MzYzNzM4MzkgLy8gIjAxMjM0NTY3ODkiCmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKJQppbnRjXzEgLy8gMQpleHRyYWN0Mwpjb25jYXQKYiBpdG9hXzdfbDYKaXRvYV83X2w0OgpmcmFtZV9kaWcgLTEKaW50Y18yIC8vIDEwCi8KY2FsbHN1YiBpdG9hXzcKYiBpdG9hXzdfbDMKaXRvYV83X2w1OgpwdXNoYnl0ZXMgMHgzMCAvLyAiMCIKaXRvYV83X2w2OgpyZXRzdWIKCi8vIGdldF9wcmVjb25kaXRpb25zCmdldHByZWNvbmRpdGlvbnNfODoKcHJvdG8gMSAxCmJ5dGVjXzAgLy8gIiIKaW50Y18wIC8vIDAKZHVwbiA1CmJ5dGVjXzAgLy8gIiIKZHVwCmNhbGxzdWIgdm90aW5nb3Blbl81CmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKY2FsbHN1YiBhbGxvd2VkdG92b3RlXzQKZnJhbWVfYnVyeSAyCmNhbGxzdWIgYWxyZWFkeXZvdGVkXzYKZnJhbWVfYnVyeSAzCmdsb2JhbCBMYXRlc3RUaW1lc3RhbXAKZnJhbWVfYnVyeSA0CmZyYW1lX2RpZyAxCml0b2IKZnJhbWVfZGlnIDIKaXRvYgpjb25jYXQKZnJhbWVfZGlnIDMKaXRvYgpjb25jYXQKZnJhbWVfZGlnIDQKaXRvYgpjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gdm90ZQp2b3RlXzk6CnByb3RvIDMgMApieXRlY18wIC8vICIiCmludGNfMCAvLyAwCmR1cG4gNwpieXRlY18wIC8vICIiCnB1c2hpbnQgNzcwMCAvLyA3NzAwCmludGNfMiAvLyAxMAorCnN0b3JlIDM2CnZvdGVfOV9sMToKbG9hZCAzNgpnbG9iYWwgT3Bjb2RlQnVkZ2V0Cj4KYm56IHZvdGVfOV9sNQpmcmFtZV9kaWcgLTIKZXh0cmFjdCAyIDAKY2FsbHN1YiBhbGxvd2VkdG92b3RlXzQKLy8gTm90IGFsbG93ZWQgdG8gdm90ZQphc3NlcnQKY2FsbHN1YiB2b3RpbmdvcGVuXzUKLy8gVm90aW5nIG5vdCBvcGVuCmFzc2VydApjYWxsc3ViIGFscmVhZHl2b3RlZF82CiEKLy8gQWxyZWFkeSB2b3RlZAphc3NlcnQKYnl0ZWNfMyAvLyAib3B0aW9uX2NvdW50cyIKYXBwX2dsb2JhbF9nZXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmludGNfMCAvLyAwCmV4dHJhY3RfdWludDE2CmZyYW1lX2J1cnkgMQpmcmFtZV9kaWcgMQpzdG9yZSAzNwpmcmFtZV9kaWcgLTEKaW50Y18wIC8vIDAKZXh0cmFjdF91aW50MTYKZnJhbWVfYnVyeSAyCmZyYW1lX2RpZyAyCmxvYWQgMzcKPT0KLy8gTnVtYmVyIG9mIGFuc3dlcnMgaW5jb3JyZWN0CmFzc2VydApwdXNoaW50IDI1MDAgLy8gMjUwMApwdXNoaW50IDM0IC8vIDM0CmludGNfMSAvLyAxCmZyYW1lX2RpZyAtMQppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQxNgpmcmFtZV9idXJ5IDQKZnJhbWVfZGlnIDQKKgorCnB1c2hpbnQgNDAwIC8vIDQwMAoqCisKc3RvcmUgMzgKZnJhbWVfZGlnIC0zCmd0eG5zIFJlY2VpdmVyCmdsb2JhbCBDdXJyZW50QXBwbGljYXRpb25BZGRyZXNzCj09Ci8vIFBheW1lbnQgbXVzdCBiZSB0byBhcHAgYWRkcmVzcwphc3NlcnQKbG9hZCAzOAppdG9iCmxvZwpmcmFtZV9kaWcgLTMKZ3R4bnMgQW1vdW50CmxvYWQgMzgKPT0KLy8gUGF5bWVudCBtdXN0IGJlIHRoZSBleGFjdCBtaW4gYmFsYW5jZSByZXF1aXJlbWVudAphc3NlcnQKaW50Y18wIC8vIDAKc3RvcmUgMzkKaW50Y18wIC8vIDAKc3RvcmUgNDAKdm90ZV85X2wzOgpsb2FkIDQwCmxvYWQgMzcKPApieiB2b3RlXzlfbDYKZnJhbWVfZGlnIC0xCmludGNfMSAvLyAxCmxvYWQgNDAKKgpwdXNoaW50IDIgLy8gMgorCmdldGJ5dGUKZnJhbWVfYnVyeSA1CmZyYW1lX2RpZyAwCmludGNfMSAvLyAxCmxvYWQgNDAKKgpwdXNoaW50IDIgLy8gMgorCmdldGJ5dGUKZnJhbWVfYnVyeSA3CmZyYW1lX2RpZyA1CmZyYW1lX2RpZyA3CjwKLy8gQW5zd2VyIG9wdGlvbiBpbmRleCBpbnZhbGlkCmFzc2VydApwdXNoaW50IDggLy8gOApsb2FkIDM5CmZyYW1lX2RpZyA1CisKKgpzdG9yZSA0MQpieXRlYyA4IC8vICJWIgpsb2FkIDQxCnB1c2hpbnQgOCAvLyA4CmJveF9leHRyYWN0CmJ0b2kKc3RvcmUgNDIKYnl0ZWMgOCAvLyAiViIKbG9hZCA0MQpsb2FkIDQyCmludGNfMSAvLyAxCisKaXRvYgpib3hfcmVwbGFjZQpsb2FkIDM5CmZyYW1lX2RpZyA3CisKc3RvcmUgMzkKbG9hZCA0MAppbnRjXzEgLy8gMQorCnN0b3JlIDQwCmIgdm90ZV85X2wzCnZvdGVfOV9sNToKaXR4bl9iZWdpbgpwdXNoaW50IDYgLy8gYXBwbAppdHhuX2ZpZWxkIFR5cGVFbnVtCmludGNfMCAvLyAwCml0eG5fZmllbGQgRmVlCmludGNfMyAvLyBEZWxldGVBcHBsaWNhdGlvbgppdHhuX2ZpZWxkIE9uQ29tcGxldGlvbgpieXRlY18xIC8vIDB4MDY4MTAxCml0eG5fZmllbGQgQXBwcm92YWxQcm9ncmFtCmJ5dGVjXzEgLy8gMHgwNjgxMDEKaXR4bl9maWVsZCBDbGVhclN0YXRlUHJvZ3JhbQppdHhuX3N1Ym1pdApiIHZvdGVfOV9sMQp2b3RlXzlfbDY6CnR4biBTZW5kZXIKZnJhbWVfYnVyeSA5CmZyYW1lX2RpZyA5CmxlbgpwdXNoaW50IDMyIC8vIDMyCj09CmFzc2VydApmcmFtZV9kaWcgOQpib3hfZGVsCnBvcApmcmFtZV9kaWcgOQpmcmFtZV9kaWcgLTEKYm94X3B1dApieXRlYyA1IC8vICJ2b3Rlcl9jb3VudCIKYnl0ZWMgNSAvLyAidm90ZXJfY291bnQiCmFwcF9nbG9iYWxfZ2V0CmludGNfMSAvLyAxCisKYXBwX2dsb2JhbF9wdXQKcmV0c3ViCgovLyBjcmVhdGVfY2FzdGVyCmNyZWF0ZWNhc3Rlcl8xMDoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwbiAyCmludGNfMCAvLyAwCmR1cApieXRlY18wIC8vICIiCmludGNfMCAvLyAwCmJ5dGVjXzAgLy8gIiIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgpmcmFtZV9idXJ5IDEKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwpmcmFtZV9idXJ5IDIKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNApidG9pCmZyYW1lX2J1cnkgMwp0eG5hIEFwcGxpY2F0aW9uQXJncyA1CmJ0b2kKZnJhbWVfYnVyeSA0CnR4bmEgQXBwbGljYXRpb25BcmdzIDYKZnJhbWVfYnVyeSA1CnR4bmEgQXBwbGljYXRpb25BcmdzIDcKYnRvaQpmcmFtZV9idXJ5IDYKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgOApmcmFtZV9idXJ5IDcKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKZnJhbWVfZGlnIDIKZnJhbWVfZGlnIDMKZnJhbWVfZGlnIDQKZnJhbWVfZGlnIDUKZnJhbWVfZGlnIDYKZnJhbWVfZGlnIDcKY2FsbHN1YiBjcmVhdGVfMQpyZXRzdWIKCi8vIGJvb3RzdHJhcF9jYXN0ZXIKYm9vdHN0cmFwY2FzdGVyXzExOgpwcm90byAwIDAKaW50Y18wIC8vIDAKdHhuIEdyb3VwSW5kZXgKaW50Y18xIC8vIDEKLQpmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKZ3R4bnMgVHlwZUVudW0KaW50Y18xIC8vIHBheQo9PQphc3NlcnQKZnJhbWVfZGlnIDAKY2FsbHN1YiBib290c3RyYXBfMgpyZXRzdWIKCi8vIGNsb3NlX2Nhc3RlcgpjbG9zZWNhc3Rlcl8xMjoKcHJvdG8gMCAwCmNhbGxzdWIgY2xvc2VfMwpyZXRzdWIKCi8vIGdldF9wcmVjb25kaXRpb25zX2Nhc3RlcgpnZXRwcmVjb25kaXRpb25zY2FzdGVyXzEzOgpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBnZXRwcmVjb25kaXRpb25zXzgKZnJhbWVfYnVyeSAwCnB1c2hieXRlcyAweDE1MWY3Yzc1IC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIHZvdGVfY2FzdGVyCnZvdGVjYXN0ZXJfMTQ6CnByb3RvIDAgMAppbnRjXzAgLy8gMApieXRlY18wIC8vICIiCmR1cAp0eG5hIEFwcGxpY2F0aW9uQXJncyAxCmZyYW1lX2J1cnkgMQp0eG5hIEFwcGxpY2F0aW9uQXJncyAyCmZyYW1lX2J1cnkgMgp0eG4gR3JvdXBJbmRleAppbnRjXzEgLy8gMQotCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApndHhucyBUeXBlRW51bQppbnRjXzEgLy8gcGF5Cj09CmFzc2VydApmcmFtZV9kaWcgMApmcmFtZV9kaWcgMQpmcmFtZV9kaWcgMgpjYWxsc3ViIHZvdGVfOQpyZXRzdWI=", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKcHVzaGludCAwIC8vIDAKcmV0dXJu"}}"""
-APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     """Helper to parse ABI args into the format expected by underlying client"""
@@ -44,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
     return [
-        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
         for arg in method_args
     ] if method_args else None
 
@@ -69,7 +68,7 @@ class VotingPreconditions:
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class BootstrapArgs:
     """Dataclass for bootstrap arguments"""
-    fund_min_bal_req: transactions.AppMethodCallTransactionArgument
+    fund_min_bal_req: algokit_utils.AppMethodCallTransactionArgument
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPreconditionsArgs:
@@ -79,7 +78,7 @@ class GetPreconditionsArgs:
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class VoteArgs:
     """Dataclass for vote arguments"""
-    fund_min_bal_req: transactions.AppMethodCallTransactionArgument
+    fund_min_bal_req: algokit_utils.AppMethodCallTransactionArgument
     signature: bytes | str
     answer_ids: list[int]
 
@@ -119,15 +118,15 @@ class CommonAppCallParams:
     account_references: list[str] | None = None
     app_references: list[int] | None = None
     asset_references: list[int] | None = None
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
-    extra_fee: models.AlgoAmount | None = None
+    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
+    extra_fee: algokit_utils.AlgoAmount | None = None
     lease: bytes | None = None
-    max_fee: models.AlgoAmount | None = None
+    max_fee: algokit_utils.AlgoAmount | None = None
     note: bytes | None = None
     rekey_to: str | None = None
     sender: str | None = None
     signer: TransactionSigner | None = None
-    static_fee: models.AlgoAmount | None = None
+    static_fee: algokit_utils.AlgoAmount | None = None
     validity_window: int | None = None
     first_valid_round: int | None = None
     last_valid_round: int | None = None
@@ -139,17 +138,17 @@ class CommonAppFactoryCallParams(CommonAppCallParams):
 
 
 class _VotingRoundAppDelete:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallParams | None = None
-    ) -> transactions.AppCallParams:
+        self, params: algokit_utils.AppClientBareCallParams | None = None
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
 
 class VotingRoundAppParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -158,50 +157,50 @@ class VotingRoundAppParams:
 
     def bootstrap(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "bootstrap(pay)void",
             "args": method_args,
         }))
 
     def close(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "close()void",
         }))
 
     def get_preconditions(
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
             "args": method_args,
         }))
 
     def vote(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "vote(pay,byte[],uint8[])void",
             "args": method_args,
         }))
@@ -209,21 +208,21 @@ class VotingRoundAppParams:
     def create(
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
             "args": method_args,
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
-    ) -> transactions.AppCallParams:
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.clear_state(
             params,
             
@@ -231,15 +230,15 @@ class VotingRoundAppParams:
 
 
 class _VotingRoundAppDeleteTransaction:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
+    def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
 class VotingRoundAppCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -248,50 +247,50 @@ class VotingRoundAppCreateTransactionParams:
 
     def bootstrap(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "bootstrap(pay)void",
             "args": method_args,
         }))
 
     def close(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "close()void",
         }))
 
     def get_preconditions(
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
             "args": method_args,
         }))
 
     def vote(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "vote(pay,byte[],uint8[])void",
             "args": method_args,
         }))
@@ -299,19 +298,19 @@ class VotingRoundAppCreateTransactionParams:
     def create(
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
             "args": method_args,
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
     ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(
@@ -321,15 +320,15 @@ class VotingRoundAppCreateTransactionParams:
 
 
 class _VotingRoundAppDeleteSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
         
-    ) -> transactions.SendAppTransactionResult:
+    ) -> algokit_utils.SendAppTransactionResult:
         return self.app_client.send.bare.delete(
             params=params,
             send_params=send_params,
@@ -338,7 +337,7 @@ class _VotingRoundAppDeleteSend:
 
 
 class VotingRoundAppSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -347,87 +346,87 @@ class VotingRoundAppSend:
 
     def bootstrap(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "bootstrap(pay)void",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def close(
         self,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "close()void",
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def get_preconditions(
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[VotingPreconditions]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[VotingPreconditions]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(transactions.SendAppTransactionResult[VotingPreconditions], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "vote(pay,byte[],uint8[])void",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def create(
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[algokit_utils.ABIReturn]:
         return self.app_client.send.bare.clear_state(
             params,
             send_params=send_params,
@@ -453,7 +452,7 @@ class GlobalStateValue(typing.TypedDict):
 class VotingRoundAppState:
     """Methods to access state for the current VotingRoundApp app"""
 
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -464,7 +463,7 @@ class VotingRoundAppState:
             return _GlobalState(self.app_client)
 
 class _GlobalState:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
@@ -581,7 +580,7 @@ class VotingRoundAppClient:
     """Client for interacting with VotingRoundApp smart contract"""
 
     @typing.overload
-    def __init__(self, app_client: applications.AppClient) -> None: ...
+    def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
     
     @typing.overload
     def __init__(
@@ -590,7 +589,7 @@ class VotingRoundAppClient:
         algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -598,12 +597,12 @@ class VotingRoundAppClient:
 
     def __init__(
         self,
-        app_client: applications.AppClient | None = None,
+        app_client: algokit_utils.AppClient | None = None,
         *,
         algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -611,8 +610,8 @@ class VotingRoundAppClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = applications.AppClient(
-                applications.AppClientParams(
+            self.app_client = algokit_utils.AppClient(
+                algokit_utils.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -636,15 +635,15 @@ class VotingRoundAppClient:
         creator_address: str,
         app_name: str,
         algorand: _AlgoKitAlgorandClient,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
     ) -> "VotingRoundAppClient":
         return VotingRoundAppClient(
-            applications.AppClient.from_creator_and_name(
+            algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -662,13 +661,13 @@ class VotingRoundAppClient:
     def from_network(
         algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> "VotingRoundAppClient":
         return VotingRoundAppClient(
-            applications.AppClient.from_network(
+            algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -692,7 +691,7 @@ class VotingRoundAppClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -702,7 +701,7 @@ class VotingRoundAppClient:
     def clone(
         self,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -724,44 +723,44 @@ class VotingRoundAppClient:
     def decode_return_value(
         self,
         method: typing.Literal["bootstrap(pay)void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["close()void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["get_preconditions(byte[])(uint64,uint64,uint64,uint64)"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> VotingPreconditions | None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["vote(pay,byte[],uint8[])void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None: ...
 
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | VotingPreconditions:
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | VotingPreconditions:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -782,7 +781,7 @@ class VotingRoundAppClient:
 
 @dataclasses.dataclass(frozen=True)
 class VotingRoundAppMethodCallCreateParams(
-    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+    algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
         typing.Literal["create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"],
     ]
@@ -790,9 +789,9 @@ class VotingRoundAppMethodCallCreateParams(
     """Parameters for creating VotingRoundApp contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
-        return applications.AppClientMethodCallCreateParams(
+        return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
@@ -800,14 +799,14 @@ class VotingRoundAppMethodCallCreateParams(
         )
 
 @dataclasses.dataclass(frozen=True)
-class VotingRoundAppBareCallDeleteParams(applications.AppClientBareCallCreateParams):
+class VotingRoundAppBareCallDeleteParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for calling VotingRoundApp contract with bare calls"""
     on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallParams:
+        return algokit_utils.AppClientBareCallParams(**self.__dict__)
 
-class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMethodCallCreateParams, None, VotingRoundAppBareCallDeleteParams]):
+class VotingRoundAppFactory(algokit_utils.TypedAppFactoryProtocol[VotingRoundAppMethodCallCreateParams, None, VotingRoundAppBareCallDeleteParams]):
     """Factory for deploying and managing VotingRoundAppClient smart contracts"""
 
     def __init__(
@@ -815,24 +814,20 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
         algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         version: str | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ):
-        self.app_factory = applications.AppFactory(
-            params=applications.AppFactoryParams(
+        self.app_factory = algokit_utils.AppFactory(
+            params=algokit_utils.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
                 default_sender=default_sender,
                 default_signer=default_signer,
                 version=version,
-                updatable=updatable,
-                deletable=deletable,
-                deploy_time_params=deploy_time_params,
+                compilation_params=compilation_params,
             )
         )
         self.params = VotingRoundAppFactoryParams(self.app_factory)
@@ -844,7 +839,7 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -854,25 +849,19 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
     def deploy(
         self,
         *,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
-        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
+        on_update: algokit_utils.OnUpdate | None = None,
+        on_schema_break: algokit_utils.OnSchemaBreak | None = None,
         create_params: VotingRoundAppMethodCallCreateParams | None = None,
         update_params: None = None,
         delete_params: VotingRoundAppBareCallDeleteParams | None = None,
-        existing_deployments: applications.AppLookup | None = None,
+        existing_deployments: algokit_utils.ApplicationLookup | None = None,
         ignore_cache: bool = False,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
         app_name: str | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool = False,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-    ) -> tuple[VotingRoundAppClient, applications.AppFactoryDeployResponse]:
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+    ) -> tuple[VotingRoundAppClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
-            deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
@@ -880,13 +869,9 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
             delete_params=delete_params.to_algokit_utils_params() if delete_params else None,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
-            updatable=updatable,
-            deletable=deletable,
             app_name=app_name,
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            compilation_params=compilation_params,
+            send_params=send_params,
         )
 
         return VotingRoundAppClient(deploy_response[0]), deploy_response[1]
@@ -895,10 +880,10 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
         self,
         creator_address: str,
         app_name: str,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> VotingRoundAppClient:
@@ -920,7 +905,7 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
         self,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -941,7 +926,7 @@ class VotingRoundAppFactory(protocols.TypedAppFactoryProtocol[VotingRoundAppMeth
 class VotingRoundAppFactoryParams:
     """Parameters for creating transactions for VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactoryCreateParams(app_factory)
         self.update = VotingRoundAppFactoryUpdateParams(app_factory)
@@ -950,34 +935,34 @@ class VotingRoundAppFactoryParams:
 class VotingRoundAppFactoryCreateParams:
     """Parameters for 'create' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
     def bootstrap(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the bootstrap(pay)void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "bootstrap(pay)void",
                 "args": _parse_abi_args(args),
                 }
@@ -988,15 +973,15 @@ class VotingRoundAppFactoryCreateParams:
     def close(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the close()void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "close()void",
                 "args": None,
                 }
@@ -1008,15 +993,15 @@ class VotingRoundAppFactoryCreateParams:
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the get_preconditions(byte[])(uint64,uint64,uint64,uint64) ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
@@ -1026,17 +1011,17 @@ class VotingRoundAppFactoryCreateParams:
 
     def vote(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the vote(pay,byte[],uint8[])void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "vote(pay,byte[],uint8[])void",
                 "args": _parse_abi_args(args),
                 }
@@ -1048,15 +1033,15 @@ class VotingRoundAppFactoryCreateParams:
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                 "args": _parse_abi_args(args),
                 }
@@ -1067,44 +1052,44 @@ class VotingRoundAppFactoryCreateParams:
 class VotingRoundAppFactoryUpdateParams:
     """Parameters for 'update' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppUpdateParams:
+    ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 class VotingRoundAppFactoryDeleteParams:
     """Parameters for 'delete' operations of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppDeleteParams:
+    ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 
 class VotingRoundAppFactoryCreateTransaction:
     """Create transactions for VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactoryCreateTransactionCreate(app_factory)
 
@@ -1112,24 +1097,24 @@ class VotingRoundAppFactoryCreateTransaction:
 class VotingRoundAppFactoryCreateTransactionCreate:
     """Create new instances of VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
 
 
 class VotingRoundAppFactorySend:
     """Send calls to VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = VotingRoundAppFactorySendCreate(app_factory)
 
@@ -1137,20 +1122,20 @@ class VotingRoundAppFactorySend:
 class VotingRoundAppFactorySendCreate:
     """Send create calls to VotingRoundApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None,
-    ) -> tuple[VotingRoundAppClient, transactions.SendAppCreateTransactionResult]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+    ) -> tuple[VotingRoundAppClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
             compilation_params=compilation_params
         )
@@ -1160,16 +1145,16 @@ class VotingRoundAppFactorySendCreate:
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> tuple[VotingRoundAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> tuple[VotingRoundAppClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void ABI method"""
-            common_params = common_params or CommonAppFactoryCallParams()
+            params = params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
-                applications.AppFactoryCreateMethodCallParams(
+                algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
-                    **dataclasses.asdict(common_params),
+                    **dataclasses.asdict(params),
                     "method": "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void",
                     "args": _parse_abi_args(args),
                     }
@@ -1179,7 +1164,7 @@ class VotingRoundAppFactorySendCreate:
             )
             return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return VotingRoundAppClient(client), applications.AppFactoryCreateMethodCallResult[None](
+            return VotingRoundAppClient(client), algokit_utils.AppFactoryCreateMethodCallResult[None](
                 **{
                     **result.__dict__,
                     "app_id": result.app_id,
@@ -1206,7 +1191,7 @@ class VotingRoundAppComposer:
     def __init__(self, client: "VotingRoundAppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def delete(self) -> "_VotingRoundAppDeleteComposer":
@@ -1214,13 +1199,13 @@ class VotingRoundAppComposer:
 
     def bootstrap(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | BootstrapArgs,
-        common_params: CommonAppCallParams | None = None
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
+        params: CommonAppCallParams | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.bootstrap(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1232,12 +1217,12 @@ class VotingRoundAppComposer:
 
     def close(
         self,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.close(
                 
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1250,12 +1235,12 @@ class VotingRoundAppComposer:
     def get_preconditions(
         self,
         args: tuple[bytes | str] | GetPreconditionsArgs,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_preconditions(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1267,13 +1252,13 @@ class VotingRoundAppComposer:
 
     def vote(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
-        common_params: CommonAppCallParams | None = None
+        args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
+        params: CommonAppCallParams | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vote(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1286,12 +1271,12 @@ class VotingRoundAppComposer:
     def create(
         self,
         args: tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
-        common_params: CommonAppCallParams | None = None
+        params: CommonAppCallParams | None = None
     ) -> "VotingRoundAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1305,14 +1290,14 @@ class VotingRoundAppComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        common_params: CommonAppCallParams | None = None,
+        params: CommonAppCallParams | None = None,
     ) -> "VotingRoundAppComposer":
-        common_params=common_params or CommonAppCallParams()
+        params=params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallParams(
+                algokit_utils.AppClientBareCallParams(
                     **{
-                        **dataclasses.asdict(common_params),
+                        **dataclasses.asdict(params),
                         "args": args
                     }
                 )
@@ -1326,7 +1311,7 @@ class VotingRoundAppComposer:
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> transactions.TransactionComposer:
+    def composer(self) -> algokit_utils.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -1338,7 +1323,7 @@ class VotingRoundAppComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: bool | None = None,
-    ) -> transactions.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -1351,6 +1336,6 @@ class VotingRoundAppComposer:
     
     def send(
         self,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAtomicTransactionComposerResults:
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)

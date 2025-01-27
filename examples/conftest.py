@@ -15,10 +15,10 @@ def algorand() -> algokit_utils.AlgorandClient:
 
 
 @pytest.fixture
-def new_account(algod_client: AlgodClient) -> algokit_utils.Account:
+def new_account(algod_client: AlgodClient) -> algokit_utils.SigningAccount:
     return algokit_utils.get_account(algod_client, get_unique_name())
 
 
 @pytest.fixture(scope="session")
-def funded_account(algod_client: AlgodClient) -> algokit_utils.Account:
+def funded_account(algod_client: AlgodClient) -> algokit_utils.SigningAccount:
     return algokit_utils.get_account(algod_client, get_unique_name())

@@ -4,9 +4,8 @@ import typing
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from algokit_utils.applications import Arc32Contract, Arc56Contract
-from algokit_utils.applications import Method as Arc56Method
-from algokit_utils.applications.app_spec.arc56 import CallEnum, CreateEnum, StructField
+from algokit_utils import Arc32Contract, Arc56Contract, CallEnum, CreateEnum, StructField
+from algokit_utils import Method as Arc56Method
 from algosdk.abi import Method
 
 from algokit_client_generator import utils

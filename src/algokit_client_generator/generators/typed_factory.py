@@ -44,11 +44,11 @@ def _generate_method_params(
         params.append(f"args: {args_type}")
 
     params.append("*")
-    params.append("common_params: CommonAppFactoryCallParams | None = None")
+    params.append("params: CommonAppFactoryCallParams | None = None")
     if include_send_params:
-        params.append("send_params: models.SendParams | None = None")
+        params.append("send_params: algokit_utils.SendParams | None = None")
     if include_compilation_params:
-        params.append("compilation_params: applications.AppClientCompilationParams | None = None")
+        params.append("compilation_params: algokit_utils.AppClientCompilationParams | None = None")
 
     param_str = ",\n    ".join(params)
     return f"""
@@ -71,13 +71,13 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
 
     yield Part.IncIndent
     yield utils.indented(f"""
-{method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
+{method_params} -> algokit_utils.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
-    common_params = common_params or CommonAppFactoryCallParams()
+    params = params or CommonAppFactoryCallParams()
     return self.app_factory.params.{operation}(
-        applications.AppFactoryCreateMethodCallParams(
+        algokit_utils.AppFactoryCreateMethodCallParams(
             **{{
-            **dataclasses.asdict(common_params),
+            **dataclasses.asdict(params),
             "method": "{method_sig}",
             "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
             }}
@@ -109,13 +109,13 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     )
 
     yield utils.indented(f"""
-    {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
+    {method_params} -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         client, result = self.app_factory.send.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "{method.abi.method.get_signature()}",
                 "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
                 }}
@@ -125,7 +125,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
         )
         return_value = None if result.abi_return is None else typing.cast({return_type}, result.abi_return)
 
-        return {context.contract_name}Client(client), applications.AppFactoryCreateMethodCallResult[{return_type}](
+        return {context.contract_name}Client(client), algokit_utils.AppFactoryCreateMethodCallResult[{return_type}](
             **{{
                 **result.__dict__,
                 "app_id": result.app_id,
@@ -151,19 +151,19 @@ def _generate_operation_params_class(context: GeneratorContext, operation: str) 
 class {class_name}:
     \"\"\"Parameters for '{operation}' operations of {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        {'compilation_params: applications.AppClientCompilationParams | None = None' if operation == 'create' else '' }
-    ) -> transactions.App{operation.title()}Params:
+        params: CommonAppFactoryCallParams | None = None,
+        {'compilation_params: algokit_utils.AppClientCompilationParams | None = None' if operation == 'create' else '' }
+    ) -> algokit_utils.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.{method_name}(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             {'compilation_params=compilation_params' if operation == 'create' else ''})
 """)
 
@@ -278,7 +278,7 @@ def _generate_abi_params_class(
     }
 
     class_name = f"{context.contract_name}MethodCall{type_suffix}Params"
-    create_schema = "applications.AppClientCreateSchema, " if is_create else ""
+    create_schema = "algokit_utils.AppClientCreateSchema, " if is_create else ""
     args_union_str = " | ".join(args_unions) if args_unions else "typing.Any"
     method_sig_str = " | ".join(method_signatures) if method_signatures else "typing.Any"
     on_complete_str = ", ".join(sorted(on_completes))
@@ -286,7 +286,7 @@ def _generate_abi_params_class(
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
 class {class_name}(
-    {create_schema}applications.BaseAppClientMethodCallParams[
+    {create_schema}algokit_utils.BaseAppClientMethodCallParams[
         {args_union_str},
         {method_sig_str},
     ]
@@ -294,9 +294,9 @@ class {class_name}(
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
     on_complete: typing.Literal[{on_complete_str}] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientMethodCall{'Create' if is_create else ''}Params:
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params:
         method_args = _parse_abi_args(self.args)
-        return applications.AppClientMethodCall{'Create' if is_create else ''}Params(
+        return algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params(
             **{{
                 **self.__dict__,
                 "args": method_args,
@@ -319,12 +319,12 @@ def _generate_bare_params_class(
 
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
-class {class_name}(applications.AppClientBareCallCreateParams):
+class {class_name}(algokit_utils.AppClientBareCallCreateParams):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
     on_complete: typing.Literal[{on_complete_options}] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCall{'Create' if is_create else ''}Params:
-        return applications.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCall{'Create' if is_create else ''}Params:
+        return algokit_utils.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
 """)
 
 
@@ -337,7 +337,7 @@ def generate_factory_class(  # noqa: PLR0915
     delete_type_names = " | ".join(type_names.delete)
     yield (
         f"class {context.contract_name}Factory("
-        f"protocols.TypedAppFactoryProtocol["
+        f"algokit_utils.TypedAppFactoryProtocol["
         f"{create_type_names or 'None'}, "
         f"{update_type_names or 'None'}, "
         f"{delete_type_names or 'None'}]):"
@@ -355,24 +355,20 @@ def __init__(
     algorand: _AlgoKitAlgorandClient,
     *,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     version: str | None = None,
-    updatable: bool | None = None,
-    deletable: bool | None = None,
-    deploy_time_params: models.TealTemplateParams | None = None,
+    compilation_params: algokit_utils.AppClientCompilationParams | None = None,
 ):
-    self.app_factory = applications.AppFactory(
-        params=applications.AppFactoryParams(
+    self.app_factory = algokit_utils.AppFactory(
+        params=algokit_utils.AppFactoryParams(
             algorand=algorand,
             app_spec=APP_SPEC,
             app_name=app_name,
             default_sender=default_sender,
             default_signer=default_signer,
             version=version,
-            updatable=updatable,
-            deletable=deletable,
-            deploy_time_params=deploy_time_params,
+            compilation_params=compilation_params,
         )
     )
     self.params = {context.contract_name}FactoryParams(self.app_factory)
@@ -388,7 +384,7 @@ def app_name(self) -> str:
     return self.app_factory.app_name
 
 @property
-def app_spec(self) -> applications.Arc56Contract:
+def app_spec(self) -> algokit_utils.Arc56Contract:
     return self.app_factory.app_spec
 
 @property
@@ -402,42 +398,32 @@ def algorand(self) -> _AlgoKitAlgorandClient:
     yield Part.IncIndent
     yield "self,"
     yield "*,"
-    yield "deploy_time_params: models.TealTemplateParams | None = None,"
-    yield "on_update: applications.OnUpdate = applications.OnUpdate.Fail,"
-    yield "on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,"
+    yield "on_update: algokit_utils.OnUpdate | None = None,"
+    yield "on_schema_break: algokit_utils.OnSchemaBreak | None = None,"
     for param in deploy_params:
         yield f"{param},"
-    yield "existing_deployments: applications.AppLookup | None = None,"
+    yield "existing_deployments: algokit_utils.ApplicationLookup | None = None,"
     yield "ignore_cache: bool = False,"
-    yield "updatable: bool | None = None,"
-    yield "deletable: bool | None = None,"
     yield "app_name: str | None = None,"
-    yield "max_rounds_to_wait: int | None = None,"
-    yield "suppress_log: bool = False,"
-    yield "populate_app_call_resources: bool | None = None,"
-    yield "cover_app_call_inner_txn_fees: bool | None = None,"
+    yield "compilation_params: algokit_utils.AppClientCompilationParams | None = None,"
+    yield "send_params: algokit_utils.SendParams | None = None,"
     yield Part.DecIndent
-    yield f") -> tuple[{context.contract_name}Client, applications.AppFactoryDeployResponse]:"
+    yield f") -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryDeployResult]:"
 
     yield Part.IncIndent
     yield utils.docstring("Deploy the application")
 
     yield "deploy_response = self.app_factory.deploy("
     yield Part.IncIndent
-    yield "deploy_time_params=deploy_time_params,"
     yield "on_update=on_update,"
     yield "on_schema_break=on_schema_break,"
     for arg in argument_forwarding:
         yield f"{arg},"
     yield "existing_deployments=existing_deployments,"
     yield "ignore_cache=ignore_cache,"
-    yield "updatable=updatable,"
-    yield "deletable=deletable,"
     yield "app_name=app_name,"
-    yield "max_rounds_to_wait=max_rounds_to_wait,"
-    yield "suppress_log=suppress_log,"
-    yield "populate_app_call_resources=populate_app_call_resources,"
-    yield "cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,"
+    yield "compilation_params=compilation_params,"
+    yield "send_params=send_params,"
     yield Part.DecIndent
     yield ")"
     yield Part.NewLine
@@ -451,10 +437,10 @@ def get_app_client_by_creator_and_name(
     self,
     creator_address: str,
     app_name: str,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     ignore_cache: bool | None = None,
-    app_lookup_cache: applications.AppLookup | None = None,
+    app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
 ) -> {context.contract_name}Client:""")
@@ -482,7 +468,7 @@ def get_app_client_by_id(
     self,
     app_id: int,
     app_name: str | None = None,
-    default_sender: str | bytes | None = None,
+    default_sender: str | None = None,
     default_signer: TransactionSigner | None = None,
     approval_source_map: SourceMap | None = None,
     clear_source_map: SourceMap | None = None,
@@ -513,7 +499,7 @@ def generate_factory_params(context: GeneratorContext) -> Iterator[DocumentParts
 class {context.contract_name}FactoryParams:
     \"\"\"Parameters for creating transactions for {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactoryCreateParams(app_factory)
         self.update = {context.contract_name}FactoryUpdateParams(app_factory)
@@ -532,7 +518,7 @@ def _generate_factory_create_transaction(context: GeneratorContext) -> Iterator[
 class {context.contract_name}FactoryCreateTransaction:
     \"\"\"Create transactions for {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactoryCreateTransactionCreate(app_factory)
 """)
@@ -544,7 +530,7 @@ def _generate_factory_send(context: GeneratorContext) -> Iterator[DocumentParts]
 class {context.contract_name}FactorySend:
     \"\"\"Send calls to {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = {context.contract_name}FactorySendCreate(app_factory)
 """)
@@ -556,17 +542,17 @@ def _generate_create_transaction_class(context: GeneratorContext) -> Iterator[Do
 class {context.contract_name}FactoryCreateTransactionCreate:
     \"\"\"Create new instances of {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
 """)
 
@@ -577,20 +563,20 @@ def _generate_send_class(context: GeneratorContext) -> Iterator[DocumentParts]:
 class {context.contract_name}FactorySendCreate:
     \"\"\"Send create calls to {context.contract_name} contract\"\"\"
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None,
-    ) -> tuple[{context.contract_name}Client, transactions.SendAppCreateTransactionResult]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+    ) -> tuple[{context.contract_name}Client, algokit_utils.SendAppCreateTransactionResult]:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
             compilation_params=compilation_params
         )

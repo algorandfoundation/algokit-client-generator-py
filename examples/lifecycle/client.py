@@ -16,12 +16,11 @@ from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
 from algosdk.v2client.models import SimulateTraceConfig
 # utils
-from algokit_utils import applications, models, protocols, transactions, clients
-from algokit_utils.applications import abi as applications_abi
+import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "desc": "The greeting", "name": "greeting"}], "name": "create", "returns": {"type": "string", "desc": "The formatted greeting"}, "desc": "ABI create method with 1 argument", "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "desc": "ABI create method with 2 arguments", "events": []}], "name": "LifeCycleApp", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDAgMSAxMApieXRlY2Jsb2NrIDB4IDB4NzQ2OTZkNjU3MyAweDY3NzI2NTY1NzQ2OTZlNjcgMHgxNTFmN2M3NQp0eG4gTnVtQXBwQXJncwppbnRjXzAgLy8gMAo9PQpibnogbWFpbl9sMTAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHgwMmJlY2UxMSAvLyAiaGVsbG8oc3RyaW5nKXN0cmluZyIKPT0KYm56IG1haW5fbDkKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHhhYjA2YzFhOCAvLyAiaGVsbG8oKXN0cmluZyIKPT0KYm56IG1haW5fbDgKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMApwdXNoYnl0ZXMgMHg5N2YxZmMxMSAvLyAiY3JlYXRlKHN0cmluZylzdHJpbmciCj09CmJueiBtYWluX2w3CnR4bmEgQXBwbGljYXRpb25BcmdzIDAKcHVzaGJ5dGVzIDB4NjAxOTMyNjQgLy8gImNyZWF0ZShzdHJpbmcsdWludDMyKXZvaWQiCj09CmJueiBtYWluX2w2CmVycgptYWluX2w2Ogp0eG4gT25Db21wbGV0aW9uCmludGNfMCAvLyBOb09wCj09CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCj09CiYmCmFzc2VydApjYWxsc3ViIGNyZWF0ZWNhc3Rlcl8xMQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sNzoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAo9PQomJgphc3NlcnQKY2FsbHN1YiBjcmVhdGVjYXN0ZXJfMTAKaW50Y18xIC8vIDEKcmV0dXJuCm1haW5fbDg6CnR4biBPbkNvbXBsZXRpb24KaW50Y18wIC8vIE5vT3AKPT0KdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKIT0KJiYKYXNzZXJ0CmNhbGxzdWIgaGVsbG9jYXN0ZXJfOQppbnRjXzEgLy8gMQpyZXR1cm4KbWFpbl9sOToKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQp0eG4gQXBwbGljYXRpb25JRAppbnRjXzAgLy8gMAohPQomJgphc3NlcnQKY2FsbHN1YiBoZWxsb2Nhc3Rlcl84CmludGNfMSAvLyAxCnJldHVybgptYWluX2wxMDoKdHhuIE9uQ29tcGxldGlvbgppbnRjXzAgLy8gTm9PcAo9PQpibnogbWFpbl9sMTYKdHhuIE9uQ29tcGxldGlvbgppbnRjXzEgLy8gT3B0SW4KPT0KYm56IG1haW5fbDE1CnR4biBPbkNvbXBsZXRpb24KcHVzaGludCA0IC8vIFVwZGF0ZUFwcGxpY2F0aW9uCj09CmJueiBtYWluX2wxNAplcnIKbWFpbl9sMTQ6CnR4biBBcHBsaWNhdGlvbklECmludGNfMCAvLyAwCiE9CmFzc2VydApjYWxsc3ViIHVwZGF0ZV8yCmludGNfMSAvLyAxCnJldHVybgptYWluX2wxNToKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgYmFyZWNyZWF0ZV81CmludGNfMSAvLyAxCnJldHVybgptYWluX2wxNjoKdHhuIEFwcGxpY2F0aW9uSUQKaW50Y18wIC8vIDAKPT0KYXNzZXJ0CmNhbGxzdWIgYmFyZWNyZWF0ZV81CmludGNfMSAvLyAxCnJldHVybgoKLy8gaW50X3RvX2FzY2lpCmludHRvYXNjaWlfMDoKcHJvdG8gMSAxCnB1c2hieXRlcyAweDMwMzEzMjMzMzQzNTM2MzczODM5IC8vICIwMTIzNDU2Nzg5IgpmcmFtZV9kaWcgLTEKaW50Y18xIC8vIDEKZXh0cmFjdDMKcmV0c3ViCgovLyBpdG9hCml0b2FfMToKcHJvdG8gMSAxCmZyYW1lX2RpZyAtMQppbnRjXzAgLy8gMAo9PQpibnogaXRvYV8xX2w1CmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKLwppbnRjXzAgLy8gMAo+CmJueiBpdG9hXzFfbDQKYnl0ZWNfMCAvLyAiIgppdG9hXzFfbDM6CmZyYW1lX2RpZyAtMQppbnRjXzIgLy8gMTAKJQpjYWxsc3ViIGludHRvYXNjaWlfMApjb25jYXQKYiBpdG9hXzFfbDYKaXRvYV8xX2w0OgpmcmFtZV9kaWcgLTEKaW50Y18yIC8vIDEwCi8KY2FsbHN1YiBpdG9hXzEKYiBpdG9hXzFfbDMKaXRvYV8xX2w1OgpwdXNoYnl0ZXMgMHgzMCAvLyAiMCIKaXRvYV8xX2w2OgpyZXRzdWIKCi8vIHVwZGF0ZQp1cGRhdGVfMjoKcHJvdG8gMCAwCnR4biBTZW5kZXIKZ2xvYmFsIENyZWF0b3JBZGRyZXNzCj09Ci8vIHVuYXV0aG9yaXplZAphc3NlcnQKcHVzaGludCBUTVBMX1VQREFUQUJMRSAvLyBUTVBMX1VQREFUQUJMRQovLyBDaGVjayBhcHAgaXMgdXBkYXRhYmxlCmFzc2VydApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzM6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCmJ5dGVjXzAgLy8gIiIKc3RvcmUgMAppbnRjXzAgLy8gMApzdG9yZSAxCmhlbGxvXzNfbDE6CmxvYWQgMQpieXRlY18xIC8vICJ0aW1lcyIKYXBwX2dsb2JhbF9nZXQKPApieiBoZWxsb18zX2wzCmxvYWQgMApieXRlY18yIC8vICJncmVldGluZyIKYXBwX2dsb2JhbF9nZXQKY29uY2F0CnB1c2hieXRlcyAweDJjMjAgLy8gIiwgIgpjb25jYXQKZnJhbWVfZGlnIC0xCmV4dHJhY3QgMiAwCmNvbmNhdApwdXNoYnl0ZXMgMHgwYSAvLyAiXG4iCmNvbmNhdApzdG9yZSAwCmxvYWQgMQppbnRjXzEgLy8gMQorCnN0b3JlIDEKYiBoZWxsb18zX2wxCmhlbGxvXzNfbDM6CmxvYWQgMApmcmFtZV9idXJ5IDAKZnJhbWVfZGlnIDAKbGVuCml0b2IKZXh0cmFjdCA2IDAKZnJhbWVfZGlnIDAKY29uY2F0CmZyYW1lX2J1cnkgMApyZXRzdWIKCi8vIGhlbGxvCmhlbGxvXzQ6CnByb3RvIDAgMQpieXRlY18wIC8vICIiCmJ5dGVjXzAgLy8gIiIKc3RvcmUgMgppbnRjXzAgLy8gMApzdG9yZSAzCmhlbGxvXzRfbDE6CmxvYWQgMwpieXRlY18xIC8vICJ0aW1lcyIKYXBwX2dsb2JhbF9nZXQKPApieiBoZWxsb180X2wzCmxvYWQgMgpieXRlY18yIC8vICJncmVldGluZyIKYXBwX2dsb2JhbF9nZXQKY29uY2F0CnB1c2hieXRlcyAweDJjMjA2ZDc5NzM3NDY1NzI3OTIwNzA2NTcyNzM2ZjZlMGEgLy8gIiwgbXlzdGVyeSBwZXJzb25cbiIKY29uY2F0CnN0b3JlIDIKbG9hZCAzCmludGNfMSAvLyAxCisKc3RvcmUgMwpiIGhlbGxvXzRfbDEKaGVsbG9fNF9sMzoKbG9hZCAyCmZyYW1lX2J1cnkgMApmcmFtZV9kaWcgMApsZW4KaXRvYgpleHRyYWN0IDYgMApmcmFtZV9kaWcgMApjb25jYXQKZnJhbWVfYnVyeSAwCnJldHN1YgoKLy8gYmFyZV9jcmVhdGUKYmFyZWNyZWF0ZV81Ogpwcm90byAwIDAKYnl0ZWNfMiAvLyAiZ3JlZXRpbmciCnB1c2hieXRlcyAweDQ4NjU2YzZjNmYgLy8gIkhlbGxvIgphcHBfZ2xvYmFsX3B1dApieXRlY18xIC8vICJ0aW1lcyIKaW50Y18xIC8vIDEKYXBwX2dsb2JhbF9wdXQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyBjcmVhdGUKY3JlYXRlXzY6CnByb3RvIDEgMQpieXRlY18wIC8vICIiCmJ5dGVjXzIgLy8gImdyZWV0aW5nIgpmcmFtZV9kaWcgLTEKZXh0cmFjdCAyIDAKYXBwX2dsb2JhbF9wdXQKYnl0ZWNfMSAvLyAidGltZXMiCmludGNfMSAvLyAxCmFwcF9nbG9iYWxfcHV0CmZyYW1lX2RpZyAtMQpleHRyYWN0IDIgMApwdXNoYnl0ZXMgMHg1ZiAvLyAiXyIKY29uY2F0CmJ5dGVjXzEgLy8gInRpbWVzIgphcHBfZ2xvYmFsX2dldApjYWxsc3ViIGl0b2FfMQpjb25jYXQKZnJhbWVfYnVyeSAwCmZyYW1lX2RpZyAwCmxlbgppdG9iCmV4dHJhY3QgNiAwCmZyYW1lX2RpZyAwCmNvbmNhdApmcmFtZV9idXJ5IDAKcmV0c3ViCgovLyBjcmVhdGUKY3JlYXRlXzc6CnByb3RvIDIgMApieXRlY18yIC8vICJncmVldGluZyIKZnJhbWVfZGlnIC0yCmV4dHJhY3QgMiAwCmFwcF9nbG9iYWxfcHV0CmJ5dGVjXzEgLy8gInRpbWVzIgpmcmFtZV9kaWcgLTEKYXBwX2dsb2JhbF9wdXQKaW50Y18xIC8vIDEKcmV0dXJuCgovLyBoZWxsb19jYXN0ZXIKaGVsbG9jYXN0ZXJfODoKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKZHVwCnR4bmEgQXBwbGljYXRpb25BcmdzIDEKZnJhbWVfYnVyeSAxCmZyYW1lX2RpZyAxCmNhbGxzdWIgaGVsbG9fMwpmcmFtZV9idXJ5IDAKYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBoZWxsb19jYXN0ZXIKaGVsbG9jYXN0ZXJfOToKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKY2FsbHN1YiBoZWxsb180CmZyYW1lX2J1cnkgMApieXRlY18zIC8vIDB4MTUxZjdjNzUKZnJhbWVfZGlnIDAKY29uY2F0CmxvZwpyZXRzdWIKCi8vIGNyZWF0ZV9jYXN0ZXIKY3JlYXRlY2FzdGVyXzEwOgpwcm90byAwIDAKYnl0ZWNfMCAvLyAiIgpkdXAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDEKY2FsbHN1YiBjcmVhdGVfNgpmcmFtZV9idXJ5IDAKYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CmZyYW1lX2RpZyAwCmNvbmNhdApsb2cKcmV0c3ViCgovLyBjcmVhdGVfY2FzdGVyCmNyZWF0ZWNhc3Rlcl8xMToKcHJvdG8gMCAwCmJ5dGVjXzAgLy8gIiIKaW50Y18wIC8vIDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQpmcmFtZV9idXJ5IDAKdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgppbnRjXzAgLy8gMApleHRyYWN0X3VpbnQzMgpmcmFtZV9idXJ5IDEKZnJhbWVfZGlnIDAKZnJhbWVfZGlnIDEKY2FsbHN1YiBjcmVhdGVfNwpyZXRzdWI=", "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50Y2Jsb2NrIDEKY2FsbHN1YiBjbGVhcl8wCmludGNfMCAvLyAxCnJldHVybgoKLy8gY2xlYXIKY2xlYXJfMDoKcHJvdG8gMCAwCmludGNfMCAvLyAxCnJldHVybg=="}}"""
-APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)
+APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     """Helper to parse ABI args into the format expected by underlying client"""
@@ -44,7 +43,7 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
     return [
-        convert_dataclass(arg) if not isinstance(arg, transactions.AppMethodCallTransactionArgument) else arg
+        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
         for arg in method_args
     ] if method_args else None
 
@@ -97,15 +96,15 @@ class CommonAppCallParams:
     account_references: list[str] | None = None
     app_references: list[int] | None = None
     asset_references: list[int] | None = None
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
-    extra_fee: models.AlgoAmount | None = None
+    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
+    extra_fee: algokit_utils.AlgoAmount | None = None
     lease: bytes | None = None
-    max_fee: models.AlgoAmount | None = None
+    max_fee: algokit_utils.AlgoAmount | None = None
     note: bytes | None = None
     rekey_to: str | None = None
     sender: str | None = None
     signer: TransactionSigner | None = None
-    static_fee: models.AlgoAmount | None = None
+    static_fee: algokit_utils.AlgoAmount | None = None
     validity_window: int | None = None
     first_valid_round: int | None = None
     last_valid_round: int | None = None
@@ -117,17 +116,17 @@ class CommonAppFactoryCallParams(CommonAppCallParams):
 
 
 class _LifeCycleAppUpdate:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallParams | None = None
-    ) -> transactions.AppUpdateParams:
+        self, params: algokit_utils.AppClientBareCallParams | None = None
+    ) -> algokit_utils.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
 
 class LifeCycleAppParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -137,36 +136,36 @@ class LifeCycleAppParams:
     def hello_string_string(
         self,
         args: tuple[str] | HelloStringStringArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello(string)string",
             "args": method_args,
         }))
 
     def hello_string(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello()string",
         }))
 
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string)string",
             "args": method_args,
         }))
@@ -174,21 +173,21 @@ class LifeCycleAppParams:
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.AppCallMethodCallParams:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,uint32)void",
             "args": method_args,
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
-    ) -> transactions.AppCallParams:
+    ) -> algokit_utils.AppCallParams:
         return self.app_client.params.bare.clear_state(
             params,
             
@@ -196,15 +195,15 @@ class LifeCycleAppParams:
 
 
 class _LifeCycleAppUpdateTransaction:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
+    def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.update(params)
 
 
 class LifeCycleAppCreateTransactionParams:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -214,36 +213,36 @@ class LifeCycleAppCreateTransactionParams:
     def hello_string_string(
         self,
         args: tuple[str] | HelloStringStringArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello(string)string",
             "args": method_args,
         }))
 
     def hello_string(
         self,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
     
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello()string",
         }))
 
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string)string",
             "args": method_args,
         }))
@@ -251,19 +250,19 @@ class LifeCycleAppCreateTransactionParams:
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
-        common_params: CommonAppCallParams | None = None
-    ) -> transactions.BuiltTransactions:
+        params: CommonAppCallParams | None = None
+    ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,uint32)void",
             "args": method_args,
         }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
+        params: algokit_utils.AppClientBareCallParams | None = None,
         
     ) -> Transaction:
         return self.app_client.create_transaction.bare.clear_state(
@@ -273,15 +272,15 @@ class LifeCycleAppCreateTransactionParams:
 
 
 class _LifeCycleAppUpdateSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def bare(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.SendAppTransactionResult:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult:
         return self.app_client.send.bare.update(
             params=params,
             send_params=send_params,
@@ -290,7 +289,7 @@ class _LifeCycleAppUpdateSend:
 
 
 class LifeCycleAppSend:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -300,70 +299,70 @@ class LifeCycleAppSend:
     def hello_string_string(
         self,
         args: tuple[str] | HelloStringStringArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[str]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello(string)string",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
 
     def hello_string(
         self,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[str]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[str]:
     
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "hello()string",
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
 
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[str]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string)string",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
 
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
-        common_params: CommonAppCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[None]:
+        params: CommonAppCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        common_params = common_params or CommonAppCallParams()
-        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
-            **dataclasses.asdict(common_params),
+        params = params or CommonAppCallParams()
+        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
+            **dataclasses.asdict(params),
             "method": "create(string,uint32)void",
             "args": method_args,
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallParams | None = None,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
+        params: algokit_utils.AppClientBareCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAppTransactionResult[algokit_utils.ABIReturn]:
         return self.app_client.send.bare.clear_state(
             params,
             send_params=send_params,
@@ -378,7 +377,7 @@ class GlobalStateValue(typing.TypedDict):
 class LifeCycleAppState:
     """Methods to access state for the current LifeCycleApp app"""
 
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
@@ -389,7 +388,7 @@ class LifeCycleAppState:
             return _GlobalState(self.app_client)
 
 class _GlobalState:
-    def __init__(self, app_client: applications.AppClient):
+    def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
@@ -429,7 +428,7 @@ class LifeCycleAppClient:
     """Client for interacting with LifeCycleApp smart contract"""
 
     @typing.overload
-    def __init__(self, app_client: applications.AppClient) -> None: ...
+    def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
     
     @typing.overload
     def __init__(
@@ -438,7 +437,7 @@ class LifeCycleAppClient:
         algorand: _AlgoKitAlgorandClient,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -446,12 +445,12 @@ class LifeCycleAppClient:
 
     def __init__(
         self,
-        app_client: applications.AppClient | None = None,
+        app_client: algokit_utils.AppClient | None = None,
         *,
         algorand: _AlgoKitAlgorandClient | None = None,
         app_id: int | None = None,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -459,8 +458,8 @@ class LifeCycleAppClient:
         if app_client:
             self.app_client = app_client
         elif algorand and app_id:
-            self.app_client = applications.AppClient(
-                applications.AppClientParams(
+            self.app_client = algokit_utils.AppClient(
+                algokit_utils.AppClientParams(
                     algorand=algorand,
                     app_spec=APP_SPEC,
                     app_id=app_id,
@@ -484,15 +483,15 @@ class LifeCycleAppClient:
         creator_address: str,
         app_name: str,
         algorand: _AlgoKitAlgorandClient,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
     ) -> "LifeCycleAppClient":
         return LifeCycleAppClient(
-            applications.AppClient.from_creator_and_name(
+            algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
                 app_spec=APP_SPEC,
@@ -510,13 +509,13 @@ class LifeCycleAppClient:
     def from_network(
         algorand: _AlgoKitAlgorandClient,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> "LifeCycleAppClient":
         return LifeCycleAppClient(
-            applications.AppClient.from_network(
+            algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
                 app_name=app_name,
@@ -540,7 +539,7 @@ class LifeCycleAppClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -550,7 +549,7 @@ class LifeCycleAppClient:
     def clone(
         self,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -572,38 +571,38 @@ class LifeCycleAppClient:
     def decode_return_value(
         self,
         method: typing.Literal["hello(string)string"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> str | None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["hello()string"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> str | None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["create(string)string"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> str | None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: typing.Literal["create(string,uint32)void"],
-        return_value: applications_abi.ABIReturn | None
+        return_value: algokit_utils.ABIReturn | None
     ) -> None: ...
     @typing.overload
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None: ...
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None: ...
 
     def decode_return_value(
         self,
         method: str,
-        return_value: applications_abi.ABIReturn | None
-    ) -> applications_abi.ABIValue | applications_abi.ABIStruct | None | str:
+        return_value: algokit_utils.ABIReturn | None
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | str:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -624,7 +623,7 @@ class LifeCycleAppClient:
 
 @dataclasses.dataclass(frozen=True)
 class LifeCycleAppMethodCallCreateParams(
-    applications.AppClientCreateSchema, applications.BaseAppClientMethodCallParams[
+    algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         tuple[str] | CreateStringStringArgs | tuple[str, int] | CreateStringUint32VoidArgs,
         typing.Literal["create(string)string"] | typing.Literal["create(string,uint32)void"],
     ]
@@ -632,9 +631,9 @@ class LifeCycleAppMethodCallCreateParams(
     """Parameters for creating LifeCycleApp contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientMethodCallCreateParams:
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
-        return applications.AppClientMethodCallCreateParams(
+        return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
                 "args": method_args,
@@ -642,22 +641,22 @@ class LifeCycleAppMethodCallCreateParams(
         )
 
 @dataclasses.dataclass(frozen=True)
-class LifeCycleAppBareCallCreateParams(applications.AppClientBareCallCreateParams):
+class LifeCycleAppBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for creating LifeCycleApp contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC, OnComplete.OptInOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallCreateParams:
-        return applications.AppClientBareCallCreateParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
+        return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class LifeCycleAppBareCallUpdateParams(applications.AppClientBareCallCreateParams):
+class LifeCycleAppBareCallUpdateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for calling LifeCycleApp contract with bare calls"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
-    def to_algokit_utils_params(self) -> applications.AppClientBareCallParams:
-        return applications.AppClientBareCallParams(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallParams:
+        return algokit_utils.AppClientBareCallParams(**self.__dict__)
 
-class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCallCreateParams | LifeCycleAppBareCallCreateParams, LifeCycleAppBareCallUpdateParams, None]):
+class LifeCycleAppFactory(algokit_utils.TypedAppFactoryProtocol[LifeCycleAppMethodCallCreateParams | LifeCycleAppBareCallCreateParams, LifeCycleAppBareCallUpdateParams, None]):
     """Factory for deploying and managing LifeCycleAppClient smart contracts"""
 
     def __init__(
@@ -665,24 +664,20 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         algorand: _AlgoKitAlgorandClient,
         *,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         version: str | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ):
-        self.app_factory = applications.AppFactory(
-            params=applications.AppFactoryParams(
+        self.app_factory = algokit_utils.AppFactory(
+            params=algokit_utils.AppFactoryParams(
                 algorand=algorand,
                 app_spec=APP_SPEC,
                 app_name=app_name,
                 default_sender=default_sender,
                 default_signer=default_signer,
                 version=version,
-                updatable=updatable,
-                deletable=deletable,
-                deploy_time_params=deploy_time_params,
+                compilation_params=compilation_params,
             )
         )
         self.params = LifeCycleAppFactoryParams(self.app_factory)
@@ -694,7 +689,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> applications.Arc56Contract:
+    def app_spec(self) -> algokit_utils.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -704,25 +699,19 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
     def deploy(
         self,
         *,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        on_update: applications.OnUpdate = applications.OnUpdate.Fail,
-        on_schema_break: applications.OnSchemaBreak = applications.OnSchemaBreak.Fail,
+        on_update: algokit_utils.OnUpdate | None = None,
+        on_schema_break: algokit_utils.OnSchemaBreak | None = None,
         create_params: LifeCycleAppMethodCallCreateParams | LifeCycleAppBareCallCreateParams | None = None,
         update_params: LifeCycleAppBareCallUpdateParams | None = None,
         delete_params: None = None,
-        existing_deployments: applications.AppLookup | None = None,
+        existing_deployments: algokit_utils.ApplicationLookup | None = None,
         ignore_cache: bool = False,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
         app_name: str | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool = False,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-    ) -> tuple[LifeCycleAppClient, applications.AppFactoryDeployResponse]:
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+    ) -> tuple[LifeCycleAppClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
-            deploy_time_params=deploy_time_params,
             on_update=on_update,
             on_schema_break=on_schema_break,
             create_params=create_params.to_algokit_utils_params() if create_params else None,
@@ -730,13 +719,9 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
             delete_params=delete_params,
             existing_deployments=existing_deployments,
             ignore_cache=ignore_cache,
-            updatable=updatable,
-            deletable=deletable,
             app_name=app_name,
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            compilation_params=compilation_params,
+            send_params=send_params,
         )
 
         return LifeCycleAppClient(deploy_response[0]), deploy_response[1]
@@ -745,10 +730,10 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         self,
         creator_address: str,
         app_name: str,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         ignore_cache: bool | None = None,
-        app_lookup_cache: applications.AppLookup | None = None,
+        app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
     ) -> LifeCycleAppClient:
@@ -770,7 +755,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
         self,
         app_id: int,
         app_name: str | None = None,
-        default_sender: str | bytes | None = None,
+        default_sender: str | None = None,
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
@@ -791,7 +776,7 @@ class LifeCycleAppFactory(protocols.TypedAppFactoryProtocol[LifeCycleAppMethodCa
 class LifeCycleAppFactoryParams:
     """Parameters for creating transactions for LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = LifeCycleAppFactoryCreateParams(app_factory)
         self.update = LifeCycleAppFactoryUpdateParams(app_factory)
@@ -800,34 +785,34 @@ class LifeCycleAppFactoryParams:
 class LifeCycleAppFactoryCreateParams:
     """Parameters for 'create' operations of LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
     def hello_string_string(
         self,
         args: tuple[str] | HelloStringStringArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the hello(string)string ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "hello(string)string",
                 "args": _parse_abi_args(args),
                 }
@@ -838,15 +823,15 @@ class LifeCycleAppFactoryCreateParams:
     def hello_string(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the hello()string ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "hello()string",
                 "args": None,
                 }
@@ -858,15 +843,15 @@ class LifeCycleAppFactoryCreateParams:
         self,
         args: tuple[str] | CreateStringStringArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the create(string)string ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "create(string)string",
                 "args": _parse_abi_args(args),
                 }
@@ -878,15 +863,15 @@ class LifeCycleAppFactoryCreateParams:
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> transactions.AppCreateMethodCallParams:
+        params: CommonAppFactoryCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the create(string,uint32)void ABI method"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
-            applications.AppFactoryCreateMethodCallParams(
+            algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
-                **dataclasses.asdict(common_params),
+                **dataclasses.asdict(params),
                 "method": "create(string,uint32)void",
                 "args": _parse_abi_args(args),
                 }
@@ -897,44 +882,44 @@ class LifeCycleAppFactoryCreateParams:
 class LifeCycleAppFactoryUpdateParams:
     """Parameters for 'update' operations of LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppUpdateParams:
+    ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 class LifeCycleAppFactoryDeleteParams:
     """Parameters for 'delete' operations of LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
         
-    ) -> transactions.AppDeleteParams:
+    ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
 
 class LifeCycleAppFactoryCreateTransaction:
     """Create transactions for LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = LifeCycleAppFactoryCreateTransactionCreate(app_factory)
 
@@ -942,24 +927,24 @@ class LifeCycleAppFactoryCreateTransaction:
 class LifeCycleAppFactoryCreateTransactionCreate:
     """Create new instances of LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
-        common_params: CommonAppFactoryCallParams | None = None,
+        params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
 
 
 class LifeCycleAppFactorySend:
     """Send calls to LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
         self.create = LifeCycleAppFactorySendCreate(app_factory)
 
@@ -967,20 +952,20 @@ class LifeCycleAppFactorySend:
 class LifeCycleAppFactorySendCreate:
     """Send create calls to LifeCycleApp contract"""
 
-    def __init__(self, app_factory: applications.AppFactory):
+    def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
 
     def bare(
         self,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None,
-    ) -> tuple[LifeCycleAppClient, transactions.SendAppCreateTransactionResult]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None,
+    ) -> tuple[LifeCycleAppClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        common_params = common_params or CommonAppFactoryCallParams()
+        params = params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
             compilation_params=compilation_params
         )
@@ -990,16 +975,16 @@ class LifeCycleAppFactorySendCreate:
         self,
         args: tuple[str] | CreateStringStringArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[str]]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> tuple[LifeCycleAppClient, algokit_utils.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create(string)string ABI method"""
-            common_params = common_params or CommonAppFactoryCallParams()
+            params = params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
-                applications.AppFactoryCreateMethodCallParams(
+                algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
-                    **dataclasses.asdict(common_params),
+                    **dataclasses.asdict(params),
                     "method": "create(string)string",
                     "args": _parse_abi_args(args),
                     }
@@ -1009,7 +994,7 @@ class LifeCycleAppFactorySendCreate:
             )
             return_value = None if result.abi_return is None else typing.cast(str, result.abi_return)
     
-            return LifeCycleAppClient(client), applications.AppFactoryCreateMethodCallResult[str](
+            return LifeCycleAppClient(client), algokit_utils.AppFactoryCreateMethodCallResult[str](
                 **{
                     **result.__dict__,
                     "app_id": result.app_id,
@@ -1028,16 +1013,16 @@ class LifeCycleAppFactorySendCreate:
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
         *,
-        common_params: CommonAppFactoryCallParams | None = None,
-        send_params: models.SendParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
-    ) -> tuple[LifeCycleAppClient, applications.AppFactoryCreateMethodCallResult[None]]:
+        params: CommonAppFactoryCallParams | None = None,
+        send_params: algokit_utils.SendParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
+    ) -> tuple[LifeCycleAppClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
-            common_params = common_params or CommonAppFactoryCallParams()
+            params = params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
-                applications.AppFactoryCreateMethodCallParams(
+                algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
-                    **dataclasses.asdict(common_params),
+                    **dataclasses.asdict(params),
                     "method": "create(string,uint32)void",
                     "args": _parse_abi_args(args),
                     }
@@ -1047,7 +1032,7 @@ class LifeCycleAppFactorySendCreate:
             )
             return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
-            return LifeCycleAppClient(client), applications.AppFactoryCreateMethodCallResult[None](
+            return LifeCycleAppClient(client), algokit_utils.AppFactoryCreateMethodCallResult[None](
                 **{
                     **result.__dict__,
                     "app_id": result.app_id,
@@ -1074,7 +1059,7 @@ class LifeCycleAppComposer:
     def __init__(self, client: "LifeCycleAppClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[applications_abi.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 
     @property
     def update(self) -> "_LifeCycleAppUpdateComposer":
@@ -1083,13 +1068,13 @@ class LifeCycleAppComposer:
     def hello_string_string(
         self,
         args: tuple[str] | HelloStringStringArgs,
-        common_params: CommonAppCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
+        params: CommonAppCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello_string_string(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1101,13 +1086,13 @@ class LifeCycleAppComposer:
 
     def hello_string(
         self,
-        common_params: CommonAppCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
+        params: CommonAppCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello_string(
                 
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1120,13 +1105,13 @@ class LifeCycleAppComposer:
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
-        common_params: CommonAppCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
+        params: CommonAppCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_string_string(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1139,13 +1124,13 @@ class LifeCycleAppComposer:
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
-        common_params: CommonAppCallParams | None = None,
-        compilation_params: applications.AppClientCompilationParams | None = None
+        params: CommonAppCallParams | None = None,
+        compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "LifeCycleAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_string_uint32_void(
                 args=args,
-                common_params=common_params,
+                params=params,
             )
         )
         self._result_mappers.append(
@@ -1159,14 +1144,14 @@ class LifeCycleAppComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        common_params: CommonAppCallParams | None = None,
+        params: CommonAppCallParams | None = None,
     ) -> "LifeCycleAppComposer":
-        common_params=common_params or CommonAppCallParams()
+        params=params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallParams(
+                algokit_utils.AppClientBareCallParams(
                     **{
-                        **dataclasses.asdict(common_params),
+                        **dataclasses.asdict(params),
                         "args": args
                     }
                 )
@@ -1180,7 +1165,7 @@ class LifeCycleAppComposer:
         self._composer.add_transaction(txn, signer)
         return self
     
-    def composer(self) -> transactions.TransactionComposer:
+    def composer(self) -> algokit_utils.TransactionComposer:
         return self._composer
     
     def simulate(
@@ -1192,7 +1177,7 @@ class LifeCycleAppComposer:
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
         skip_signatures: bool | None = None,
-    ) -> transactions.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -1205,6 +1190,6 @@ class LifeCycleAppComposer:
     
     def send(
         self,
-        send_params: models.SendParams | None = None
-    ) -> transactions.SendAtomicTransactionComposerResults:
+        send_params: algokit_utils.SendParams | None = None
+    ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)

@@ -29,7 +29,7 @@ from examples.voting.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -37,7 +37,7 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 @pytest.fixture
 def voting_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
 ) -> VotingRoundAppFactory:
     return algorand.client.get_typed_app_factory(
         VotingRoundAppFactory, default_sender=default_deployer.address
@@ -47,9 +47,11 @@ def voting_factory(
 @pytest.fixture
 def voting_app_client(voting_factory: VotingRoundAppFactory) -> VotingRoundAppClient:
     client, _ = voting_factory.deploy(
-        deploy_time_params={"VALUE": 1},
-        deletable=True,
-        updatable=True,
+        compilation_params={
+            "deploy_time_params": {"VALUE": 1},
+            "deletable": True,
+            "updatable": True,
+        },
         on_update=OnUpdate.UpdateApp,
     )
     return client
@@ -61,7 +63,7 @@ class RandomVotingAppDeployment:
     algod: AlgodClient
     client: VotingRoundAppClient
     total_question_options: int
-    test_account: algokit_utils.Account
+    test_account: algokit_utils.SigningAccount
     private_key: bytes
     quorum: int
     question_count: int
@@ -74,7 +76,7 @@ class RandomVotingAppDeployment:
 
 @pytest.fixture
 def random_voting_round_app(
-    voting_factory: VotingRoundAppFactory, default_deployer: algokit_utils.Account
+    voting_factory: VotingRoundAppFactory, default_deployer: algokit_utils.SigningAccount
 ) -> RandomVotingAppDeployment:
     algod = voting_factory.algorand.client.algod
     status = algod.status()
@@ -102,7 +104,7 @@ def random_voting_round_app(
             nft_image_url="ipfs://cid",
             option_counts=question_counts,
         ),
-        common_params=CommonAppFactoryCallParams(
+        params=CommonAppFactoryCallParams(
             static_fee=AlgoAmount.from_micro_algo(1000 + 1000 * 4)
         ),
         compilation_params={
@@ -152,7 +154,7 @@ def test_struct_mapping(random_voting_round_app: RandomVotingAppDeployment) -> N
                 params=input_params
             )
         ),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=["V"],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
         ),
@@ -160,7 +162,7 @@ def test_struct_mapping(random_voting_round_app: RandomVotingAppDeployment) -> N
 
     preconditions_result = client.send.get_preconditions(
         args=GetPreconditionsArgs(signature=signature),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=[test_account.public_key],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
         ),
@@ -204,7 +206,7 @@ def test_works_with_separate_transactions(
 
     preconditions_result = client.send.get_preconditions(
         args=GetPreconditionsArgs(signature=signature),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=[test_account.address],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
         ),
@@ -228,7 +230,7 @@ def test_works_with_separate_transactions(
                 params=input_params
             )
         ),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=["V"],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
         ),
@@ -247,7 +249,7 @@ def test_works_with_separate_transactions(
             ),
             signature=signature,
         ),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=["V", test_account.public_key],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 16),
         ),
@@ -255,7 +257,7 @@ def test_works_with_separate_transactions(
 
     preconditions_result_after = client.send.get_preconditions(
         args=GetPreconditionsArgs(signature=signature),
-        common_params=CommonAppCallParams(
+        params=CommonAppCallParams(
             box_references=[test_account.public_key],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
         ),
@@ -291,7 +293,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
         .add_app_call_method_call(
             client.params.get_preconditions(
                 args=GetPreconditionsArgs(signature=signature),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
                     box_references=[test_account.address],
                 ),
@@ -304,7 +306,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
                         params=params_1
                     )
                 ),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     box_references=["V"],
                     static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
                 ),
@@ -319,7 +321,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
                     ),
                     signature=signature,
                 ),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     box_references=["V", test_account.public_key],
                     static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 16),
                 ),
@@ -328,7 +330,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
         .add_app_call_method_call(
             client.params.get_preconditions(
                 args=GetPreconditionsArgs(signature=signature),
-                common_params=CommonAppCallParams(
+                params=CommonAppCallParams(
                     static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
                     box_references=[test_account.public_key],
                 ),
@@ -365,7 +367,7 @@ def test_it_works_using_the_fluent_composer(
         client.new_group()
         .get_preconditions(
             args=GetPreconditionsArgs(signature=signature),
-            common_params=CommonAppCallParams(
+            params=CommonAppCallParams(
                 static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
                 box_references=[test_account.public_key],
             ),
@@ -376,7 +378,7 @@ def test_it_works_using_the_fluent_composer(
                     params=params_1
                 )
             ),
-            common_params=CommonAppCallParams(
+            params=CommonAppCallParams(
                 box_references=["V"],
                 static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
             ),
@@ -389,14 +391,14 @@ def test_it_works_using_the_fluent_composer(
                 ),
                 signature=signature,
             ),
-            common_params=CommonAppCallParams(
+            params=CommonAppCallParams(
                 box_references=["V", test_account.public_key],
                 static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 16),
             ),
         )
         .get_preconditions(
             args=GetPreconditionsArgs(signature=signature),
-            common_params=CommonAppCallParams(
+            params=CommonAppCallParams(
                 static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
                 box_references=[test_account.public_key],
                 note=b"hmmm",

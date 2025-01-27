@@ -14,7 +14,7 @@ from examples.helloworld.client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
@@ -22,7 +22,7 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 @pytest.fixture
 def helloworld_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
 ) -> HelloWorldAppFactory:
     return algorand.client.get_typed_app_factory(
         HelloWorldAppFactory, default_sender=default_deployer.address
@@ -31,7 +31,11 @@ def helloworld_factory(
 
 def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     client, _ = helloworld_factory.deploy(
-        deletable=True, updatable=True, on_update=OnUpdate.UpdateApp
+        compilation_params={
+            "deletable": True,
+            "updatable": True,
+        },
+        on_update=OnUpdate.UpdateApp
     )
 
     # Test with dict args
@@ -50,7 +54,7 @@ def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
 def test_composer_with_manual_transaction(
     helloworld_factory: HelloWorldAppFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.Account,
+    default_deployer: algokit_utils.SigningAccount,
 ) -> None:
     client, _ = helloworld_factory.deploy()
 
@@ -68,7 +72,7 @@ def test_composer_with_manual_transaction(
 
     transactions2 = client2.create_transaction.hello(
         args=HelloArgs(name="Bananas"),
-        common_params=CommonAppCallParams(sender=default_deployer.address),
+        params=CommonAppCallParams(sender=default_deployer.address),
     )
 
     # Test composition with manual transactions

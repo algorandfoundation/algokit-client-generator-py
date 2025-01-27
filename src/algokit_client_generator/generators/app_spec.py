@@ -8,4 +8,4 @@ def generate_app_spec(context: GeneratorContext) -> DocumentParts:
     yield context.app_spec.to_json(indent=None)
     yield '"""'
     yield Part.RestoreLineMode
-    yield "APP_SPEC = applications.Arc56Contract.from_json(_APP_SPEC_JSON)"
+    yield "APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)"
