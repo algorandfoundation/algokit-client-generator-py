@@ -11,7 +11,6 @@ import typing
 # core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -69,12 +68,54 @@ class HelloWorldCheckArgs:
     name: str
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppCallParams:
+    """Common configuration for app call transaction parameters
+
+    :ivar account_references: List of account addresses to reference
+    :ivar app_references: List of app IDs to reference
+    :ivar asset_references: List of asset IDs to reference
+    :ivar box_references: List of box references to include
+    :ivar extra_fee: Additional fee to add to transaction
+    :ivar lease: Transaction lease value
+    :ivar max_fee: Maximum fee allowed for transaction
+    :ivar note: Arbitrary note for the transaction
+    :ivar rekey_to: Address to rekey account to
+    :ivar sender: Sender address override
+    :ivar signer: Custom transaction signer
+    :ivar static_fee: Fixed fee for transaction
+    :ivar validity_window: Number of rounds valid
+    :ivar first_valid_round: First valid round number
+    :ivar last_valid_round: Last valid round number"""
+
+    account_references: list[str] | None = None
+    app_references: list[int] | None = None
+    asset_references: list[int] | None = None
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
+    extra_fee: models.AlgoAmount | None = None
+    lease: bytes | None = None
+    max_fee: models.AlgoAmount | None = None
+    note: bytes | None = None
+    rekey_to: str | None = None
+    sender: str | None = None
+    signer: TransactionSigner | None = None
+    static_fee: models.AlgoAmount | None = None
+    validity_window: int | None = None
+    first_valid_round: int | None = None
+    last_valid_round: int | None = None
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppFactoryCallParams(CommonAppCallParams):
+    """Common configuration for app factory call related transaction parameters"""
+    on_complete: ON_COMPLETE_TYPES | None = None
+
+
 class _HelloWorldAppUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None
+        self, params: applications.AppClientBareCallParams | None = None
     ) -> transactions.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
@@ -84,7 +125,7 @@ class _HelloWorldAppDelete:
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallWithSendParams | None = None
+        self, params: applications.AppClientBareCallParams | None = None
     ) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
@@ -92,6 +133,7 @@ class _HelloWorldAppDelete:
 class HelloWorldAppParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_HelloWorldAppUpdate":
         return _HelloWorldAppUpdate(self.app_client)
@@ -99,110 +141,49 @@ class HelloWorldAppParams:
     @property
     def delete(self) -> "_HelloWorldAppDelete":
         return _HelloWorldAppDelete(self.app_client)
+
     def hello(
         self,
-        args: tuple[str] | HelloArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello(string)string",
+            "args": method_args,
+        }))
 
     def hello_world_check(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloWorldCheckArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello_world_check(string)void",
+            "args": method_args,
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> transactions.AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+        return self.app_client.params.bare.clear_state(
+            params,
+            
+        )
 
 
 class _HelloWorldAppUpdateTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.update(params)
 
 
@@ -210,13 +191,14 @@ class _HelloWorldAppDeleteTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
 class HelloWorldAppCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_HelloWorldAppUpdateTransaction":
         return _HelloWorldAppUpdateTransaction(self.app_client)
@@ -224,124 +206,82 @@ class HelloWorldAppCreateTransactionParams:
     @property
     def delete(self) -> "_HelloWorldAppDeleteTransaction":
         return _HelloWorldAppDeleteTransaction(self.app_client)
+
     def hello(
         self,
-        args: tuple[str] | HelloArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello(string)string",
+            "args": method_args,
+        }))
 
     def hello_world_check(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloWorldCheckArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello_world_check(string)void",
+            "args": method_args,
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+        return self.app_client.create_transaction.bare.clear_state(
+            params,
+            
+        )
 
 
 class _HelloWorldAppUpdateSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.update(params)
+    def bare(
+        self,
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
+    ) -> transactions.SendAppTransactionResult:
+        return self.app_client.send.bare.update(
+            params=params,
+            send_params=send_params,
+            compilation_params=compilation_params
+        )
 
 
 class _HelloWorldAppDeleteSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.delete(params)
+    def bare(
+        self,
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        
+    ) -> transactions.SendAppTransactionResult:
+        return self.app_client.send.bare.delete(
+            params=params,
+            send_params=send_params,
+            
+        )
 
 
 class HelloWorldAppSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_HelloWorldAppUpdateSend":
         return _HelloWorldAppUpdateSend(self.app_client)
@@ -349,107 +289,48 @@ class HelloWorldAppSend:
     @property
     def delete(self) -> "_HelloWorldAppDeleteSend":
         return _HelloWorldAppDeleteSend(self.app_client)
+
     def hello(
         self,
-        args: tuple[str] | HelloArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="hello(string)string",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello(string)string",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[str], parsed_response)
 
     def hello_world_check(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloWorldCheckArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="hello_world_check(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "hello_world_check(string)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
-        return self.app_client.send.bare.clear_state(params)
+        return self.app_client.send.bare.clear_state(
+            params,
+            send_params=send_params,
+        )
 
 
 class HelloWorldAppState:
@@ -727,8 +608,8 @@ class HelloWorldAppFactory(protocols.TypedAppFactoryProtocol[HelloWorldAppBareCa
         app_name: str | None = None,
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> tuple[HelloWorldAppClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -816,117 +697,53 @@ class HelloWorldAppFactoryCreateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            compilation_params=compilation_params)
 
     def hello(
         self,
         args: tuple[str] | HelloArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello(string)string ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "hello(string)string",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def hello_world_check(
         self,
         args: tuple[str] | HelloWorldCheckArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the hello_world_check(string)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "hello_world_check(string)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
 class HelloWorldAppFactoryUpdateParams:
@@ -938,36 +755,14 @@ class HelloWorldAppFactoryUpdateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 class HelloWorldAppFactoryDeleteParams:
     """Parameters for 'delete' operations of HelloWorldApp contract"""
@@ -978,36 +773,14 @@ class HelloWorldAppFactoryDeleteParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 
 class HelloWorldAppFactoryCreateTransaction:
@@ -1026,37 +799,12 @@ class HelloWorldAppFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
         )
 
 
@@ -1077,40 +825,16 @@ class HelloWorldAppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None,
     ) -> tuple[HelloWorldAppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return HelloWorldAppClient(result[0]), result[1]
 
@@ -1143,46 +867,13 @@ class HelloWorldAppComposer:
 
     def hello(
         self,
-        args: tuple[str] | HelloArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -1194,46 +885,13 @@ class HelloWorldAppComposer:
 
     def hello_world_check(
         self,
-        args: tuple[str] | HelloWorldCheckArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | HelloWorldCheckArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "HelloWorldAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello_world_check(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -1246,44 +904,17 @@ class HelloWorldAppComposer:
     def clear_state(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        args: list[bytes] | None = None,
+        common_params: CommonAppCallParams | None = None,
     ) -> "HelloWorldAppComposer":
+        common_params=common_params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallWithSendParams(
-                    account_references=account_references,
-                    app_references=app_references,
-                    asset_references=asset_references,
-                    box_references=box_references,
-                    extra_fee=extra_fee,
-                    first_valid_round=first_valid_round,
-                    lease=lease,
-                    max_fee=max_fee,
-                    note=note,
-                    rekey_to=rekey_to,
-                    sender=sender,
-                    signer=signer,
-                    static_fee=static_fee,
-                    validity_window=validity_window,
-                    last_valid_round=last_valid_round,
-                    populate_app_call_resources=populate_app_call_resources,
-                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                applications.AppClientBareCallParams(
+                    **{
+                        **dataclasses.asdict(common_params),
+                        "args": args
+                    }
                 )
             )
         )
@@ -1320,14 +951,6 @@ class HelloWorldAppComposer:
     
     def send(
         self,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAtomicTransactionComposerResults:
-        return self._composer.send(
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-        )
+        return self._composer.send(send_params)

@@ -14,8 +14,12 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 
 @pytest.fixture
-def my_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> HelloWorldFactory:
-    return algorand.client.get_typed_app_factory(HelloWorldFactory, default_sender=default_deployer.address)
+def my_test_factory(
+    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+) -> HelloWorldFactory:
+    return algorand.client.get_typed_app_factory(
+        HelloWorldFactory, default_sender=default_deployer.address
+    )
 
 
 def test_global_state_struct(my_test_factory: HelloWorldFactory) -> None:

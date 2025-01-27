@@ -4,7 +4,13 @@ from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
 
-from examples.helloworld.client import HelloArgs, HelloWorldAppClient, HelloWorldAppFactory, HelloWorldCheckArgs
+from examples.helloworld.client import (
+    HelloArgs,
+    CommonAppCallParams,
+    HelloWorldAppClient,
+    HelloWorldAppFactory,
+    HelloWorldCheckArgs,
+)
 
 
 @pytest.fixture
@@ -18,11 +24,15 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 def helloworld_factory(
     algorand: AlgorandClient, default_deployer: algokit_utils.Account
 ) -> HelloWorldAppFactory:
-    return algorand.client.get_typed_app_factory(HelloWorldAppFactory, default_sender=default_deployer.address)
+    return algorand.client.get_typed_app_factory(
+        HelloWorldAppFactory, default_sender=default_deployer.address
+    )
 
 
 def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
-    client, _ = helloworld_factory.deploy(deletable=True, updatable=True, on_update=OnUpdate.UpdateApp)
+    client, _ = helloworld_factory.deploy(
+        deletable=True, updatable=True, on_update=OnUpdate.UpdateApp
+    )
 
     # Test with dict args
     response = client.send.hello(args=HelloArgs(name="World"))
@@ -38,19 +48,28 @@ def test_calls_hello(helloworld_factory: HelloWorldAppFactory) -> None:
 
 
 def test_composer_with_manual_transaction(
-    helloworld_factory: HelloWorldAppFactory, algorand: AlgorandClient, default_deployer: algokit_utils.Account
+    helloworld_factory: HelloWorldAppFactory,
+    algorand: AlgorandClient,
+    default_deployer: algokit_utils.Account,
 ) -> None:
     client, _ = helloworld_factory.deploy()
 
     # Create transactions to add manually
-    transactions = client.create_transaction.hello_world_check(args=HelloWorldCheckArgs(name="World"))
+    transactions = client.create_transaction.hello_world_check(
+        args=HelloWorldCheckArgs(name="World")
+    )
 
     # Get client from creator and name
     client2 = algorand.client.get_typed_app_client_by_creator_and_name(
-        HelloWorldAppClient, creator_address=default_deployer.address, app_name=client.app_name
+        HelloWorldAppClient,
+        creator_address=default_deployer.address,
+        app_name=client.app_name,
     )
 
-    transactions2 = client2.create_transaction.hello(args=HelloArgs(name="Bananas"), sender=default_deployer.address)
+    transactions2 = client2.create_transaction.hello(
+        args=HelloArgs(name="Bananas"),
+        common_params=CommonAppCallParams(sender=default_deployer.address),
+    )
 
     # Test composition with manual transactions
     result = (
@@ -72,10 +91,10 @@ def test_simulate_hello(helloworld_factory: HelloWorldAppFactory) -> None:
     client, _ = helloworld_factory.deploy()
 
     response = client.new_group().hello(args=HelloArgs(name="mate")).simulate()
-    
+
     assert response.returns[0].value == "Hello, mate"
     assert response.simulate_response
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50  
+    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
 
 
 def test_can_be_cloned(helloworld_factory: HelloWorldAppFactory) -> None:

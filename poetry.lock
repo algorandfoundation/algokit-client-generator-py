@@ -18,7 +18,7 @@ typing-extensions = ">=4.6.0"
 type = "git"
 url = "https://github.com/algorandfoundation/algokit-utils-py.git"
 reference = "prerelease/ts-feature-parity"
-resolved_reference = "8da2dfeb04a1138763f0e0042993f0842ea32bfe"
+resolved_reference = "f1036de744fe1a08b06b30e4d180c078da54040e"
 
 [[package]]
 name = "anyio"

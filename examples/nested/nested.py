@@ -14,6 +14,9 @@ class NestedContract(ARC4Contract):
 
     @arc4.abimethod
     def nested_method_call(
-        self, _: arc4.String, _pay_txn: gtxn.PaymentTransaction, method_call: gtxn.ApplicationCallTransaction
+        self,
+        _: arc4.String,
+        _pay_txn: gtxn.PaymentTransaction,
+        method_call: gtxn.ApplicationCallTransaction,
     ) -> arc4.DynamicBytes:
         return arc4.DynamicBytes(method_call.txn_id)

@@ -11,7 +11,6 @@ import typing
 # core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction

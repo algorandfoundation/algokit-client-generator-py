@@ -23,10 +23,14 @@ class BareCallAppState:
     local_int2 = beaker.LocalStateValue(stack_type=pt.TealType.uint64)
     box = BoxMapping(pt.abi.StaticBytes[Literal[4]], pt.abi.String)
     reserved_global_bytes = beaker.ReservedGlobalStateValue(
-        stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved global state description"
+        stack_type=pt.TealType.bytes,
+        max_keys=1,
+        descr="Reserved global state description",
     )
     reserved_local_bytes = beaker.ReservedLocalStateValue(
-        stack_type=pt.TealType.bytes, max_keys=1, descr="Reserved local state description"
+        stack_type=pt.TealType.bytes,
+        max_keys=1,
+        descr="Reserved local state description",
     )
 
 
@@ -73,7 +77,9 @@ def itoa(i: pt.Expr) -> pt.Expr:
 
 
 @app.external(read_only=True)
-def call_abi_txn(txn: pt.abi.PaymentTransaction, value: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:
+def call_abi_txn(
+    txn: pt.abi.PaymentTransaction, value: pt.abi.String, *, output: pt.abi.String
+) -> pt.Expr:
     return output.set(
         pt.Concat(
             pt.Bytes("Sent "),
@@ -86,7 +92,11 @@ def call_abi_txn(txn: pt.abi.PaymentTransaction, value: pt.abi.String, *, output
 
 @app.external()
 def call_with_references(
-    asset: pt.abi.Asset, account: pt.abi.Account, application: pt.abi.Application, *, output: pt.abi.Uint64
+    asset: pt.abi.Asset,
+    account: pt.abi.Account,
+    application: pt.abi.Application,
+    *,
+    output: pt.abi.Uint64,
 ) -> pt.Expr:
     return pt.Seq(
         pt.Assert(asset.asset_id(), comment="asset not provided"),
@@ -98,7 +108,10 @@ def call_with_references(
 
 @app.external()
 def set_global(
-    int1: pt.abi.Uint64, int2: pt.abi.Uint64, bytes1: pt.abi.String, bytes2: pt.abi.StaticBytes[Literal[4]]
+    int1: pt.abi.Uint64,
+    int2: pt.abi.Uint64,
+    bytes1: pt.abi.String,
+    bytes2: pt.abi.StaticBytes[Literal[4]],
 ) -> pt.Expr:
     return pt.Seq(
         app.state.int1.set(int1.get()),
@@ -110,7 +123,10 @@ def set_global(
 
 @app.external()
 def set_local(
-    int1: pt.abi.Uint64, int2: pt.abi.Uint64, bytes1: pt.abi.String, bytes2: pt.abi.StaticBytes[Literal[4]]
+    int1: pt.abi.Uint64,
+    int2: pt.abi.Uint64,
+    bytes1: pt.abi.String,
+    bytes2: pt.abi.StaticBytes[Literal[4]],
 ) -> pt.Expr:
     return pt.Seq(
         app.state.local_int1.set(int1.get()),
@@ -191,25 +207,35 @@ def create_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # no
 
 @app.update(authorize=beaker.Authorize.only_creator(), bare=True)
 def update() -> pt.Expr:
-    return pt.Assert(pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable")
+    return pt.Assert(
+        pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable"
+    )
 
 
 @app.update(authorize=beaker.Authorize.only_creator())
 def update_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
     return pt.Seq(
-        pt.Assert(pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable"), output.set(input.get())
+        pt.Assert(
+            pt.Tmpl.Int(UPDATABLE_TEMPLATE_NAME), comment="Check app is updatable"
+        ),
+        output.set(input.get()),
     )
 
 
 @app.delete(authorize=beaker.Authorize.only_creator(), bare=True)
 def delete() -> pt.Expr:
-    return pt.Assert(pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable")
+    return pt.Assert(
+        pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable"
+    )
 
 
 @app.delete(authorize=beaker.Authorize.only_creator())
 def delete_abi(input: pt.abi.String, *, output: pt.abi.String) -> pt.Expr:  # noqa: ignore[A003]
     return pt.Seq(
-        pt.Assert(pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable"), output.set(input.get())
+        pt.Assert(
+            pt.Tmpl.Int(DELETABLE_TEMPLATE_NAME), comment="Check app is deletable"
+        ),
+        output.set(input.get()),
     )
 
 

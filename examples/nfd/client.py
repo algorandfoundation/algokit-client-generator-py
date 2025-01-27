@@ -11,7 +11,6 @@ import typing
 # core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -209,1215 +208,404 @@ class UpdateApplicationArgs:
     versionNum: str
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppCallParams:
+    """Common configuration for app call transaction parameters
+
+    :ivar account_references: List of account addresses to reference
+    :ivar app_references: List of app IDs to reference
+    :ivar asset_references: List of asset IDs to reference
+    :ivar box_references: List of box references to include
+    :ivar extra_fee: Additional fee to add to transaction
+    :ivar lease: Transaction lease value
+    :ivar max_fee: Maximum fee allowed for transaction
+    :ivar note: Arbitrary note for the transaction
+    :ivar rekey_to: Address to rekey account to
+    :ivar sender: Sender address override
+    :ivar signer: Custom transaction signer
+    :ivar static_fee: Fixed fee for transaction
+    :ivar validity_window: Number of rounds valid
+    :ivar first_valid_round: First valid round number
+    :ivar last_valid_round: Last valid round number"""
+
+    account_references: list[str] | None = None
+    app_references: list[int] | None = None
+    asset_references: list[int] | None = None
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
+    extra_fee: models.AlgoAmount | None = None
+    lease: bytes | None = None
+    max_fee: models.AlgoAmount | None = None
+    note: bytes | None = None
+    rekey_to: str | None = None
+    sender: str | None = None
+    signer: TransactionSigner | None = None
+    static_fee: models.AlgoAmount | None = None
+    validity_window: int | None = None
+    first_valid_round: int | None = None
+    last_valid_round: int | None = None
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppFactoryCallParams(CommonAppCallParams):
+    """Common configuration for app factory call related transaction parameters"""
+    on_complete: ON_COMPLETE_TYPES | None = None
+
+
 class _NfdInstanceUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str] | UpdateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppUpdateMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.update(applications.AppClientMethodCallWithCompilationAndSendParams(
-                method="updateApplication(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
-            ))
+        common_params = common_params or CommonAppCallParams()
+        compilation_params = compilation_params or applications.AppClientCompilationParams()
+        return self.app_client.params.update(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateApplication(string)void",
+            "args": method_args,
+        }))
 
 
 class NfdInstanceParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_NfdInstanceUpdate":
         return _NfdInstanceUpdate(self.app_client)
+
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }))
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | MintAsaArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="mintAsa(string,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintAsa(string,string)void",
+            "args": method_args,
+        }))
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="deleteFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "deleteFields(byte[][])void",
+            "args": method_args,
+        }))
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, int] | UpdateSegmentCountArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="updateSegmentCount(string,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateSegmentCount(string,uint64)void",
+            "args": method_args,
+        }))
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getFieldUpdateCost(byte[][])uint64",
+            "args": method_args,
+        }))
 
     def update_fields(
         self,
-        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="updateFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateFields(byte[][])void",
+            "args": method_args,
+        }))
 
     def read_field(
         self,
-        args: tuple[bytes | str] | ReadFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | ReadFieldArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="readField(byte[])byte[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "readField(byte[])byte[]",
+            "args": method_args,
+        }))
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | OfferForSaleArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="offerForSale(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "offerForSale(uint64,address)void",
+            "args": method_args,
+        }))
 
     def cancel_sale(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="cancelSale()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "cancelSale()void",
+        }))
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | PostOfferArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="postOffer(uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "postOffer(uint64,string)void",
+            "args": method_args,
+        }))
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | MintPayoutArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            "args": method_args,
+        }))
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="purchase(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "purchase(pay)void",
+            "args": method_args,
+        }))
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | IsAddressInFieldArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="isAddressInField(string,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "isAddressInField(string,address)bool",
+            "args": method_args,
+        }))
 
     def get_renew_price(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getRenewPrice()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getRenewPrice()uint64",
+        }))
 
     def update_hash(
         self,
-        args: tuple[bytes | str] | UpdateHashArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | UpdateHashArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="updateHash(byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateHash(byte[])void",
+            "args": method_args,
+        }))
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | ContractLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="contractLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "contractLock(bool)void",
+            "args": method_args,
+        }))
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool, int] | SegmentLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="segmentLock(bool,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "segmentLock(bool,uint64)void",
+            "args": method_args,
+        }))
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | VaultOptInLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptInLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptInLock(bool)void",
+            "args": method_args,
+        }))
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[int]] | VaultOptInArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptIn(uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptIn(uint64[])void",
+            "args": method_args,
+        }))
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
+            "args": method_args,
+        }))
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="renew(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "renew(pay)void",
+            "args": method_args,
+        }))
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | SetPrimaryAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="setPrimaryAddress(string,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setPrimaryAddress(string,address)void",
+            "args": method_args,
+        }))
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryAddingVerifiedAddress(string,string)bool",
+            "args": method_args,
+        }))
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
+            "args": method_args,
+        }))
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+            "args": method_args,
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> transactions.AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+        return self.app_client.params.bare.clear_state(
+            params,
+            
+        )
 
 
 class _NfdInstanceUpdateTransaction:
@@ -1426,1209 +614,356 @@ class _NfdInstanceUpdateTransaction:
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str] | UpdateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.update(applications.AppClientMethodCallWithCompilationAndSendParams(
-                method="updateApplication(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
-            ))
+        common_params = common_params or CommonAppCallParams()
+        compilation_params = compilation_params or applications.AppClientCompilationParams()
+        return self.app_client.create_transaction.update(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateApplication(string)void",
+            "args": method_args,
+        }))
 
 
 class NfdInstanceCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_NfdInstanceUpdateTransaction":
         return _NfdInstanceUpdateTransaction(self.app_client)
+
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }))
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | MintAsaArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="mintAsa(string,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintAsa(string,string)void",
+            "args": method_args,
+        }))
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="deleteFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "deleteFields(byte[][])void",
+            "args": method_args,
+        }))
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, int] | UpdateSegmentCountArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="updateSegmentCount(string,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateSegmentCount(string,uint64)void",
+            "args": method_args,
+        }))
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getFieldUpdateCost(byte[][])uint64",
+            "args": method_args,
+        }))
 
     def update_fields(
         self,
-        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="updateFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateFields(byte[][])void",
+            "args": method_args,
+        }))
 
     def read_field(
         self,
-        args: tuple[bytes | str] | ReadFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | ReadFieldArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="readField(byte[])byte[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "readField(byte[])byte[]",
+            "args": method_args,
+        }))
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | OfferForSaleArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="offerForSale(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "offerForSale(uint64,address)void",
+            "args": method_args,
+        }))
 
     def cancel_sale(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="cancelSale()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "cancelSale()void",
+        }))
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | PostOfferArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="postOffer(uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "postOffer(uint64,string)void",
+            "args": method_args,
+        }))
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | MintPayoutArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            "args": method_args,
+        }))
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="purchase(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "purchase(pay)void",
+            "args": method_args,
+        }))
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | IsAddressInFieldArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="isAddressInField(string,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "isAddressInField(string,address)bool",
+            "args": method_args,
+        }))
 
     def get_renew_price(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getRenewPrice()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getRenewPrice()uint64",
+        }))
 
     def update_hash(
         self,
-        args: tuple[bytes | str] | UpdateHashArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | UpdateHashArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="updateHash(byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateHash(byte[])void",
+            "args": method_args,
+        }))
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | ContractLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="contractLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "contractLock(bool)void",
+            "args": method_args,
+        }))
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool, int] | SegmentLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="segmentLock(bool,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "segmentLock(bool,uint64)void",
+            "args": method_args,
+        }))
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | VaultOptInLockArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptInLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptInLock(bool)void",
+            "args": method_args,
+        }))
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[int]] | VaultOptInArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptIn(uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptIn(uint64[])void",
+            "args": method_args,
+        }))
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
+            "args": method_args,
+        }))
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="renew(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "renew(pay)void",
+            "args": method_args,
+        }))
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | SetPrimaryAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="setPrimaryAddress(string,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setPrimaryAddress(string,address)void",
+            "args": method_args,
+        }))
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryAddingVerifiedAddress(string,string)bool",
+            "args": method_args,
+        }))
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
+            "args": method_args,
+        }))
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+            "args": method_args,
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+        return self.app_client.create_transaction.bare.clear_state(
+            params,
+            
+        )
 
 
 class _NfdInstanceUpdateSend:
@@ -2637,49 +972,19 @@ class _NfdInstanceUpdateSend:
 
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str] | UpdateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.update(applications.AppClientMethodCallWithCompilationAndSendParams(
-                method="updateApplication(string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
-            ))
+        common_params = common_params or CommonAppCallParams()
+        compilation_params = compilation_params or applications.AppClientCompilationParams()
+        response = self.app_client.send.update(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateApplication(string)void",
+            "args": method_args,
+        }), send_params=send_params, compilation_params=compilation_params)
         parsed_response = response
         return typing.cast(transactions.SendAppUpdateTransactionResult[None], parsed_response)
 
@@ -2687,1211 +992,414 @@ class _NfdInstanceUpdateSend:
 class NfdInstanceSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_NfdInstanceUpdateSend":
         return _NfdInstanceUpdateSend(self.app_client)
+
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | MintAsaArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="mintAsa(string,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintAsa(string,string)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="deleteFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "deleteFields(byte[][])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, int] | UpdateSegmentCountArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="updateSegmentCount(string,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateSegmentCount(string,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getFieldUpdateCost(byte[][])uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getFieldUpdateCost(byte[][])uint64",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def update_fields(
         self,
-        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="updateFields(byte[][])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateFields(byte[][])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def read_field(
         self,
-        args: tuple[bytes | str] | ReadFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | ReadFieldArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[bytes]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="readField(byte[])byte[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "readField(byte[])byte[]",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[bytes], parsed_response)
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | OfferForSaleArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="offerForSale(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "offerForSale(uint64,address)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def cancel_sale(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="cancelSale()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "cancelSale()void",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | PostOfferArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="postOffer(uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "postOffer(uint64,string)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | MintPayoutArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[PayoutInfo]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="purchase(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "purchase(pay)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | IsAddressInFieldArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="isAddressInField(string,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "isAddressInField(string,address)bool",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def get_renew_price(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getRenewPrice()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getRenewPrice()uint64",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def update_hash(
         self,
-        args: tuple[bytes | str] | UpdateHashArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bytes | str] | UpdateHashArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="updateHash(byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "updateHash(byte[])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | ContractLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="contractLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "contractLock(bool)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool, int] | SegmentLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="segmentLock(bool,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "segmentLock(bool,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[bool] | VaultOptInLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptInLock(bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptInLock(bool)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[list[int]] | VaultOptInArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultOptIn(uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultOptIn(uint64[])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="vaultSend(uint64,address,string,uint64,uint64[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="renew(pay)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "renew(pay)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | SetPrimaryAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="setPrimaryAddress(string,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setPrimaryAddress(string,address)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="registryAddingVerifiedAddress(string,string)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryAddingVerifiedAddress(string,string)bool",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="registryRemovingVerifiedAddress(string,address,address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
-        return self.app_client.send.bare.clear_state(params)
+        return self.app_client.send.bare.clear_state(
+            params,
+            send_params=send_params,
+        )
 
 
 class NfdInstanceState:
@@ -3978,8 +1486,8 @@ class _BoxState:
             None
         )
 
-KeyType = typing.TypeVar("KeyType")
-ValueType = typing.TypeVar("ValueType")
+_KeyType = typing.TypeVar("_KeyType")
+_ValueType = typing.TypeVar("_ValueType")
 
 class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map(self, map_name: str) -> dict[typing.Any, typing.Any]:
@@ -3987,30 +1495,30 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map_value(self, map_name: str, key: typing.Any) -> typing.Any | None:
         ...
 
-class _MapState(typing.Generic[KeyType, ValueType]):
+class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
     def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[ValueType] | None = None):
+                struct_class: typing.Type[_ValueType] | None = None):
         self._state_accessor = state_accessor
         self._map_name = map_name
         self._struct_class = struct_class
 
-    def get_map(self) -> dict[KeyType, ValueType]:
+    def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
             return {k: self._struct_class(**v) if isinstance(v, dict) else v
                     for k, v in result.items()}
-        return typing.cast(dict[KeyType, ValueType], result or {})
+        return typing.cast(dict[_KeyType, _ValueType], result or {})
 
-    def get_value(self, key: KeyType) -> ValueType | None:
+    def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
-        return typing.cast(ValueType | None, value)
+        return typing.cast(_ValueType | None, value)
 
 
 class NfdInstanceClient:
@@ -4440,8 +1948,8 @@ class NfdInstanceFactory(protocols.TypedAppFactoryProtocol[NfdInstanceMethodCall
         app_name: str | None = None,
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> tuple[NfdInstanceClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -4529,1098 +2037,530 @@ class NfdInstanceFactoryCreateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            compilation_params=compilation_params)
 
     def gas(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "gas()void",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintAsa(string,string)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "mintAsa(string,string)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the deleteFields(byte[][])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "deleteFields(byte[][])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "updateSegmentCount(string,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getFieldUpdateCost(byte[][])uint64",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateFields(byte[][])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "updateFields(byte[][])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the readField(byte[])byte[] ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "readField(byte[])byte[]",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "offerForSale(uint64,address)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def cancel_sale(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the cancelSale()void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "cancelSale()void",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the postOffer(uint64,string)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "postOffer(uint64,string)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def purchase(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the purchase(pay)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "purchase(pay)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "isAddressInField(string,address)bool",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_renew_price(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getRenewPrice()uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getRenewPrice()uint64",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateHash(byte[])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "updateHash(byte[])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the contractLock(bool)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "contractLock(bool)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "segmentLock(bool,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "vaultOptInLock(bool)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "vaultOptIn(uint64[])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def renew(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the renew(pay)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "renew(pay)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "setPrimaryAddress(string,address)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "registryAddingVerifiedAddress(string,string)bool",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "registryRemovingVerifiedAddress(string,address,address)bool",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def update_application(
         self,
         args: tuple[str] | UpdateApplicationArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the updateApplication(string)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "updateApplication(string)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
 class NfdInstanceFactoryUpdateParams:
@@ -5632,36 +2572,14 @@ class NfdInstanceFactoryUpdateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 class NfdInstanceFactoryDeleteParams:
     """Parameters for 'delete' operations of NfdInstance contract"""
@@ -5672,36 +2590,14 @@ class NfdInstanceFactoryDeleteParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 
 class NfdInstanceFactoryCreateTransaction:
@@ -5720,37 +2616,12 @@ class NfdInstanceFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
         )
 
 
@@ -5771,82 +2642,39 @@ class NfdInstanceFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None,
     ) -> tuple[NfdInstanceClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return NfdInstanceClient(result[0]), result[1]
 
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> tuple[NfdInstanceClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-            params = {
-                k: v for k, v in locals().items()
-                if k != 'self' and v is not None
-            }
+            common_params = common_params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     **{
-                    **params,
+                    **dataclasses.asdict(common_params),
                     "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
                     "args": _parse_abi_args(args),
                     }
-                )
+                ),
+                send_params=send_params,
+                compilation_params=compilation_params
             )
             return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
@@ -5871,47 +2699,15 @@ class _NfdInstanceUpdateComposer:
         self.composer = composer
     def update_application(
         self,
-        args: tuple[str] | UpdateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str] | UpdateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self.composer._composer.add_app_update_method_call(
             self.composer.client.params.update.update_application(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params
+                common_params=common_params,
+                compilation_params=compilation_params
             )
         )
         self.composer._result_mappers.append(
@@ -5936,46 +2732,13 @@ class NfdInstanceComposer:
 
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.gas(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -5987,46 +2750,14 @@ class NfdInstanceComposer:
 
     def mint_asa(
         self,
-        args: tuple[str, str] | MintAsaArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str] | MintAsaArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_asa(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6038,46 +2769,14 @@ class NfdInstanceComposer:
 
     def delete_fields(
         self,
-        args: tuple[list[bytes | str]] | DeleteFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[list[bytes | str]] | DeleteFieldsArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.delete_fields(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6089,46 +2788,14 @@ class NfdInstanceComposer:
 
     def update_segment_count(
         self,
-        args: tuple[str, int] | UpdateSegmentCountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, int] | UpdateSegmentCountArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_segment_count(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6140,46 +2807,14 @@ class NfdInstanceComposer:
 
     def get_field_update_cost(
         self,
-        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_field_update_cost(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6191,46 +2826,14 @@ class NfdInstanceComposer:
 
     def update_fields(
         self,
-        args: tuple[list[bytes | str]] | UpdateFieldsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[list[bytes | str]] | UpdateFieldsArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_fields(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6242,46 +2845,14 @@ class NfdInstanceComposer:
 
     def read_field(
         self,
-        args: tuple[bytes | str] | ReadFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[bytes | str] | ReadFieldArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.read_field(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6293,46 +2864,14 @@ class NfdInstanceComposer:
 
     def offer_for_sale(
         self,
-        args: tuple[int, str] | OfferForSaleArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[int, str] | OfferForSaleArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.offer_for_sale(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6344,46 +2883,13 @@ class NfdInstanceComposer:
 
     def cancel_sale(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.cancel_sale(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6395,46 +2901,14 @@ class NfdInstanceComposer:
 
     def post_offer(
         self,
-        args: tuple[int, str] | PostOfferArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[int, str] | PostOfferArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.post_offer(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6446,46 +2920,14 @@ class NfdInstanceComposer:
 
     def mint_payout(
         self,
-        args: tuple[int, int] | MintPayoutArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[int, int] | MintPayoutArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.mint_payout(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6497,46 +2939,14 @@ class NfdInstanceComposer:
 
     def purchase(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[transactions.AppMethodCallTransactionArgument] | PurchaseArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.purchase(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6548,46 +2958,14 @@ class NfdInstanceComposer:
 
     def is_address_in_field(
         self,
-        args: tuple[str, str] | IsAddressInFieldArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str] | IsAddressInFieldArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.is_address_in_field(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6599,46 +2977,13 @@ class NfdInstanceComposer:
 
     def get_renew_price(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_renew_price(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6650,46 +2995,14 @@ class NfdInstanceComposer:
 
     def update_hash(
         self,
-        args: tuple[bytes | str] | UpdateHashArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[bytes | str] | UpdateHashArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.update_hash(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6701,46 +3014,14 @@ class NfdInstanceComposer:
 
     def contract_lock(
         self,
-        args: tuple[bool] | ContractLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[bool] | ContractLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.contract_lock(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6752,46 +3033,14 @@ class NfdInstanceComposer:
 
     def segment_lock(
         self,
-        args: tuple[bool, int] | SegmentLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[bool, int] | SegmentLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.segment_lock(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6803,46 +3052,14 @@ class NfdInstanceComposer:
 
     def vault_opt_in_lock(
         self,
-        args: tuple[bool] | VaultOptInLockArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[bool] | VaultOptInLockArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in_lock(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6854,46 +3071,14 @@ class NfdInstanceComposer:
 
     def vault_opt_in(
         self,
-        args: tuple[list[int]] | VaultOptInArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[list[int]] | VaultOptInArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_opt_in(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6905,46 +3090,14 @@ class NfdInstanceComposer:
 
     def vault_send(
         self,
-        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.vault_send(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -6956,46 +3109,14 @@ class NfdInstanceComposer:
 
     def renew(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[transactions.AppMethodCallTransactionArgument] | RenewArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.renew(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7007,46 +3128,14 @@ class NfdInstanceComposer:
 
     def set_primary_address(
         self,
-        args: tuple[str, str] | SetPrimaryAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str] | SetPrimaryAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_primary_address(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7058,46 +3147,14 @@ class NfdInstanceComposer:
 
     def registry_adding_verified_address(
         self,
-        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_adding_verified_address(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7109,46 +3166,14 @@ class NfdInstanceComposer:
 
     def registry_removing_verified_address(
         self,
-        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.registry_removing_verified_address(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7160,46 +3185,14 @@ class NfdInstanceComposer:
 
     def create_application(
         self,
-        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None
+        args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
+        common_params: CommonAppCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7212,44 +3205,17 @@ class NfdInstanceComposer:
     def clear_state(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        args: list[bytes] | None = None,
+        common_params: CommonAppCallParams | None = None,
     ) -> "NfdInstanceComposer":
+        common_params=common_params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallWithSendParams(
-                    account_references=account_references,
-                    app_references=app_references,
-                    asset_references=asset_references,
-                    box_references=box_references,
-                    extra_fee=extra_fee,
-                    first_valid_round=first_valid_round,
-                    lease=lease,
-                    max_fee=max_fee,
-                    note=note,
-                    rekey_to=rekey_to,
-                    sender=sender,
-                    signer=signer,
-                    static_fee=static_fee,
-                    validity_window=validity_window,
-                    last_valid_round=last_valid_round,
-                    populate_app_call_resources=populate_app_call_resources,
-                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                applications.AppClientBareCallParams(
+                    **{
+                        **dataclasses.asdict(common_params),
+                        "args": args
+                    }
                 )
             )
         )
@@ -7286,14 +3252,6 @@ class NfdInstanceComposer:
     
     def send(
         self,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAtomicTransactionComposerResults:
-        return self._composer.send(
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-        )
+        return self._composer.send(send_params)

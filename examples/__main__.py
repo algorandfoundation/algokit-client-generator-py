@@ -8,7 +8,9 @@ from pathlib import Path
 
 import algokit_utils
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)-10s: %(message)s")
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s %(levelname)-10s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 root_path = Path(__file__).parent
 
@@ -37,17 +39,23 @@ def to_json(app_spec: algokit_utils.ApplicationSpecification) -> str:
 
 
 def main() -> None:
-    example_dirs = filter(lambda file: file.is_dir() and "__" not in file.name, root_path.glob("*"))
+    example_dirs = filter(
+        lambda file: file.is_dir() and "__" not in file.name, root_path.glob("*")
+    )
     for example in example_dirs:
         try:
             logger.info(f"Building example {example.name}")
             with cwd(root_path):
-                evaluated_file = importlib.import_module(f"examples.{example.name}.{example.name}")
+                evaluated_file = importlib.import_module(
+                    f"examples.{example.name}.{example.name}"
+                )
             app = evaluated_file.app
             logger.info(f"  Building app {app.name}")
             app_spec = app.build()
             logger.info(f"  Writing {example.name}/application.json")
-            (example / "application.json").write_text(to_json(app_spec), encoding="utf-8")
+            (example / "application.json").write_text(
+                to_json(app_spec), encoding="utf-8"
+            )
         except Exception as e:
             logger.warning(f"Skipping example {example.name} due to error: {e}")
 

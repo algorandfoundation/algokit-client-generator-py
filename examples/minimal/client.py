@@ -11,7 +11,6 @@ import typing
 # core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -58,12 +57,54 @@ ON_COMPLETE_TYPES = typing.Literal[
 ]
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppCallParams:
+    """Common configuration for app call transaction parameters
+
+    :ivar account_references: List of account addresses to reference
+    :ivar app_references: List of app IDs to reference
+    :ivar asset_references: List of asset IDs to reference
+    :ivar box_references: List of box references to include
+    :ivar extra_fee: Additional fee to add to transaction
+    :ivar lease: Transaction lease value
+    :ivar max_fee: Maximum fee allowed for transaction
+    :ivar note: Arbitrary note for the transaction
+    :ivar rekey_to: Address to rekey account to
+    :ivar sender: Sender address override
+    :ivar signer: Custom transaction signer
+    :ivar static_fee: Fixed fee for transaction
+    :ivar validity_window: Number of rounds valid
+    :ivar first_valid_round: First valid round number
+    :ivar last_valid_round: Last valid round number"""
+
+    account_references: list[str] | None = None
+    app_references: list[int] | None = None
+    asset_references: list[int] | None = None
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
+    extra_fee: models.AlgoAmount | None = None
+    lease: bytes | None = None
+    max_fee: models.AlgoAmount | None = None
+    note: bytes | None = None
+    rekey_to: str | None = None
+    sender: str | None = None
+    signer: TransactionSigner | None = None
+    static_fee: models.AlgoAmount | None = None
+    validity_window: int | None = None
+    first_valid_round: int | None = None
+    last_valid_round: int | None = None
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppFactoryCallParams(CommonAppCallParams):
+    """Common configuration for app factory call related transaction parameters"""
+    on_complete: ON_COMPLETE_TYPES | None = None
+
+
 class _AppUpdate:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None
+        self, params: applications.AppClientBareCallParams | None = None
     ) -> transactions.AppUpdateParams:
         return self.app_client.params.bare.update(params)
 
@@ -73,7 +114,7 @@ class _AppDelete:
         self.app_client = app_client
 
     def bare(
-        self, params: applications.AppClientBareCallWithSendParams | None = None
+        self, params: applications.AppClientBareCallParams | None = None
     ) -> transactions.AppCallParams:
         return self.app_client.params.bare.delete(params)
 
@@ -81,6 +122,7 @@ class _AppDelete:
 class AppParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_AppUpdate":
         return _AppUpdate(self.app_client)
@@ -91,16 +133,20 @@ class AppParams:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> transactions.AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+        return self.app_client.params.bare.clear_state(
+            params,
+            
+        )
 
 
 class _AppUpdateTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.update(params)
 
 
@@ -108,13 +154,14 @@ class _AppDeleteTransaction:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> Transaction:
+    def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
         return self.app_client.create_transaction.bare.delete(params)
 
 
 class AppCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_AppUpdateTransaction":
         return _AppUpdateTransaction(self.app_client)
@@ -125,30 +172,53 @@ class AppCreateTransactionParams:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+        return self.app_client.create_transaction.bare.clear_state(
+            params,
+            
+        )
 
 
 class _AppUpdateSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithCompilationAndSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.update(params)
+    def bare(
+        self,
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
+    ) -> transactions.SendAppTransactionResult:
+        return self.app_client.send.bare.update(
+            params=params,
+            send_params=send_params,
+            compilation_params=compilation_params
+        )
 
 
 class _AppDeleteSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
 
-    def bare(self, params: applications.AppClientBareCallWithSendParams | None = None) -> transactions.SendAppTransactionResult:
-        return self.app_client.send.bare.delete(params)
+    def bare(
+        self,
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        
+    ) -> transactions.SendAppTransactionResult:
+        return self.app_client.send.bare.delete(
+            params=params,
+            send_params=send_params,
+            
+        )
 
 
 class AppSend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     @property
     def update(self) -> "_AppUpdateSend":
         return _AppUpdateSend(self.app_client)
@@ -159,9 +229,13 @@ class AppSend:
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
-        return self.app_client.send.bare.clear_state(params)
+        return self.app_client.send.bare.clear_state(
+            params,
+            send_params=send_params,
+        )
 
 
 class AppState:
@@ -420,8 +494,8 @@ class AppFactory(protocols.TypedAppFactoryProtocol[AppBareCallCreateParams, AppB
         app_name: str | None = None,
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> tuple[AppClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -509,36 +583,14 @@ class AppFactoryCreateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            compilation_params=compilation_params)
 
 class AppFactoryUpdateParams:
     """Parameters for 'update' operations of App contract"""
@@ -549,36 +601,14 @@ class AppFactoryUpdateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 class AppFactoryDeleteParams:
     """Parameters for 'delete' operations of App contract"""
@@ -589,36 +619,14 @@ class AppFactoryDeleteParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 
 class AppFactoryCreateTransaction:
@@ -637,37 +645,12 @@ class AppFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
         )
 
 
@@ -688,40 +671,16 @@ class AppFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None,
     ) -> tuple[AppClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return AppClient(result[0]), result[1]
 
@@ -755,44 +714,17 @@ class AppComposer:
     def clear_state(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        args: list[bytes] | None = None,
+        common_params: CommonAppCallParams | None = None,
     ) -> "AppComposer":
+        common_params=common_params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallWithSendParams(
-                    account_references=account_references,
-                    app_references=app_references,
-                    asset_references=asset_references,
-                    box_references=box_references,
-                    extra_fee=extra_fee,
-                    first_valid_round=first_valid_round,
-                    lease=lease,
-                    max_fee=max_fee,
-                    note=note,
-                    rekey_to=rekey_to,
-                    sender=sender,
-                    signer=signer,
-                    static_fee=static_fee,
-                    validity_window=validity_window,
-                    last_valid_round=last_valid_round,
-                    populate_app_call_resources=populate_app_call_resources,
-                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                applications.AppClientBareCallParams(
+                    **{
+                        **dataclasses.asdict(common_params),
+                        "args": args
+                    }
                 )
             )
         )
@@ -829,14 +761,6 @@ class AppComposer:
     
     def send(
         self,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAtomicTransactionComposerResults:
-        return self._composer.send(
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-        )
+        return self._composer.send(send_params)

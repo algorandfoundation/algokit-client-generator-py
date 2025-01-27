@@ -10,6 +10,7 @@ from examples.state.client import (
     CallAbiArgs,
     CallWithReferencesArgs,
     DefaultValueArgs,
+    CommonAppCallParams,
     DefaultValueFromAbiArgs,
     DefaultValueFromGlobalStateArgs,
     DefaultValueFromLocalStateArgs,
@@ -29,23 +30,34 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 
 @pytest.fixture
-def state_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> StateAppFactory:
-    return algorand.client.get_typed_app_factory(StateAppFactory, default_sender=default_deployer.address)
+def state_factory(
+    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+) -> StateAppFactory:
+    return algorand.client.get_typed_app_factory(
+        StateAppFactory, default_sender=default_deployer.address
+    )
 
 
 @pytest.fixture
 def deployed_state_app_client(state_factory: StateAppFactory) -> StateAppClient:
     client, _ = state_factory.deploy(
-        deploy_time_params={"VALUE": 1}, deletable=True, updatable=True, on_update=OnUpdate.UpdateApp
+        deploy_time_params={"VALUE": 1},
+        deletable=True,
+        updatable=True,
+        on_update=OnUpdate.UpdateApp,
     )
     return client
 
 
-def test_exposes_state_correctly(state_factory: StateAppFactory, default_deployer: algokit_utils.Account) -> None:
+def test_exposes_state_correctly(
+    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+) -> None:
     client, _ = state_factory.deploy(
         deploy_time_params={"VALUE": 1},
     )
-    client.send.set_global(args=SetGlobalArgs(int1=1, bytes1="asdf", bytes2=b"\x01\x02\x03\x04", int2=2))
+    client.send.set_global(
+        args=SetGlobalArgs(int1=1, bytes1="asdf", bytes2=b"\x01\x02\x03\x04", int2=2)
+    )
     global_state = client.state.global_state.get_all()
     assert global_state["int1"] == 1
     assert global_state["int2"] == 2
@@ -53,7 +65,9 @@ def test_exposes_state_correctly(state_factory: StateAppFactory, default_deploye
     assert global_state["bytes2"] == b"\x01\x02\x03\x04"
 
     client.send.opt_in.opt_in()
-    client.send.set_local(args=SetLocalArgs(int1=1, int2=2, bytes1="asdf", bytes2=b"\x01\x02\x03\x04"))
+    client.send.set_local(
+        args=SetLocalArgs(int1=1, int2=2, bytes1="asdf", bytes2=b"\x01\x02\x03\x04")
+    )
     local_state = client.state.local_state(default_deployer.address).get_all()
     assert local_state["local_int1"] == 1
     assert local_state["local_int2"] == 2
@@ -69,14 +83,22 @@ def test_readonly_methods_dont_consume_algos(state_factory: StateAppFactory) -> 
     tx_cost = AlgoAmount.from_micro_algo(1_000)
 
     low_funds_account = state_factory.algorand.account.random()
-    state_factory.algorand.account.ensure_funded_from_environment(low_funds_account, tx_cost)
+    state_factory.algorand.account.ensure_funded_from_environment(
+        low_funds_account, tx_cost
+    )
 
-    result = client.send.call_abi(args=CallAbiArgs(value="oh hi"), sender=low_funds_account.address)
+    result = client.send.call_abi(
+        args=CallAbiArgs(value="oh hi"),
+        common_params=CommonAppCallParams(sender=low_funds_account.address),
+    )
     assert result.abi_return == "Hello, oh hi"
 
     # If we can invoke this method twice it confirms that we are still above the min balance + single tx amount and the
     # previous call did not consume algos
-    result2 = client.send.call_abi(args=CallAbiArgs(value="oh hi 2"), sender=low_funds_account.address)
+    result2 = client.send.call_abi(
+        args=CallAbiArgs(value="oh hi 2"),
+        common_params=CommonAppCallParams(sender=low_funds_account.address),
+    )
     assert result2.abi_return == "Hello, oh hi 2"
 
 
@@ -85,23 +107,35 @@ def test_arguments_with_defaults(state_factory: StateAppFactory) -> None:
         deploy_time_params={"VALUE": 1},
     )
 
-    client.send.set_global(args=SetGlobalArgs(int1=50, int2=2, bytes1="asdf", bytes2=bytes([1, 2, 3, 4])))
+    client.send.set_global(
+        args=SetGlobalArgs(int1=50, int2=2, bytes1="asdf", bytes2=bytes([1, 2, 3, 4]))
+    )
     client.send.opt_in.opt_in()
-    client.send.set_local(args=SetLocalArgs(bytes1="default value", int2=0, int1=0, bytes2=bytes([1, 2, 3, 4])))
+    client.send.set_local(
+        args=SetLocalArgs(
+            bytes1="default value", int2=0, int1=0, bytes2=bytes([1, 2, 3, 4])
+        )
+    )
 
-    constant_defined = client.send.default_value(args=DefaultValueArgs(arg_with_default="defined value"))
+    constant_defined = client.send.default_value(
+        args=DefaultValueArgs(arg_with_default="defined value")
+    )
     assert constant_defined.abi_return == "defined value"
 
     constant_default = client.send.default_value()
     assert constant_default.abi_return == "default value"
 
-    abi_defined = client.send.default_value_from_abi(args=DefaultValueFromAbiArgs(arg_with_default="defined value"))
+    abi_defined = client.send.default_value_from_abi(
+        args=DefaultValueFromAbiArgs(arg_with_default="defined value")
+    )
     assert abi_defined.abi_return == "ABI, defined value"
 
     abi_default = client.send.default_value_from_abi()
     assert abi_default.abi_return == "ABI, default value"
 
-    int_defined = client.send.default_value_int(args=DefaultValueIntArgs(arg_with_default=42))
+    int_defined = client.send.default_value_int(
+        args=DefaultValueIntArgs(arg_with_default=42)
+    )
     assert int_defined.abi_return == 42
 
     int_default = client.send.default_value_int()
@@ -124,12 +158,16 @@ def test_arguments_with_defaults(state_factory: StateAppFactory) -> None:
     assert local_default.abi_return == "Local state, default value"
 
 
-def test_methods_can_be_composed(state_factory: StateAppFactory, default_deployer: algokit_utils.Account) -> None:
+def test_methods_can_be_composed(
+    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+) -> None:
     client, _ = state_factory.deploy(
         deploy_time_params={"VALUE": 1},
     )
     client.new_group().opt_in.opt_in().set_local(
-        args=SetLocalArgs(bytes1="default value", int2=0, int1=0, bytes2=b"\x01\x02\x03\x04")
+        args=SetLocalArgs(
+            bytes1="default value", int2=0, int1=0, bytes2=b"\x01\x02\x03\x04"
+        )
     ).send()
 
     local_state = client.state.local_state(default_deployer.address).get_all()
@@ -139,10 +177,14 @@ def test_methods_can_be_composed(state_factory: StateAppFactory, default_deploye
     assert local_state["local_int2"] == 0
 
 
-def test_call_with_references(state_factory: StateAppFactory, default_deployer: algokit_utils.Account) -> None:
+def test_call_with_references(
+    state_factory: StateAppFactory, default_deployer: algokit_utils.Account
+) -> None:
     client, _ = state_factory.deploy(
         deploy_time_params={"VALUE": 1},
     )
     client.send.call_with_references(
-        args=CallWithReferencesArgs(asset=1234, account=default_deployer.address, application=client.app_id)
+        args=CallWithReferencesArgs(
+            asset=1234, account=default_deployer.address, application=client.app_id
+        )
     )

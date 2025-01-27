@@ -48,6 +48,52 @@ OPERATION_TO_METHOD_CALL_PARAMS_TYPE = {
 }
 
 
+def generate_call_params(context: GeneratorContext) -> DocumentParts:
+    """Generate transaction configuration dataclasses"""
+    yield utils.indented("""
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppCallParams:
+    \"\"\"Common configuration for app call transaction parameters
+
+    :ivar account_references: List of account addresses to reference
+    :ivar app_references: List of app IDs to reference
+    :ivar asset_references: List of asset IDs to reference
+    :ivar box_references: List of box references to include
+    :ivar extra_fee: Additional fee to add to transaction
+    :ivar lease: Transaction lease value
+    :ivar max_fee: Maximum fee allowed for transaction
+    :ivar note: Arbitrary note for the transaction
+    :ivar rekey_to: Address to rekey account to
+    :ivar sender: Sender address override
+    :ivar signer: Custom transaction signer
+    :ivar static_fee: Fixed fee for transaction
+    :ivar validity_window: Number of rounds valid
+    :ivar first_valid_round: First valid round number
+    :ivar last_valid_round: Last valid round number\"\"\"
+
+    account_references: list[str] | None = None
+    app_references: list[int] | None = None
+    asset_references: list[int] | None = None
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
+    extra_fee: models.AlgoAmount | None = None
+    lease: bytes | None = None
+    max_fee: models.AlgoAmount | None = None
+    note: bytes | None = None
+    rekey_to: str | None = None
+    sender: str | None = None
+    signer: TransactionSigner | None = None
+    static_fee: models.AlgoAmount | None = None
+    validity_window: int | None = None
+    first_valid_round: int | None = None
+    last_valid_round: int | None = None
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppFactoryCallParams(CommonAppCallParams):
+    \"\"\"Common configuration for app factory call related transaction parameters\"\"\"
+    on_complete: ON_COMPLETE_TYPES | None = None
+""")
+
+
 def _generate_common_method_params(  # noqa: C901
     context: GeneratorContext,
     method: ContractMethod,
@@ -89,36 +135,23 @@ def _generate_common_method_params(  # noqa: C901
         if all(arg.has_default for arg in method.abi.args):
             args_type = f"{args_type} | None = None"
 
-    def algokit_extra_args(operation: str | None = None) -> str:
-        if operation == "update":
-            return (
-                "updatable: bool | None, deletable: bool | None, deploy_time_params: models.TealTemplateParams | None"
-            )
-        return ""
+    # Build parameters list
+    params = []
+    if args_type:
+        params.append(f"args: {args_type}")
+    params.append("common_params: CommonAppCallParams | None = None")
 
-    # Remove the extra_params parameter since we handle return type differently
-    params = f"""
+    if property_type == PropertyType.SEND:
+        params.append("send_params: models.SendParams | None = None")
+    if operation == "update":
+        params.append("compilation_params: applications.AppClientCompilationParams | None = None")
+
+    # Join parameters with proper indentation and line breaks
+    params_str = ",\n    ".join(params)
+    params_def = f"""
 def {method.abi.client_method_name}(
     self,
-    {f'args: {args_type},    *,' if args_type else '    *,'}
-    account_references: list[str] | None = None,
-    app_references: list[int] | None = None,
-    asset_references: list[int] | None = None,
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-    extra_fee: models.AlgoAmount | None = None,
-    lease: bytes | None = None,
-    max_fee: models.AlgoAmount | None = None,
-    note: bytes | None = None,
-    rekey_to: str | None = None,
-    sender: str | None = None,
-    signer: TransactionSigner | None = None,
-    static_fee: models.AlgoAmount | None = None,
-    validity_window: int | None = None,
-    first_valid_round: int | None = None,
-    last_valid_round: int | None = None,
-    populate_app_call_resources: bool = False,
-    cover_app_call_inner_txn_fees: bool = False,
-    {algokit_extra_args(operation)}
+    {params_str}
 )"""
 
     # Add return type annotation if needed
@@ -132,9 +165,9 @@ def {method.abi.client_method_name}(
             OPERATION_TO_METHOD_CALL_PARAMS_TYPE[operation or "call"] if method.abi else "transactions.AppCallParams"
         )
 
-    params += f" -> {return_type}:"
+    params_def += f" -> {return_type}:"
 
-    return params, args_type is not None
+    return params_def, args_type is not None
 
 
 def _generate_method_body(
@@ -147,14 +180,10 @@ def _generate_method_body(
 ) -> str:
     """Generate the common method body shared across different generator methods"""
     body = "    method_args = _parse_abi_args(args)" if include_args else ""
+    body += "\n    common_params = common_params or CommonAppCallParams()"
+    if operation == "update":
+        body += "\n    compilation_params = compilation_params or applications.AppClientCompilationParams()"
     method_sig = method.abi.method.get_signature() if method.abi else ""
-
-    def algokit_param_type(operation: str) -> str:
-        return (
-            "applications.AppClientMethodCallWithCompilationAndSendParams"
-            if operation == "update"
-            else "applications.AppClientMethodCallWithSendParams"
-        )
 
     def alogkit_return_type(operation: str, method: ContractMethod) -> str:
         return_type = f"{method.abi.python_type}" if method.abi else ""
@@ -173,33 +202,13 @@ def _generate_method_body(
             )
         return "response"
 
-    def algokit_extra_args(operation: str) -> str:
-        if operation == "update":
-            return "updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params"
-        return ""
-
-    call_params = f"""{algokit_param_type(operation)}(
-            method="{method_sig}",{'''
-            args=method_args, ''' if include_args else ''}
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-            {algokit_extra_args(operation)}
-        )"""
+    call_params = f"""applications.AppClientMethodCallParams(**{{
+        **dataclasses.asdict(common_params),
+        "method": "{method_sig}",{'''
+        "args": method_args, ''' if include_args else ''}
+    }})"""
+    send_params = ", send_params=send_params" if property_type == PropertyType.SEND else ""
+    compilation_params = ", compilation_params=compilation_params" if operation == "update" else ""
 
     if property_type == PropertyType.PARAMS:
         return f"{body}\n    return self.app_client.params.{operation}({call_params})"
@@ -207,7 +216,7 @@ def _generate_method_body(
         return f"{body}\n    return self.app_client.create_transaction.{operation}({call_params})"
     else:
         response_code = f"""
-    response = self.app_client.send.{operation}({call_params})
+    response = self.app_client.send.{operation}({call_params}{send_params}{compilation_params})
     parsed_response = {parse_struct_if_needed(method)}
     return typing.cast({alogkit_return_type(operation, method)}, parsed_response)
 """
@@ -244,19 +253,28 @@ class {class_name}:
         if property_type == PropertyType.PARAMS:
             yield utils.indented(f"""
 def bare(
-    self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None
+    self, params: applications.AppClientBareCallParams | None = None
 ) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
     return self.app_client.params.bare.{operation}(params)
 """)
         elif property_type == PropertyType.CREATE_TRANSACTION:
             yield utils.indented(f"""
-def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> Transaction:
+def bare(self, params: applications.AppClientBareCallParams | None = None) -> Transaction:
     return self.app_client.create_transaction.bare.{operation}(params)
 """)
         else:  # SEND
             yield utils.indented(f"""
-def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> transactions.SendAppTransactionResult:
-    return self.app_client.send.bare.{operation}(params)
+def bare(
+    self,
+    params: applications.AppClientBareCallParams | None = None,
+    send_params: models.SendParams | None = None,
+    {'compilation_params: applications.AppClientCompilationParams | None = None' if operation == 'update' else ''}
+) -> transactions.SendAppTransactionResult:
+    return self.app_client.send.bare.{operation}(
+        params=params,
+        send_params=send_params,
+        {'compilation_params=compilation_params' if operation == 'update' else ''}
+    )
 """)
 
     # Generate ABI methods
@@ -284,7 +302,7 @@ def bare(self, params: {OPERATION_TO_PARAMS_CLASS[operation]} | None = None) -> 
     return class_name
 
 
-def _generate_class_methods(  # noqa: C901
+def _generate_class_methods(
     context: GeneratorContext,
     class_name: str,
     property_type: PropertyType,
@@ -333,15 +351,11 @@ class {class_name}:
         else ""
     )
 
-    first = True
     for operation, methods in operations.items():
         if not methods:
             continue
 
-        if not first:
-            yield Part.Gap1
-
-        first = False
+        yield Part.Gap1
 
         default_class_name = (
             f"_{context.contract_name}{context.sanitizer.make_safe_type_identifier(operation)}{postfix}"
@@ -355,14 +369,11 @@ def {operation}(self) -> "{operation_class}":
 """)
 
     # Generate method for each ABI method
-    first = True
     for method in context.methods.all_abi_methods:
         if not method.abi or "no_op" not in method.on_complete:
             continue
 
-        if not first:
-            yield Part.Gap1
-        first = False
+        yield Part.Gap1
 
         method_params, include_args = _generate_common_method_params(
             context,
@@ -384,9 +395,13 @@ def {operation}(self) -> "{operation_class}":
     yield utils.indented(f"""
 def clear_state(
     self,
-    params: applications.AppClientBareCallWithSendParams | None = None
+    params: applications.AppClientBareCallParams | None = None,
+    {'send_params: models.SendParams | None = None' if property_type == PropertyType.SEND else ''}
 ) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
-    return self.app_client.{property_type.value}.bare.clear_state(params)
+    return self.app_client.{property_type.value}.bare.clear_state(
+        params,
+        {'send_params=send_params,' if property_type == PropertyType.SEND else ''}
+    )
 """)
 
     yield Part.DecIndent
@@ -394,14 +409,11 @@ def clear_state(
 
 def generate_structs_for_args(context: GeneratorContext) -> DocumentParts:
     """Generate dataclasses for each method's arguments"""
-    first = True
     for method in context.methods.all_abi_methods:
         if not method.abi or not method.abi.args:
             continue
 
-        if not first:
-            yield Part.Gap1
-        first = False
+        yield Part.Gap1
 
         # Track appl args from right to left like in TypeScript
         has_appl_to_right = False
@@ -700,9 +712,8 @@ def new_group(self) -> "{context.contract_name}Composer":
 """)
 
 
-def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901, PLR0912
+def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901
     """Generate struct classes for ABI structs"""
-    first = True
     # Track generated structs by their class name to avoid duplicates
     generated_structs: set[str] = set()
 
@@ -732,9 +743,7 @@ def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901,
                     )
                     # Only generate if we haven't seen this nested struct before
                     if nested_struct.struct_class_name not in generated_structs:
-                        if not first:
-                            yield Part.Gap1
-                        first = False
+                        yield Part.Gap1
                         generated_structs.add(nested_struct.struct_class_name)
                         yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
@@ -749,9 +758,7 @@ class {nested_struct.struct_class_name}:
 
             # Then generate the main struct class if we haven't already
             if struct.struct_class_name not in generated_structs:
-                if not first:
-                    yield Part.Gap1
-                first = False
+                yield Part.Gap1
                 generated_structs.add(struct.struct_class_name)
                 yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
@@ -950,8 +957,8 @@ def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(
     # Generate MapState class if needed
     if any(bool(getattr(context.app_spec.state.maps, t)) for t in ["global_state", "local_state", "box"]):
         yield utils.indented("""
-KeyType = typing.TypeVar("KeyType")
-ValueType = typing.TypeVar("ValueType")
+_KeyType = typing.TypeVar("_KeyType")
+_ValueType = typing.TypeVar("_ValueType")
 
 class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map(self, map_name: str) -> dict[typing.Any, typing.Any]:
@@ -959,30 +966,30 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map_value(self, map_name: str, key: typing.Any) -> typing.Any | None:
         ...
 
-class _MapState(typing.Generic[KeyType, ValueType]):
+class _MapState(typing.Generic[_KeyType, _ValueType]):
     \"\"\"Generic class for accessing state maps with strongly typed keys and values\"\"\"
 
     def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                 struct_class: typing.Type[ValueType] | None = None):
+                 struct_class: typing.Type[_ValueType] | None = None):
         self._state_accessor = state_accessor
         self._map_name = map_name
         self._struct_class = struct_class
 
-    def get_map(self) -> dict[KeyType, ValueType]:
+    def get_map(self) -> dict[_KeyType, _ValueType]:
         \"\"\"Get all current values in the map\"\"\"
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
             return {k: self._struct_class(**v) if isinstance(v, dict) else v
                     for k, v in result.items()}
-        return typing.cast(dict[KeyType, ValueType], result or {})
+        return typing.cast(dict[_KeyType, _ValueType], result or {})
 
-    def get_value(self, key: KeyType) -> ValueType | None:
+    def get_value(self, key: _KeyType) -> _ValueType | None:
         \"\"\"Get a value from the map by key\"\"\"
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
-        return typing.cast(ValueType | None, value)
+        return typing.cast(_ValueType | None, value)
 """)
 
 
@@ -996,6 +1003,8 @@ def generate_typed_client(context: GeneratorContext) -> DocumentParts:
     # Generate supporting classes
     yield Part.Gap2
     yield generate_structs_for_args(context)
+    yield Part.Gap2
+    yield generate_call_params(context)
     yield Part.Gap2
     yield from _generate_class_methods(context, f"{context.contract_name}Params", PropertyType.PARAMS)
     yield Part.Gap2

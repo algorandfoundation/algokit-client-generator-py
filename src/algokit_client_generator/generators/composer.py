@@ -45,32 +45,15 @@ class {class_name}:
         method_params, _ = _generate_common_method_params(context, method, PropertyType.PARAMS, operation=operation)
         method_params = method_params.rsplit(" ->", 1)[0]
         method_params += f' -> "{context.contract_name}Composer":'
+        compilation_params = "compilation_params=compilation_params" if operation == "update" else ""
 
         yield utils.indented(f"""
 {method_params}
     self.composer._composer.add_app_{OPERATION_TO_METHOD_CALL_PREFIX[operation]}_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
             {'args=args,' if method.abi.args else ''}
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-            {'updatable=updatable, deletable=deletable, deploy_time_params=deploy_time_params'
-             if operation == 'update'
-             else ''}
+            common_params=common_params,
+            {compilation_params}
         )
     )
     self.composer._result_mappers.append(
@@ -148,23 +131,7 @@ def {operation}(self) -> "{class_name}":
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
             {'args=args, ' if method.abi.args else ''}
-            account_references=account_references,
-            app_references=app_references,
-            asset_references=asset_references,
-            box_references=box_references,
-            extra_fee=extra_fee,
-            first_valid_round=first_valid_round,
-            lease=lease,
-            max_fee=max_fee,
-            note=note,
-            rekey_to=rekey_to,
-            sender=sender,
-            signer=signer,
-            static_fee=static_fee,
-            validity_window=validity_window,
-            last_valid_round=last_valid_round,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            common_params=common_params,
         )
     )
     self._result_mappers.append(
@@ -181,44 +148,17 @@ def {operation}(self) -> "{class_name}":
 def clear_state(
     self,
     *,
-    account_references: list[str] | None = None,
-    app_references: list[int] | None = None,
-    asset_references: list[int] | None = None,
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-    extra_fee: models.AlgoAmount | None = None,
-    lease: bytes | None = None,
-    max_fee: models.AlgoAmount | None = None,
-    note: bytes | None = None,
-    rekey_to: str | None = None,
-    sender: str | None = None,
-    signer: TransactionSigner | None = None,
-    static_fee: models.AlgoAmount | None = None,
-    validity_window: int | None = None,
-    first_valid_round: int | None = None,
-    last_valid_round: int | None = None,
-    populate_app_call_resources: bool = False,
-    cover_app_call_inner_txn_fees: bool = False,
+    args: list[bytes] | None = None,
+    common_params: CommonAppCallParams | None = None,
 ) -> \"{context.contract_name}Composer\":
+    common_params=common_params or CommonAppCallParams()
     self._composer.add_app_call(
         self.client.params.clear_state(
-            applications.AppClientBareCallWithSendParams(
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+            applications.AppClientBareCallParams(
+                **{{
+                    **dataclasses.asdict(common_params),
+                    "args": args
+                }}
             )
         )
     )
@@ -255,16 +195,8 @@ def simulate(
 
 def send(
     self,
-    max_rounds_to_wait: int | None = None,
-    suppress_log: bool | None = None,
-    populate_app_call_resources: bool | None = None,
-    cover_app_call_inner_txn_fees: bool | None = None,
+    send_params: models.SendParams | None = None
 ) -> transactions.SendAtomicTransactionComposerResults:
-    return self._composer.send(
-        max_rounds_to_wait=max_rounds_to_wait,
-        suppress_log=suppress_log,
-        populate_app_call_resources=populate_app_call_resources,
-        cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-    )
+    return self._composer.send(send_params)
 """)
     yield Part.DecIndent

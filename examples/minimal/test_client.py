@@ -14,8 +14,12 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.Account:
 
 
 @pytest.fixture
-def minimal_factory(algorand: AlgorandClient, default_deployer: algokit_utils.Account) -> AppFactory:
-    return algorand.client.get_typed_app_factory(AppFactory, default_sender=default_deployer.address)
+def minimal_factory(
+    algorand: AlgorandClient, default_deployer: algokit_utils.Account
+) -> AppFactory:
+    return algorand.client.get_typed_app_factory(
+        AppFactory, default_sender=default_deployer.address
+    )
 
 
 def test_delete(minimal_factory: AppFactory) -> None:

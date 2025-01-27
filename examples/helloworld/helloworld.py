@@ -6,7 +6,11 @@ from examples.deployment_standard import (
     deploy_time_permanence_control,
 )
 
-app = beaker.Application("HelloWorldApp").apply(deploy_time_immutability_control).apply(deploy_time_permanence_control)
+app = (
+    beaker.Application("HelloWorldApp")
+    .apply(deploy_time_immutability_control)
+    .apply(deploy_time_permanence_control)
+)
 
 
 @app.external

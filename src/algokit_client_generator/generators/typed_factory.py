@@ -34,35 +34,27 @@ def _generate_method_args_type(context: GeneratorContext, method: ContractMethod
     return args_type
 
 
-def _generate_method_params(method_name: str, args_type: str) -> str:
+def _generate_method_params(
+    method_name: str, args_type: str, *, include_send_params: bool = False, include_compilation_params: bool = False
+) -> str:
     """Generate method parameters with proper indentation"""
-    args_param = f"args: {args_type},{utils.NEW_LINE}         *," if args_type != "None" else "*,"
+    params = []
 
+    if args_type != "None":
+        params.append(f"args: {args_type}")
+
+    params.append("*")
+    params.append("common_params: CommonAppFactoryCallParams | None = None")
+    if include_send_params:
+        params.append("send_params: models.SendParams | None = None")
+    if include_compilation_params:
+        params.append("compilation_params: applications.AppClientCompilationParams | None = None")
+
+    param_str = ",\n    ".join(params)
     return f"""
 def {method_name}(
     self,
-    {args_param}
-    account_references: list[str] | None = None,
-    app_references: list[int] | None = None,
-    asset_references: list[int] | None = None,
-    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-    extra_fee: models.AlgoAmount | None = None,
-    first_valid_round: int | None = None,
-    lease: bytes | None = None,
-    max_fee: models.AlgoAmount | None = None,
-    note: bytes | None = None,
-    rekey_to: str | None = None,
-    sender: str | None = None,
-    signer: TransactionSigner | None = None,
-    static_fee: models.AlgoAmount | None = None,
-    validity_window: int | None = None,
-    last_valid_round: int | None = None,
-    extra_program_pages: int | None = None,
-    schema: transactions.AppCreateSchema | None = None,
-    deploy_time_params: models.TealTemplateParams | None = None,
-    updatable: bool | None = None,
-    deletable: bool | None = None,
-    on_complete: (ON_COMPLETE_TYPES | None) = None
+    {param_str}
 )"""
 
 
@@ -72,25 +64,25 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
         return ""
 
     args_type = _generate_method_args_type(context, method)
-    method_params = _generate_method_params(method.abi.client_method_name, args_type)
+    method_params = _generate_method_params(
+        method.abi.client_method_name, args_type, include_compilation_params=operation == "create"
+    )
     method_sig = method.abi.method.get_signature()
 
     yield Part.IncIndent
     yield utils.indented(f"""
 {method_params} -> transactions.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
-    params = {{
-        k: v for k, v in locals().items()
-        if k != 'self' and v is not None
-    }}
+    common_params = common_params or CommonAppFactoryCallParams()
     return self.app_factory.params.{operation}(
         applications.AppFactoryCreateMethodCallParams(
             **{{
-            **params,
+            **dataclasses.asdict(common_params),
             "method": "{method_sig}",
             "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
             }}
-        )
+        ),
+        {'compilation_params=compilation_params' if operation == "create" else ''}
     )
 """)
     yield Part.DecIndent
@@ -112,23 +104,24 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
         cleaned_sig = signature.replace("[]", "").replace(",", "_")
         method_name = utils.to_snake_case(cleaned_sig.replace("(", "_").replace(")", "_"))
 
-    method_params = _generate_method_params(method_name, args_type)
+    method_params = _generate_method_params(
+        method_name, args_type, include_send_params=True, include_compilation_params=True
+    )
 
     yield utils.indented(f"""
     {method_params} -> tuple[{context.contract_name}Client, applications.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        params = {{
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }}
+        common_params = common_params or CommonAppFactoryCallParams()
         client, result = self.app_factory.send.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "{method.abi.method.get_signature()}",
                 "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
                 }}
-            )
+            ),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return_value = None if result.abi_return is None else typing.cast({return_type}, result.abi_return)
 
@@ -164,36 +157,14 @@ class {class_name}:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        {'compilation_params: applications.AppClientCompilationParams | None = None' if operation == 'create' else '' }
     ) -> transactions.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
-        params = {{
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }}
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.{method_name}(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            {'compilation_params=compilation_params' if operation == 'create' else ''})
 """)
 
     if operation == "create":
@@ -443,8 +414,8 @@ def algorand(self) -> _AlgoKitAlgorandClient:
     yield "app_name: str | None = None,"
     yield "max_rounds_to_wait: int | None = None,"
     yield "suppress_log: bool = False,"
-    yield "populate_app_call_resources: bool = False,"
-    yield "cover_app_call_inner_txn_fees: bool = False,"
+    yield "populate_app_call_resources: bool | None = None,"
+    yield "cover_app_call_inner_txn_fees: bool | None = None,"
     yield Part.DecIndent
     yield f") -> tuple[{context.contract_name}Client, applications.AppFactoryDeployResponse]:"
 
@@ -590,37 +561,12 @@ class {context.contract_name}FactoryCreateTransactionCreate:
 
     def bare(
         self,
-        *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        params = {{
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }}
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
         )
 """)
 
@@ -637,40 +583,16 @@ class {context.contract_name}FactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None,
     ) -> tuple[{context.contract_name}Client, transactions.SendAppCreateTransactionResult]:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        params = {{
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }}
+        common_params = common_params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return {context.contract_name}Client(result[0]), result[1]
 """)

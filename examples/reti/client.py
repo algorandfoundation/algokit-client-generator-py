@@ -11,7 +11,6 @@ import typing
 # core algosdk
 import algosdk
 from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionWithSigner
 from algosdk.atomic_transaction_composer import TransactionSigner
 from algosdk.source_map import SourceMap
 from algosdk.transaction import Transaction
@@ -355,4773 +354,1477 @@ class EmptyTokenRewardsArgs:
     receiver: str
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppCallParams:
+    """Common configuration for app call transaction parameters
+
+    :ivar account_references: List of account addresses to reference
+    :ivar app_references: List of app IDs to reference
+    :ivar asset_references: List of asset IDs to reference
+    :ivar box_references: List of box references to include
+    :ivar extra_fee: Additional fee to add to transaction
+    :ivar lease: Transaction lease value
+    :ivar max_fee: Maximum fee allowed for transaction
+    :ivar note: Arbitrary note for the transaction
+    :ivar rekey_to: Address to rekey account to
+    :ivar sender: Sender address override
+    :ivar signer: Custom transaction signer
+    :ivar static_fee: Fixed fee for transaction
+    :ivar validity_window: Number of rounds valid
+    :ivar first_valid_round: First valid round number
+    :ivar last_valid_round: Last valid round number"""
+
+    account_references: list[str] | None = None
+    app_references: list[int] | None = None
+    asset_references: list[int] | None = None
+    box_references: list[models.BoxReference | models.BoxIdentifier] | None = None
+    extra_fee: models.AlgoAmount | None = None
+    lease: bytes | None = None
+    max_fee: models.AlgoAmount | None = None
+    note: bytes | None = None
+    rekey_to: str | None = None
+    sender: str | None = None
+    signer: TransactionSigner | None = None
+    static_fee: models.AlgoAmount | None = None
+    validity_window: int | None = None
+    first_valid_round: int | None = None
+    last_valid_round: int | None = None
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CommonAppFactoryCallParams(CommonAppCallParams):
+    """Common configuration for app factory call related transaction parameters"""
+    on_complete: ON_COMPLETE_TYPES | None = None
+
+
 class ValidatorRegistryParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     def init_staking_contract(
         self,
-        args: tuple[int] | InitStakingContractArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | InitStakingContractArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="initStakingContract(uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "initStakingContract(uint64)void",
+            "args": method_args,
+        }))
 
     def load_staking_contract_data(
         self,
-        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="loadStakingContractData(uint64,byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "loadStakingContractData(uint64,byte[])void",
+            "args": method_args,
+        }))
 
     def finalize_staking_contract(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="finalizeStakingContract()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "finalizeStakingContract()void",
+        }))
 
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }))
 
     def get_mbr_amounts(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        }))
 
     def get_protocol_constraints(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        }))
 
     def get_num_validators(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getNumValidators()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNumValidators()uint64",
+        }))
 
     def get_validator_config(
         self,
-        args: tuple[int] | GetValidatorConfigArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorConfigArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def get_validator_state(
         self,
-        args: tuple[int] | GetValidatorStateArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorStateArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def get_validator_owner_and_manager(
         self,
-        args: tuple[int] | GetValidatorOwnerAndManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorOwnerAndManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
+            "args": method_args,
+        }))
 
     def get_pools(
         self,
-        args: tuple[int] | GetPoolsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetPoolsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
+            "args": method_args,
+        }))
 
     def get_pool_app_id(
         self,
-        args: tuple[int, int] | GetPoolAppIdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | GetPoolAppIdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolAppId(uint64,uint64)uint64",
+            "args": method_args,
+        }))
 
     def get_pool_info(
         self,
-        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            "args": method_args,
+        }))
 
     def get_cur_max_stake_per_pool(
         self,
-        args: tuple[int] | GetCurMaxStakePerPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetCurMaxStakePerPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getCurMaxStakePerPool(uint64)uint64",
+            "args": method_args,
+        }))
 
     def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "doesStakerNeedToPayMBR(address)bool",
+            "args": method_args,
+        }))
 
     def get_staked_pools_for_account(
         self,
-        args: tuple[str] | GetStakedPoolsForAccountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | GetStakedPoolsForAccountArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            "args": method_args,
+        }))
 
     def get_token_payout_ratio(
         self,
-        args: tuple[int] | GetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }))
 
     def get_node_pool_assignments(
         self,
-        args: tuple[int] | GetNodePoolAssignmentsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetNodePoolAssignmentsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
+            "args": method_args,
+        }))
 
     def get_nfd_registry_id(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="getNFDRegistryID()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNFDRegistryID()uint64",
+        }))
 
     def add_validator(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            "args": method_args,
+        }))
 
     def change_validator_manager(
         self,
-        args: tuple[int, str] | ChangeValidatorManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorManager(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorManager(uint64,address)void",
+            "args": method_args,
+        }))
 
     def change_validator_sunset_info(
         self,
-        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorNFD(uint64,uint64,string)void",
+            "args": method_args,
+        }))
 
     def change_validator_commission_address(
         self,
-        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorCommissionAddress(uint64,address)void",
+            "args": method_args,
+        }))
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def add_pool(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def add_stake(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def set_token_payout_ratio(
         self,
-        args: tuple[int] | SetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | SetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }))
 
     def stake_updated_via_rewards(
         self,
-        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def stake_removed(
         self,
-        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            "args": method_args,
+        }))
 
     def find_pool_for_staker(
         self,
-        args: tuple[int, str, int] | FindPoolForStakerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, int] | FindPoolForStakerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            "args": method_args,
+        }))
 
     def move_pool_to_node(
         self,
-        args: tuple[int, int, int] | MovePoolToNodeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | MovePoolToNodeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "movePoolToNode(uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def empty_token_rewards(
         self,
-        args: tuple[int, str] | EmptyTokenRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | EmptyTokenRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "emptyTokenRewards(uint64,address)uint64",
+            "args": method_args,
+        }))
 
     def create_application(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.AppCallMethodCallParams:
     
-        return self.app_client.params.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.params.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication()void",
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> transactions.AppCallParams:
-        return self.app_client.params.bare.clear_state(params)
+        return self.app_client.params.bare.clear_state(
+            params,
+            
+        )
 
 
 class ValidatorRegistryCreateTransactionParams:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     def init_staking_contract(
         self,
-        args: tuple[int] | InitStakingContractArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | InitStakingContractArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="initStakingContract(uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "initStakingContract(uint64)void",
+            "args": method_args,
+        }))
 
     def load_staking_contract_data(
         self,
-        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="loadStakingContractData(uint64,byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "loadStakingContractData(uint64,byte[])void",
+            "args": method_args,
+        }))
 
     def finalize_staking_contract(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="finalizeStakingContract()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "finalizeStakingContract()void",
+        }))
 
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }))
 
     def get_mbr_amounts(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        }))
 
     def get_protocol_constraints(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        }))
 
     def get_num_validators(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getNumValidators()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNumValidators()uint64",
+        }))
 
     def get_validator_config(
         self,
-        args: tuple[int] | GetValidatorConfigArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorConfigArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def get_validator_state(
         self,
-        args: tuple[int] | GetValidatorStateArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorStateArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def get_validator_owner_and_manager(
         self,
-        args: tuple[int] | GetValidatorOwnerAndManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorOwnerAndManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
+            "args": method_args,
+        }))
 
     def get_pools(
         self,
-        args: tuple[int] | GetPoolsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetPoolsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
+            "args": method_args,
+        }))
 
     def get_pool_app_id(
         self,
-        args: tuple[int, int] | GetPoolAppIdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | GetPoolAppIdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolAppId(uint64,uint64)uint64",
+            "args": method_args,
+        }))
 
     def get_pool_info(
         self,
-        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            "args": method_args,
+        }))
 
     def get_cur_max_stake_per_pool(
         self,
-        args: tuple[int] | GetCurMaxStakePerPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetCurMaxStakePerPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getCurMaxStakePerPool(uint64)uint64",
+            "args": method_args,
+        }))
 
     def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "doesStakerNeedToPayMBR(address)bool",
+            "args": method_args,
+        }))
 
     def get_staked_pools_for_account(
         self,
-        args: tuple[str] | GetStakedPoolsForAccountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | GetStakedPoolsForAccountArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            "args": method_args,
+        }))
 
     def get_token_payout_ratio(
         self,
-        args: tuple[int] | GetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }))
 
     def get_node_pool_assignments(
         self,
-        args: tuple[int] | GetNodePoolAssignmentsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetNodePoolAssignmentsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
+            "args": method_args,
+        }))
 
     def get_nfd_registry_id(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="getNFDRegistryID()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNFDRegistryID()uint64",
+        }))
 
     def add_validator(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            "args": method_args,
+        }))
 
     def change_validator_manager(
         self,
-        args: tuple[int, str] | ChangeValidatorManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorManager(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorManager(uint64,address)void",
+            "args": method_args,
+        }))
 
     def change_validator_sunset_info(
         self,
-        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorNFD(uint64,uint64,string)void",
+            "args": method_args,
+        }))
 
     def change_validator_commission_address(
         self,
-        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorCommissionAddress(uint64,address)void",
+            "args": method_args,
+        }))
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def add_pool(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def add_stake(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }))
 
     def set_token_payout_ratio(
         self,
-        args: tuple[int] | SetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | SetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }))
 
     def stake_updated_via_rewards(
         self,
-        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def stake_removed(
         self,
-        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            "args": method_args,
+        }))
 
     def find_pool_for_staker(
         self,
-        args: tuple[int, str, int] | FindPoolForStakerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, int] | FindPoolForStakerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            "args": method_args,
+        }))
 
     def move_pool_to_node(
         self,
-        args: tuple[int, int, int] | MovePoolToNodeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | MovePoolToNodeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "movePoolToNode(uint64,uint64,uint64)void",
+            "args": method_args,
+        }))
 
     def empty_token_rewards(
         self,
-        args: tuple[int, str] | EmptyTokenRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | EmptyTokenRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "emptyTokenRewards(uint64,address)uint64",
+            "args": method_args,
+        }))
 
     def create_application(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> transactions.BuiltTransactions:
     
-        return self.app_client.create_transaction.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        return self.app_client.create_transaction.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication()void",
+        }))
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        
     ) -> Transaction:
-        return self.app_client.create_transaction.bare.clear_state(params)
+        return self.app_client.create_transaction.bare.clear_state(
+            params,
+            
+        )
 
 
 class ValidatorRegistrySend:
     def __init__(self, app_client: applications.AppClient):
         self.app_client = app_client
+
     def init_staking_contract(
         self,
-        args: tuple[int] | InitStakingContractArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | InitStakingContractArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="initStakingContract(uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "initStakingContract(uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def load_staking_contract_data(
         self,
-        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="loadStakingContractData(uint64,byte[])void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "loadStakingContractData(uint64,byte[])void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def finalize_staking_contract(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="finalizeStakingContract()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "finalizeStakingContract()void",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="gas()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "gas()void",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def get_mbr_amounts(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[MbrAmounts]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[MbrAmounts], parsed_response)
 
     def get_protocol_constraints(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[Constraints]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[Constraints], parsed_response)
 
     def get_num_validators(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getNumValidators()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNumValidators()uint64",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def get_validator_config(
         self,
-        args: tuple[int] | GetValidatorConfigArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorConfigArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[ValidatorConfig]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorConfig], parsed_response)
 
     def get_validator_state(
         self,
-        args: tuple[int] | GetValidatorStateArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorStateArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[ValidatorCurState]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorCurState], parsed_response)
 
     def get_validator_owner_and_manager(
         self,
-        args: tuple[int] | GetValidatorOwnerAndManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorOwnerAndManagerArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[tuple[str, str]]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getValidatorOwnerAndManager(uint64)(address,address)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[tuple[str, str]], parsed_response)
 
     def get_pools(
         self,
-        args: tuple[int] | GetPoolsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetPoolsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[list[tuple[int, int, int]]]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getPools(uint64)(uint64,uint16,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
 
     def get_pool_app_id(
         self,
-        args: tuple[int, int] | GetPoolAppIdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | GetPoolAppIdArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolAppId(uint64,uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolAppId(uint64,uint64)uint64",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def get_pool_info(
         self,
-        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[PoolInfo]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolInfo], parsed_response)
 
     def get_cur_max_stake_per_pool(
         self,
-        args: tuple[int] | GetCurMaxStakePerPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetCurMaxStakePerPoolArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getCurMaxStakePerPool(uint64)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getCurMaxStakePerPool(uint64)uint64",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="doesStakerNeedToPayMBR(address)bool",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "doesStakerNeedToPayMBR(address)bool",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[bool], parsed_response)
 
     def get_staked_pools_for_account(
         self,
-        args: tuple[str] | GetStakedPoolsForAccountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | GetStakedPoolsForAccountArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[list[tuple[int, int, int]]]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
 
     def get_token_payout_ratio(
         self,
-        args: tuple[int] | GetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[PoolTokenPayoutRatio]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def get_node_pool_assignments(
         self,
-        args: tuple[int] | GetNodePoolAssignmentsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetNodePoolAssignmentsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[NodePoolAssignmentConfig]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getNodePoolAssignments(uint64)((uint64[3])[8])",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
 
     def get_nfd_registry_id(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="getNFDRegistryID()uint64",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "getNFDRegistryID()uint64",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def add_validator(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def change_validator_manager(
         self,
-        args: tuple[int, str] | ChangeValidatorManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorManagerArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorManager(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorManager(uint64,address)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_sunset_info(
         self,
-        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorNFD(uint64,uint64,string)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorNFD(uint64,uint64,string)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_commission_address(
         self,
-        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorCommissionAddress(uint64,address)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorCommissionAddress(uint64,address)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def add_pool(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[ValidatorPoolKey]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def add_stake(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[ValidatorPoolKey]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def set_token_payout_ratio(
         self,
-        args: tuple[int] | SetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | SetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[PoolTokenPayoutRatio]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(transactions.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def stake_updated_via_rewards(
         self,
-        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def stake_removed(
         self,
-        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def find_pool_for_staker(
         self,
-        args: tuple[int, str, int] | FindPoolForStakerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, int] | FindPoolForStakerArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]], parsed_response)
 
     def move_pool_to_node(
         self,
-        args: tuple[int, int, int] | MovePoolToNodeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | MovePoolToNodeArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="movePoolToNode(uint64,uint64,uint64)void",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "movePoolToNode(uint64,uint64,uint64)void",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def empty_token_rewards(
         self,
-        args: tuple[int, str] | EmptyTokenRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | EmptyTokenRewardsArgs,
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="emptyTokenRewards(uint64,address)uint64",
-                args=method_args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "emptyTokenRewards(uint64,address)uint64",
+            "args": method_args,
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[int], parsed_response)
 
     def create_application(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[None]:
     
-        response = self.app_client.send.call(applications.AppClientMethodCallWithSendParams(
-                method="createApplication()void",
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-                
-            ))
+        common_params = common_params or CommonAppCallParams()
+        response = self.app_client.send.call(applications.AppClientMethodCallParams(**{
+            **dataclasses.asdict(common_params),
+            "method": "createApplication()void",
+        }), send_params=send_params)
         parsed_response = response
         return typing.cast(transactions.SendAppTransactionResult[None], parsed_response)
 
     def clear_state(
         self,
-        params: applications.AppClientBareCallWithSendParams | None = None
+        params: applications.AppClientBareCallParams | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAppTransactionResult[applications_abi.ABIReturn]:
-        return self.app_client.send.bare.clear_state(params)
+        return self.app_client.send.bare.clear_state(
+            params,
+            send_params=send_params,
+        )
 
 
 class GlobalStateValue(typing.TypedDict):
@@ -5256,8 +1959,8 @@ class _BoxState:
             None
         )
 
-KeyType = typing.TypeVar("KeyType")
-ValueType = typing.TypeVar("ValueType")
+_KeyType = typing.TypeVar("_KeyType")
+_ValueType = typing.TypeVar("_ValueType")
 
 class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map(self, map_name: str) -> dict[typing.Any, typing.Any]:
@@ -5265,30 +1968,30 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
     def get_map_value(self, map_name: str, key: typing.Any) -> typing.Any | None:
         ...
 
-class _MapState(typing.Generic[KeyType, ValueType]):
+class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
     def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[ValueType] | None = None):
+                struct_class: typing.Type[_ValueType] | None = None):
         self._state_accessor = state_accessor
         self._map_name = map_name
         self._struct_class = struct_class
 
-    def get_map(self) -> dict[KeyType, ValueType]:
+    def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
             return {k: self._struct_class(**v) if isinstance(v, dict) else v
                     for k, v in result.items()}
-        return typing.cast(dict[KeyType, ValueType], result or {})
+        return typing.cast(dict[_KeyType, _ValueType], result or {})
 
-    def get_value(self, key: KeyType) -> ValueType | None:
+    def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
             return self._struct_class(**value)
-        return typing.cast(ValueType | None, value)
+        return typing.cast(_ValueType | None, value)
 
 
 class ValidatorRegistryClient:
@@ -5747,8 +2450,8 @@ class ValidatorRegistryFactory(protocols.TypedAppFactoryProtocol[ValidatorRegist
         app_name: str | None = None,
         max_rounds_to_wait: int | None = None,
         suppress_log: bool = False,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        populate_app_call_resources: bool | None = None,
+        cover_app_call_inner_txn_fees: bool | None = None,
     ) -> tuple[ValidatorRegistryClient, applications.AppFactoryDeployResponse]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
@@ -5836,1422 +2539,686 @@ class ValidatorRegistryFactoryCreateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.create(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            compilation_params=compilation_params)
 
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the initStakingContract(uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "initStakingContract(uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the loadStakingContractData(uint64,byte[])void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "loadStakingContractData(uint64,byte[])void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def finalize_staking_contract(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the finalizeStakingContract()void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "finalizeStakingContract()void",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def gas(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "gas()void",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_mbr_amounts(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getMbrAmounts()(uint64,uint64,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_protocol_constraints(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_num_validators(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNumValidators()uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getNumValidators()uint64",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorState(uint64)(uint16,uint64,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorOwnerAndManager(uint64)(address,address) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getValidatorOwnerAndManager(uint64)(address,address)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPools(uint64)(uint64,uint16,uint64)[] ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getPools(uint64)(uint64,uint16,uint64)[]",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolAppId(uint64,uint64)uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getPoolAppId(uint64,uint64)uint64",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getCurMaxStakePerPool(uint64)uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getCurMaxStakePerPool(uint64)uint64",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the doesStakerNeedToPayMBR(address)bool ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "doesStakerNeedToPayMBR(address)bool",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getStakedPoolsForAccount(address)(uint64,uint64,uint64)[] ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNodePoolAssignments(uint64)((uint64[3])[8]) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def get_nfd_registry_id(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the getNFDRegistryID()uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "getNFDRegistryID()uint64",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def add_validator(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorManager(uint64,address)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "changeValidatorManager(uint64,address)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorSunsetInfo(uint64,uint64,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorNFD(uint64,uint64,string)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "changeValidatorNFD(uint64,uint64,string)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorCommissionAddress(uint64,address)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "changeValidatorCommissionAddress(uint64,address)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def add_pool(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addPool(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def add_stake(
         self,
         args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the addStake(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the setTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool) ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the movePoolToNode(uint64,uint64,uint64)void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "movePoolToNode(uint64,uint64,uint64)void",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        *,
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the emptyTokenRewards(uint64,address)uint64 ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "emptyTokenRewards(uint64,address)uint64",
                 "args": _parse_abi_args(args),
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
     def create_application(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> transactions.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.create(
             applications.AppFactoryCreateMethodCallParams(
                 **{
-                **params,
+                **dataclasses.asdict(common_params),
                 "method": "createApplication()void",
                 "args": None,
                 }
-            )
+            ),
+            compilation_params=compilation_params
         )
 
 class ValidatorRegistryFactoryUpdateParams:
@@ -7263,36 +3230,14 @@ class ValidatorRegistryFactoryUpdateParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_update(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 class ValidatorRegistryFactoryDeleteParams:
     """Parameters for 'delete' operations of ValidatorRegistry contract"""
@@ -7303,36 +3248,14 @@ class ValidatorRegistryFactoryDeleteParams:
     def bare(
         self,
         *,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        
     ) -> transactions.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.params.bare.deploy_delete(
-            applications.AppFactoryCreateParams(**params)
-        )
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            )
 
 
 class ValidatorRegistryFactoryCreateTransaction:
@@ -7351,37 +3274,12 @@ class ValidatorRegistryFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         return self.app_factory.create_transaction.bare.create(
-            applications.AppFactoryCreateParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
         )
 
 
@@ -7402,81 +3300,38 @@ class ValidatorRegistryFactorySendCreate:
     def bare(
         self,
         *,
-        on_complete: (ON_COMPLETE_TYPES | None) = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
-        signer: TransactionSigner | None = None,
-        rekey_to: str | None = None,
-        lease: bytes | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        sender: str | None = None,
-        note: bytes | None = None,
-        args: list[bytes] | None = None,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None,
     ) -> tuple[ValidatorRegistryClient, transactions.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = {
-            k: v for k, v in locals().items()
-            if k != 'self' and v is not None
-        }
+        common_params = common_params or CommonAppFactoryCallParams()
         result = self.app_factory.send.bare.create(
-            applications.AppFactoryCreateWithSendParams(**params)
+            applications.AppFactoryCreateParams(**dataclasses.asdict(common_params)),
+            send_params=send_params,
+            compilation_params=compilation_params
         )
         return ValidatorRegistryClient(result[0]), result[1]
 
     def create_application(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        first_valid_round: int | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        last_valid_round: int | None = None,
-        extra_program_pages: int | None = None,
-        schema: transactions.AppCreateSchema | None = None,
-        deploy_time_params: models.TealTemplateParams | None = None,
-        updatable: bool | None = None,
-        deletable: bool | None = None,
-        on_complete: (ON_COMPLETE_TYPES | None) = None
+        common_params: CommonAppFactoryCallParams | None = None,
+        send_params: models.SendParams | None = None,
+        compilation_params: applications.AppClientCompilationParams | None = None
     ) -> tuple[ValidatorRegistryClient, applications.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
-            params = {
-                k: v for k, v in locals().items()
-                if k != 'self' and v is not None
-            }
+            common_params = common_params or CommonAppFactoryCallParams()
             client, result = self.app_factory.send.create(
                 applications.AppFactoryCreateMethodCallParams(
                     **{
-                    **params,
+                    **dataclasses.asdict(common_params),
                     "method": "createApplication()void",
                     "args": None,
                     }
-                )
+                ),
+                send_params=send_params,
+                compilation_params=compilation_params
             )
             return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
     
@@ -7506,46 +3361,13 @@ class ValidatorRegistryComposer:
 
     def init_staking_contract(
         self,
-        args: tuple[int] | InitStakingContractArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | InitStakingContractArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.init_staking_contract(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7557,46 +3379,13 @@ class ValidatorRegistryComposer:
 
     def load_staking_contract_data(
         self,
-        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.load_staking_contract_data(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7608,46 +3397,12 @@ class ValidatorRegistryComposer:
 
     def finalize_staking_contract(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.finalize_staking_contract(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7659,46 +3414,12 @@ class ValidatorRegistryComposer:
 
     def gas(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.gas(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7710,46 +3431,12 @@ class ValidatorRegistryComposer:
 
     def get_mbr_amounts(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_mbr_amounts(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7761,46 +3448,12 @@ class ValidatorRegistryComposer:
 
     def get_protocol_constraints(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_protocol_constraints(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7812,46 +3465,12 @@ class ValidatorRegistryComposer:
 
     def get_num_validators(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_num_validators(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7863,46 +3482,13 @@ class ValidatorRegistryComposer:
 
     def get_validator_config(
         self,
-        args: tuple[int] | GetValidatorConfigArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorConfigArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_config(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7914,46 +3500,13 @@ class ValidatorRegistryComposer:
 
     def get_validator_state(
         self,
-        args: tuple[int] | GetValidatorStateArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorStateArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_state(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -7965,46 +3518,13 @@ class ValidatorRegistryComposer:
 
     def get_validator_owner_and_manager(
         self,
-        args: tuple[int] | GetValidatorOwnerAndManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetValidatorOwnerAndManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_owner_and_manager(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8016,46 +3536,13 @@ class ValidatorRegistryComposer:
 
     def get_pools(
         self,
-        args: tuple[int] | GetPoolsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetPoolsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pools(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8067,46 +3554,13 @@ class ValidatorRegistryComposer:
 
     def get_pool_app_id(
         self,
-        args: tuple[int, int] | GetPoolAppIdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int] | GetPoolAppIdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_app_id(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8118,46 +3572,13 @@ class ValidatorRegistryComposer:
 
     def get_pool_info(
         self,
-        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_info(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8169,46 +3590,13 @@ class ValidatorRegistryComposer:
 
     def get_cur_max_stake_per_pool(
         self,
-        args: tuple[int] | GetCurMaxStakePerPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetCurMaxStakePerPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_cur_max_stake_per_pool(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8220,46 +3608,13 @@ class ValidatorRegistryComposer:
 
     def does_staker_need_to_pay_mbr(
         self,
-        args: tuple[str] | DoesStakerNeedToPayMbrArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | DoesStakerNeedToPayMbrArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.does_staker_need_to_pay_mbr(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8271,46 +3626,13 @@ class ValidatorRegistryComposer:
 
     def get_staked_pools_for_account(
         self,
-        args: tuple[str] | GetStakedPoolsForAccountArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[str] | GetStakedPoolsForAccountArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_staked_pools_for_account(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8322,46 +3644,13 @@ class ValidatorRegistryComposer:
 
     def get_token_payout_ratio(
         self,
-        args: tuple[int] | GetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_token_payout_ratio(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8373,46 +3662,13 @@ class ValidatorRegistryComposer:
 
     def get_node_pool_assignments(
         self,
-        args: tuple[int] | GetNodePoolAssignmentsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | GetNodePoolAssignmentsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_node_pool_assignments(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8424,46 +3680,12 @@ class ValidatorRegistryComposer:
 
     def get_nfd_registry_id(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_nfd_registry_id(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8475,46 +3697,13 @@ class ValidatorRegistryComposer:
 
     def add_validator(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_validator(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8526,46 +3715,13 @@ class ValidatorRegistryComposer:
 
     def change_validator_manager(
         self,
-        args: tuple[int, str] | ChangeValidatorManagerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorManagerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_manager(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8577,46 +3733,13 @@ class ValidatorRegistryComposer:
 
     def change_validator_sunset_info(
         self,
-        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_sunset_info(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8628,46 +3751,13 @@ class ValidatorRegistryComposer:
 
     def change_validator_nfd(
         self,
-        args: tuple[int, int, str] | ChangeValidatorNfdArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str] | ChangeValidatorNfdArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_nfd(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8679,46 +3769,13 @@ class ValidatorRegistryComposer:
 
     def change_validator_commission_address(
         self,
-        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_commission_address(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8730,46 +3787,13 @@ class ValidatorRegistryComposer:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_reward_info(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8781,46 +3805,13 @@ class ValidatorRegistryComposer:
 
     def add_pool(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_pool(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8832,46 +3823,13 @@ class ValidatorRegistryComposer:
 
     def add_stake(
         self,
-        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[transactions.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_stake(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8883,46 +3841,13 @@ class ValidatorRegistryComposer:
 
     def set_token_payout_ratio(
         self,
-        args: tuple[int] | SetTokenPayoutRatioArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int] | SetTokenPayoutRatioArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_token_payout_ratio(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8934,46 +3859,13 @@ class ValidatorRegistryComposer:
 
     def stake_updated_via_rewards(
         self,
-        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_updated_via_rewards(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -8985,46 +3877,13 @@ class ValidatorRegistryComposer:
 
     def stake_removed(
         self,
-        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_removed(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -9036,46 +3895,13 @@ class ValidatorRegistryComposer:
 
     def find_pool_for_staker(
         self,
-        args: tuple[int, str, int] | FindPoolForStakerArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str, int] | FindPoolForStakerArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.find_pool_for_staker(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -9087,46 +3913,13 @@ class ValidatorRegistryComposer:
 
     def move_pool_to_node(
         self,
-        args: tuple[int, int, int] | MovePoolToNodeArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, int, int] | MovePoolToNodeArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.move_pool_to_node(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -9138,46 +3931,13 @@ class ValidatorRegistryComposer:
 
     def empty_token_rewards(
         self,
-        args: tuple[int, str] | EmptyTokenRewardsArgs,    *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        args: tuple[int, str] | EmptyTokenRewardsArgs,
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.empty_token_rewards(
                 args=args,
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -9189,46 +3949,12 @@ class ValidatorRegistryComposer:
 
     def create_application(
         self,
-            *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
-        
+        common_params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
                 
-                account_references=account_references,
-                app_references=app_references,
-                asset_references=asset_references,
-                box_references=box_references,
-                extra_fee=extra_fee,
-                first_valid_round=first_valid_round,
-                lease=lease,
-                max_fee=max_fee,
-                note=note,
-                rekey_to=rekey_to,
-                sender=sender,
-                signer=signer,
-                static_fee=static_fee,
-                validity_window=validity_window,
-                last_valid_round=last_valid_round,
-                populate_app_call_resources=populate_app_call_resources,
-                cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                common_params=common_params,
             )
         )
         self._result_mappers.append(
@@ -9241,44 +3967,17 @@ class ValidatorRegistryComposer:
     def clear_state(
         self,
         *,
-        account_references: list[str] | None = None,
-        app_references: list[int] | None = None,
-        asset_references: list[int] | None = None,
-        box_references: list[models.BoxReference | models.BoxIdentifier] | None = None,
-        extra_fee: models.AlgoAmount | None = None,
-        lease: bytes | None = None,
-        max_fee: models.AlgoAmount | None = None,
-        note: bytes | None = None,
-        rekey_to: str | None = None,
-        sender: str | None = None,
-        signer: TransactionSigner | None = None,
-        static_fee: models.AlgoAmount | None = None,
-        validity_window: int | None = None,
-        first_valid_round: int | None = None,
-        last_valid_round: int | None = None,
-        populate_app_call_resources: bool = False,
-        cover_app_call_inner_txn_fees: bool = False,
+        args: list[bytes] | None = None,
+        common_params: CommonAppCallParams | None = None,
     ) -> "ValidatorRegistryComposer":
+        common_params=common_params or CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                applications.AppClientBareCallWithSendParams(
-                    account_references=account_references,
-                    app_references=app_references,
-                    asset_references=asset_references,
-                    box_references=box_references,
-                    extra_fee=extra_fee,
-                    first_valid_round=first_valid_round,
-                    lease=lease,
-                    max_fee=max_fee,
-                    note=note,
-                    rekey_to=rekey_to,
-                    sender=sender,
-                    signer=signer,
-                    static_fee=static_fee,
-                    validity_window=validity_window,
-                    last_valid_round=last_valid_round,
-                    populate_app_call_resources=populate_app_call_resources,
-                    cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
+                applications.AppClientBareCallParams(
+                    **{
+                        **dataclasses.asdict(common_params),
+                        "args": args
+                    }
                 )
             )
         )
@@ -9315,14 +4014,6 @@ class ValidatorRegistryComposer:
     
     def send(
         self,
-        max_rounds_to_wait: int | None = None,
-        suppress_log: bool | None = None,
-        populate_app_call_resources: bool | None = None,
-        cover_app_call_inner_txn_fees: bool | None = None,
+        send_params: models.SendParams | None = None
     ) -> transactions.SendAtomicTransactionComposerResults:
-        return self._composer.send(
-            max_rounds_to_wait=max_rounds_to_wait,
-            suppress_log=suppress_log,
-            populate_app_call_resources=populate_app_call_resources,
-            cover_app_call_inner_txn_fees=cover_app_call_inner_txn_fees,
-        )
+        return self._composer.send(send_params)
