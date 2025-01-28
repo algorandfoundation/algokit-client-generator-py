@@ -57,64 +57,6 @@ ON_COMPLETE_TYPES = typing.Literal[
 
 
 @dataclasses.dataclass(frozen=True)
-class ValidatorInfoConfig:
-    """Struct for ValidatorInfo_config"""
-    id: int
-    owner: str
-    manager: str
-    nfdForInfo: int
-    entryGatingType: int
-    entryGatingAddress: str
-    entryGatingAssets: tuple[int, int, int, int]
-    gatingAssetMinBalance: int
-    rewardTokenId: int
-    rewardPerPayout: int
-    epochRoundLength: int
-    percentToValidator: int
-    validatorCommissionAddress: str
-    minEntryStake: int
-    maxAlgoPerPool: int
-    poolsPerNode: int
-    sunsettingOn: int
-    sunsettingTo: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoState:
-    """Struct for ValidatorInfo_state"""
-    numPools: int
-    totalStakers: int
-    totalAlgoStaked: int
-    rewardTokenHeldBack: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoTokenpayoutratio:
-    """Struct for ValidatorInfo_tokenPayoutRatio"""
-    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
-    updatedForPayout: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoNodepoolassignments:
-    """Struct for ValidatorInfo_nodePoolAssignments"""
-    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfo:
-    """Struct for ValidatorInfo"""
-    config: ValidatorInfoConfig
-    state: ValidatorInfoState
-    pools: tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
-    tokenPayoutRatio: ValidatorInfoTokenpayoutratio
-    nodePoolAssignments: ValidatorInfoNodepoolassignments
-
-@dataclasses.dataclass(frozen=True)
-class MbrAmounts:
-    """Struct for MbrAmounts"""
-    addValidatorMbr: int
-    addPoolMbr: int
-    poolInitMbr: int
-    addStakerMbr: int
-
-@dataclasses.dataclass(frozen=True)
 class Constraints:
     """Struct for Constraints"""
     epochPayoutRoundsMin: int
@@ -128,6 +70,32 @@ class Constraints:
     maxNodes: int
     maxPoolsPerNode: int
     maxStakersPerPool: int
+
+@dataclasses.dataclass(frozen=True)
+class MbrAmounts:
+    """Struct for MbrAmounts"""
+    addValidatorMbr: int
+    addPoolMbr: int
+    poolInitMbr: int
+    addStakerMbr: int
+
+@dataclasses.dataclass(frozen=True)
+class NodePoolAssignmentConfig:
+    """Struct for NodePoolAssignmentConfig"""
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
+
+@dataclasses.dataclass(frozen=True)
+class PoolInfo:
+    """Struct for PoolInfo"""
+    poolAppId: int
+    totalStakers: int
+    totalAlgoStaked: int
+
+@dataclasses.dataclass(frozen=True)
+class PoolTokenPayoutRatio:
+    """Struct for PoolTokenPayoutRatio"""
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    updatedForPayout: int
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorConfig:
@@ -160,11 +128,54 @@ class ValidatorCurState:
     rewardTokenHeldBack: int
 
 @dataclasses.dataclass(frozen=True)
-class PoolInfo:
-    """Struct for PoolInfo"""
-    poolAppId: int
+class ValidatorInfoConfig:
+    """Struct for ValidatorInfoConfig"""
+    id: int
+    owner: str
+    manager: str
+    nfdForInfo: int
+    entryGatingType: int
+    entryGatingAddress: str
+    entryGatingAssets: tuple[int, int, int, int]
+    gatingAssetMinBalance: int
+    rewardTokenId: int
+    rewardPerPayout: int
+    epochRoundLength: int
+    percentToValidator: int
+    validatorCommissionAddress: str
+    minEntryStake: int
+    maxAlgoPerPool: int
+    poolsPerNode: int
+    sunsettingOn: int
+    sunsettingTo: int
+
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoState:
+    """Struct for ValidatorInfoState"""
+    numPools: int
     totalStakers: int
     totalAlgoStaked: int
+    rewardTokenHeldBack: int
+
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoTokenPayoutRatio:
+    """Struct for ValidatorInfoTokenPayoutRatio"""
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    updatedForPayout: int
+
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoNodePoolAssignments:
+    """Struct for ValidatorInfoNodePoolAssignments"""
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
+
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfo:
+    """Struct for ValidatorInfo"""
+    config: ValidatorInfoConfig
+    state: ValidatorInfoState
+    pools: tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
+    tokenPayoutRatio: ValidatorInfoTokenPayoutRatio
+    nodePoolAssignments: ValidatorInfoNodePoolAssignments
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorPoolKey:
@@ -172,17 +183,6 @@ class ValidatorPoolKey:
     id: int
     poolId: int
     poolAppId: int
-
-@dataclasses.dataclass(frozen=True)
-class PoolTokenPayoutRatio:
-    """Struct for PoolTokenPayoutRatio"""
-    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
-    updatedForPayout: int
-
-@dataclasses.dataclass(frozen=True)
-class NodePoolAssignmentConfig:
-    """Struct for NodePoolAssignmentConfig"""
-    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

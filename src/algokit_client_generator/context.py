@@ -41,7 +41,7 @@ class GeneratorContext:
             self.used_module_symbols, utils.get_class_name(self.app_spec.name)
         )
 
-        self.structs = get_all_structs(self.app_spec, self.used_module_symbols)
+        self.structs = get_all_structs(self.app_spec, self.used_module_symbols, self.sanitizer)
         self.methods = get_contract_methods(
             self.app_spec, self.structs, self.used_module_symbols, self.used_client_symbols
         )

@@ -8,17 +8,18 @@ from algokit_client_generator import generate_client
 @pytest.mark.parametrize(
     "app",
     [
-        "nested",
         "arc56_test",
         "duplicate_structs",
-        "nfd",
-        "reti",
-        "state",
+        "global_state_struct",
         "helloworld",
         "lifecycle",
         "minimal",
+        "nested",
+        "nfd",
+        "reti",
+        "state",
         "voting",
-        "global_state_struct",
+        "zero_coupon_bond",
     ],
 )
 def test_generate_clients(app: str) -> None:

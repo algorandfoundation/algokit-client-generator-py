@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import json
 import typing
@@ -26,6 +27,7 @@ class ABIStructField:
     abi_type: str | list["ABIStructField"]  # Enhanced to handle nested structs
     python_type: str
     is_nested: bool = False
+    is_implicit: bool = False
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -33,31 +35,6 @@ class ABIStruct:
     abi_name: str
     struct_class_name: str
     fields: list[ABIStructField]
-
-    def get_python_type_hints(self) -> str:
-        """Generate Python type hints for the struct"""
-        field_types = []
-        for field in self.fields:
-            if field.is_nested:
-                # For nested structs, reference the generated class name
-                assert isinstance(field.abi_type, list)
-                nested_struct = ABIStruct(
-                    abi_name=f"{self.abi_name}_{field.name}",
-                    struct_class_name=f"{self.struct_class_name}{field.name.title()}",
-                    fields=[
-                        ABIStructField(
-                            name=f.name,
-                            abi_type=f.abi_type,
-                            python_type=f.python_type,
-                            is_nested=isinstance(f.abi_type, list),
-                        )
-                        for f in field.abi_type
-                    ],
-                )
-                field_types.append(f"{field.name}: {nested_struct.struct_class_name}")
-            else:
-                field_types.append(f"{field.name}: {field.python_type}")
-        return ", ".join(field_types)
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -80,22 +57,6 @@ class ContractMethod:
     abi: ABIContractMethod | None
     on_complete: list[str]  # Using string literals from Arc56 CallEnum/CreateEnum values
     call_config: typing.Literal["call", "create"]
-
-
-def _map_enum_to_property(enum_value: str) -> str:
-    """Maps Arc56 enum values to property names.
-
-    For example:
-    - DeleteApplication -> delete_application
-    - NoOp -> no_op
-    - OptIn -> opt_in
-    """
-    result = ""
-    for i, char in enumerate(enum_value):
-        if i > 0 and char.isupper():
-            result += "_"
-        result += char.lower()
-    return result
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -173,22 +134,40 @@ def find_naming_strategy(methods: list[Arc56Method]) -> Callable[[Arc56Method], 
     return use_method_signature
 
 
-def process_struct_field(
+def process_struct_field(  # noqa: PLR0913
     field_def: StructField,
     used_module_symbols: set[str],
     parent_name: str = "",
     io_type: utils.IOType = utils.IOType.OUTPUT,
+    structs: dict[str, "ABIStruct"] | None = None,
+    sanitizer: utils.Sanitizer | None = None,
 ) -> ABIStructField:
     """Process a struct field, handling nested structures"""
     field_name = field_def.name
     field_type = field_def.type
 
+    # Implicit nested structs
     if isinstance(field_type, list):  # Nested struct
+        sanitizer = sanitizer or utils.get_sanitizer(preserve_names=False)
+        parent_python_type = sanitizer.make_safe_type_identifier(f"{parent_name}_{field_name}")
         nested_fields = [
-            process_struct_field(f, used_module_symbols, f"{parent_name}_{field_name}", io_type) for f in field_type
+            process_struct_field(f, used_module_symbols, parent_python_type, io_type, structs) for f in field_type
         ]
         return ABIStructField(
-            name=field_name, abi_type=nested_fields, python_type=f"{parent_name}{field_name.title()}", is_nested=True
+            name=field_name,
+            abi_type=nested_fields,
+            python_type=parent_python_type,
+            is_nested=True,
+            is_implicit=True,
+        )
+    # Structs referenced by name
+    elif isinstance(field_type, str) and structs and field_type in structs:
+        return ABIStructField(
+            name=field_name,
+            abi_type=field_type,
+            python_type=structs[field_type].struct_class_name,
+            is_nested=True,
+            is_implicit=False,
         )
     else:  # Regular field
         return ABIStructField(
@@ -196,23 +175,28 @@ def process_struct_field(
             abi_type=field_type,
             python_type=utils.map_abi_type_to_python(field_type, io_type),
             is_nested=False,
+            is_implicit=False,
         )
 
 
-def process_struct(
+def process_struct(  # noqa: PLR0913
     struct_name: str,
     struct_def: list[StructField],
     used_module_symbols: set[str],
     io_type: utils.IOType = utils.IOType.OUTPUT,
+    structs: dict[str, "ABIStruct"] | None = None,
+    sanitizer: utils.Sanitizer | None = None,
 ) -> ABIStruct:
     """Process a struct definition, including nested structs"""
     sanitized_name = utils.get_struct_name(struct_name)
 
     struct_class_name = utils.get_unique_symbol_by_incrementing(
-        used_module_symbols, utils.get_class_name(sanitized_name)
+        used_module_symbols, utils.get_class_name(sanitized_name), sanitizer=sanitizer
     )
 
-    fields = [process_struct_field(field, used_module_symbols, struct_class_name, io_type) for field in struct_def]
+    fields = [
+        process_struct_field(field, used_module_symbols, struct_class_name, io_type, structs) for field in struct_def
+    ]
 
     return ABIStruct(
         abi_name=struct_name,  # Keep original name for reference
@@ -224,22 +208,33 @@ def process_struct(
 def get_all_structs(  # noqa: C901
     app_spec: Arc56Contract,
     used_module_symbols: set[str],
+    sanitizer: utils.Sanitizer | None = None,
 ) -> dict[str, ABIStruct]:
     """Extract all structs from app spec, whether used in methods or not"""
-    structs: dict[str, ABIStruct] = {}
+    flat_structs: dict[str, ABIStruct] = _flatten_structs_from_spec(app_spec, used_module_symbols)
+    structs: dict[str, ABIStruct] = copy.deepcopy(flat_structs)
 
     def get_or_create_struct(struct_name: str, io_type: utils.IOType = utils.IOType.OUTPUT) -> ABIStruct:
         if struct_name not in structs:
             if struct_name not in app_spec.structs:
                 raise ValueError(f"Referenced struct {struct_name} not found in app spec")
             struct_def = app_spec.structs[struct_name]
-            abi_struct = process_struct(struct_name, struct_def, used_module_symbols, io_type)
+            abi_struct = process_struct(struct_name, struct_def, used_module_symbols, io_type, structs, sanitizer)
             structs[struct_name] = abi_struct
         return structs[struct_name]
 
-    # Process all structs defined in app_spec
-    for struct_name in app_spec.structs:
-        get_or_create_struct(struct_name)
+    # Process nested structs in struct fields resolved from app_spec
+    sanitizer = sanitizer or utils.get_sanitizer(preserve_names=False)
+    for struct in flat_structs.values():
+        for field in struct.fields:
+            if field.is_nested and field.is_implicit and isinstance(field.abi_type, list):
+                name_identifier = sanitizer.make_safe_type_identifier(f"{struct.abi_name}_{field.name}")
+                nested_struct = ABIStruct(
+                    abi_name=name_identifier,
+                    struct_class_name=name_identifier,
+                    fields=field.abi_type,
+                )
+                structs[nested_struct.abi_name] = nested_struct
 
     # Process structs from global/local/box maps
     for maps in (app_spec.state.maps.global_state, app_spec.state.maps.local_state, app_spec.state.maps.box):
@@ -257,7 +252,7 @@ def get_all_structs(  # noqa: C901
             if key_info.key_type in app_spec.structs:
                 get_or_create_struct(key_info.key_type, utils.IOType.INPUT)
 
-    return structs
+    return dict(sorted(structs.items(), key=lambda x: x[0]))
 
 
 def get_contract_methods(
@@ -354,3 +349,64 @@ def load_from_json(path: Path) -> Arc56Contract:
             return Arc56Contract.from_json(raw_json)
     except Exception as ex:
         raise ValueError("Invalid application.json") from ex
+
+
+def _map_enum_to_property(enum_value: str) -> str:
+    """Maps Arc56 enum values to property names.
+
+    For example:
+    - DeleteApplication -> delete_application
+    - NoOp -> no_op
+    - OptIn -> opt_in
+    """
+    result = ""
+    for i, char in enumerate(enum_value):
+        if i > 0 and char.isupper():
+            result += "_"
+        result += char.lower()
+    return result
+
+
+def _flatten_structs_from_spec(app_spec: Arc56Contract, used_module_symbols: set[str]) -> dict[str, ABIStruct]:
+    structs: dict[str, ABIStruct] = {}
+    unprocessed_structs = set(app_spec.structs.keys())
+
+    def _get_struct_dependencies(
+        struct_def: list[StructField], all_struct_defs: dict[str, list[StructField]]
+    ) -> set[str]:
+        """Get names of structs referenced by this struct definition"""
+        deps = set()
+        for field in struct_def:
+            if isinstance(field.type, list):
+                continue
+            if field.type in all_struct_defs:
+                deps.add(field.type)
+        return deps
+
+    while unprocessed_structs:
+        # Find structs with all dependencies resolved
+        ready = {
+            name
+            for name in unprocessed_structs
+            if all(dep in structs for dep in _get_struct_dependencies(app_spec.structs[name], app_spec.structs))
+        }
+        if not ready:
+            # Circular dependency or missing struct, process alphabetically as fallback
+            ready = {next(iter(unprocessed_structs))}
+
+        for struct_name in ready:
+            struct_def = app_spec.structs[struct_name]
+            abi_struct = process_struct(
+                struct_name=struct_name,
+                struct_def=struct_def,
+                used_module_symbols=used_module_symbols,
+                structs=structs,  # Pass existing structs (dependencies)
+                io_type=utils.IOType.OUTPUT,
+            )
+            if struct_name not in structs:
+                structs[struct_name] = abi_struct
+                unprocessed_structs.remove(struct_name)
+            else:
+                raise ValueError(f"Duplicate struct definition {struct_name}")
+
+    return structs

@@ -57,26 +57,14 @@ ON_COMPLETE_TYPES = typing.Literal[
 
 
 @dataclasses.dataclass(frozen=True)
-class FooUint16BarUint16:
-    """Struct for { foo: uint16; bar: uint16 }"""
-    foo: int
-    bar: int
-
-@dataclasses.dataclass(frozen=True)
-class Outputs:
-    """Struct for Outputs"""
-    sum: int
-    difference: int
-
-@dataclasses.dataclass(frozen=True)
 class InputsAdd:
-    """Struct for Inputs_add"""
+    """Struct for InputsAdd"""
     a: int
     b: int
 
 @dataclasses.dataclass(frozen=True)
 class InputsSubtract:
-    """Struct for Inputs_subtract"""
+    """Struct for InputsSubtract"""
     a: int
     b: int
 
@@ -85,6 +73,18 @@ class Inputs:
     """Struct for Inputs"""
     add: InputsAdd
     subtract: InputsSubtract
+
+@dataclasses.dataclass(frozen=True)
+class Outputs:
+    """Struct for Outputs"""
+    sum: int
+    difference: int
+
+@dataclasses.dataclass(frozen=True)
+class FooUint16BarUint16:
+    """Struct for { foo: uint16; bar: uint16 }"""
+    foo: int
+    bar: int
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

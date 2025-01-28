@@ -6,17 +6,18 @@ from algokit_client_generator import generate_client
 def update_approvals() -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     for app in [
-        "nested",
         "arc56_test",
         "duplicate_structs",
-        "nfd",
-        "reti",
-        "state",
+        "global_state_struct",
         "helloworld",
         "lifecycle",
         "minimal",
+        "nested",
+        "nfd",
+        "reti",
+        "state",
         "voting",
-        "global_state_struct",
+        "zero_coupon_bond",
     ]:
         app_path = examples / app
         app_spec = app_path / "application.json"

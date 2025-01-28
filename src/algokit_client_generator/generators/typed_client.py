@@ -8,7 +8,7 @@ import algosdk
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
-from algokit_client_generator.spec import ABIStruct, ABIStructField, ContractMethod
+from algokit_client_generator.spec import ABIStruct, ContractMethod
 
 APPL_TYPE_TXNS = [algosdk.abi.ABITransactionType.APPL, algosdk.abi.ABITransactionType.ANY]
 
@@ -727,20 +727,9 @@ def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901
             # First generate any nested struct classes
             for field in struct.fields:
                 if field.is_nested:
-                    assert isinstance(field.abi_type, list)
-                    nested_struct = ABIStruct(
-                        abi_name=f"{struct.abi_name}_{field.name}",
-                        struct_class_name=f"{struct.struct_class_name}{field.name.title()}",
-                        fields=[
-                            ABIStructField(
-                                name=f.name,
-                                abi_type=f.abi_type,
-                                python_type=f.python_type,
-                                is_nested=isinstance(f.abi_type, list),
-                            )
-                            for f in field.abi_type
-                        ],
-                    )
+                    nested_struct = context.structs.get(field.python_type)
+                    if not nested_struct:
+                        raise ValueError(f"Nested struct {field.python_type} not found in context")
                     # Only generate if we haven't seen this nested struct before
                     if nested_struct.struct_class_name not in generated_structs:
                         yield Part.Gap1
