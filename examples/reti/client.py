@@ -65,7 +65,7 @@ class ValidatorInfoConfig:
     nfdForInfo: int
     entryGatingType: int
     entryGatingAddress: str
-    entryGatingAssets: list[int] | tuple[int, int, int, int]
+    entryGatingAssets: tuple[int, int, int, int]
     gatingAssetMinBalance: int
     rewardTokenId: int
     rewardPerPayout: int
@@ -89,20 +89,20 @@ class ValidatorInfoState:
 @dataclasses.dataclass(frozen=True)
 class ValidatorInfoTokenpayoutratio:
     """Struct for ValidatorInfo_tokenPayoutRatio"""
-    poolPctOfWhole: list[int] | tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
     updatedForPayout: int
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorInfoNodepoolassignments:
     """Struct for ValidatorInfo_nodePoolAssignments"""
-    nodes: list[tuple[list[int] | tuple[int, int, int]]] | tuple[tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]]]
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorInfo:
     """Struct for ValidatorInfo"""
     config: ValidatorInfoConfig
     state: ValidatorInfoState
-    pools: list[tuple[int, int, int]] | tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
+    pools: tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
     tokenPayoutRatio: ValidatorInfoTokenpayoutratio
     nodePoolAssignments: ValidatorInfoNodepoolassignments
 
@@ -138,7 +138,7 @@ class ValidatorConfig:
     nfdForInfo: int
     entryGatingType: int
     entryGatingAddress: str
-    entryGatingAssets: list[int] | tuple[int, int, int, int]
+    entryGatingAssets: tuple[int, int, int, int]
     gatingAssetMinBalance: int
     rewardTokenId: int
     rewardPerPayout: int
@@ -176,13 +176,13 @@ class ValidatorPoolKey:
 @dataclasses.dataclass(frozen=True)
 class PoolTokenPayoutRatio:
     """Struct for PoolTokenPayoutRatio"""
-    poolPctOfWhole: list[int] | tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
     updatedForPayout: int
 
 @dataclasses.dataclass(frozen=True)
 class NodePoolAssignmentConfig:
     """Struct for NodePoolAssignmentConfig"""
-    nodes: list[tuple[list[int] | tuple[int, int, int]]] | tuple[tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]], tuple[list[int] | tuple[int, int, int]]]
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -291,7 +291,7 @@ class ChangeValidatorRewardInfoArgs:
     validatorId: int
     EntryGatingType: int
     EntryGatingAddress: str
-    EntryGatingAssets: list[int] | tuple[int, int, int, int]
+    EntryGatingAssets: tuple[int, int, int, int]
     GatingAssetMinBalance: int
     RewardPerPayout: int
 
@@ -701,7 +701,7 @@ class ValidatorRegistryParams:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
@@ -1144,7 +1144,7 @@ class ValidatorRegistryCreateTransactionParams:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
@@ -1659,7 +1659,7 @@ class ValidatorRegistrySend:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
@@ -1950,7 +1950,7 @@ class _BoxState:
         )
 
     @property
-    def staker_pool_set(self) -> "_MapState[str, list[tuple[int, int, int]] | tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]]":
+    def staker_pool_set(self) -> "_MapState[str, tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]]":
         """Get values from the staker_pool_set map in box state"""
         return _MapState(
             self.app_client.state.box,
@@ -3009,7 +3009,7 @@ class ValidatorRegistryFactoryCreateParams:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         *,
         params: CommonAppFactoryCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
@@ -3772,7 +3772,7 @@ class ValidatorRegistryComposer:
 
     def change_validator_reward_info(
         self,
-        args: tuple[int, int, str, list[int] | tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
+        args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(

@@ -185,7 +185,7 @@ def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -
                     return f"bytes | str | tuple[{', '.join('int' for _ in range(array.static_length))}]"
                 return "bytes"
             inner_type = abi_type_to_python(child, io_type)
-            return f"list[{inner_type}] | tuple[{', '.join(inner_type for _ in range(array.static_length))}]"
+            return f"tuple[{', '.join(inner_type for _ in range(array.static_length))}]"
         case abi.AddressType():
             return "str"
         case abi.BoolType():
