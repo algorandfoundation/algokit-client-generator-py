@@ -34,6 +34,12 @@ def get_args_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Walk the input path recursively, generating a client for each application.json found",
     )
+    parser.add_argument(
+        "-p",
+        "--preserve-names",
+        action="store_true",
+        help="Preserve original names for structs and methods",
+    )
     return parser
 
 
@@ -69,7 +75,7 @@ def process(parser: argparse.ArgumentParser) -> None:
     else:
         if not app_spec.is_file():
             raise ArgumentError(f"Application Specification must be a path to an application.json: {app_spec}")
-        generate_client(app_spec, output)
+        generate_client(app_spec, output, preserve_names=args.preserve_names)
 
 
 def main() -> None:

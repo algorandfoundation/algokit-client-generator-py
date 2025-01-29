@@ -1,10 +1,27 @@
 import pathlib
 
 import pytest
+
 from algokit_client_generator import generate_client
 
 
-@pytest.mark.parametrize("app", ["helloworld", "lifecycle", "minimal", "state", "voting"])
+@pytest.mark.parametrize(
+    "app",
+    [
+        "arc56_test",
+        "duplicate_structs",
+        "global_state_struct",
+        "helloworld",
+        "lifecycle",
+        "minimal",
+        "nested",
+        "nfd",
+        "reti",
+        "state",
+        "voting",
+        "zero_coupon_bond",
+    ],
+)
 def test_generate_clients(app: str) -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     app_path = examples / app

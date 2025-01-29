@@ -25,7 +25,7 @@
         }
     },
     "contract": {
-        "name": "MinimalApp",
+        "name": "App",
         "methods": [],
         "networks": {},
         "desc": "An app that has no abi methods"

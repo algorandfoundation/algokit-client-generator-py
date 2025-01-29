@@ -151,7 +151,9 @@ class VotingState:
         pt.TealType.uint64,
         descr="The asset ID of a result NFT if one has been created",
     )
-    total_options = beaker.GlobalStateValue(pt.TealType.uint64, static=True, descr="The total number of options")
+    total_options = beaker.GlobalStateValue(
+        pt.TealType.uint64, static=True, descr="The total number of options"
+    )
     option_counts = beaker.GlobalStateValue(
         pt.TealType.bytes, static=True, descr="The number of options for each question"
     )
@@ -177,7 +179,9 @@ class VotingState:
                 comment="Can't have more than 112 questions",
             ),
             self.option_counts.set(data.encode()),
-            (total_options := UInt64ScratchVar()).store(self.calculate_total_options_count()),
+            (total_options := UInt64ScratchVar()).store(
+                self.calculate_total_options_count()
+            ),
             # Need to have a reasonable limit, plus this ensures the results should fit
             # into the 1000 byte limit for the transaction note of the result NFT and
             # the 128 byte limit for global storage
@@ -190,12 +194,16 @@ class VotingState:
 
     def calculate_total_options_count(self) -> pt.Expr:
         return pt.Seq(
-            self.load_option_counts(into=(option_counts := pt.abi.make(VoteIndexArray))),
+            self.load_option_counts(
+                into=(option_counts := pt.abi.make(VoteIndexArray))
+            ),
             pt.Seq(
                 (total := UInt64ScratchVar()).store(ZERO),
                 (questions_count := UInt64ScratchVar()).store(option_counts.length()),
                 ForRange(question_idx := UInt64ScratchVar(), stop=questions_count).Do(
-                    option_counts[question_idx.load()].use(lambda count: total.store(total.load() + count.get()))
+                    option_counts[question_idx.load()].use(
+                        lambda count: total.store(total.load() + count.get())
+                    )
                 ),
                 total.load(),
             ),
@@ -256,7 +264,9 @@ def bootstrap(
     pt.ScratchVar(pt.TealType.uint64)
     min_bal_req = pt.ScratchVar(pt.TealType.uint64)
     return pt.Seq(
-        pt.Assert(pt.Not(app.state.is_bootstrapped.get()), comment="Already bootstrapped"),
+        pt.Assert(
+            pt.Not(app.state.is_bootstrapped.get()), comment="Already bootstrapped"
+        ),
         app.state.is_bootstrapped.set(pt.Int(1)),
         min_bal_req.store(
             pt.Int(
@@ -272,11 +282,17 @@ def bootstrap(
             + (
                 # Tally box value
                 app.state.total_options.get()
-                * (pt.Int(pt.abi.make(VoteCount).type_spec().byte_length_static() * beaker.consts.BOX_BYTE_MIN_BALANCE))
+                * (
+                    pt.Int(
+                        pt.abi.make(VoteCount).type_spec().byte_length_static()
+                        * beaker.consts.BOX_BYTE_MIN_BALANCE
+                    )
+                )
             )
         ),
         pt.Assert(
-            fund_min_bal_req.get().receiver() == pt.Global.current_application_address(),
+            fund_min_bal_req.get().receiver()
+            == pt.Global.current_application_address(),
             comment="Payment must be to app address",
         ),
         pt.Log(pt.Itob(min_bal_req.load())),
@@ -297,7 +313,10 @@ def close() -> pt.Expr:
         app.state.close_time.set(pt.Global.latest_timestamp()),
         (note := StringScratchVar()).store(
             pt.Concat(
-                pt.Bytes('{"standard":"arc69","description":"This is a voting result NFT for voting round with ID '),
+                pt.Bytes(
+                    '{"standard":"arc69","description":"This is a voting result NFT'
+                    " for voting round with ID "
+                ),
                 app.state.vote_id.get(),
                 pt.Bytes('.","properties":{"metadata":"ipfs://'),
                 app.state.metadata_ipfs_cid.get(),
@@ -310,13 +329,17 @@ def close() -> pt.Expr:
                 pt.Bytes(',"tallies":['),
             )
         ),
-        app.state.load_option_counts(into=(option_counts := pt.abi.make(VoteIndexArray))),
+        app.state.load_option_counts(
+            into=(option_counts := pt.abi.make(VoteIndexArray))
+        ),
         (questions_count := UInt64ScratchVar()).store(option_counts.length()),
         (current_tally := UInt64ScratchVar()).store(ZERO),
         (current_index := UInt64ScratchVar()).store(ZERO),
         ForRange(question_index := UInt64ScratchVar(), stop=questions_count).Do(
             # Load the number of vote options for this question
-            option_counts[question_index.load()].store_into(options_count_temp := VoteIndex()),
+            option_counts[question_index.load()].store_into(
+                options_count_temp := VoteIndex()
+            ),
             (options_count := UInt64ScratchVar()).store(options_count_temp.get()),
             ForRange(option_index := UInt64ScratchVar(), stop=options_count).Do(
                 app.state.tallies.get_vote(current_index.load(), current_tally),
@@ -330,7 +353,8 @@ def close() -> pt.Expr:
                             pt.Concat(
                                 pt.Bytes("]"),
                                 pt.If(
-                                    question_index.load() == (questions_count.load() - ONE),
+                                    question_index.load()
+                                    == (questions_count.load() - ONE),
                                     pt.Bytes(""),
                                     pt.Bytes(","),
                                 ),
@@ -348,7 +372,9 @@ def close() -> pt.Expr:
                 pt.TxnField.config_asset_total: pt.Int(1),
                 pt.TxnField.config_asset_decimals: pt.Int(0),
                 pt.TxnField.config_asset_default_frozen: pt.Int(0),
-                pt.TxnField.config_asset_name: pt.Concat(pt.Bytes("[VOTE RESULT] "), app.state.vote_id.get()),
+                pt.TxnField.config_asset_name: pt.Concat(
+                    pt.Bytes("[VOTE RESULT] "), app.state.vote_id.get()
+                ),
                 pt.TxnField.config_asset_unit_name: pt.Bytes("VOTERSLT"),
                 pt.TxnField.config_asset_url: app.state.nft_image_url.get(),
                 pt.TxnField.note: pt.Concat(note.load(), pt.Bytes("]}}")),
@@ -417,7 +443,15 @@ class VotingPreconditions(pt.abi.NamedTuple):
 
 
 @app.external(read_only=True)
-def get_preconditions(signature: pt.abi.DynamicBytes, *, output: VotingPreconditions) -> pt.Expr:
+def get_preconditions(
+    signature: pt.abi.DynamicBytes, *, output: VotingPreconditions
+) -> pt.Expr:
+    """
+    Returns the calculated pre-conditions for the voting round.
+
+    :param signature: The signature for the given voter account
+    :return: The precondition values
+    """
     return pt.Seq(
         (is_voting_open := pt.abi.Uint64()).set(voting_open()),
         (is_allowed_to_vote := pt.abi.Uint64()).set(allowed_to_vote(signature.get())),
@@ -444,7 +478,9 @@ def vote(
         pt.Assert(voting_open(), comment="Voting not open"),
         pt.Assert(pt.Not(already_voted()), comment="Already voted"),
         # Check vote array looks valid
-        app.state.load_option_counts(into=(option_counts := pt.abi.make(VoteIndexArray))),
+        app.state.load_option_counts(
+            into=(option_counts := pt.abi.make(VoteIndexArray))
+        ),
         (questions_count := UInt64ScratchVar()).store(option_counts.length()),
         pt.Assert(
             answer_ids.length() == questions_count.load(),
@@ -453,11 +489,16 @@ def vote(
         # Check voter box is funded
         (min_bal_req := UInt64ScratchVar()).store(
             pt.Int(beaker.consts.BOX_FLAT_MIN_BALANCE)
-            + (pt.Int(32 + 2) + pt.Int(VoteIndex().type_spec().byte_length_static()) * answer_ids.length())
+            + (
+                pt.Int(32 + 2)
+                + pt.Int(VoteIndex().type_spec().byte_length_static())
+                * answer_ids.length()
+            )
             * pt.Int(beaker.consts.BOX_BYTE_MIN_BALANCE)
         ),
         pt.Assert(
-            fund_min_bal_req.get().receiver() == pt.Global.current_application_address(),
+            fund_min_bal_req.get().receiver()
+            == pt.Global.current_application_address(),
             comment="Payment must be to app address",
         ),
         pt.Log(pt.Itob(min_bal_req.load())),
@@ -469,16 +510,22 @@ def vote(
         (cumulative_offset := UInt64ScratchVar()).store(ZERO),
         ForRange(question_index := UInt64ScratchVar(), stop=questions_count).Do(
             # Load the user's vote for this question
-            answer_ids[question_index.load()].store_into(answer_option_index := VoteIndex()),
+            answer_ids[question_index.load()].store_into(
+                answer_option_index := VoteIndex()
+            ),
             # Load the number of vote options for this question
-            option_counts[question_index.load()].store_into(options_count := VoteIndex()),
+            option_counts[question_index.load()].store_into(
+                options_count := VoteIndex()
+            ),
             pt.Assert(
                 answer_option_index.get() < options_count.get(),
                 comment="Answer option index invalid",
             ),
             # Increment the tally: the index into the tally is the cumulative option
             # count from all the questions so far + the vote option for this question
-            app.state.tallies.increment_vote(index=cumulative_offset.load() + answer_option_index.get()),
+            app.state.tallies.increment_vote(
+                index=cumulative_offset.load() + answer_option_index.get()
+            ),
             # compute offset for start of next question
             cumulative_offset.store(cumulative_offset.load() + options_count.get()),
         ),

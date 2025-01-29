@@ -2,8 +2,8 @@
     // General - see also /.editorconfig
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true,
-        "source.fixAll": true
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "files.exclude": {
@@ -16,18 +16,21 @@
         "**/__pycache__": true,
         ".idea": true
     },
-
     // Python
     "platformSettings.autoLoad": true,
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
-    "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ],
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "python.analysis.typeCheckingMode": "basic",
     "ruff.enable": true,
     "ruff.lint.run": "onSave",
-    "ruff.lint.args": ["--config=pyproject.toml"],
+    "ruff.lint.args": [
+        "--config=pyproject.toml"
+    ],
     "ruff.importStrategy": "fromEnvironment",
     "ruff.fixAll": true, //lint and fix all files in workspace
     "ruff.organizeImports": true, //organize imports on save
@@ -43,11 +46,12 @@
     "mypy.runUsingActiveInterpreter": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-
     // PowerShell
     "[powershell]": {
         "editor.defaultFormatter": "ms-vscode.powershell"
     },
     "powershell.codeFormatting.preset": "Stroustrup",
-    "python.testing.pytestArgs": ["."]
+    "python.testing.pytestArgs": [
+        "."
+    ]
 }

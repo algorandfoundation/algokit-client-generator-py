@@ -7,7 +7,7 @@ from examples.deployment_standard import (
 )
 
 app = (
-    beaker.Application("HelloWorldApp", descr="An app that says hello")
+    beaker.Application("HelloWorldApp")
     .apply(deploy_time_immutability_control)
     .apply(deploy_time_permanence_control)
 )
