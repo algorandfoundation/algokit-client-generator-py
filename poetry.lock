@@ -2,23 +2,18 @@
 
 [[package]]
 name = "algokit-utils"
-version = "2.4.0"
+version = "3.0.0b2"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
-python-versions = "^3.10"
-files = []
-develop = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "algokit_utils-3.0.0b2-py3-none-any.whl", hash = "sha256:661a0225393b2d868b76b1c5d71ab256187b39334ef90a692217b0c8bc88aaf3"},
+]
 
 [package.dependencies]
-httpx = "^0.28"
-py-algorand-sdk = "^2.4.0"
+httpx = ">=0.28,<0.29"
+py-algorand-sdk = ">=2.4.0,<3.0.0"
 typing-extensions = ">=4.6.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/algorandfoundation/algokit-utils-py.git"
-reference = "prerelease/ts-feature-parity"
-resolved_reference = "cf14b5c86982354aba60aedb1cb39f7b9ca0292a"
 
 [[package]]
 name = "anyio"
@@ -56,21 +51,6 @@ files = [
 [package.extras]
 docs = ["furo", "jaraco.packaging (>=9.3)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 testing = ["jaraco.test", "pytest (!=8.0.*)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)"]
-
-[[package]]
-name = "beaker-pyteal"
-version = "1.1.1"
-description = "A Framework for building PyTeal Applications"
-optional = false
-python-versions = ">=3.10,<4.0"
-files = [
-    {file = "beaker_pyteal-1.1.1-py3-none-any.whl", hash = "sha256:a85a4568213acbd097cd70d8acd71d0e7187b71a4dc5c1fd9760ae8c1433571e"},
-]
-
-[package.dependencies]
-algokit-utils = ">=2.0.0,<3.0.0"
-py-algorand-sdk = ">=2.0.0"
-pyteal = ">=0.24,<0.25"
 
 [[package]]
 name = "boolean-py"
@@ -516,17 +496,6 @@ files = [
 ]
 
 [[package]]
-name = "docstring-parser"
-version = "0.14.1"
-description = "Parse Python docstrings in reST, Google and Numpydoc format"
-optional = false
-python-versions = ">=3.6,<4.0"
-files = [
-    {file = "docstring_parser-0.14.1-py3-none-any.whl", hash = "sha256:14ac6ec1f1ba6905c4d8cb90fd0bc55394f5678183752c90e44812bf28d7a515"},
-    {file = "docstring_parser-0.14.1.tar.gz", hash = "sha256:2c77522e31b7c88b1ab457a1f3c9ae38947ad719732260ba77ee8a3deb58622a"},
-]
-
-[[package]]
 name = "docutils"
 version = "0.21.2"
 description = "Docutils -- Python Documentation Utilities"
@@ -575,20 +544,6 @@ files = [
 
 [package.extras]
 testing = ["hatch", "pre-commit", "pytest", "tox"]
-
-[[package]]
-name = "executing"
-version = "1.2.0"
-description = "Get the currently executing AST node of a frame, and other information"
-optional = false
-python-versions = "*"
-files = [
-    {file = "executing-1.2.0-py2.py3-none-any.whl", hash = "sha256:0314a69e37426e3608aada02473b4161d4caf5a4b244d1d0c48072b8fee7bacc"},
-    {file = "executing-1.2.0.tar.gz", hash = "sha256:19da64c18d2d851112f09c287f8d3dbbdf725ab0e569077efb6cdcbd3497c107"},
-]
-
-[package.extras]
-tests = ["asttokens", "littleutils", "pytest", "rich"]
 
 [[package]]
 name = "filelock"
@@ -1335,13 +1290,13 @@ virtualenv = ">=20.10.0"
 
 [[package]]
 name = "py-algorand-sdk"
-version = "2.6.1"
+version = "2.7.0"
 description = "Algorand SDK in Python"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 files = [
-    {file = "py-algorand-sdk-2.6.1.tar.gz", hash = "sha256:9223929d05f532a9295711c5ff945aa8aa854bc5efedb37b821f15335106ea14"},
-    {file = "py_algorand_sdk-2.6.1-py3-none-any.whl", hash = "sha256:1257b0999f4c67dd66e0517da5081e014953d0a7d14edecc45d53b8aba1b7328"},
+    {file = "py-algorand-sdk-2.7.0.tar.gz", hash = "sha256:9bb20d794aa4c67452330ad76fcd016195241c7bee2a39720cea688df6620a1b"},
+    {file = "py_algorand_sdk-2.7.0-py3-none-any.whl", hash = "sha256:4e04e8705ac65b38adcd14ccfc39d21406019ddbd6ae5b3aba287471d139be34"},
 ]
 
 [package.dependencies]
@@ -1468,24 +1423,6 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
-
-[[package]]
-name = "pyteal"
-version = "0.24.1"
-description = "Algorand Smart Contracts in Python"
-optional = false
-python-versions = ">=3.10"
-files = [
-    {file = "pyteal-0.24.1-py3-none-any.whl", hash = "sha256:19c601f0ea4d1a0be41a3fe48cd3807558a0e907cd47d0dca5df60977d78f2c4"},
-    {file = "pyteal-0.24.1.tar.gz", hash = "sha256:172d796981f8f9d3a9a8fbe71a71a49cf185509780f46d82e29aaa692386d1fa"},
-]
-
-[package.dependencies]
-docstring-parser = "0.14.1"
-executing = "1.2.0"
-py-algorand-sdk = ">=2.0.0,<3.0.0"
-semantic-version = ">=2.9.0,<3.0.0"
-tabulate = ">=0.9.0,<0.10.0"
 
 [[package]]
 name = "pytest"
@@ -1819,21 +1756,6 @@ cryptography = ">=2.0"
 jeepney = ">=0.6"
 
 [[package]]
-name = "semantic-version"
-version = "2.10.0"
-description = "A library implementing the 'SemVer' scheme."
-optional = false
-python-versions = ">=2.7"
-files = [
-    {file = "semantic_version-2.10.0-py2.py3-none-any.whl", hash = "sha256:de78a3b8e0feda74cabc54aab2da702113e33ac9d9eb9d2389bcf1f58b7d9177"},
-    {file = "semantic_version-2.10.0.tar.gz", hash = "sha256:bdabb6d336998cbb378d4b9db3a4b56a1e3235701dc05ea2690d9a997ed5041c"},
-]
-
-[package.extras]
-dev = ["Django (>=1.11)", "check-manifest", "colorama (<=0.4.1)", "coverage", "flake8", "nose2", "readme-renderer (<25.0)", "tox", "wheel", "zest.releaser[recommended]"]
-doc = ["Sphinx", "sphinx-rtd-theme"]
-
-[[package]]
 name = "semver"
 version = "2.13.0"
 description = "Python helper for Semantic Versioning (http://semver.org/)"
@@ -1907,20 +1829,6 @@ files = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
 ]
-
-[[package]]
-name = "tabulate"
-version = "0.9.0"
-description = "Pretty-print tabular data"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
-    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
-]
-
-[package.extras]
-widechars = ["wcwidth"]
 
 [[package]]
 name = "termcolor"
@@ -2138,4 +2046,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0e2fc314fd45c72f028e3c6cf9721d7bdd2f89482a3c4cccfb17b43f043f9d33"
+content-hash = "814e4d43fedbb02f8bf160daa5d5de37374ee1b004acd5c2abd348679d4ae25c"
