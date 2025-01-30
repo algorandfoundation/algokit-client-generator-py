@@ -384,12 +384,13 @@ class _GlobalState:
             )
         return typing.cast(GlobalStateValue, converted)
 
+    @property
     def global_key(self) -> int:
-            """Get the current value of the global_key key in global_state state"""
-            value = self.app_client.state.global_state.get_value("global_key")
-            if isinstance(value, dict) and "uint64" in self._struct_classes:
-                return self._struct_classes["uint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the global_key key in global_state state"""
+        value = self.app_client.state.global_state.get_value("global_key")
+        if isinstance(value, dict) and "uint64" in self._struct_classes:
+            return self._struct_classes["uint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
     @property
     def global_map(self) -> "_MapState[str, FooUint16BarUint16]":
@@ -423,12 +424,13 @@ class _LocalState:
             )
         return typing.cast(LocalStateValue, converted)
 
+    @property
     def local_key(self) -> int:
-            """Get the current value of the local_key key in local_state state"""
-            value = self.app_client.state.local_state(self.address).get_value("local_key")
-            if isinstance(value, dict) and "uint64" in self._struct_classes:
-                return self._struct_classes["uint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the local_key key in local_state state"""
+        value = self.app_client.state.local_state(self.address).get_value("local_key")
+        if isinstance(value, dict) and "uint64" in self._struct_classes:
+            return self._struct_classes["uint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
     @property
     def local_map(self) -> "_MapState[bytes, str]":
@@ -464,12 +466,13 @@ class _BoxState:
             )
         return typing.cast(BoxStateValue, converted)
 
+    @property
     def box_key(self) -> str:
-            """Get the current value of the box_key key in box state"""
-            value = self.app_client.state.box.get_value("box_key")
-            if isinstance(value, dict) and "string" in self._struct_classes:
-                return self._struct_classes["string"](**value)  # type: ignore
-            return typing.cast(str, value)
+        """Get the current value of the box_key key in box state"""
+        value = self.app_client.state.box.get_value("box_key")
+        if isinstance(value, dict) and "string" in self._struct_classes:
+            return self._struct_classes["string"](**value)  # type: ignore
+        return typing.cast(str, value)
 
     @property
     def box_map(self) -> "_MapState[Inputs, Outputs]":

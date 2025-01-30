@@ -1256,40 +1256,45 @@ class _GlobalState:
             )
         return typing.cast(GlobalStateValue, converted)
 
+    @property
     def bytes1(self) -> bytes:
-            """Get the current value of the bytes1 key in global_state state"""
-            value = self.app_client.state.global_state.get_value("bytes1")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the bytes1 key in global_state state"""
+        value = self.app_client.state.global_state.get_value("bytes1")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
+    @property
     def bytes2(self) -> bytes:
-            """Get the current value of the bytes2 key in global_state state"""
-            value = self.app_client.state.global_state.get_value("bytes2")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the bytes2 key in global_state state"""
+        value = self.app_client.state.global_state.get_value("bytes2")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
+    @property
     def int1(self) -> int:
-            """Get the current value of the int1 key in global_state state"""
-            value = self.app_client.state.global_state.get_value("int1")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the int1 key in global_state state"""
+        value = self.app_client.state.global_state.get_value("int1")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
+    @property
     def int2(self) -> int:
-            """Get the current value of the int2 key in global_state state"""
-            value = self.app_client.state.global_state.get_value("int2")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the int2 key in global_state state"""
+        value = self.app_client.state.global_state.get_value("int2")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
+    @property
     def value(self) -> int:
-            """Get the current value of the value key in global_state state"""
-            value = self.app_client.state.global_state.get_value("value")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the value key in global_state state"""
+        value = self.app_client.state.global_state.get_value("value")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
 class _LocalState:
     def __init__(self, app_client: algokit_utils.AppClient, address: str):
@@ -1314,33 +1319,37 @@ class _LocalState:
             )
         return typing.cast(LocalStateValue, converted)
 
+    @property
     def local_bytes1(self) -> bytes:
-            """Get the current value of the local_bytes1 key in local_state state"""
-            value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the local_bytes1 key in local_state state"""
+        value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
+    @property
     def local_bytes2(self) -> bytes:
-            """Get the current value of the local_bytes2 key in local_state state"""
-            value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the local_bytes2 key in local_state state"""
+        value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
+    @property
     def local_int1(self) -> int:
-            """Get the current value of the local_int1 key in local_state state"""
-            value = self.app_client.state.local_state(self.address).get_value("local_int1")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the local_int1 key in local_state state"""
+        value = self.app_client.state.local_state(self.address).get_value("local_int1")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
+    @property
     def local_int2(self) -> int:
-            """Get the current value of the local_int2 key in local_state state"""
-            value = self.app_client.state.local_state(self.address).get_value("local_int2")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the local_int2 key in local_state state"""
+        value = self.app_client.state.local_state(self.address).get_value("local_int2")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
 class StateAppClient:
     """Client for interacting with StateApp smart contract"""

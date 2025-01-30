@@ -109,6 +109,48 @@ client, result = factory.deploy(
 )
 ```
 
+### 5. State Access
+
+**Before (v1):**
+
+```python
+# Global state access via dedicated method
+global_response = client.get_global_state()
+print(global_response.int1)  # 42
+print(global_response.bytes1.as_str)  # "test"
+
+# Local state required opt-in first
+client.opt_in_opt_in()
+local_response = client.get_local_state(account=None)
+print(local_response.local_int1)  # 123
+
+# Box state required manual transactions
+```
+
+**After (v2):**
+
+```python
+# Single entry point via .state property
+global_state = client.state.global_state.get_all()
+print(global_state["int1"])  # 42 (native int)
+print(global_state["bytes1"].decode())  # "test"
+## or access key directly via property
+print(client.state.global_state.int1)
+print(client.state.global_state.bytes1.decode())
+
+# Explicit account for local state
+local_state = client.state.local_state("ADDRESS").get_all()
+print(local_state["local_int1"])  # 123
+## or access key directly via property
+print(client.state.local_state("ADDRESS").local_int1)
+
+# Box access via same interface
+box_key = client.state.boxes.box_key # access box key directly
+all_boxes = client.state.boxes.get_all() # access all boxes
+box_mapping = client.state.boxes.box_map.get_map() # access map directly
+box_mapping_content = client.state.boxes.box_map.get_value(Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=4, b=3))) # access map content directly by typed key
+```
+
 ## Key Improvements
 
 | Feature          | v1              | v2 Benefit                   |
@@ -136,7 +178,3 @@ client, result = factory.deploy(
 -   Combine factory patterns with `algokit-utils-py` v3 features for best results
 
 Need help? Submit an issue on [GitHub](https://github.com/algorandfoundation/algokit-client-generator-py/issues), for reference on the application specification refer to [ARC-56 specification](https://arc.algorand.foundation/ARCs/arc-0056).
-
-```
-
-```

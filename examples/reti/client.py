@@ -1880,33 +1880,37 @@ class _GlobalState:
             )
         return typing.cast(GlobalStateValue, converted)
 
+    @property
     def staking_pool_initialized(self) -> bool:
-            """Get the current value of the staking_pool_initialized key in global_state state"""
-            value = self.app_client.state.global_state.get_value("staking_pool_initialized")
-            if isinstance(value, dict) and "bool" in self._struct_classes:
-                return self._struct_classes["bool"](**value)  # type: ignore
-            return typing.cast(bool, value)
+        """Get the current value of the staking_pool_initialized key in global_state state"""
+        value = self.app_client.state.global_state.get_value("staking_pool_initialized")
+        if isinstance(value, dict) and "bool" in self._struct_classes:
+            return self._struct_classes["bool"](**value)  # type: ignore
+        return typing.cast(bool, value)
 
+    @property
     def num_validators(self) -> int:
-            """Get the current value of the num_validators key in global_state state"""
-            value = self.app_client.state.global_state.get_value("num_validators")
-            if isinstance(value, dict) and "uint64" in self._struct_classes:
-                return self._struct_classes["uint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the num_validators key in global_state state"""
+        value = self.app_client.state.global_state.get_value("num_validators")
+        if isinstance(value, dict) and "uint64" in self._struct_classes:
+            return self._struct_classes["uint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
+    @property
     def num_stakers(self) -> int:
-            """Get the current value of the num_stakers key in global_state state"""
-            value = self.app_client.state.global_state.get_value("num_stakers")
-            if isinstance(value, dict) and "uint64" in self._struct_classes:
-                return self._struct_classes["uint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the num_stakers key in global_state state"""
+        value = self.app_client.state.global_state.get_value("num_stakers")
+        if isinstance(value, dict) and "uint64" in self._struct_classes:
+            return self._struct_classes["uint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
+    @property
     def total_algo_staked(self) -> int:
-            """Get the current value of the total_algo_staked key in global_state state"""
-            value = self.app_client.state.global_state.get_value("total_algo_staked")
-            if isinstance(value, dict) and "uint64" in self._struct_classes:
-                return self._struct_classes["uint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the total_algo_staked key in global_state state"""
+        value = self.app_client.state.global_state.get_value("total_algo_staked")
+        if isinstance(value, dict) and "uint64" in self._struct_classes:
+            return self._struct_classes["uint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
 class _BoxState:
     def __init__(self, app_client: algokit_utils.AppClient):
@@ -1933,12 +1937,13 @@ class _BoxState:
             )
         return typing.cast(BoxStateValue, converted)
 
+    @property
     def staking_pool_approval_program(self) -> bytes:
-            """Get the current value of the staking_pool_approval_program key in box state"""
-            value = self.app_client.state.box.get_value("staking_pool_approval_program")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the staking_pool_approval_program key in box state"""
+        value = self.app_client.state.box.get_value("staking_pool_approval_program")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
     @property
     def validator_list(self) -> "_MapState[int, ValidatorInfo]":

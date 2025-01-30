@@ -61,6 +61,8 @@ def test_exposes_state_correctly(
         args=SetGlobalArgs(int1=1, bytes1="asdf", bytes2=b"\x01\x02\x03\x04", int2=2)
     )
     global_state = client.state.global_state.get_all()
+    client.state.global_state.bytes1
+    
     assert global_state["int1"] == 1
     assert global_state["int2"] == 2
     assert global_state["bytes1"] == b"asdf"
