@@ -843,14 +843,16 @@ class {class_name}:
             python_type = utils.map_abi_type_to_python(key_info.value_type, utils.IOType.OUTPUT, context.structs)
             yield Part.Gap1
             yield Part.IncIndent
-            yield utils.indented(f"""
+            yield (
+                f"""@property
     def {utils.get_method_name(key_name)}(self) -> {python_type}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
         value = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}")
         if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes:
             return self._struct_classes["{key_info.value_type}"](**value)  # type: ignore
         return typing.cast({python_type}, value)
-""")
+"""
+            )
             yield Part.DecIndent
 
     # Generate methods for maps

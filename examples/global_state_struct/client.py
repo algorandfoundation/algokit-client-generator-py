@@ -240,12 +240,13 @@ class _GlobalState:
             )
         return typing.cast(GlobalStateValue, converted)
 
+    @property
     def my_struct(self) -> Vector:
-            """Get the current value of the my_struct key in global_state state"""
-            value = self.app_client.state.global_state.get_value("my_struct")
-            if isinstance(value, dict) and "Vector" in self._struct_classes:
-                return self._struct_classes["Vector"](**value)  # type: ignore
-            return typing.cast(Vector, value)
+        """Get the current value of the my_struct key in global_state state"""
+        value = self.app_client.state.global_state.get_value("my_struct")
+        if isinstance(value, dict) and "Vector" in self._struct_classes:
+            return self._struct_classes["Vector"](**value)  # type: ignore
+        return typing.cast(Vector, value)
 
 class HelloWorldClient:
     """Client for interacting with HelloWorld smart contract"""

@@ -147,8 +147,8 @@ def test_arc56_demo(
             )
         )
 
-    assert client.state.global_state.global_key() == 1337
-    assert another_client.state.global_state.global_key() == 1338
+    assert client.state.global_state.global_key == 1337
+    assert another_client.state.global_state.global_key == 1338
     assert client.state.global_state.global_map.get_value("foo") == FooUint16BarUint16(
         foo=13, bar=37
     )
@@ -159,13 +159,13 @@ def test_arc56_demo(
     client.send.opt_in.opt_in_to_application(
         send_params={"populate_app_call_resources": True}
     )
-
-    assert client.state.local_state(default_deployer.address).local_key() == 1337
+    assert client.state.local_state(default_deployer.address).local_key == 1337
     assert (
         client.state.local_state(default_deployer.address).local_map.get_value(b"foo")
         == "bar"
     )
-    assert client.state.box.box_key() == "baz"
+    client.state.box.box_map.get_value
+    assert client.state.box.box_key == "baz"
     assert client.state.box.box_map.get_value(
         Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=4, b=3))
     ) == Outputs(

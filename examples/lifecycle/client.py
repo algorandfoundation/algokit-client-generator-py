@@ -410,19 +410,21 @@ class _GlobalState:
             )
         return typing.cast(GlobalStateValue, converted)
 
+    @property
     def greeting(self) -> bytes:
-            """Get the current value of the greeting key in global_state state"""
-            value = self.app_client.state.global_state.get_value("greeting")
-            if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-                return self._struct_classes["AVMBytes"](**value)  # type: ignore
-            return typing.cast(bytes, value)
+        """Get the current value of the greeting key in global_state state"""
+        value = self.app_client.state.global_state.get_value("greeting")
+        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
+            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+        return typing.cast(bytes, value)
 
+    @property
     def times(self) -> int:
-            """Get the current value of the times key in global_state state"""
-            value = self.app_client.state.global_state.get_value("times")
-            if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-                return self._struct_classes["AVMUint64"](**value)  # type: ignore
-            return typing.cast(int, value)
+        """Get the current value of the times key in global_state state"""
+        value = self.app_client.state.global_state.get_value("times")
+        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
+            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+        return typing.cast(int, value)
 
 class LifeCycleAppClient:
     """Client for interacting with LifeCycleApp smart contract"""
