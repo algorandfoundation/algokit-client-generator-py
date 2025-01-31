@@ -9,19 +9,20 @@ def to_camel_case(s: str) -> str:
 
 def update_approvals() -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
+    # TODO: Uncomment all apps.
     for app in [
-        "arc56_test",
-        "duplicate_structs",
-        "global_state_struct",
+        # "arc56_test",
+        # "duplicate_structs",
+        # "global_state_struct",
         "hello_world",
         "lifecycle",
         "minimal",
-        "nested",
-        "nfd",
-        "reti",
+        # "nested",
+        # "nfd",
+        # "reti",
         "state",
         "voting_round",
-        "zero_coupon_bond",
+        # "zero_coupon_bond",
     ]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
