@@ -1,0 +1,90 @@
+import algokit_utils
+import pytest
+from algosdk.v2client.algod import AlgodClient
+from algosdk.v2client.indexer import IndexerClient
+
+from examples.smart_contracts.artifacts.lifecycle.lifecycle_client import (
+    CreateStringStringArgs,
+    CreateStringUint32VoidArgs,
+    DeployCreate,
+    LifeCycleClient,
+)
+from examples.tests.conftest import get_unique_name
+
+
+@pytest.fixture(scope="session")
+def lifecycle_client(algod_client: AlgodClient, funded_account: algokit_utils.Account) -> LifeCycleClient:
+    return LifeCycleClient(algod_client=algod_client, signer=funded_account.signer, template_values={"UPDATABLE": 1})
+
+
+@pytest.fixture()
+def deploy_lifecycle_client(
+    algod_client: AlgodClient, indexer_client: IndexerClient, funded_account: algokit_utils.Account
+) -> LifeCycleClient:
+    return LifeCycleClient(
+        algod_client=algod_client,
+        indexer_client=indexer_client,
+        creator=funded_account,
+        app_name=get_unique_name(),
+    )
+
+
+def test_create_bare(lifecycle_client: LifeCycleClient) -> None:
+    create_response = lifecycle_client.create_bare()
+    assert create_response
+    response = lifecycle_client.hello_string_string(name="Bare")
+
+    assert response.return_value == "Hello, Bare\n"
+
+
+def test_create_1arg(lifecycle_client: LifeCycleClient) -> None:
+    create_response = lifecycle_client.create_create_string_string(greeting="Greetings")
+    assert create_response.return_value == "Greetings_1"
+    response = lifecycle_client.hello_string_string(name="1 Arg")
+
+    assert response.return_value == "Greetings, 1 Arg\n"
+
+
+def test_create_2arg(lifecycle_client: LifeCycleClient) -> None:
+    create_response = lifecycle_client.create_create_string_uint32_void(greeting="Greetings", times=2)
+    assert create_response.return_value is None
+    response = lifecycle_client.hello_string_string(name="2 Arg")
+
+    assert response.return_value == "Greetings, 2 Arg\nGreetings, 2 Arg\n"
+
+
+def test_deploy_bare(deploy_lifecycle_client: LifeCycleClient) -> None:
+    deploy_lifecycle_client.deploy(allow_update=True, create_args=None)
+    assert deploy_lifecycle_client.app_id
+
+    response = deploy_lifecycle_client.hello_string_string(name="Deploy Bare")
+
+    assert response.return_value == "Hello, Deploy Bare\n"
+
+
+def test_deploy_create_1arg(deploy_lifecycle_client: LifeCycleClient) -> None:
+    deploy_response = deploy_lifecycle_client.deploy(
+        allow_update=True,
+        create_args=DeployCreate(args=CreateStringStringArgs(greeting="Deploy Greetings")),
+    )
+    assert deploy_lifecycle_client.app_id
+    assert isinstance(deploy_response.create_response, algokit_utils.ABITransactionResponse)
+    assert deploy_response.create_response.return_value == "Deploy Greetings_1"
+
+    response = deploy_lifecycle_client.hello_string_string(name="1 Arg")
+
+    assert response.return_value == "Deploy Greetings, 1 Arg\n"
+
+
+def test_deploy_create_2arg(deploy_lifecycle_client: LifeCycleClient) -> None:
+    deploy_lifecycle_client.deploy(
+        allow_update=True,
+        create_args=DeployCreate(
+            args=CreateStringUint32VoidArgs(greeting="Deploy Greetings", times=2),
+        ),
+    )
+    assert deploy_lifecycle_client.app_id
+
+    response = deploy_lifecycle_client.hello_string_string(name="2 Arg")
+
+    assert response.return_value == "Deploy Greetings, 2 Arg\nDeploy Greetings, 2 Arg\n"

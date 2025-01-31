@@ -3,25 +3,30 @@ import pathlib
 from algokit_client_generator import generate_client
 
 
+def to_camel_case(s: str) -> str:
+    return "".join([x.capitalize() for x in s.split("_")])
+
+
 def update_approvals() -> None:
-    examples = pathlib.Path(__file__).parent.parent / "examples"
+    artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
+    # TODO: Uncomment all apps.
     for app in [
-        "arc56_test",
-        "duplicate_structs",
-        "global_state_struct",
-        "helloworld",
+        # "arc56_test",
+        # "duplicate_structs",
+        # "global_state_struct",
+        "hello_world",
         "lifecycle",
         "minimal",
-        "nested",
-        "nfd",
-        "reti",
+        # "nested",
+        # "nfd",
+        # "reti",
         "state",
-        "voting",
-        "zero_coupon_bond",
+        "voting_round",
+        # "zero_coupon_bond",
     ]:
-        app_path = examples / app
-        app_spec = app_path / "application.json"
-        approved_path = app_path / "client.py"
+        app_path = artifacts / app
+        app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
+        approved_path = app_path / f"{app}_client.py"
         try:
             generate_client(app_spec, approved_path)
         except Exception as e:
