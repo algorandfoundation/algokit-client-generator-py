@@ -9,11 +9,27 @@ def to_camel_case(s: str) -> str:
 
 def update_approvals() -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
-    for app in ["hello_world", "lifecycle", "minimal", "state", "voting_round"]:
+    for app in [
+        "arc56_test",
+        "duplicate_structs",
+        "global_state_struct",
+        "hello_world",
+        "lifecycle",
+        "minimal",
+        "nested",
+        "nfd",
+        "reti",
+        "state",
+        "voting_round",
+        "zero_coupon_bond",
+    ]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
         approved_path = app_path / f"{app}_client.py"
-        generate_client(app_spec, approved_path)
+        try:
+            generate_client(app_spec, approved_path)
+        except Exception as e:
+            print(f"Error generating client for {app}: {e}")
 
 
 if __name__ == "__main__":

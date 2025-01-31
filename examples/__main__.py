@@ -3,7 +3,9 @@ import pathlib
 import subprocess
 from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)-10s: %(message)s")
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s %(levelname)-10s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 root_path = Path(__file__).parent
 

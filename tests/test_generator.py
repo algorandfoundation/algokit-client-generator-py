@@ -1,6 +1,7 @@
 import pathlib
 
 import pytest
+
 from algokit_client_generator import generate_client
 
 
@@ -8,7 +9,23 @@ def to_camel_case(s: str) -> str:
     return "".join([x.capitalize() for x in s.split("_")])
 
 
-@pytest.mark.parametrize("app", ["hello_world", "lifecycle", "minimal", "state", "voting_round"])
+@pytest.mark.parametrize(
+    "app",
+    [
+        "arc56_test",
+        "duplicate_structs",
+        "global_state_struct",
+        "hello_world",
+        "lifecycle",
+        "minimal",
+        "nested",
+        "nfd",
+        "reti",
+        "state",
+        "voting_round",
+        "zero_coupon_bond",
+    ],
+)
 def test_generate_clients(app: str) -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     app_path = examples / app
