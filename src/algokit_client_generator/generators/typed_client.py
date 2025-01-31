@@ -197,8 +197,8 @@ def _generate_method_body(
         if method.abi and method.abi.result_struct:
             return (
                 f"dataclasses.replace(response, "
-                f"abi_return={method.abi.result_struct.struct_class_name}("
-                f"**typing.cast(dict, response.abi_return))) # type: ignore"
+                f"abi_return=_init_dataclass({method.abi.result_struct.struct_class_name}, "
+                f"typing.cast(dict, response.abi_return))) # type: ignore"
             )
         return "response"
 
@@ -831,7 +831,7 @@ class {class_name}:
             key_info = self.app_client.app_spec.state.keys.{state_type}.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return {'typing.cast(' + value_type_name + ', converted)' if value_type_name else 'converted'}
@@ -849,7 +849,7 @@ class {class_name}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
         value = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}")
         if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes:
-            return self._struct_classes["{key_info.value_type}"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["{key_info.value_type}"], value)  # type: ignore
         return typing.cast({python_type}, value)
 """
             )
@@ -970,8 +970,8 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         \"\"\"Get all current values in the map\"\"\"
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
-            return {k: self._struct_class(**v) if isinstance(v, dict) else v
-                    for k, v in result.items()}
+            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
+                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
@@ -979,7 +979,7 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
-            return self._struct_class(**value)
+            return _init_dataclass(self._struct_class, value)  # type: ignore
         return typing.cast(_ValueType | None, value)
 """)
 

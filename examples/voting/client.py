@@ -47,6 +47,23 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         for arg in method_args
     ] if method_args else None
 
+def _init_dataclass(cls: type, data: dict) -> object:
+    """
+    Recursively instantiate a dataclass of type `cls` from `data`.
+
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    """
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
+
 ON_COMPLETE_TYPES = typing.Literal[
     OnComplete.NoOpOC,
     OnComplete.UpdateApplicationOC,
@@ -387,7 +404,7 @@ class VotingRoundAppSend:
             "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=VotingPreconditions(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(VotingPreconditions, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[VotingPreconditions], parsed_response)
 
     def vote(
@@ -480,7 +497,7 @@ class _GlobalState:
             key_info = self.app_client.app_spec.state.keys.global_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(GlobalStateValue, converted)
@@ -490,7 +507,7 @@ class _GlobalState:
         """Get the current value of the close_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("close_time")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -498,7 +515,7 @@ class _GlobalState:
         """Get the current value of the end_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("end_time")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -506,7 +523,7 @@ class _GlobalState:
         """Get the current value of the is_bootstrapped key in global_state state"""
         value = self.app_client.state.global_state.get_value("is_bootstrapped")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -514,7 +531,7 @@ class _GlobalState:
         """Get the current value of the metadata_ipfs_cid key in global_state state"""
         value = self.app_client.state.global_state.get_value("metadata_ipfs_cid")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -522,7 +539,7 @@ class _GlobalState:
         """Get the current value of the nft_asset_id key in global_state state"""
         value = self.app_client.state.global_state.get_value("nft_asset_id")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -530,7 +547,7 @@ class _GlobalState:
         """Get the current value of the nft_image_url key in global_state state"""
         value = self.app_client.state.global_state.get_value("nft_image_url")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -538,7 +555,7 @@ class _GlobalState:
         """Get the current value of the option_counts key in global_state state"""
         value = self.app_client.state.global_state.get_value("option_counts")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -546,7 +563,7 @@ class _GlobalState:
         """Get the current value of the quorum key in global_state state"""
         value = self.app_client.state.global_state.get_value("quorum")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -554,7 +571,7 @@ class _GlobalState:
         """Get the current value of the snapshot_public_key key in global_state state"""
         value = self.app_client.state.global_state.get_value("snapshot_public_key")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -562,7 +579,7 @@ class _GlobalState:
         """Get the current value of the start_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("start_time")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -570,7 +587,7 @@ class _GlobalState:
         """Get the current value of the total_options key in global_state state"""
         value = self.app_client.state.global_state.get_value("total_options")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -578,7 +595,7 @@ class _GlobalState:
         """Get the current value of the vote_id key in global_state state"""
         value = self.app_client.state.global_state.get_value("vote_id")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -586,7 +603,7 @@ class _GlobalState:
         """Get the current value of the voter_count key in global_state state"""
         value = self.app_client.state.global_state.get_value("voter_count")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class VotingRoundAppClient:

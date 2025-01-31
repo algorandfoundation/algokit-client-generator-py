@@ -47,6 +47,23 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         for arg in method_args
     ] if method_args else None
 
+def _init_dataclass(cls: type, data: dict) -> object:
+    """
+    Recursively instantiate a dataclass of type `cls` from `data`.
+
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    """
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
+
 ON_COMPLETE_TYPES = typing.Literal[
     OnComplete.NoOpOC,
     OnComplete.UpdateApplicationOC,
@@ -1251,7 +1268,7 @@ class _GlobalState:
             key_info = self.app_client.app_spec.state.keys.global_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(GlobalStateValue, converted)
@@ -1261,7 +1278,7 @@ class _GlobalState:
         """Get the current value of the bytes1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes1")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1269,7 +1286,7 @@ class _GlobalState:
         """Get the current value of the bytes2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes2")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1277,7 +1294,7 @@ class _GlobalState:
         """Get the current value of the int1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int1")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1285,7 +1302,7 @@ class _GlobalState:
         """Get the current value of the int2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int2")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1293,7 +1310,7 @@ class _GlobalState:
         """Get the current value of the value key in global_state state"""
         value = self.app_client.state.global_state.get_value("value")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _LocalState:
@@ -1314,7 +1331,7 @@ class _LocalState:
             key_info = self.app_client.app_spec.state.keys.local_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(LocalStateValue, converted)
@@ -1324,7 +1341,7 @@ class _LocalState:
         """Get the current value of the local_bytes1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1332,7 +1349,7 @@ class _LocalState:
         """Get the current value of the local_bytes2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1340,7 +1357,7 @@ class _LocalState:
         """Get the current value of the local_int1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int1")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1348,7 +1365,7 @@ class _LocalState:
         """Get the current value of the local_int2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int2")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class StateAppClient:

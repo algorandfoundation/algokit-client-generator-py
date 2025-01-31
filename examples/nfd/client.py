@@ -47,6 +47,23 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         for arg in method_args
     ] if method_args else None
 
+def _init_dataclass(cls: type, data: dict) -> object:
+    """
+    Recursively instantiate a dataclass of type `cls` from `data`.
+
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    """
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
+
 ON_COMPLETE_TYPES = typing.Literal[
     OnComplete.NoOpOC,
     OnComplete.UpdateApplicationOC,
@@ -1165,7 +1182,7 @@ class NfdInstanceSend:
             "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=PayoutInfo(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PayoutInfo, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[PayoutInfo], parsed_response)
 
     def purchase(
@@ -1439,7 +1456,7 @@ class _GlobalState:
             key_info = self.app_client.app_spec.state.keys.global_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return converted
@@ -1471,7 +1488,7 @@ class _BoxState:
             key_info = self.app_client.app_spec.state.keys.box.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return converted
@@ -1507,8 +1524,8 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
-            return {k: self._struct_class(**v) if isinstance(v, dict) else v
-                    for k, v in result.items()}
+            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
+                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
@@ -1516,7 +1533,7 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
-            return self._struct_class(**value)
+            return _init_dataclass(self._struct_class, value)  # type: ignore
         return typing.cast(_ValueType | None, value)
 
 
