@@ -18,7 +18,21 @@ def main() -> None:
     smart_contracts = pathlib.Path(__file__).parent / "smart_contracts"
     artifacts = smart_contracts / "artifacts"
 
-    for app in ["hello_world", "lifecycle", "minimal", "state", "voting_round"]:
+    # TODO: Uncomment all apps.
+    for app in [
+        # "arc56_test",
+        # "duplicate_structs",
+        # "global_state_struct",
+        "hello_world",
+        "lifecycle",
+        "minimal",
+        # "nested",
+        # "nfd",
+        # "reti",
+        "state",
+        "voting_round",
+        # "zero_coupon_bond",
+    ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
         subprocess.run(
