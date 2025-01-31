@@ -120,11 +120,11 @@ print(global_response.int1)  # 42
 print(global_response.bytes1.as_str)  # "test"
 
 # Local state required opt-in first
-client.opt_in_opt_in()
+client.send.opt_in.some_opt_in_method()
 local_response = client.get_local_state(account=None)
 print(local_response.local_int1)  # 123
 
-# Box state required manual transactions
+# No unified box state access ;(
 ```
 
 **After (v2):**
