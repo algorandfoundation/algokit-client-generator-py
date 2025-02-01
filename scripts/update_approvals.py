@@ -8,7 +8,7 @@ def update_approvals() -> None:
     for app in [
         "arc56_test",
         "duplicate_structs",
-        "global_state_struct",
+        "structs",
         "helloworld",
         "lifecycle",
         "minimal",

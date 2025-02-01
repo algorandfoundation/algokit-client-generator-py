@@ -10,7 +10,7 @@ from algokit_client_generator import generate_client
     [
         "arc56_test",
         "duplicate_structs",
-        "global_state_struct",
+        "structs",
         "helloworld",
         "lifecycle",
         "minimal",

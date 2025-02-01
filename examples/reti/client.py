@@ -47,6 +47,23 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         for arg in method_args
     ] if method_args else None
 
+def _init_dataclass(cls: type, data: dict) -> object:
+    """
+    Recursively instantiate a dataclass of type `cls` from `data`.
+
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    """
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
+
 ON_COMPLETE_TYPES = typing.Literal[
     OnComplete.NoOpOC,
     OnComplete.UpdateApplicationOC,
@@ -1356,7 +1373,7 @@ class ValidatorRegistrySend:
             **dataclasses.asdict(params),
             "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=MbrAmounts(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(MbrAmounts, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[MbrAmounts], parsed_response)
 
     def get_protocol_constraints(
@@ -1370,7 +1387,7 @@ class ValidatorRegistrySend:
             **dataclasses.asdict(params),
             "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=Constraints(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(Constraints, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[Constraints], parsed_response)
 
     def get_num_validators(
@@ -1400,7 +1417,7 @@ class ValidatorRegistrySend:
             "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorConfig(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorConfig, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorConfig], parsed_response)
 
     def get_validator_state(
@@ -1416,7 +1433,7 @@ class ValidatorRegistrySend:
             "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorCurState(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorCurState, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorCurState], parsed_response)
 
     def get_validator_owner_and_manager(
@@ -1480,7 +1497,7 @@ class ValidatorRegistrySend:
             "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=PoolInfo(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolInfo, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[PoolInfo], parsed_response)
 
     def get_cur_max_stake_per_pool(
@@ -1544,7 +1561,7 @@ class ValidatorRegistrySend:
             "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolTokenPayoutRatio, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def get_node_pool_assignments(
@@ -1560,7 +1577,7 @@ class ValidatorRegistrySend:
             "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=NodePoolAssignmentConfig(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(NodePoolAssignmentConfig, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
 
     def get_nfd_registry_id(
@@ -1686,7 +1703,7 @@ class ValidatorRegistrySend:
             "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorPoolKey, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def add_stake(
@@ -1702,7 +1719,7 @@ class ValidatorRegistrySend:
             "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=ValidatorPoolKey(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorPoolKey, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
 
     def set_token_payout_ratio(
@@ -1718,7 +1735,7 @@ class ValidatorRegistrySend:
             "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
             "args": method_args,
         }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=PoolTokenPayoutRatio(**typing.cast(dict, response.abi_return))) # type: ignore
+        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolTokenPayoutRatio, typing.cast(dict, response.abi_return))) # type: ignore
         return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
 
     def stake_updated_via_rewards(
@@ -1875,7 +1892,7 @@ class _GlobalState:
             key_info = self.app_client.app_spec.state.keys.global_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(GlobalStateValue, converted)
@@ -1885,7 +1902,7 @@ class _GlobalState:
         """Get the current value of the staking_pool_initialized key in global_state state"""
         value = self.app_client.state.global_state.get_value("staking_pool_initialized")
         if isinstance(value, dict) and "bool" in self._struct_classes:
-            return self._struct_classes["bool"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["bool"], value)  # type: ignore
         return typing.cast(bool, value)
 
     @property
@@ -1893,7 +1910,7 @@ class _GlobalState:
         """Get the current value of the num_validators key in global_state state"""
         value = self.app_client.state.global_state.get_value("num_validators")
         if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return self._struct_classes["uint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1901,7 +1918,7 @@ class _GlobalState:
         """Get the current value of the num_stakers key in global_state state"""
         value = self.app_client.state.global_state.get_value("num_stakers")
         if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return self._struct_classes["uint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1909,7 +1926,7 @@ class _GlobalState:
         """Get the current value of the total_algo_staked key in global_state state"""
         value = self.app_client.state.global_state.get_value("total_algo_staked")
         if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return self._struct_classes["uint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _BoxState:
@@ -1932,7 +1949,7 @@ class _BoxState:
             key_info = self.app_client.app_spec.state.keys.box.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(BoxStateValue, converted)
@@ -1942,7 +1959,7 @@ class _BoxState:
         """Get the current value of the staking_pool_approval_program key in box state"""
         value = self.app_client.state.box.get_value("staking_pool_approval_program")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1985,8 +2002,8 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
         if self._struct_class and result:
-            return {k: self._struct_class(**v) if isinstance(v, dict) else v
-                    for k, v in result.items()}
+            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
+                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
@@ -1994,7 +2011,7 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
         value = self._state_accessor.get_map_value(self._map_name, key_value)
         if value is not None and self._struct_class and isinstance(value, dict):
-            return self._struct_class(**value)
+            return _init_dataclass(self._struct_class, value)  # type: ignore
         return typing.cast(_ValueType | None, value)
 
 
