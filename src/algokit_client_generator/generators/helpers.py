@@ -40,19 +40,6 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     )
 
 
-def generate_helper_aliases(context: GeneratorContext) -> DocumentParts:
-    yield utils.indented(
-        """
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]"""
-    )
-
-
 def generate_dataclass_initializer(context: GeneratorContext) -> DocumentParts:
     yield utils.indented(
         """
@@ -82,5 +69,3 @@ def generate_helpers(context: GeneratorContext) -> DocumentParts:
     yield Part.Gap1
     yield generate_dataclass_initializer(context)
     yield Part.Gap1
-    yield generate_helper_aliases(context)
-    yield Part.Gap2

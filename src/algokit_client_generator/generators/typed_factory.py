@@ -44,7 +44,7 @@ def _generate_method_params(
         params.append(f"args: {args_type}")
 
     params.append("*")
-    params.append("params: CommonAppFactoryCallParams | None = None")
+    params.append("params: algokit_utils.CommonAppCallCreateParams | None = None")
     if include_send_params:
         params.append("send_params: algokit_utils.SendParams | None = None")
     if include_compilation_params:
@@ -73,7 +73,7 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
     yield utils.indented(f"""
 {method_params} -> algokit_utils.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
-    params = params or CommonAppFactoryCallParams()
+    params = params or algokit_utils.CommonAppCallCreateParams()
     return self.app_factory.params.{operation}(
         algokit_utils.AppFactoryCreateMethodCallParams(
             **{{
@@ -111,7 +111,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
     yield utils.indented(f"""
     {method_params} -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         client, result = self.app_factory.send.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{{
@@ -157,11 +157,11 @@ class {class_name}:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         {'compilation_params: algokit_utils.AppClientCompilationParams | None = None' if operation == 'create' else '' }
     ) -> algokit_utils.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             {'compilation_params=compilation_params' if operation == 'create' else ''})
@@ -547,10 +547,10 @@ class {context.contract_name}FactoryCreateTransactionCreate:
 
     def bare(
         self,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
     ) -> Transaction:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
@@ -569,12 +569,12 @@ class {context.contract_name}FactorySendCreate:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ) -> tuple[{context.contract_name}Client, algokit_utils.SendAppCreateTransactionResult]:
         \"\"\"Creates a new instance using a bare call\"\"\"
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,

@@ -64,15 +64,6 @@ def _init_dataclass(cls: type, data: dict) -> object:
             field_values[field.name] = field_value
     return cls(**field_values)
 
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]
-
-
 @dataclasses.dataclass(frozen=True)
 class InputsAdd:
     """Struct for InputsAdd"""
@@ -110,58 +101,16 @@ class FooArgs:
     inputs: Inputs
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppCallParams:
-    """Common configuration for app call transaction parameters
-
-    :ivar account_references: List of account addresses to reference
-    :ivar app_references: List of app IDs to reference
-    :ivar asset_references: List of asset IDs to reference
-    :ivar box_references: List of box references to include
-    :ivar extra_fee: Additional fee to add to transaction
-    :ivar lease: Transaction lease value
-    :ivar max_fee: Maximum fee allowed for transaction
-    :ivar note: Arbitrary note for the transaction
-    :ivar rekey_to: Address to rekey account to
-    :ivar sender: Sender address override
-    :ivar signer: Custom transaction signer
-    :ivar static_fee: Fixed fee for transaction
-    :ivar validity_window: Number of rounds valid
-    :ivar first_valid_round: First valid round number
-    :ivar last_valid_round: Last valid round number"""
-
-    account_references: list[str] | None = None
-    app_references: list[int] | None = None
-    asset_references: list[int] | None = None
-    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
-    extra_fee: algokit_utils.AlgoAmount | None = None
-    lease: bytes | None = None
-    max_fee: algokit_utils.AlgoAmount | None = None
-    note: bytes | None = None
-    rekey_to: str | None = None
-    sender: str | None = None
-    signer: TransactionSigner | None = None
-    static_fee: algokit_utils.AlgoAmount | None = None
-    validity_window: int | None = None
-    first_valid_round: int | None = None
-    last_valid_round: int | None = None
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppFactoryCallParams(CommonAppCallParams):
-    """Common configuration for app factory call related transaction parameters"""
-    on_complete: ON_COMPLETE_TYPES | None = None
-
-
 class _Arc56TestOptIn:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     def opt_in_to_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "optInToApplication()void",
@@ -179,10 +128,10 @@ class Arc56TestParams:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
@@ -191,10 +140,10 @@ class Arc56TestParams:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -217,10 +166,10 @@ class _Arc56TestOptInTransaction:
 
     def opt_in_to_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "optInToApplication()void",
@@ -238,10 +187,10 @@ class Arc56TestCreateTransactionParams:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
@@ -250,10 +199,10 @@ class Arc56TestCreateTransactionParams:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -276,11 +225,11 @@ class _Arc56TestOptInSend:
 
     def opt_in_to_application(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "optInToApplication()void",
@@ -300,11 +249,11 @@ class Arc56TestSend:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Outputs]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
@@ -315,11 +264,11 @@ class Arc56TestSend:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -880,11 +829,11 @@ class Arc56TestFactoryCreateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
@@ -893,11 +842,11 @@ class Arc56TestFactoryCreateParams:
         self,
         args: tuple[Inputs] | FooArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -912,11 +861,11 @@ class Arc56TestFactoryCreateParams:
     def create_application(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -931,11 +880,11 @@ class Arc56TestFactoryCreateParams:
     def opt_in_to_application(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the optInToApplication()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -956,11 +905,11 @@ class Arc56TestFactoryUpdateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -974,11 +923,11 @@ class Arc56TestFactoryDeleteParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -1000,10 +949,10 @@ class Arc56TestFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
@@ -1026,12 +975,12 @@ class Arc56TestFactorySendCreate:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ) -> tuple[Arc56TestClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
@@ -1042,12 +991,12 @@ class Arc56TestFactorySendCreate:
     def create_application(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> tuple[Arc56TestClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
-            params = params or CommonAppFactoryCallParams()
+            params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
                 algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
@@ -1082,7 +1031,7 @@ class _Arc56TestOpt_inComposer:
         self.composer = composer
     def opt_in_to_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.opt_in.opt_in_to_application(
@@ -1114,7 +1063,7 @@ class Arc56TestComposer:
     def foo(
         self,
         args: tuple[Inputs] | FooArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.foo(
@@ -1131,7 +1080,7 @@ class Arc56TestComposer:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "Arc56TestComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
@@ -1150,9 +1099,9 @@ class Arc56TestComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
     ) -> "Arc56TestComposer":
-        params=params or CommonAppCallParams()
+        params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
                 algokit_utils.AppClientBareCallParams(

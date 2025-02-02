@@ -64,15 +64,6 @@ def _init_dataclass(cls: type, data: dict) -> object:
             field_values[field.name] = field_value
     return cls(**field_values)
 
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]
-
-
 @dataclasses.dataclass(frozen=True)
 class PayoutInfo:
     """Struct for PayoutInfo"""
@@ -224,48 +215,6 @@ class UpdateApplicationArgs:
     versionNum: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppCallParams:
-    """Common configuration for app call transaction parameters
-
-    :ivar account_references: List of account addresses to reference
-    :ivar app_references: List of app IDs to reference
-    :ivar asset_references: List of asset IDs to reference
-    :ivar box_references: List of box references to include
-    :ivar extra_fee: Additional fee to add to transaction
-    :ivar lease: Transaction lease value
-    :ivar max_fee: Maximum fee allowed for transaction
-    :ivar note: Arbitrary note for the transaction
-    :ivar rekey_to: Address to rekey account to
-    :ivar sender: Sender address override
-    :ivar signer: Custom transaction signer
-    :ivar static_fee: Fixed fee for transaction
-    :ivar validity_window: Number of rounds valid
-    :ivar first_valid_round: First valid round number
-    :ivar last_valid_round: Last valid round number"""
-
-    account_references: list[str] | None = None
-    app_references: list[int] | None = None
-    asset_references: list[int] | None = None
-    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
-    extra_fee: algokit_utils.AlgoAmount | None = None
-    lease: bytes | None = None
-    max_fee: algokit_utils.AlgoAmount | None = None
-    note: bytes | None = None
-    rekey_to: str | None = None
-    sender: str | None = None
-    signer: TransactionSigner | None = None
-    static_fee: algokit_utils.AlgoAmount | None = None
-    validity_window: int | None = None
-    first_valid_round: int | None = None
-    last_valid_round: int | None = None
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppFactoryCallParams(CommonAppCallParams):
-    """Common configuration for app factory call related transaction parameters"""
-    on_complete: ON_COMPLETE_TYPES | None = None
-
-
 class _NfdInstanceUpdate:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -273,11 +222,11 @@ class _NfdInstanceUpdate:
     def update_application(
         self,
         args: tuple[str] | UpdateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppUpdateMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         return self.app_client.params.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -296,10 +245,10 @@ class NfdInstanceParams:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -308,10 +257,10 @@ class NfdInstanceParams:
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintAsa(string,string)void",
@@ -321,10 +270,10 @@ class NfdInstanceParams:
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "deleteFields(byte[][])void",
@@ -334,10 +283,10 @@ class NfdInstanceParams:
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateSegmentCount(string,uint64)void",
@@ -347,10 +296,10 @@ class NfdInstanceParams:
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getFieldUpdateCost(byte[][])uint64",
@@ -360,10 +309,10 @@ class NfdInstanceParams:
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateFields(byte[][])void",
@@ -373,10 +322,10 @@ class NfdInstanceParams:
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "readField(byte[])byte[]",
@@ -386,10 +335,10 @@ class NfdInstanceParams:
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "offerForSale(uint64,address)void",
@@ -398,10 +347,10 @@ class NfdInstanceParams:
 
     def cancel_sale(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "cancelSale()void",
@@ -410,10 +359,10 @@ class NfdInstanceParams:
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "postOffer(uint64,string)void",
@@ -423,10 +372,10 @@ class NfdInstanceParams:
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
@@ -436,10 +385,10 @@ class NfdInstanceParams:
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "purchase(pay)void",
@@ -449,10 +398,10 @@ class NfdInstanceParams:
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "isAddressInField(string,address)bool",
@@ -461,10 +410,10 @@ class NfdInstanceParams:
 
     def get_renew_price(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getRenewPrice()uint64",
@@ -473,10 +422,10 @@ class NfdInstanceParams:
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateHash(byte[])void",
@@ -486,10 +435,10 @@ class NfdInstanceParams:
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "contractLock(bool)void",
@@ -499,10 +448,10 @@ class NfdInstanceParams:
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "segmentLock(bool,uint64)void",
@@ -512,10 +461,10 @@ class NfdInstanceParams:
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptInLock(bool)void",
@@ -525,10 +474,10 @@ class NfdInstanceParams:
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptIn(uint64[])void",
@@ -538,10 +487,10 @@ class NfdInstanceParams:
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
@@ -551,10 +500,10 @@ class NfdInstanceParams:
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "renew(pay)void",
@@ -564,10 +513,10 @@ class NfdInstanceParams:
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setPrimaryAddress(string,address)void",
@@ -577,10 +526,10 @@ class NfdInstanceParams:
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryAddingVerifiedAddress(string,string)bool",
@@ -590,10 +539,10 @@ class NfdInstanceParams:
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryRemovingVerifiedAddress(string,address,address)bool",
@@ -603,10 +552,10 @@ class NfdInstanceParams:
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
@@ -631,11 +580,11 @@ class _NfdInstanceUpdateTransaction:
     def update_application(
         self,
         args: tuple[str] | UpdateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         return self.app_client.create_transaction.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -654,10 +603,10 @@ class NfdInstanceCreateTransactionParams:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -666,10 +615,10 @@ class NfdInstanceCreateTransactionParams:
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintAsa(string,string)void",
@@ -679,10 +628,10 @@ class NfdInstanceCreateTransactionParams:
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "deleteFields(byte[][])void",
@@ -692,10 +641,10 @@ class NfdInstanceCreateTransactionParams:
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateSegmentCount(string,uint64)void",
@@ -705,10 +654,10 @@ class NfdInstanceCreateTransactionParams:
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getFieldUpdateCost(byte[][])uint64",
@@ -718,10 +667,10 @@ class NfdInstanceCreateTransactionParams:
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateFields(byte[][])void",
@@ -731,10 +680,10 @@ class NfdInstanceCreateTransactionParams:
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "readField(byte[])byte[]",
@@ -744,10 +693,10 @@ class NfdInstanceCreateTransactionParams:
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "offerForSale(uint64,address)void",
@@ -756,10 +705,10 @@ class NfdInstanceCreateTransactionParams:
 
     def cancel_sale(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "cancelSale()void",
@@ -768,10 +717,10 @@ class NfdInstanceCreateTransactionParams:
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "postOffer(uint64,string)void",
@@ -781,10 +730,10 @@ class NfdInstanceCreateTransactionParams:
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
@@ -794,10 +743,10 @@ class NfdInstanceCreateTransactionParams:
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "purchase(pay)void",
@@ -807,10 +756,10 @@ class NfdInstanceCreateTransactionParams:
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "isAddressInField(string,address)bool",
@@ -819,10 +768,10 @@ class NfdInstanceCreateTransactionParams:
 
     def get_renew_price(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getRenewPrice()uint64",
@@ -831,10 +780,10 @@ class NfdInstanceCreateTransactionParams:
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateHash(byte[])void",
@@ -844,10 +793,10 @@ class NfdInstanceCreateTransactionParams:
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "contractLock(bool)void",
@@ -857,10 +806,10 @@ class NfdInstanceCreateTransactionParams:
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "segmentLock(bool,uint64)void",
@@ -870,10 +819,10 @@ class NfdInstanceCreateTransactionParams:
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptInLock(bool)void",
@@ -883,10 +832,10 @@ class NfdInstanceCreateTransactionParams:
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptIn(uint64[])void",
@@ -896,10 +845,10 @@ class NfdInstanceCreateTransactionParams:
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
@@ -909,10 +858,10 @@ class NfdInstanceCreateTransactionParams:
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "renew(pay)void",
@@ -922,10 +871,10 @@ class NfdInstanceCreateTransactionParams:
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setPrimaryAddress(string,address)void",
@@ -935,10 +884,10 @@ class NfdInstanceCreateTransactionParams:
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryAddingVerifiedAddress(string,string)bool",
@@ -948,10 +897,10 @@ class NfdInstanceCreateTransactionParams:
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryRemovingVerifiedAddress(string,address,address)bool",
@@ -961,10 +910,10 @@ class NfdInstanceCreateTransactionParams:
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
@@ -989,12 +938,12 @@ class _NfdInstanceUpdateSend:
     def update_application(
         self,
         args: tuple[str] | UpdateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         response = self.app_client.send.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -1015,11 +964,11 @@ class NfdInstanceSend:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -1030,11 +979,11 @@ class NfdInstanceSend:
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintAsa(string,string)void",
@@ -1046,11 +995,11 @@ class NfdInstanceSend:
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "deleteFields(byte[][])void",
@@ -1062,11 +1011,11 @@ class NfdInstanceSend:
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateSegmentCount(string,uint64)void",
@@ -1078,11 +1027,11 @@ class NfdInstanceSend:
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getFieldUpdateCost(byte[][])uint64",
@@ -1094,11 +1043,11 @@ class NfdInstanceSend:
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateFields(byte[][])void",
@@ -1110,11 +1059,11 @@ class NfdInstanceSend:
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bytes]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "readField(byte[])byte[]",
@@ -1126,11 +1075,11 @@ class NfdInstanceSend:
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "offerForSale(uint64,address)void",
@@ -1141,11 +1090,11 @@ class NfdInstanceSend:
 
     def cancel_sale(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "cancelSale()void",
@@ -1156,11 +1105,11 @@ class NfdInstanceSend:
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "postOffer(uint64,string)void",
@@ -1172,11 +1121,11 @@ class NfdInstanceSend:
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PayoutInfo]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
@@ -1188,11 +1137,11 @@ class NfdInstanceSend:
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "purchase(pay)void",
@@ -1204,11 +1153,11 @@ class NfdInstanceSend:
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "isAddressInField(string,address)bool",
@@ -1219,11 +1168,11 @@ class NfdInstanceSend:
 
     def get_renew_price(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getRenewPrice()uint64",
@@ -1234,11 +1183,11 @@ class NfdInstanceSend:
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "updateHash(byte[])void",
@@ -1250,11 +1199,11 @@ class NfdInstanceSend:
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "contractLock(bool)void",
@@ -1266,11 +1215,11 @@ class NfdInstanceSend:
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "segmentLock(bool,uint64)void",
@@ -1282,11 +1231,11 @@ class NfdInstanceSend:
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptInLock(bool)void",
@@ -1298,11 +1247,11 @@ class NfdInstanceSend:
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultOptIn(uint64[])void",
@@ -1314,11 +1263,11 @@ class NfdInstanceSend:
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
@@ -1330,11 +1279,11 @@ class NfdInstanceSend:
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "renew(pay)void",
@@ -1346,11 +1295,11 @@ class NfdInstanceSend:
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setPrimaryAddress(string,address)void",
@@ -1362,11 +1311,11 @@ class NfdInstanceSend:
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryAddingVerifiedAddress(string,string)bool",
@@ -1378,11 +1327,11 @@ class NfdInstanceSend:
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "registryRemovingVerifiedAddress(string,address,address)bool",
@@ -1394,11 +1343,11 @@ class NfdInstanceSend:
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void",
@@ -2039,11 +1988,11 @@ class NfdInstanceFactoryCreateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
@@ -2051,11 +2000,11 @@ class NfdInstanceFactoryCreateParams:
     def gas(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2071,11 +2020,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | MintAsaArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the mintAsa(string,string)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2091,11 +2040,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the deleteFields(byte[][])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2111,11 +2060,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the updateSegmentCount(string,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2131,11 +2080,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getFieldUpdateCost(byte[][])uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2151,11 +2100,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the updateFields(byte[][])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2171,11 +2120,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the readField(byte[])byte[] ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2191,11 +2140,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[int, str] | OfferForSaleArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the offerForSale(uint64,address)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2210,11 +2159,11 @@ class NfdInstanceFactoryCreateParams:
     def cancel_sale(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the cancelSale()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2230,11 +2179,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[int, str] | PostOfferArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the postOffer(uint64,string)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2250,11 +2199,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[int, int] | MintPayoutArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2270,11 +2219,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the purchase(pay)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2290,11 +2239,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the isAddressInField(string,address)bool ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2309,11 +2258,11 @@ class NfdInstanceFactoryCreateParams:
     def get_renew_price(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getRenewPrice()uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2329,11 +2278,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the updateHash(byte[])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2349,11 +2298,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[bool] | ContractLockArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the contractLock(bool)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2369,11 +2318,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[bool, int] | SegmentLockArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the segmentLock(bool,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2389,11 +2338,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[bool] | VaultOptInLockArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptInLock(bool)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2409,11 +2358,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[list[int]] | VaultOptInArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the vaultOptIn(uint64[])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2429,11 +2378,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the vaultSend(uint64,address,string,uint64,uint64[])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2449,11 +2398,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the renew(pay)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2469,11 +2418,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the setPrimaryAddress(string,address)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2489,11 +2438,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the registryAddingVerifiedAddress(string,string)bool ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2509,11 +2458,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the registryRemovingVerifiedAddress(string,address,address)bool ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2529,11 +2478,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2549,11 +2498,11 @@ class NfdInstanceFactoryCreateParams:
         self,
         args: tuple[str] | UpdateApplicationArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the updateApplication(string)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2574,11 +2523,11 @@ class NfdInstanceFactoryUpdateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -2592,11 +2541,11 @@ class NfdInstanceFactoryDeleteParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -2618,10 +2567,10 @@ class NfdInstanceFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
@@ -2644,12 +2593,12 @@ class NfdInstanceFactorySendCreate:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ) -> tuple[NfdInstanceClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
@@ -2661,12 +2610,12 @@ class NfdInstanceFactorySendCreate:
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> tuple[NfdInstanceClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void ABI method"""
-            params = params or CommonAppFactoryCallParams()
+            params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
                 algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
@@ -2702,7 +2651,7 @@ class _NfdInstanceUpdateComposer:
     def update_application(
         self,
         args: tuple[str] | UpdateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self.composer._composer.add_app_update_method_call(
@@ -2734,7 +2683,7 @@ class NfdInstanceComposer:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2753,7 +2702,7 @@ class NfdInstanceComposer:
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2772,7 +2721,7 @@ class NfdInstanceComposer:
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2791,7 +2740,7 @@ class NfdInstanceComposer:
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2810,7 +2759,7 @@ class NfdInstanceComposer:
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2829,7 +2778,7 @@ class NfdInstanceComposer:
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2848,7 +2797,7 @@ class NfdInstanceComposer:
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2867,7 +2816,7 @@ class NfdInstanceComposer:
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2885,7 +2834,7 @@ class NfdInstanceComposer:
 
     def cancel_sale(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2904,7 +2853,7 @@ class NfdInstanceComposer:
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2923,7 +2872,7 @@ class NfdInstanceComposer:
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2942,7 +2891,7 @@ class NfdInstanceComposer:
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2961,7 +2910,7 @@ class NfdInstanceComposer:
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2979,7 +2928,7 @@ class NfdInstanceComposer:
 
     def get_renew_price(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -2998,7 +2947,7 @@ class NfdInstanceComposer:
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3017,7 +2966,7 @@ class NfdInstanceComposer:
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3036,7 +2985,7 @@ class NfdInstanceComposer:
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3055,7 +3004,7 @@ class NfdInstanceComposer:
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3074,7 +3023,7 @@ class NfdInstanceComposer:
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3093,7 +3042,7 @@ class NfdInstanceComposer:
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3112,7 +3061,7 @@ class NfdInstanceComposer:
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3131,7 +3080,7 @@ class NfdInstanceComposer:
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3150,7 +3099,7 @@ class NfdInstanceComposer:
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3169,7 +3118,7 @@ class NfdInstanceComposer:
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3188,7 +3137,7 @@ class NfdInstanceComposer:
     def create_application(
         self,
         args: tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "NfdInstanceComposer":
         self._composer.add_app_call_method_call(
@@ -3208,9 +3157,9 @@ class NfdInstanceComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
     ) -> "NfdInstanceComposer":
-        params=params or CommonAppCallParams()
+        params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
                 algokit_utils.AppClientBareCallParams(

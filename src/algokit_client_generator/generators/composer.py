@@ -149,9 +149,9 @@ def clear_state(
     self,
     *,
     args: list[bytes] | None = None,
-    params: CommonAppCallParams | None = None,
+    params: algokit_utils.CommonAppCallParams | None = None,
 ) -> \"{context.contract_name}Composer\":
-    params=params or CommonAppCallParams()
+    params=params or algokit_utils.CommonAppCallParams()
     self._composer.add_app_call(
         self.client.params.clear_state(
             algokit_utils.AppClientBareCallParams(

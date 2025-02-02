@@ -4,12 +4,11 @@ import algokit_utils.applications
 import pytest
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils import AlgorandClient
+from algokit_utils import AlgorandClient, CommonAppCallParams
 
 from examples.arc56_test.client import (
     Arc56TestClient,
     Arc56TestFactory,
-    CommonAppCallParams,
     FooArgs,
     FooUint16BarUint16,
     Inputs,

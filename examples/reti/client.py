@@ -64,15 +64,6 @@ def _init_dataclass(cls: type, data: dict) -> object:
             field_values[field.name] = field_value
     return cls(**field_values)
 
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]
-
-
 @dataclasses.dataclass(frozen=True)
 class Constraints:
     """Struct for Constraints"""
@@ -370,48 +361,6 @@ class EmptyTokenRewardsArgs:
     receiver: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppCallParams:
-    """Common configuration for app call transaction parameters
-
-    :ivar account_references: List of account addresses to reference
-    :ivar app_references: List of app IDs to reference
-    :ivar asset_references: List of asset IDs to reference
-    :ivar box_references: List of box references to include
-    :ivar extra_fee: Additional fee to add to transaction
-    :ivar lease: Transaction lease value
-    :ivar max_fee: Maximum fee allowed for transaction
-    :ivar note: Arbitrary note for the transaction
-    :ivar rekey_to: Address to rekey account to
-    :ivar sender: Sender address override
-    :ivar signer: Custom transaction signer
-    :ivar static_fee: Fixed fee for transaction
-    :ivar validity_window: Number of rounds valid
-    :ivar first_valid_round: First valid round number
-    :ivar last_valid_round: Last valid round number"""
-
-    account_references: list[str] | None = None
-    app_references: list[int] | None = None
-    asset_references: list[int] | None = None
-    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
-    extra_fee: algokit_utils.AlgoAmount | None = None
-    lease: bytes | None = None
-    max_fee: algokit_utils.AlgoAmount | None = None
-    note: bytes | None = None
-    rekey_to: str | None = None
-    sender: str | None = None
-    signer: TransactionSigner | None = None
-    static_fee: algokit_utils.AlgoAmount | None = None
-    validity_window: int | None = None
-    first_valid_round: int | None = None
-    last_valid_round: int | None = None
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppFactoryCallParams(CommonAppCallParams):
-    """Common configuration for app factory call related transaction parameters"""
-    on_complete: ON_COMPLETE_TYPES | None = None
-
-
 class ValidatorRegistryParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -419,10 +368,10 @@ class ValidatorRegistryParams:
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "initStakingContract(uint64)void",
@@ -432,10 +381,10 @@ class ValidatorRegistryParams:
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "loadStakingContractData(uint64,byte[])void",
@@ -444,10 +393,10 @@ class ValidatorRegistryParams:
 
     def finalize_staking_contract(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "finalizeStakingContract()void",
@@ -455,10 +404,10 @@ class ValidatorRegistryParams:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -466,10 +415,10 @@ class ValidatorRegistryParams:
 
     def get_mbr_amounts(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
@@ -477,10 +426,10 @@ class ValidatorRegistryParams:
 
     def get_protocol_constraints(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
@@ -488,10 +437,10 @@ class ValidatorRegistryParams:
 
     def get_num_validators(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNumValidators()uint64",
@@ -500,10 +449,10 @@ class ValidatorRegistryParams:
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
@@ -513,10 +462,10 @@ class ValidatorRegistryParams:
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
@@ -526,10 +475,10 @@ class ValidatorRegistryParams:
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorOwnerAndManager(uint64)(address,address)",
@@ -539,10 +488,10 @@ class ValidatorRegistryParams:
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPools(uint64)(uint64,uint16,uint64)[]",
@@ -552,10 +501,10 @@ class ValidatorRegistryParams:
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolAppId(uint64,uint64)uint64",
@@ -565,10 +514,10 @@ class ValidatorRegistryParams:
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
@@ -578,10 +527,10 @@ class ValidatorRegistryParams:
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getCurMaxStakePerPool(uint64)uint64",
@@ -591,10 +540,10 @@ class ValidatorRegistryParams:
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "doesStakerNeedToPayMBR(address)bool",
@@ -604,10 +553,10 @@ class ValidatorRegistryParams:
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
@@ -617,10 +566,10 @@ class ValidatorRegistryParams:
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -630,10 +579,10 @@ class ValidatorRegistryParams:
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
@@ -642,10 +591,10 @@ class ValidatorRegistryParams:
 
     def get_nfd_registry_id(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNFDRegistryID()uint64",
@@ -654,10 +603,10 @@ class ValidatorRegistryParams:
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
@@ -667,10 +616,10 @@ class ValidatorRegistryParams:
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorManager(uint64,address)void",
@@ -680,10 +629,10 @@ class ValidatorRegistryParams:
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
@@ -693,10 +642,10 @@ class ValidatorRegistryParams:
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorNFD(uint64,uint64,string)void",
@@ -706,10 +655,10 @@ class ValidatorRegistryParams:
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorCommissionAddress(uint64,address)void",
@@ -719,10 +668,10 @@ class ValidatorRegistryParams:
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
@@ -732,10 +681,10 @@ class ValidatorRegistryParams:
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -745,10 +694,10 @@ class ValidatorRegistryParams:
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -758,10 +707,10 @@ class ValidatorRegistryParams:
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -771,10 +720,10 @@ class ValidatorRegistryParams:
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
@@ -784,10 +733,10 @@ class ValidatorRegistryParams:
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
@@ -797,10 +746,10 @@ class ValidatorRegistryParams:
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
@@ -810,10 +759,10 @@ class ValidatorRegistryParams:
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "movePoolToNode(uint64,uint64,uint64)void",
@@ -823,10 +772,10 @@ class ValidatorRegistryParams:
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "emptyTokenRewards(uint64,address)uint64",
@@ -835,10 +784,10 @@ class ValidatorRegistryParams:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -862,10 +811,10 @@ class ValidatorRegistryCreateTransactionParams:
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "initStakingContract(uint64)void",
@@ -875,10 +824,10 @@ class ValidatorRegistryCreateTransactionParams:
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "loadStakingContractData(uint64,byte[])void",
@@ -887,10 +836,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def finalize_staking_contract(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "finalizeStakingContract()void",
@@ -898,10 +847,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -909,10 +858,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def get_mbr_amounts(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
@@ -920,10 +869,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def get_protocol_constraints(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
@@ -931,10 +880,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def get_num_validators(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNumValidators()uint64",
@@ -943,10 +892,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
@@ -956,10 +905,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
@@ -969,10 +918,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorOwnerAndManager(uint64)(address,address)",
@@ -982,10 +931,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPools(uint64)(uint64,uint16,uint64)[]",
@@ -995,10 +944,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolAppId(uint64,uint64)uint64",
@@ -1008,10 +957,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
@@ -1021,10 +970,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getCurMaxStakePerPool(uint64)uint64",
@@ -1034,10 +983,10 @@ class ValidatorRegistryCreateTransactionParams:
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "doesStakerNeedToPayMBR(address)bool",
@@ -1047,10 +996,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
@@ -1060,10 +1009,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -1073,10 +1022,10 @@ class ValidatorRegistryCreateTransactionParams:
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
@@ -1085,10 +1034,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def get_nfd_registry_id(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNFDRegistryID()uint64",
@@ -1097,10 +1046,10 @@ class ValidatorRegistryCreateTransactionParams:
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
@@ -1110,10 +1059,10 @@ class ValidatorRegistryCreateTransactionParams:
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorManager(uint64,address)void",
@@ -1123,10 +1072,10 @@ class ValidatorRegistryCreateTransactionParams:
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
@@ -1136,10 +1085,10 @@ class ValidatorRegistryCreateTransactionParams:
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorNFD(uint64,uint64,string)void",
@@ -1149,10 +1098,10 @@ class ValidatorRegistryCreateTransactionParams:
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorCommissionAddress(uint64,address)void",
@@ -1162,10 +1111,10 @@ class ValidatorRegistryCreateTransactionParams:
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
@@ -1175,10 +1124,10 @@ class ValidatorRegistryCreateTransactionParams:
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -1188,10 +1137,10 @@ class ValidatorRegistryCreateTransactionParams:
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -1201,10 +1150,10 @@ class ValidatorRegistryCreateTransactionParams:
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -1214,10 +1163,10 @@ class ValidatorRegistryCreateTransactionParams:
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
@@ -1227,10 +1176,10 @@ class ValidatorRegistryCreateTransactionParams:
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
@@ -1240,10 +1189,10 @@ class ValidatorRegistryCreateTransactionParams:
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
@@ -1253,10 +1202,10 @@ class ValidatorRegistryCreateTransactionParams:
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "movePoolToNode(uint64,uint64,uint64)void",
@@ -1266,10 +1215,10 @@ class ValidatorRegistryCreateTransactionParams:
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "emptyTokenRewards(uint64,address)uint64",
@@ -1278,10 +1227,10 @@ class ValidatorRegistryCreateTransactionParams:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -1305,11 +1254,11 @@ class ValidatorRegistrySend:
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "initStakingContract(uint64)void",
@@ -1321,11 +1270,11 @@ class ValidatorRegistrySend:
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "loadStakingContractData(uint64,byte[])void",
@@ -1336,11 +1285,11 @@ class ValidatorRegistrySend:
 
     def finalize_staking_contract(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "finalizeStakingContract()void",
@@ -1350,11 +1299,11 @@ class ValidatorRegistrySend:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "gas()void",
@@ -1364,11 +1313,11 @@ class ValidatorRegistrySend:
 
     def get_mbr_amounts(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[MbrAmounts]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
@@ -1378,11 +1327,11 @@ class ValidatorRegistrySend:
 
     def get_protocol_constraints(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Constraints]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
@@ -1392,11 +1341,11 @@ class ValidatorRegistrySend:
 
     def get_num_validators(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNumValidators()uint64",
@@ -1407,11 +1356,11 @@ class ValidatorRegistrySend:
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorConfig]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
@@ -1423,11 +1372,11 @@ class ValidatorRegistrySend:
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorCurState]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
@@ -1439,11 +1388,11 @@ class ValidatorRegistrySend:
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[tuple[str, str]]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getValidatorOwnerAndManager(uint64)(address,address)",
@@ -1455,11 +1404,11 @@ class ValidatorRegistrySend:
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPools(uint64)(uint64,uint16,uint64)[]",
@@ -1471,11 +1420,11 @@ class ValidatorRegistrySend:
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolAppId(uint64,uint64)uint64",
@@ -1487,11 +1436,11 @@ class ValidatorRegistrySend:
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolInfo]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
@@ -1503,11 +1452,11 @@ class ValidatorRegistrySend:
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getCurMaxStakePerPool(uint64)uint64",
@@ -1519,11 +1468,11 @@ class ValidatorRegistrySend:
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "doesStakerNeedToPayMBR(address)bool",
@@ -1535,11 +1484,11 @@ class ValidatorRegistrySend:
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
@@ -1551,11 +1500,11 @@ class ValidatorRegistrySend:
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -1567,11 +1516,11 @@ class ValidatorRegistrySend:
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[NodePoolAssignmentConfig]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
@@ -1582,11 +1531,11 @@ class ValidatorRegistrySend:
 
     def get_nfd_registry_id(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "getNFDRegistryID()uint64",
@@ -1597,11 +1546,11 @@ class ValidatorRegistrySend:
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
@@ -1613,11 +1562,11 @@ class ValidatorRegistrySend:
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorManager(uint64,address)void",
@@ -1629,11 +1578,11 @@ class ValidatorRegistrySend:
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
@@ -1645,11 +1594,11 @@ class ValidatorRegistrySend:
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorNFD(uint64,uint64,string)void",
@@ -1661,11 +1610,11 @@ class ValidatorRegistrySend:
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorCommissionAddress(uint64,address)void",
@@ -1677,11 +1626,11 @@ class ValidatorRegistrySend:
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
@@ -1693,11 +1642,11 @@ class ValidatorRegistrySend:
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorPoolKey]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -1709,11 +1658,11 @@ class ValidatorRegistrySend:
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorPoolKey]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
@@ -1725,11 +1674,11 @@ class ValidatorRegistrySend:
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
@@ -1741,11 +1690,11 @@ class ValidatorRegistrySend:
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
@@ -1757,11 +1706,11 @@ class ValidatorRegistrySend:
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
@@ -1773,11 +1722,11 @@ class ValidatorRegistrySend:
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
@@ -1789,11 +1738,11 @@ class ValidatorRegistrySend:
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "movePoolToNode(uint64,uint64,uint64)void",
@@ -1805,11 +1754,11 @@ class ValidatorRegistrySend:
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "emptyTokenRewards(uint64,address)uint64",
@@ -1820,11 +1769,11 @@ class ValidatorRegistrySend:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "createApplication()void",
@@ -2546,11 +2495,11 @@ class ValidatorRegistryFactoryCreateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
@@ -2559,11 +2508,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | InitStakingContractArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the initStakingContract(uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2579,11 +2528,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the loadStakingContractData(uint64,byte[])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2598,11 +2547,11 @@ class ValidatorRegistryFactoryCreateParams:
     def finalize_staking_contract(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the finalizeStakingContract()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2617,11 +2566,11 @@ class ValidatorRegistryFactoryCreateParams:
     def gas(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the gas()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2636,11 +2585,11 @@ class ValidatorRegistryFactoryCreateParams:
     def get_mbr_amounts(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getMbrAmounts()(uint64,uint64,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2655,11 +2604,11 @@ class ValidatorRegistryFactoryCreateParams:
     def get_protocol_constraints(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2674,11 +2623,11 @@ class ValidatorRegistryFactoryCreateParams:
     def get_num_validators(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getNumValidators()uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2694,11 +2643,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorConfigArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2714,11 +2663,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorStateArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorState(uint64)(uint16,uint64,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2734,11 +2683,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getValidatorOwnerAndManager(uint64)(address,address) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2754,11 +2703,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetPoolsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getPools(uint64)(uint64,uint16,uint64)[] ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2774,11 +2723,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolAppId(uint64,uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2794,11 +2743,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2814,11 +2763,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getCurMaxStakePerPool(uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2834,11 +2783,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the doesStakerNeedToPayMBR(address)bool ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2854,11 +2803,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getStakedPoolsForAccount(address)(uint64,uint64,uint64)[] ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2874,11 +2823,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2894,11 +2843,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getNodePoolAssignments(uint64)((uint64[3])[8]) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2913,11 +2862,11 @@ class ValidatorRegistryFactoryCreateParams:
     def get_nfd_registry_id(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the getNFDRegistryID()uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2933,11 +2882,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2953,11 +2902,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorManager(uint64,address)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2973,11 +2922,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorSunsetInfo(uint64,uint64,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2993,11 +2942,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorNFD(uint64,uint64,string)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3013,11 +2962,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorCommissionAddress(uint64,address)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3033,11 +2982,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3053,11 +3002,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the addPool(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3073,11 +3022,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the addStake(pay,uint64,uint64)(uint64,uint64,uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3093,11 +3042,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the setTokenPayoutRatio(uint64)(uint64[24],uint64) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3113,11 +3062,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3133,11 +3082,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3153,11 +3102,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool) ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3173,11 +3122,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the movePoolToNode(uint64,uint64,uint64)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3193,11 +3142,11 @@ class ValidatorRegistryFactoryCreateParams:
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the emptyTokenRewards(uint64,address)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3212,11 +3161,11 @@ class ValidatorRegistryFactoryCreateParams:
     def create_application(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the createApplication()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -3237,11 +3186,11 @@ class ValidatorRegistryFactoryUpdateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -3255,11 +3204,11 @@ class ValidatorRegistryFactoryDeleteParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -3281,10 +3230,10 @@ class ValidatorRegistryFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
@@ -3307,12 +3256,12 @@ class ValidatorRegistryFactorySendCreate:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ) -> tuple[ValidatorRegistryClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
@@ -3323,12 +3272,12 @@ class ValidatorRegistryFactorySendCreate:
     def create_application(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> tuple[ValidatorRegistryClient, algokit_utils.AppFactoryCreateMethodCallResult[None]]:
             """Creates and sends a transaction using the createApplication()void ABI method"""
-            params = params or CommonAppFactoryCallParams()
+            params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
                 algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
@@ -3369,7 +3318,7 @@ class ValidatorRegistryComposer:
     def init_staking_contract(
         self,
         args: tuple[int] | InitStakingContractArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.init_staking_contract(
@@ -3387,7 +3336,7 @@ class ValidatorRegistryComposer:
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.load_staking_contract_data(
@@ -3404,7 +3353,7 @@ class ValidatorRegistryComposer:
 
     def finalize_staking_contract(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.finalize_staking_contract(
@@ -3421,7 +3370,7 @@ class ValidatorRegistryComposer:
 
     def gas(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.gas(
@@ -3438,7 +3387,7 @@ class ValidatorRegistryComposer:
 
     def get_mbr_amounts(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_mbr_amounts(
@@ -3455,7 +3404,7 @@ class ValidatorRegistryComposer:
 
     def get_protocol_constraints(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_protocol_constraints(
@@ -3472,7 +3421,7 @@ class ValidatorRegistryComposer:
 
     def get_num_validators(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_num_validators(
@@ -3490,7 +3439,7 @@ class ValidatorRegistryComposer:
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_config(
@@ -3508,7 +3457,7 @@ class ValidatorRegistryComposer:
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_state(
@@ -3526,7 +3475,7 @@ class ValidatorRegistryComposer:
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_validator_owner_and_manager(
@@ -3544,7 +3493,7 @@ class ValidatorRegistryComposer:
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pools(
@@ -3562,7 +3511,7 @@ class ValidatorRegistryComposer:
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_app_id(
@@ -3580,7 +3529,7 @@ class ValidatorRegistryComposer:
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pool_info(
@@ -3598,7 +3547,7 @@ class ValidatorRegistryComposer:
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_cur_max_stake_per_pool(
@@ -3616,7 +3565,7 @@ class ValidatorRegistryComposer:
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.does_staker_need_to_pay_mbr(
@@ -3634,7 +3583,7 @@ class ValidatorRegistryComposer:
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_staked_pools_for_account(
@@ -3652,7 +3601,7 @@ class ValidatorRegistryComposer:
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_token_payout_ratio(
@@ -3670,7 +3619,7 @@ class ValidatorRegistryComposer:
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_node_pool_assignments(
@@ -3687,7 +3636,7 @@ class ValidatorRegistryComposer:
 
     def get_nfd_registry_id(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_nfd_registry_id(
@@ -3705,7 +3654,7 @@ class ValidatorRegistryComposer:
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_validator(
@@ -3723,7 +3672,7 @@ class ValidatorRegistryComposer:
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_manager(
@@ -3741,7 +3690,7 @@ class ValidatorRegistryComposer:
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_sunset_info(
@@ -3759,7 +3708,7 @@ class ValidatorRegistryComposer:
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_nfd(
@@ -3777,7 +3726,7 @@ class ValidatorRegistryComposer:
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_commission_address(
@@ -3795,7 +3744,7 @@ class ValidatorRegistryComposer:
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.change_validator_reward_info(
@@ -3813,7 +3762,7 @@ class ValidatorRegistryComposer:
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_pool(
@@ -3831,7 +3780,7 @@ class ValidatorRegistryComposer:
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add_stake(
@@ -3849,7 +3798,7 @@ class ValidatorRegistryComposer:
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_token_payout_ratio(
@@ -3867,7 +3816,7 @@ class ValidatorRegistryComposer:
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_updated_via_rewards(
@@ -3885,7 +3834,7 @@ class ValidatorRegistryComposer:
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.stake_removed(
@@ -3903,7 +3852,7 @@ class ValidatorRegistryComposer:
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.find_pool_for_staker(
@@ -3921,7 +3870,7 @@ class ValidatorRegistryComposer:
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.move_pool_to_node(
@@ -3939,7 +3888,7 @@ class ValidatorRegistryComposer:
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.empty_token_rewards(
@@ -3956,7 +3905,7 @@ class ValidatorRegistryComposer:
 
     def create_application(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "ValidatorRegistryComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_application(
@@ -3975,9 +3924,9 @@ class ValidatorRegistryComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
     ) -> "ValidatorRegistryComposer":
-        params=params or CommonAppCallParams()
+        params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
                 algokit_utils.AppClientBareCallParams(
