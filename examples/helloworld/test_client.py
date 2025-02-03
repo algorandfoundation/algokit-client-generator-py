@@ -2,11 +2,10 @@ import algokit_utils
 import pytest
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils import AlgorandClient
+from algokit_utils import AlgorandClient, CommonAppCallParams
 
 from examples.helloworld.client import (
     HelloArgs,
-    CommonAppCallParams,
     HelloWorldAppClient,
     HelloWorldAppFactory,
     HelloWorldCheckArgs,

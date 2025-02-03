@@ -47,14 +47,22 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
         for arg in method_args
     ] if method_args else None
 
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]
+def _init_dataclass(cls: type, data: dict) -> object:
+    """
+    Recursively instantiate a dataclass of type `cls` from `data`.
 
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    """
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiUint32Args:
@@ -157,48 +165,6 @@ class DeleteAbiArgs:
     input: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppCallParams:
-    """Common configuration for app call transaction parameters
-
-    :ivar account_references: List of account addresses to reference
-    :ivar app_references: List of app IDs to reference
-    :ivar asset_references: List of asset IDs to reference
-    :ivar box_references: List of box references to include
-    :ivar extra_fee: Additional fee to add to transaction
-    :ivar lease: Transaction lease value
-    :ivar max_fee: Maximum fee allowed for transaction
-    :ivar note: Arbitrary note for the transaction
-    :ivar rekey_to: Address to rekey account to
-    :ivar sender: Sender address override
-    :ivar signer: Custom transaction signer
-    :ivar static_fee: Fixed fee for transaction
-    :ivar validity_window: Number of rounds valid
-    :ivar first_valid_round: First valid round number
-    :ivar last_valid_round: Last valid round number"""
-
-    account_references: list[str] | None = None
-    app_references: list[int] | None = None
-    asset_references: list[int] | None = None
-    box_references: list[algokit_utils.BoxReference | algokit_utils.BoxIdentifier] | None = None
-    extra_fee: algokit_utils.AlgoAmount | None = None
-    lease: bytes | None = None
-    max_fee: algokit_utils.AlgoAmount | None = None
-    note: bytes | None = None
-    rekey_to: str | None = None
-    sender: str | None = None
-    signer: TransactionSigner | None = None
-    static_fee: algokit_utils.AlgoAmount | None = None
-    validity_window: int | None = None
-    first_valid_round: int | None = None
-    last_valid_round: int | None = None
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CommonAppFactoryCallParams(CommonAppCallParams):
-    """Common configuration for app factory call related transaction parameters"""
-    on_complete: ON_COMPLETE_TYPES | None = None
-
-
 class _StateAppUpdate:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -211,11 +177,11 @@ class _StateAppUpdate:
     def update_abi(
         self,
         args: tuple[str] | UpdateAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppUpdateMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         return self.app_client.params.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -236,10 +202,10 @@ class _StateAppDelete:
     def delete_abi(
         self,
         args: tuple[str] | DeleteAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppDeleteMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.delete(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "delete_abi(string)string",
@@ -253,10 +219,10 @@ class _StateAppOptIn:
 
     def opt_in(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "opt_in()void",
@@ -282,10 +248,10 @@ class StateAppParams:
     def call_abi_uint32(
         self,
         args: tuple[int] | CallAbiUint32Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32(uint32)uint32",
@@ -295,10 +261,10 @@ class StateAppParams:
     def call_abi_uint32_readonly(
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32_readonly(uint32)uint32",
@@ -308,10 +274,10 @@ class StateAppParams:
     def call_abi_uint64(
         self,
         args: tuple[int] | CallAbiUint64Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64(uint64)uint64",
@@ -321,10 +287,10 @@ class StateAppParams:
     def call_abi_uint64_readonly(
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64_readonly(uint64)uint64",
@@ -334,10 +300,10 @@ class StateAppParams:
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi(string)string",
@@ -347,10 +313,10 @@ class StateAppParams:
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_txn(pay,string)string",
@@ -360,10 +326,10 @@ class StateAppParams:
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_with_references(asset,account,application)uint64",
@@ -373,10 +339,10 @@ class StateAppParams:
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_global(uint64,uint64,string,byte[4])void",
@@ -386,10 +352,10 @@ class StateAppParams:
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_local(uint64,uint64,string,byte[4])void",
@@ -399,10 +365,10 @@ class StateAppParams:
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_box(byte[4],string)void",
@@ -411,10 +377,10 @@ class StateAppParams:
 
     def error(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "error()void",
@@ -423,10 +389,10 @@ class StateAppParams:
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value(string)string",
@@ -436,10 +402,10 @@ class StateAppParams:
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_int(uint64)uint64",
@@ -449,10 +415,10 @@ class StateAppParams:
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_abi(string)string",
@@ -462,10 +428,10 @@ class StateAppParams:
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_global_state(uint64)uint64",
@@ -475,10 +441,10 @@ class StateAppParams:
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_local_state(string)string",
@@ -488,10 +454,10 @@ class StateAppParams:
     def create_abi(
         self,
         args: tuple[str] | CreateAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "create_abi(string)string",
@@ -519,11 +485,11 @@ class _StateAppUpdateTransaction:
     def update_abi(
         self,
         args: tuple[str] | UpdateAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         return self.app_client.create_transaction.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -542,10 +508,10 @@ class _StateAppDeleteTransaction:
     def delete_abi(
         self,
         args: tuple[str] | DeleteAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.delete(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "delete_abi(string)string",
@@ -559,10 +525,10 @@ class _StateAppOptInTransaction:
 
     def opt_in(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "opt_in()void",
@@ -588,10 +554,10 @@ class StateAppCreateTransactionParams:
     def call_abi_uint32(
         self,
         args: tuple[int] | CallAbiUint32Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32(uint32)uint32",
@@ -601,10 +567,10 @@ class StateAppCreateTransactionParams:
     def call_abi_uint32_readonly(
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32_readonly(uint32)uint32",
@@ -614,10 +580,10 @@ class StateAppCreateTransactionParams:
     def call_abi_uint64(
         self,
         args: tuple[int] | CallAbiUint64Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64(uint64)uint64",
@@ -627,10 +593,10 @@ class StateAppCreateTransactionParams:
     def call_abi_uint64_readonly(
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64_readonly(uint64)uint64",
@@ -640,10 +606,10 @@ class StateAppCreateTransactionParams:
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi(string)string",
@@ -653,10 +619,10 @@ class StateAppCreateTransactionParams:
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_txn(pay,string)string",
@@ -666,10 +632,10 @@ class StateAppCreateTransactionParams:
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_with_references(asset,account,application)uint64",
@@ -679,10 +645,10 @@ class StateAppCreateTransactionParams:
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_global(uint64,uint64,string,byte[4])void",
@@ -692,10 +658,10 @@ class StateAppCreateTransactionParams:
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_local(uint64,uint64,string,byte[4])void",
@@ -705,10 +671,10 @@ class StateAppCreateTransactionParams:
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_box(byte[4],string)void",
@@ -717,10 +683,10 @@ class StateAppCreateTransactionParams:
 
     def error(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "error()void",
@@ -729,10 +695,10 @@ class StateAppCreateTransactionParams:
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value(string)string",
@@ -742,10 +708,10 @@ class StateAppCreateTransactionParams:
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_int(uint64)uint64",
@@ -755,10 +721,10 @@ class StateAppCreateTransactionParams:
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_abi(string)string",
@@ -768,10 +734,10 @@ class StateAppCreateTransactionParams:
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_global_state(uint64)uint64",
@@ -781,10 +747,10 @@ class StateAppCreateTransactionParams:
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_local_state(string)string",
@@ -794,10 +760,10 @@ class StateAppCreateTransactionParams:
     def create_abi(
         self,
         args: tuple[str] | CreateAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "create_abi(string)string",
@@ -834,12 +800,12 @@ class _StateAppUpdateSend:
     def update_abi(
         self,
         args: tuple[str] | UpdateAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
         response = self.app_client.send.update(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
@@ -869,11 +835,11 @@ class _StateAppDeleteSend:
     def delete_abi(
         self,
         args: tuple[str] | DeleteAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.delete(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "delete_abi(string)string",
@@ -889,11 +855,11 @@ class _StateAppOptInSend:
 
     def opt_in(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "opt_in()void",
@@ -921,11 +887,11 @@ class StateAppSend:
     def call_abi_uint32(
         self,
         args: tuple[int] | CallAbiUint32Args,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32(uint32)uint32",
@@ -937,11 +903,11 @@ class StateAppSend:
     def call_abi_uint32_readonly(
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint32_readonly(uint32)uint32",
@@ -953,11 +919,11 @@ class StateAppSend:
     def call_abi_uint64(
         self,
         args: tuple[int] | CallAbiUint64Args,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64(uint64)uint64",
@@ -969,11 +935,11 @@ class StateAppSend:
     def call_abi_uint64_readonly(
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_uint64_readonly(uint64)uint64",
@@ -985,11 +951,11 @@ class StateAppSend:
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi(string)string",
@@ -1001,11 +967,11 @@ class StateAppSend:
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_abi_txn(pay,string)string",
@@ -1017,11 +983,11 @@ class StateAppSend:
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "call_with_references(asset,account,application)uint64",
@@ -1033,11 +999,11 @@ class StateAppSend:
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_global(uint64,uint64,string,byte[4])void",
@@ -1049,11 +1015,11 @@ class StateAppSend:
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_local(uint64,uint64,string,byte[4])void",
@@ -1065,11 +1031,11 @@ class StateAppSend:
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "set_box(byte[4],string)void",
@@ -1080,11 +1046,11 @@ class StateAppSend:
 
     def error(
         self,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
     
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "error()void",
@@ -1095,11 +1061,11 @@ class StateAppSend:
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value(string)string",
@@ -1111,11 +1077,11 @@ class StateAppSend:
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_int(uint64)uint64",
@@ -1127,11 +1093,11 @@ class StateAppSend:
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_abi(string)string",
@@ -1143,11 +1109,11 @@ class StateAppSend:
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_global_state(uint64)uint64",
@@ -1159,11 +1125,11 @@ class StateAppSend:
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "default_value_from_local_state(string)string",
@@ -1175,11 +1141,11 @@ class StateAppSend:
     def create_abi(
         self,
         args: tuple[str] | CreateAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
         method_args = _parse_abi_args(args)
-        params = params or CommonAppCallParams()
+        params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
             "method": "create_abi(string)string",
@@ -1251,7 +1217,7 @@ class _GlobalState:
             key_info = self.app_client.app_spec.state.keys.global_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(GlobalStateValue, converted)
@@ -1261,7 +1227,7 @@ class _GlobalState:
         """Get the current value of the bytes1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes1")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1269,7 +1235,7 @@ class _GlobalState:
         """Get the current value of the bytes2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes2")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1277,7 +1243,7 @@ class _GlobalState:
         """Get the current value of the int1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int1")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1285,7 +1251,7 @@ class _GlobalState:
         """Get the current value of the int2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int2")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1293,7 +1259,7 @@ class _GlobalState:
         """Get the current value of the value key in global_state state"""
         value = self.app_client.state.global_state.get_value("value")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _LocalState:
@@ -1314,7 +1280,7 @@ class _LocalState:
             key_info = self.app_client.app_spec.state.keys.local_state.get(key)
             struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
             converted[key] = (
-                struct_class(**value) if struct_class and isinstance(value, dict)
+                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
         return typing.cast(LocalStateValue, converted)
@@ -1324,7 +1290,7 @@ class _LocalState:
         """Get the current value of the local_bytes1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1332,7 +1298,7 @@ class _LocalState:
         """Get the current value of the local_bytes2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
         if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return self._struct_classes["AVMBytes"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1340,7 +1306,7 @@ class _LocalState:
         """Get the current value of the local_int1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int1")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -1348,7 +1314,7 @@ class _LocalState:
         """Get the current value of the local_int2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int2")
         if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return self._struct_classes["AVMUint64"](**value)  # type: ignore
+            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class StateAppClient:
@@ -1860,11 +1826,11 @@ class StateAppFactoryCreateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateParams:
         """Creates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
@@ -1873,11 +1839,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint32Args,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32(uint32)uint32 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1893,11 +1859,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint32_readonly(uint32)uint32 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1913,11 +1879,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint64Args,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64(uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1933,11 +1899,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_uint64_readonly(uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1953,11 +1919,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | CallAbiArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1973,11 +1939,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_abi_txn(pay,string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -1993,11 +1959,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the call_with_references(asset,account,application)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2013,11 +1979,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the set_global(uint64,uint64,string,byte[4])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2033,11 +1999,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the set_local(uint64,uint64,string,byte[4])void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2053,11 +2019,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the set_box(byte[4],string)void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2072,11 +2038,11 @@ class StateAppFactoryCreateParams:
     def error(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the error()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2092,11 +2058,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueArgs | None = None,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the default_value(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2112,11 +2078,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | DefaultValueIntArgs | None = None,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_int(uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2132,11 +2098,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueFromAbiArgs | None = None,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_abi(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2152,11 +2118,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[int] | DefaultValueFromGlobalStateArgs | None = None,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_global_state(uint64)uint64 ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2172,11 +2138,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DefaultValueFromLocalStateArgs | None = None,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the default_value_from_local_state(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2192,11 +2158,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | CreateAbiArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the create_abi(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2212,11 +2178,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | UpdateAbiArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the update_abi(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2232,11 +2198,11 @@ class StateAppFactoryCreateParams:
         self,
         args: tuple[str] | DeleteAbiArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the delete_abi(string)string ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2251,11 +2217,11 @@ class StateAppFactoryCreateParams:
     def opt_in(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
         """Creates a new instance using the opt_in()void ABI method"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
@@ -2276,11 +2242,11 @@ class StateAppFactoryUpdateParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppUpdateParams:
         """Updates an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -2294,11 +2260,11 @@ class StateAppFactoryDeleteParams:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         
     ) -> algokit_utils.AppDeleteParams:
         """Deletes an instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
@@ -2320,10 +2286,10 @@ class StateAppFactoryCreateTransactionCreate:
 
     def bare(
         self,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
     ) -> Transaction:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
         )
@@ -2346,12 +2312,12 @@ class StateAppFactorySendCreate:
     def bare(
         self,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
     ) -> tuple[StateAppClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
-        params = params or CommonAppFactoryCallParams()
+        params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             send_params=send_params,
@@ -2363,12 +2329,12 @@ class StateAppFactorySendCreate:
         self,
         args: tuple[str] | CreateAbiArgs,
         *,
-        params: CommonAppFactoryCallParams | None = None,
+        params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> tuple[StateAppClient, algokit_utils.AppFactoryCreateMethodCallResult[str]]:
             """Creates and sends a transaction using the create_abi(string)string ABI method"""
-            params = params or CommonAppFactoryCallParams()
+            params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
                 algokit_utils.AppFactoryCreateMethodCallParams(
                     **{
@@ -2404,7 +2370,7 @@ class _StateAppUpdateComposer:
     def update_abi(
         self,
         args: tuple[str] | UpdateAbiArgs,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> "StateAppComposer":
         self.composer._composer.add_app_update_method_call(
@@ -2428,7 +2394,7 @@ class _StateAppDeleteComposer:
     def delete_abi(
         self,
         args: tuple[str] | DeleteAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self.composer._composer.add_app_delete_method_call(
             self.composer.client.params.delete.delete_abi(
@@ -2450,7 +2416,7 @@ class _StateAppOpt_inComposer:
         self.composer = composer
     def opt_in(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.opt_in.opt_in(
@@ -2490,7 +2456,7 @@ class StateAppComposer:
     def call_abi_uint32(
         self,
         args: tuple[int] | CallAbiUint32Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32(
@@ -2508,7 +2474,7 @@ class StateAppComposer:
     def call_abi_uint32_readonly(
         self,
         args: tuple[int] | CallAbiUint32ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint32_readonly(
@@ -2526,7 +2492,7 @@ class StateAppComposer:
     def call_abi_uint64(
         self,
         args: tuple[int] | CallAbiUint64Args,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64(
@@ -2544,7 +2510,7 @@ class StateAppComposer:
     def call_abi_uint64_readonly(
         self,
         args: tuple[int] | CallAbiUint64ReadonlyArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_uint64_readonly(
@@ -2562,7 +2528,7 @@ class StateAppComposer:
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi(
@@ -2580,7 +2546,7 @@ class StateAppComposer:
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_abi_txn(
@@ -2598,7 +2564,7 @@ class StateAppComposer:
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.call_with_references(
@@ -2616,7 +2582,7 @@ class StateAppComposer:
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_global(
@@ -2634,7 +2600,7 @@ class StateAppComposer:
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_local(
@@ -2652,7 +2618,7 @@ class StateAppComposer:
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.set_box(
@@ -2669,7 +2635,7 @@ class StateAppComposer:
 
     def error(
         self,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.error(
@@ -2687,7 +2653,7 @@ class StateAppComposer:
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value(
@@ -2705,7 +2671,7 @@ class StateAppComposer:
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_int(
@@ -2723,7 +2689,7 @@ class StateAppComposer:
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_abi(
@@ -2741,7 +2707,7 @@ class StateAppComposer:
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_global_state(
@@ -2759,7 +2725,7 @@ class StateAppComposer:
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.default_value_from_local_state(
@@ -2777,7 +2743,7 @@ class StateAppComposer:
     def create_abi(
         self,
         args: tuple[str] | CreateAbiArgs,
-        params: CommonAppCallParams | None = None
+        params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateAppComposer":
         self._composer.add_app_call_method_call(
             self.client.params.create_abi(
@@ -2796,9 +2762,9 @@ class StateAppComposer:
         self,
         *,
         args: list[bytes] | None = None,
-        params: CommonAppCallParams | None = None,
+        params: algokit_utils.CommonAppCallParams | None = None,
     ) -> "StateAppComposer":
-        params=params or CommonAppCallParams()
+        params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
                 algokit_utils.AppClientBareCallParams(

@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass
 
 import algokit_utils
+from algokit_utils import  CommonAppCallParams, CommonAppCallCreateParams
 import algokit_utils.applications
 import algokit_utils.transactions
 import algosdk
@@ -19,8 +20,6 @@ from nacl.signing import SigningKey
 from examples.voting.client import (
     BootstrapArgs,
     CreateArgs,
-    CommonAppCallParams,
-    CommonAppFactoryCallParams,
     GetPreconditionsArgs,
     VoteArgs,
     VotingRoundAppClient,
@@ -104,7 +103,7 @@ def random_voting_round_app(
             nft_image_url="ipfs://cid",
             option_counts=question_counts,
         ),
-        params=CommonAppFactoryCallParams(
+        params=CommonAppCallCreateParams(
             static_fee=AlgoAmount.from_micro_algo(1000 + 1000 * 4)
         ),
         compilation_params={

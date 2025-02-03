@@ -2,14 +2,13 @@ import algokit_utils
 import algosdk
 import pytest
 from algokit_utils.models import AlgoAmount
-from algokit_utils import AlgorandClient, OperationPerformed
+from algokit_utils import AlgorandClient, OperationPerformed, CommonAppCallCreateParams
 
 from examples.lifecycle.client import (
     CreateStringStringArgs,
     CreateStringUint32VoidArgs,
     HelloStringStringArgs,
     LifeCycleAppFactory,
-    CommonAppFactoryCallParams,
     LifeCycleAppMethodCallCreateParams,
 )
 
@@ -45,7 +44,7 @@ def test_create_bare(lifecycle_factory: LifeCycleAppFactory) -> None:
 
 def test_create_bare_optin(lifecycle_factory: LifeCycleAppFactory) -> None:
     client, create_result = lifecycle_factory.send.create.bare(
-        params=CommonAppFactoryCallParams(
+        params=CommonAppCallCreateParams(
             on_complete=algosdk.transaction.OnComplete.OptInOC
         ),
         compilation_params={"updatable": True},

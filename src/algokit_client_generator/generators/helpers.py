@@ -40,16 +40,26 @@ def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
     )
 
 
-def generate_helper_aliases(context: GeneratorContext) -> DocumentParts:
+def generate_dataclass_initializer(context: GeneratorContext) -> DocumentParts:
     yield utils.indented(
         """
-ON_COMPLETE_TYPES = typing.Literal[
-    OnComplete.NoOpOC,
-    OnComplete.UpdateApplicationOC,
-    OnComplete.DeleteApplicationOC,
-    OnComplete.OptInOC,
-    OnComplete.CloseOutOC,
-]"""
+def _init_dataclass(cls: type, data: dict) -> object:
+    \"\"\"
+    Recursively instantiate a dataclass of type `cls` from `data`.
+
+    For each field on the dataclass, if the field type is also a dataclass
+    and the corresponding data is a dict, instantiate that field recursively.
+    \"\"\"
+    field_values = {}
+    for field in dataclasses.fields(cls):
+        field_value = data.get(field.name)
+        # Check if the field expects another dataclass and the value is a dict.
+        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
+            field_values[field.name] = _init_dataclass(field.type, field_value)
+        else:
+            field_values[field.name] = field_value
+    return cls(**field_values)
+    """
     )
 
 
@@ -57,5 +67,5 @@ def generate_helpers(context: GeneratorContext) -> DocumentParts:
     yield Part.Gap1
     yield generate_abi_args_parser()
     yield Part.Gap1
-    yield generate_helper_aliases(context)
-    yield Part.Gap2
+    yield generate_dataclass_initializer(context)
+    yield Part.Gap1
