@@ -147,6 +147,7 @@ def _generate_operation_params_class(context: GeneratorContext, operation: str) 
     class_name = f"{context.contract_name}Factory{operation.title()}Params"
     method_name = "create" if operation == "create" else f"deploy_{operation}"
 
+    bare_params_class = "AppFactoryCreateParams" if operation == "create" else "AppClientBareCallParams"
     yield utils.indented(f"""
 class {class_name}:
     \"\"\"Parameters for '{operation}' operations of {context.contract_name} contract\"\"\"
@@ -163,7 +164,7 @@ class {class_name}:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.{bare_params_class}(**dataclasses.asdict(params)),
             {'compilation_params=compilation_params' if operation == 'create' else ''})
 """)
 
@@ -316,10 +317,10 @@ def _generate_bare_params_class(
     )
 
     class_name = f"{context.contract_name}BareCall{type_suffix}Params"
-
+    sub_class = "AppClientBareCallCreateParams" if is_create else "AppClientBareCallParams"
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
-class {class_name}(algokit_utils.AppClientBareCallCreateParams):
+class {class_name}(algokit_utils.{sub_class}):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
     on_complete: typing.Literal[{on_complete_options}] | None = None
 

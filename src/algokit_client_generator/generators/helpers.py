@@ -55,7 +55,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)

@@ -59,7 +59,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)
@@ -584,7 +584,7 @@ class DuplicateStructsContractFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 class DuplicateStructsContractFactoryDeleteParams:
@@ -602,7 +602,7 @@ class DuplicateStructsContractFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 
