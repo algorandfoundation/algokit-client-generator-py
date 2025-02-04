@@ -21,7 +21,6 @@ def update_approvals() -> None:
         # "reti",
         "state",
         "voting_round",
-        # "zero_coupon_bond",
     ]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
@@ -39,7 +38,7 @@ def update_approvals() -> None:
         # "nested",
         # "nfd",
         # "reti",
-        # "zero_coupon_bond",
+        "zero_coupon_bond",
     ]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc56.json"

@@ -31,7 +31,6 @@ def main() -> None:
         # "reti",
         "state",
         "voting_round",
-        # "zero_coupon_bond",
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
@@ -65,7 +64,6 @@ def main() -> None:
         # "nested",
         # "nfd",
         # "reti",
-        # "zero_coupon_bond",
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
