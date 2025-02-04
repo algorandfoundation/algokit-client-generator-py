@@ -18,7 +18,6 @@ def update_approvals() -> None:
         "minimal",
         # "nested",
         # "nfd",
-        # "reti",
         "state",
         "voting_round",
     ]:
@@ -37,7 +36,7 @@ def update_approvals() -> None:
         "structs",
         # "nested",
         # "nfd",
-        # "reti",
+        "reti",
         "zero_coupon_bond",
     ]:
         app_path = artifacts / app

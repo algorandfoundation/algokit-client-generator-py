@@ -28,7 +28,6 @@ def main() -> None:
         "minimal",
         # "nested",
         # "nfd",
-        # "reti",
         "state",
         "voting_round",
     ]:
@@ -63,7 +62,6 @@ def main() -> None:
         "structs",
         # "nested",
         # "nfd",
-        # "reti",
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
