@@ -11,7 +11,6 @@ def update_approvals() -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
     # TODO: Uncomment all apps.
     for app in [
-        # "arc56_test",
         # "duplicate_structs",
         "hello_world",
         "lifecycle",
@@ -31,7 +30,7 @@ def update_approvals() -> None:
 
     # TODO: Uncomment all apps.
     for app in [
-        # "arc56_test",
+        "arc56_test",
         # "duplicate_structs",
         "structs",
         # "nested",

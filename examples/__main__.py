@@ -20,9 +20,7 @@ def main() -> None:
 
     # TODO: Uncomment all apps.
     for app in [
-        # "arc56_test",
         # "duplicate_structs",
-        # "global_state_struct",
         "hello_world",
         "lifecycle",
         "minimal",
@@ -56,9 +54,7 @@ def main() -> None:
 
     # TODO: Uncomment all apps.
     for app in [
-        # "arc56_test",
         # "duplicate_structs",
-        # "global_state_struct",
         "structs",
         # "nested",
         # "nfd",
