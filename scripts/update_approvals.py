@@ -15,7 +15,6 @@ def update_approvals() -> None:
         "hello_world",
         "lifecycle",
         "minimal",
-        # "nested",
         "state",
         "voting_round",
     ]:
@@ -32,7 +31,7 @@ def update_approvals() -> None:
         "arc56_test",
         # "duplicate_structs",
         "structs",
-        # "nested",
+        "nested",
         "nfd",
         "reti",
         "zero_coupon_bond",

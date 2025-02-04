@@ -24,7 +24,6 @@ def main() -> None:
         "hello_world",
         "lifecycle",
         "minimal",
-        # "nested",
         "state",
         "voting_round",
     ]:
@@ -55,7 +54,7 @@ def main() -> None:
     for app in [
         # "duplicate_structs",
         "structs",
-        # "nested",
+        "nested",
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app

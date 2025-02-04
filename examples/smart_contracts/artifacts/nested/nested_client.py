@@ -19,7 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "NestedContract", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmFwcHJvdmFsX3Byb2dyYW06CiAgICBpbnRjYmxvY2sgMSAwCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIGNhbGxzdWIgX19wdXlhX2FyYzRfcm91dGVyX18KICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuX19wdXlhX2FyYzRfcm91dGVyX18oKSAtPiB1aW50NjQ6Cl9fcHV5YV9hcmM0X3JvdXRlcl9fOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgcHJvdG8gMCAxCiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDcKICAgIHB1c2hieXRlc3MgMHhmZTZiZGY2OSAweDlmZDgzNWY4IDB4MzRhZjM5NDIgLy8gbWV0aG9kICJhZGQodWludDY0LHVpbnQ2NCl1aW50NjQiLCBtZXRob2QgImdldF9wYXlfdHhuX2Ftb3VudChwYXkpdWludDY0IiwgbWV0aG9kICJuZXN0ZWRfbWV0aG9kX2NhbGwoc3RyaW5nLHBheSxhcHBsKWJ5dGVbXSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2FkZF9yb3V0ZUAyIF9fcHV5YV9hcmM0X3JvdXRlcl9fX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUAzIF9fcHV5YV9hcmM0X3JvdXRlcl9fX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA0CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgpfX3B1eWFfYXJjNF9yb3V0ZXJfX19hZGRfcm91dGVAMjoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkQ29udHJhY3QoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fZ2V0X3BheV90eG5fYW1vdW50X3JvdXRlQDM6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGdldF9wYXlfdHhuX2Ftb3VudAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDQ6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWRDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgdHhuIEdyb3VwSW5kZXgKICAgIHB1c2hpbnQgMiAvLyAyCiAgICAtCiAgICBkdXAKICAgIGd0eG5zIFR5cGVFbnVtCiAgICBpbnRjXzAgLy8gcGF5CiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgcGF5CiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIHB1c2hpbnQgNiAvLyBhcHBsCiAgICA9PQogICAgYXNzZXJ0IC8vIHRyYW5zYWN0aW9uIHR5cGUgaXMgYXBwbAogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIG5lc3RlZF9tZXRob2RfY2FsbAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHN1YgoKX19wdXlhX2FyYzRfcm91dGVyX19fYmFyZV9yb3V0aW5nQDc6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogX19wdXlhX2FyYzRfcm91dGVyX19fYWZ0ZXJfaWZfZWxzZUAxMQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXRzdWIKCl9fcHV5YV9hcmM0X3JvdXRlcl9fX2FmdGVyX2lmX2Vsc2VAMTE6CiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjQKICAgIC8vIGNsYXNzIE5lc3RlZENvbnRyYWN0KEFSQzRDb250cmFjdCk6CiAgICBpbnRjXzEgLy8gMAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMubmVzdGVkLm5lc3RlZC5OZXN0ZWRDb250cmFjdC5hZGQoYTogYnl0ZXMsIGI6IGJ5dGVzKSAtPiBieXRlczoKYWRkOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weTo1LTYKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIGFkZChzZWxmLCBhOiBhcmM0LlVJbnQ2NCwgYjogYXJjNC5VSW50NjQpIC0+IGFyYzQuVUludDY0OgogICAgcHJvdG8gMiAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjcKICAgIC8vIHJldHVybiBhcmM0LlVJbnQ2NChhLm5hdGl2ZSArIGIubmF0aXZlKQogICAgZnJhbWVfZGlnIC0yCiAgICBidG9pCiAgICBmcmFtZV9kaWcgLTEKICAgIGJ0b2kKICAgICsKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIGV4YW1wbGVzL25lc3RlZC9uZXN0ZWQucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLm5lc3RlZC5uZXN0ZWQuTmVzdGVkQ29udHJhY3QubmVzdGVkX21ldGhvZF9jYWxsKF86IGJ5dGVzLCBfcGF5X3R4bjogdWludDY0LCBtZXRob2RfY2FsbDogdWludDY0KSAtPiBieXRlczoKbmVzdGVkX21ldGhvZF9jYWxsOgogICAgLy8gZXhhbXBsZXMvbmVzdGVkL25lc3RlZC5weToxMy0xNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgbmVzdGVkX21ldGhvZF9jYWxsKAogICAgLy8gICAgIHNlbGYsIF86IGFyYzQuU3RyaW5nLCBfcGF5X3R4bjogZ3R4bi5QYXltZW50VHJhbnNhY3Rpb24sIG1ldGhvZF9jYWxsOiBndHhuLkFwcGxpY2F0aW9uQ2FsbFRyYW5zYWN0aW9uCiAgICAvLyApIC0+IGFyYzQuRHluYW1pY0J5dGVzOgogICAgcHJvdG8gMyAxCiAgICAvLyBleGFtcGxlcy9uZXN0ZWQvbmVzdGVkLnB5OjE3CiAgICAvLyByZXR1cm4gYXJjNC5EeW5hbWljQnl0ZXMobWV0aG9kX2NhbGwudHhuX2lkKQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBUeElECiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpleGFtcGxlcy5uZXN0ZWQubmVzdGVkLk5lc3RlZENvbnRyYWN0LmNsZWFyX3N0YXRlX3Byb2dyYW06CiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg=="}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [57, 79, 105], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [151], "errorMessage": "can only call when creating"}, {"pc": [60, 82, 108], "errorMessage": "can only call when not creating"}, {"pc": [133], "errorMessage": "transaction type is appl"}, {"pc": [92, 122], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Nested", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CiABASYBBBUffHUxG0EAeIIDBP5r32kEn9g1+AQ0rzlCNhoAjgMARgAsAAOBAEMxGRREMRhENhoBMRaBAglJOBAiEkQxFiIJSTgQgQYSRIgAVihMULAiQzEZFEQxGEQxFiIJSTgQIhJEiAAzKExQsCJDMRkURDEYRDYaATYaAogAEShMULAiQzEZQP+fMRgURCJDigIBi/4Xi/8XCBaJigEBi/84CBaJigMBi/84F0kVFlcGAkxQiQ==", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 3, "patch": 1}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOAogICAgcHVzaGJ5dGVzcyAweGZlNmJkZjY5IDB4OWZkODM1ZjggMHgzNGFmMzk0MiAvLyBtZXRob2QgImFkZCh1aW50NjQsdWludDY0KXVpbnQ2NCIsIG1ldGhvZCAiZ2V0X3BheV90eG5fYW1vdW50KHBheSl1aW50NjQiLCBtZXRob2QgIm5lc3RlZF9tZXRob2RfY2FsbChzdHJpbmcscGF5LGFwcGwpYnl0ZVtdIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9hZGRfcm91dGVAMyBtYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0IG1haW5fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDUKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA1OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICB0eG4gR3JvdXBJbmRleAogICAgcHVzaGludCAyIC8vIDIKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgcHVzaGludCA2IC8vIGFwcGwKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBhcHBsCiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgbmVzdGVkX21ldGhvZF9jYWxsCiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgaW50Y18wIC8vIHBheQogICAgPT0KICAgIGFzc2VydCAvLyB0cmFuc2FjdGlvbiB0eXBlIGlzIHBheQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgZ2V0X3BheV90eG5fYW1vdW50CiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2FkZF9yb3V0ZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo1CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDEyCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLmFkZChhOiBieXRlcywgYjogYnl0ZXMpIC0+IGJ5dGVzOgphZGQ6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjUtNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgYWRkKHNlbGYsIGE6IGFyYzQuVUludDY0LCBiOiBhcmM0LlVJbnQ2NCkgLT4gYXJjNC5VSW50NjQ6CiAgICBwcm90byAyIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NwogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KGEubmF0aXZlICsgYi5uYXRpdmUpCiAgICBmcmFtZV9kaWcgLTIKICAgIGJ0b2kKICAgIGZyYW1lX2RpZyAtMQogICAgYnRvaQogICAgKwogICAgaXRvYgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLm5lc3RlZC5jb250cmFjdC5OZXN0ZWQuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLm5lc3RlZF9tZXRob2RfY2FsbChfOiBieXRlcywgX3BheV90eG46IHVpbnQ2NCwgbWV0aG9kX2NhbGw6IHVpbnQ2NCkgLT4gYnl0ZXM6Cm5lc3RlZF9tZXRob2RfY2FsbDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MTMtMTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIG5lc3RlZF9tZXRob2RfY2FsbCgKICAgIC8vICAgICBzZWxmLAogICAgLy8gICAgIF86IGFyYzQuU3RyaW5nLAogICAgLy8gICAgIF9wYXlfdHhuOiBndHhuLlBheW1lbnRUcmFuc2FjdGlvbiwKICAgIC8vICAgICBtZXRob2RfY2FsbDogZ3R4bi5BcHBsaWNhdGlvbkNhbGxUcmFuc2FjdGlvbiwKICAgIC8vICkgLT4gYXJjNC5EeW5hbWljQnl0ZXM6CiAgICBwcm90byAzIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MjAKICAgIC8vIHJldHVybiBhcmM0LkR5bmFtaWNCeXRlcyhtZXRob2RfY2FsbC50eG5faWQpCiAgICBmcmFtZV9kaWcgLTEKICAgIGd0eG5zIFR4SUQKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [50, 91, 117], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [144], "errorMessage": "can only call when creating"}, {"pc": [53, 94, 120], "errorMessage": "can only call when not creating"}, {"pc": [78], "errorMessage": "transaction type is appl"}, {"pc": [67, 104], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -83,7 +83,7 @@ class NestedMethodCallArgs:
     method_call: algokit_utils.AppMethodCallTransactionArgument
 
 
-class NestedContractParams:
+class NestedParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -137,7 +137,7 @@ class NestedContractParams:
         )
 
 
-class NestedContractCreateTransactionParams:
+class NestedCreateTransactionParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -191,7 +191,7 @@ class NestedContractCreateTransactionParams:
         )
 
 
-class NestedContractSend:
+class NestedSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -254,14 +254,14 @@ class NestedContractSend:
         )
 
 
-class NestedContractState:
-    """Methods to access state for the current NestedContract app"""
+class NestedState:
+    """Methods to access state for the current Nested app"""
 
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-class NestedContractClient:
-    """Client for interacting with NestedContract smart contract"""
+class NestedClient:
+    """Client for interacting with Nested smart contract"""
 
     @typing.overload
     def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
@@ -309,10 +309,10 @@ class NestedContractClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = NestedContractParams(self.app_client)
-        self.create_transaction = NestedContractCreateTransactionParams(self.app_client)
-        self.send = NestedContractSend(self.app_client)
-        self.state = NestedContractState(self.app_client)
+        self.params = NestedParams(self.app_client)
+        self.create_transaction = NestedCreateTransactionParams(self.app_client)
+        self.send = NestedSend(self.app_client)
+        self.state = NestedState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -325,8 +325,8 @@ class NestedContractClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "NestedClient":
+        return NestedClient(
             algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -349,8 +349,8 @@ class NestedContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "NestedClient":
+        return NestedClient(
             algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -389,8 +389,8 @@ class NestedContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "NestedContractClient":
-        return NestedContractClient(
+    ) -> "NestedClient":
+        return NestedClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -400,8 +400,8 @@ class NestedContractClient:
             )
         )
 
-    def new_group(self) -> "NestedContractComposer":
-        return NestedContractComposer(self)
+    def new_group(self) -> "NestedComposer":
+        return NestedComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -452,15 +452,15 @@ class NestedContractClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class NestedContractBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
-    """Parameters for creating NestedContract contract with bare calls"""
+class NestedBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
+    """Parameters for creating Nested contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
-class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContractBareCallCreateParams, None, None]):
-    """Factory for deploying and managing NestedContractClient smart contracts"""
+class NestedFactory(algokit_utils.TypedAppFactoryProtocol[NestedBareCallCreateParams, None, None]):
+    """Factory for deploying and managing NestedClient smart contracts"""
 
     def __init__(
         self,
@@ -483,9 +483,9 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
                 compilation_params=compilation_params,
             )
         )
-        self.params = NestedContractFactoryParams(self.app_factory)
-        self.create_transaction = NestedContractFactoryCreateTransaction(self.app_factory)
-        self.send = NestedContractFactorySend(self.app_factory)
+        self.params = NestedFactoryParams(self.app_factory)
+        self.create_transaction = NestedFactoryCreateTransaction(self.app_factory)
+        self.send = NestedFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -504,7 +504,7 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
         *,
         on_update: algokit_utils.OnUpdate | None = None,
         on_schema_break: algokit_utils.OnSchemaBreak | None = None,
-        create_params: NestedContractBareCallCreateParams | None = None,
+        create_params: NestedBareCallCreateParams | None = None,
         update_params: None = None,
         delete_params: None = None,
         existing_deployments: algokit_utils.ApplicationLookup | None = None,
@@ -512,7 +512,7 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
         app_name: str | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
-    ) -> tuple[NestedContractClient, algokit_utils.AppFactoryDeployResult]:
+    ) -> tuple[NestedClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             on_update=on_update,
@@ -527,7 +527,7 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
             send_params=send_params,
         )
 
-        return NestedContractClient(deploy_response[0]), deploy_response[1]
+        return NestedClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -539,9 +539,9 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NestedContractClient:
+    ) -> NestedClient:
         """Get an app client by creator address and name"""
-        return NestedContractClient(
+        return NestedClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -562,9 +562,9 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> NestedContractClient:
+    ) -> NestedClient:
         """Get an app client by app ID"""
-        return NestedContractClient(
+        return NestedClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -576,17 +576,17 @@ class NestedContractFactory(algokit_utils.TypedAppFactoryProtocol[NestedContract
         )
 
 
-class NestedContractFactoryParams:
-    """Parameters for creating transactions for NestedContract contract"""
+class NestedFactoryParams:
+    """Parameters for creating transactions for Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactoryCreateParams(app_factory)
-        self.update = NestedContractFactoryUpdateParams(app_factory)
-        self.delete = NestedContractFactoryDeleteParams(app_factory)
+        self.create = NestedFactoryCreateParams(app_factory)
+        self.update = NestedFactoryUpdateParams(app_factory)
+        self.delete = NestedFactoryDeleteParams(app_factory)
 
-class NestedContractFactoryCreateParams:
-    """Parameters for 'create' operations of NestedContract contract"""
+class NestedFactoryCreateParams:
+    """Parameters for 'create' operations of Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -663,8 +663,8 @@ class NestedContractFactoryCreateParams:
             compilation_params=compilation_params
         )
 
-class NestedContractFactoryUpdateParams:
-    """Parameters for 'update' operations of NestedContract contract"""
+class NestedFactoryUpdateParams:
+    """Parameters for 'update' operations of Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -681,8 +681,8 @@ class NestedContractFactoryUpdateParams:
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
-class NestedContractFactoryDeleteParams:
-    """Parameters for 'delete' operations of NestedContract contract"""
+class NestedFactoryDeleteParams:
+    """Parameters for 'delete' operations of Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -700,16 +700,16 @@ class NestedContractFactoryDeleteParams:
             )
 
 
-class NestedContractFactoryCreateTransaction:
-    """Create transactions for NestedContract contract"""
+class NestedFactoryCreateTransaction:
+    """Create transactions for Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactoryCreateTransactionCreate(app_factory)
+        self.create = NestedFactoryCreateTransactionCreate(app_factory)
 
 
-class NestedContractFactoryCreateTransactionCreate:
-    """Create new instances of NestedContract contract"""
+class NestedFactoryCreateTransactionCreate:
+    """Create new instances of Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -725,16 +725,16 @@ class NestedContractFactoryCreateTransactionCreate:
         )
 
 
-class NestedContractFactorySend:
-    """Send calls to NestedContract contract"""
+class NestedFactorySend:
+    """Send calls to Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = NestedContractFactorySendCreate(app_factory)
+        self.create = NestedFactorySendCreate(app_factory)
 
 
-class NestedContractFactorySendCreate:
-    """Send create calls to NestedContract contract"""
+class NestedFactorySendCreate:
+    """Send create calls to Nested contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -745,7 +745,7 @@ class NestedContractFactorySendCreate:
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
-    ) -> tuple[NestedContractClient, algokit_utils.SendAppCreateTransactionResult]:
+    ) -> tuple[NestedClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
@@ -753,13 +753,13 @@ class NestedContractFactorySendCreate:
             send_params=send_params,
             compilation_params=compilation_params
         )
-        return NestedContractClient(result[0]), result[1]
+        return NestedClient(result[0]), result[1]
 
 
-class NestedContractComposer:
-    """Composer for creating transaction groups for NestedContract contract calls"""
+class NestedComposer:
+    """Composer for creating transaction groups for Nested contract calls"""
 
-    def __init__(self, client: "NestedContractClient"):
+    def __init__(self, client: "NestedClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
@@ -768,7 +768,7 @@ class NestedContractComposer:
         self,
         args: tuple[int, int] | AddArgs,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "NestedContractComposer":
+    ) -> "NestedComposer":
         self._composer.add_app_call_method_call(
             self.client.params.add(
                 args=args,
@@ -786,7 +786,7 @@ class NestedContractComposer:
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "NestedContractComposer":
+    ) -> "NestedComposer":
         self._composer.add_app_call_method_call(
             self.client.params.get_pay_txn_amount(
                 args=args,
@@ -804,7 +804,7 @@ class NestedContractComposer:
         self,
         args: tuple[str, algokit_utils.AppMethodCallTransactionArgument | None, algokit_utils.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "NestedContractComposer":
+    ) -> "NestedComposer":
         self._composer.add_app_call_method_call(
             self.client.params.nested_method_call(
                 args=args,
@@ -823,7 +823,7 @@ class NestedContractComposer:
         *,
         args: list[bytes] | None = None,
         params: algokit_utils.CommonAppCallParams | None = None,
-    ) -> "NestedContractComposer":
+    ) -> "NestedComposer":
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -839,7 +839,7 @@ class NestedContractComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "NestedContractComposer":
+    ) -> "NestedComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
