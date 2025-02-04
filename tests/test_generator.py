@@ -14,7 +14,7 @@ def to_camel_case(s: str) -> str:
     [
         "arc56_test",
         "duplicate_structs",
-        "global_state_struct",
+        "structs",
         "hello_world",
         "lifecycle",
         "minimal",
