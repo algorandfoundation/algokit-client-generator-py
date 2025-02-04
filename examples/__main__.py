@@ -25,7 +25,6 @@ def main() -> None:
         "lifecycle",
         "minimal",
         # "nested",
-        # "nfd",
         "state",
         "voting_round",
     ]:
@@ -57,7 +56,6 @@ def main() -> None:
         # "duplicate_structs",
         "structs",
         # "nested",
-        # "nfd",
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app

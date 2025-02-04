@@ -16,7 +16,6 @@ def update_approvals() -> None:
         "lifecycle",
         "minimal",
         # "nested",
-        # "nfd",
         "state",
         "voting_round",
     ]:
@@ -34,7 +33,7 @@ def update_approvals() -> None:
         # "duplicate_structs",
         "structs",
         # "nested",
-        # "nfd",
+        "nfd",
         "reti",
         "zero_coupon_bond",
     ]:
