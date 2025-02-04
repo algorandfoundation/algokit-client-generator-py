@@ -35,23 +35,61 @@ def main() -> None:
     ]:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
-        subprocess.run(
-            [
-                "algokit",
-                "--no-color",
-                "compile",
-                "python",
-                app_path.absolute(),
-                f"--out-dir={app_artifacts}",
-                "--output-arc32",
-                "--no-output-teal",
-                "--no-output-source-map",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
-        )
+        try:
+            subprocess.run(
+                [
+                    "algokit",
+                    "--no-color",
+                    "compile",
+                    "python",
+                    app_path.absolute(),
+                    f"--out-dir={app_artifacts}",
+                    "--output-arc32",
+                    "--no-output-teal",
+                    "--no-output-source-map",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=True,
+            )
+        except Exception as e:
+            print(f"Error compiling contract for app {app}: {e}")
+
+    # TODO: Uncomment all apps.
+    for app in [
+        # "arc56_test",
+        # "duplicate_structs",
+        # "global_state_struct",
+        "structs",
+        # "nested",
+        # "nfd",
+        # "reti",
+        # "zero_coupon_bond",
+    ]:
+        app_path = smart_contracts / app / "contract.py"
+        app_artifacts = artifacts / app
+        try:
+            subprocess.run(
+                [
+                    "algokit",
+                    "--no-color",
+                    "compile",
+                    "python",
+                    app_path.absolute(),
+                    f"--out-dir={app_artifacts}",
+                    "--output-arc56",
+                    "--no-output-arc32",
+                    "--no-output-teal",
+                    "--no-output-source-map",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=True,
+            )
+        except Exception as e:
+            print(f"Error compiling contract for app {app}: {e}")
 
 
 if __name__ == "__main__":

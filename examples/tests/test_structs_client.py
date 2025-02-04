@@ -4,7 +4,7 @@ import pytest
 from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
 
-from examples.structs.client import GlobalStateStructFactory
+from examples.smart_contracts.artifacts.structs.structs_client import StructsFactory
 
 
 @pytest.fixture
@@ -17,20 +17,20 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 @pytest.fixture
 def my_test_factory(
     algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> GlobalStateStructFactory:
+) -> StructsFactory:
     return algorand.client.get_typed_app_factory(
-        GlobalStateStructFactory, default_sender=default_deployer.address
+        StructsFactory, default_sender=default_deployer.address
     )
 
 
-def test_root_struct_from_response_is_dataclass(my_test_factory: GlobalStateStructFactory) -> None:
+def test_root_struct_from_response_is_dataclass(my_test_factory: StructsFactory) -> None:
     client, _ = my_test_factory.deploy()
 
     struct = client.state.global_state.get_all()
     assert struct["my_struct"].x == client.state.global_state.my_struct.x == "1" 
     assert struct["my_struct"].y == client.state.global_state.my_struct.y == "2"
 
-def test_nested_structs_from_response_are_dataclasses(my_test_factory: GlobalStateStructFactory) -> None:
+def test_nested_structs_from_response_are_dataclasses(my_test_factory: StructsFactory) -> None:
     client, _ = my_test_factory.deploy()
 
     root_struct = client.send.give_me_root_struct().abi_return
@@ -41,7 +41,7 @@ def test_nested_structs_from_response_are_dataclasses(my_test_factory: GlobalSta
     assert is_dataclass(root_struct.nested)
     assert is_dataclass(root_struct.nested.content)
 
-def test_nested_structs_from_state_are_dataclasses(my_test_factory: GlobalStateStructFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+def test_nested_structs_from_state_are_dataclasses(my_test_factory: StructsFactory, default_deployer: algokit_utils.SigningAccount) -> None:
     client, _ = my_test_factory.deploy()
     struct = client.state.global_state.get_all()
     nested_struct_from_state = client.state.global_state.my_nested_struct

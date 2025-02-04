@@ -13,7 +13,6 @@ def update_approvals() -> None:
     for app in [
         # "arc56_test",
         # "duplicate_structs",
-        # "structs",
         "hello_world",
         "lifecycle",
         "minimal",
@@ -26,6 +25,24 @@ def update_approvals() -> None:
     ]:
         app_path = artifacts / app
         app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
+        approved_path = app_path / f"{app}_client.py"
+        try:
+            generate_client(app_spec, approved_path)
+        except Exception as e:
+            print(f"Error generating client for {app}: {e}")
+
+    # TODO: Uncomment all apps.
+    for app in [
+        # "arc56_test",
+        # "duplicate_structs",
+        "structs",
+        # "nested",
+        # "nfd",
+        # "reti",
+        # "zero_coupon_bond",
+    ]:
+        app_path = artifacts / app
+        app_spec = app_path / f"{to_camel_case(app)}.arc56.json"
         approved_path = app_path / f"{app}_client.py"
         try:
             generate_client(app_spec, approved_path)

@@ -1,4 +1,3 @@
-# type: ignore
 # NOTE: remove above comment if you need to recompile the contract
 
 from algopy import ARC4Contract, Box, BoxMap, GlobalState, LocalState, Txn, arc4
@@ -17,7 +16,7 @@ class RootStruct(arc4.Struct, kw_only=True):
     nested: NestedStruct
 
 
-class GlobalStateStruct(ARC4Contract):
+class Structs(ARC4Contract):
     def __init__(self) -> None:
         self.my_struct = GlobalState(Vector(x=arc4.String("1"), y=arc4.String("2")))
         self.my_nested_struct = GlobalState(

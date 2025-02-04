@@ -19,7 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "GlobalStateStruct", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 2, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "byteCode": {"approval": "CiABASYGCgAEAAcAATEAATIOAAIAAgAEAAcAATEAATINbXlfYm94X3N0cnVjdBRteV9uZXN0ZWRfYm94X3N0cnVjdBhteV9ib3htYXBfc3RydWN0AAAAAAAAAHsfbXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3QAAAAAAAAAezEYQAAhgAlteV9zdHJ1Y3QoZ4AQbXlfbmVzdGVkX3N0cnVjdClnMRtBAGKCAwQCvs4RBKSjzpoEMMbVijYaAI4DAC4AEAADgQBDMRkiEkQxGESIAF8iQzEZFEQxGESAEhUffHUAAgACAAQABwABMQABMrAiQzEZFEQxGEQ2GgGIABaABBUffHVMULAiQzEZQP+1MRgURCJDigEBi/9XAgCAB0hlbGxvLCBMUEkVFlcGAkxQiYoAACq8SCoovyu8SCspvycEvEgnBCi/JwW8SCcFKb8xAIAUbXlfbG9jYWxzdGF0ZV9zdHJ1Y3QoZjEAgBtteV9uZXN0ZWRfbG9jYWxzdGF0ZV9zdHJ1Y3QpZok=", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 2, "patch": 1}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBzbWFydF9jb250cmFjdHMuaGVsbG9fd29ybGQuY29udHJhY3QuR2xvYmFsU3RhdGVTdHJ1Y3QuX19hbGdvcHlfZW50cnlwb2ludF93aXRoX2luaXQoKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMQogICAgYnl0ZWNibG9jayAweDAwMDQwMDA3MDAwMTMxMDAwMTMyIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMiAibXlfYm94X3N0cnVjdCIgIm15X25lc3RlZF9ib3hfc3RydWN0IiAweDZkNzk1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YiAweDZkNzk1ZjZlNjU3Mzc0NjU2NDVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTkKICAgIC8vIHNlbGYubXlfc3RydWN0ID0gR2xvYmFsU3RhdGUoVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIHB1c2hieXRlcyAibXlfc3RydWN0IgogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjIwCiAgICAvLyBzZWxmLm15X25lc3RlZF9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZSgKICAgIHB1c2hieXRlcyAibXlfbmVzdGVkX3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToyMS0yNQogICAgLy8gUm9vdFN0cnVjdCgKICAgIC8vICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KAogICAgLy8gICAgICAgICBjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkKICAgIC8vICAgICApCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjIwLTI2CiAgICAvLyBzZWxmLm15X25lc3RlZF9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZSgKICAgIC8vICAgICBSb290U3RydWN0KAogICAgLy8gICAgICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KAogICAgLy8gICAgICAgICAgICAgY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICAvLyAgICAgICAgICkKICAgIC8vICAgICApCiAgICAvLyApCiAgICBhcHBfZ2xvYmFsX3B1dAoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTcKICAgIC8vIGNsYXNzIEdsb2JhbFN0YXRlU3RydWN0KEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOAogICAgcHVzaGJ5dGVzcyAweDAyYmVjZTExIDB4YTRhM2NlOWEgMHgzMGM2ZDU4YSAvLyBtZXRob2QgImhlbGxvKHN0cmluZylzdHJpbmciLCBtZXRob2QgImdpdmVfbWVfcm9vdF9zdHJ1Y3QoKSgoKHN0cmluZyxzdHJpbmcpKSkiLCBtZXRob2QgIm9wdF9pbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5faGVsbG9fcm91dGVANSBtYWluX2dpdmVfbWVfcm9vdF9zdHJ1Y3Rfcm91dGVANiBtYWluX29wdF9pbl9yb3V0ZUA3CgptYWluX2FmdGVyX2lmX2Vsc2VAMTA6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTcKICAgIC8vIGNsYXNzIEdsb2JhbFN0YXRlU3RydWN0KEFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX29wdF9pbl9yb3V0ZUA3OgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjQ0CiAgICAvLyBAYXJjNC5hYmltZXRob2QoYWxsb3dfYWN0aW9ucz1bIk9wdEluIl0pCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBpbnRjXzAgLy8gT3B0SW4KICAgID09CiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBPcHRJbgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIG9wdF9pbgogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9naXZlX21lX3Jvb3Rfc3RydWN0X3JvdXRlQDY6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MzgKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2hlbGxvX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MzQKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxNwogICAgLy8gY2xhc3MgR2xvYmFsU3RhdGVTdHJ1Y3QoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTozNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIGNhbGxzdWIgaGVsbG8KICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxNwogICAgLy8gY2xhc3MgR2xvYmFsU3RhdGVTdHJ1Y3QoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgoKLy8gc21hcnRfY29udHJhY3RzLmhlbGxvX3dvcmxkLmNvbnRyYWN0Lkdsb2JhbFN0YXRlU3RydWN0LmhlbGxvKG5hbWU6IGJ5dGVzKSAtPiBieXRlczoKaGVsbG86CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MzQtMzUKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICAvLyBkZWYgaGVsbG8oc2VsZiwgbmFtZTogYXJjNC5TdHJpbmcpIC0+IGFyYzQuU3RyaW5nOgogICAgcHJvdG8gMSAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MzYKICAgIC8vIHJldHVybiAiSGVsbG8sICIgKyBuYW1lCiAgICBmcmFtZV9kaWcgLTEKICAgIGV4dHJhY3QgMiAwCiAgICBwdXNoYnl0ZXMgMHg0ODY1NmM2YzZmMmMyMAogICAgc3dhcAogICAgY29uY2F0CiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCgoKLy8gc21hcnRfY29udHJhY3RzLmhlbGxvX3dvcmxkLmNvbnRyYWN0Lkdsb2JhbFN0YXRlU3RydWN0Lm9wdF9pbigpIC0+IHZvaWQ6Cm9wdF9pbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo0NC00NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJPcHRJbiJdKQogICAgLy8gZGVmIG9wdF9pbihzZWxmKSAtPiBOb25lOgogICAgcHJvdG8gMCAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NDYKICAgIC8vIHNlbGYubXlfYm94X3N0cnVjdC52YWx1ZSA9IFZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkKICAgIGJ5dGVjXzIgLy8gIm15X2JveF9zdHJ1Y3QiCiAgICBib3hfZGVsCiAgICBwb3AKICAgIGJ5dGVjXzIgLy8gIm15X2JveF9zdHJ1Y3QiCiAgICBieXRlY18wIC8vIDB4MDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo0NwogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICBieXRlY18zIC8vICJteV9uZXN0ZWRfYm94X3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo0Ny00OQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo0NwogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICBieXRlY18zIC8vICJteV9uZXN0ZWRfYm94X3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo0Ny00OQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjUwCiAgICAvLyBzZWxmLm15X2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBWZWN0b3IoCiAgICBieXRlYyA0IC8vIDB4NmQ3OTVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NTAtNTIKICAgIC8vIHNlbGYubXlfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFZlY3RvcigKICAgIC8vICAgICB4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKQogICAgLy8gKQogICAgYm94X2RlbAogICAgcG9wCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NTAKICAgIC8vIHNlbGYubXlfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFZlY3RvcigKICAgIGJ5dGVjIDQgLy8gMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1MC01MgogICAgLy8gc2VsZi5teV9ib3htYXBfc3RydWN0W2FyYzQuVUludDY0KDEyMyldID0gVmVjdG9yKAogICAgLy8gICAgIHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpCiAgICAvLyApCiAgICBieXRlY18wIC8vIDB4MDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1MwogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICBieXRlYyA1IC8vIDB4NmQ3OTVmNmU2NTczNzQ2NTY0NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1My01NQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1MwogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICBieXRlYyA1IC8vIDB4NmQ3OTVmNmU2NTczNzQ2NTY0NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1My01NQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjU2CiAgICAvLyBzZWxmLm15X2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gVmVjdG9yKAogICAgdHhuIFNlbmRlcgogICAgcHVzaGJ5dGVzICJteV9sb2NhbHN0YXRlX3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo1Ni01OAogICAgLy8gc2VsZi5teV9sb2NhbHN0YXRlX3N0cnVjdFtUeG4uc2VuZGVyXSA9IFZlY3RvcigKICAgIC8vICAgICB4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKQogICAgLy8gKQogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfbG9jYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NTkKICAgIC8vIHNlbGYubXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gUm9vdFN0cnVjdCgKICAgIHR4biBTZW5kZXIKICAgIHB1c2hieXRlcyAibXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjU5LTYxCiAgICAvLyBzZWxmLm15X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdFtUeG4uc2VuZGVyXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYXBwX2xvY2FsX3B1dAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [214, 244], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [202], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [273], "errorMessage": "can only call when creating"}, {"pc": [205, 217, 247], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 2, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "byteCode": {"approval": "CiABASYGCgAEAAcAATEAATIOAAIAAgAEAAcAATEAATINbXlfYm94X3N0cnVjdBRteV9uZXN0ZWRfYm94X3N0cnVjdBhteV9ib3htYXBfc3RydWN0AAAAAAAAAHsfbXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3QAAAAAAAAAezEYQAAhgAlteV9zdHJ1Y3QoZ4AQbXlfbmVzdGVkX3N0cnVjdClnMRtBAGKCAwQCvs4RBKSjzpoEMMbVijYaAI4DAC4AEAADgQBDMRkiEkQxGESIAF8iQzEZFEQxGESAEhUffHUAAgACAAQABwABMQABMrAiQzEZFEQxGEQ2GgGIABaABBUffHVMULAiQzEZQP+1MRgURCJDigEBi/9XAgCAB0hlbGxvLCBMUEkVFlcGAkxQiYoAACq8SCoovyu8SCspvycEvEgnBCi/JwW8SCcFKb8xAIAUbXlfbG9jYWxzdGF0ZV9zdHJ1Y3QoZjEAgBtteV9uZXN0ZWRfbG9jYWxzdGF0ZV9zdHJ1Y3QpZok=", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 3, "patch": 1}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuc3RydWN0cy5jb250cmFjdC5TdHJ1Y3RzLl9fYWxnb3B5X2VudHJ5cG9pbnRfd2l0aF9pbml0KCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDEKICAgIGJ5dGVjYmxvY2sgMHgwMDA0MDAwNzAwMDEzMTAwMDEzMiAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIgIm15X2JveF9zdHJ1Y3QiICJteV9uZXN0ZWRfYm94X3N0cnVjdCIgMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IgMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjEKICAgIC8vIHNlbGYubXlfc3RydWN0ID0gR2xvYmFsU3RhdGUoVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIHB1c2hieXRlcyAibXlfc3RydWN0IgogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjIKICAgIC8vIHNlbGYubXlfbmVzdGVkX3N0cnVjdCA9IEdsb2JhbFN0YXRlKAogICAgcHVzaGJ5dGVzICJteV9uZXN0ZWRfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjMtMjcKICAgIC8vIFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdCgKICAgIC8vICAgICAgICAgY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICAvLyAgICAgKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjIyLTI4CiAgICAvLyBzZWxmLm15X25lc3RlZF9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZSgKICAgIC8vICAgICBSb290U3RydWN0KAogICAgLy8gICAgICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KAogICAgLy8gICAgICAgICAgICAgY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICAvLyAgICAgICAgICkKICAgIC8vICAgICApCiAgICAvLyApCiAgICBhcHBfZ2xvYmFsX3B1dAoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weToxOQogICAgLy8gY2xhc3MgU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDgKICAgIHB1c2hieXRlc3MgMHgwMmJlY2UxMSAweGE0YTNjZTlhIDB4MzBjNmQ1OGEgLy8gbWV0aG9kICJoZWxsbyhzdHJpbmcpc3RyaW5nIiwgbWV0aG9kICJnaXZlX21lX3Jvb3Rfc3RydWN0KCkoKChzdHJpbmcsc3RyaW5nKSkpIiwgbWV0aG9kICJvcHRfaW4oKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX2hlbGxvX3JvdXRlQDUgbWFpbl9naXZlX21lX3Jvb3Rfc3RydWN0X3JvdXRlQDYgbWFpbl9vcHRfaW5fcm91dGVANwoKbWFpbl9hZnRlcl9pZl9lbHNlQDEwOgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MTkKICAgIC8vIGNsYXNzIFN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHB1c2hpbnQgMCAvLyAwCiAgICByZXR1cm4KCm1haW5fb3B0X2luX3JvdXRlQDc6CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo0NgogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJPcHRJbiJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgaW50Y18wIC8vIE9wdEluCiAgICA9PQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgT3B0SW4KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgY2FsbHN1YiBvcHRfaW4KICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fZ2l2ZV9tZV9yb290X3N0cnVjdF9yb3V0ZUA2OgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NDAKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2hlbGxvX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTozNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MTkKICAgIC8vIGNsYXNzIFN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjM2CiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgY2FsbHN1YiBoZWxsbwogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2JhcmVfcm91dGluZ0A4OgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MTkKICAgIC8vIGNsYXNzIFN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLnN0cnVjdHMuY29udHJhY3QuU3RydWN0cy5oZWxsbyhuYW1lOiBieXRlcykgLT4gYnl0ZXM6CmhlbGxvOgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MzYtMzcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICAvLyBkZWYgaGVsbG8oc2VsZiwgbmFtZTogYXJjNC5TdHJpbmcpIC0+IGFyYzQuU3RyaW5nOgogICAgcHJvdG8gMSAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTozOAogICAgLy8gcmV0dXJuICJIZWxsbywgIiArIG5hbWUKICAgIGZyYW1lX2RpZyAtMQogICAgZXh0cmFjdCAyIDAKICAgIHB1c2hieXRlcyAweDQ4NjU2YzZjNmYyYzIwCiAgICBzd2FwCiAgICBjb25jYXQKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICByZXRzdWIKCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuc3RydWN0cy5jb250cmFjdC5TdHJ1Y3RzLm9wdF9pbigpIC0+IHZvaWQ6Cm9wdF9pbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQ2LTQ3CiAgICAvLyBAYXJjNC5hYmltZXRob2QoYWxsb3dfYWN0aW9ucz1bIk9wdEluIl0pCiAgICAvLyBkZWYgb3B0X2luKHNlbGYpIC0+IE5vbmU6CiAgICBwcm90byAwIDAKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQ4CiAgICAvLyBzZWxmLm15X2JveF9zdHJ1Y3QudmFsdWUgPSBWZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICBieXRlY18yIC8vICJteV9ib3hfc3RydWN0IgogICAgYm94X2RlbAogICAgcG9wCiAgICBieXRlY18yIC8vICJteV9ib3hfc3RydWN0IgogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBib3hfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo0OQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICBieXRlY18zIC8vICJteV9uZXN0ZWRfYm94X3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQ5LTUxCiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3hfc3RydWN0LnZhbHVlID0gUm9vdFN0cnVjdCgKICAgIC8vICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KGNvbnRlbnQ9VmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIC8vICkKICAgIGJveF9kZWwKICAgIHBvcAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NDkKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveF9zdHJ1Y3QudmFsdWUgPSBSb290U3RydWN0KAogICAgYnl0ZWNfMyAvLyAibXlfbmVzdGVkX2JveF9zdHJ1Y3QiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo0OS01MQogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTIKICAgIC8vIHNlbGYubXlfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFZlY3RvcigKICAgIGJ5dGVjIDQgLy8gMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjUyLTU0CiAgICAvLyBzZWxmLm15X2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBWZWN0b3IoCiAgICAvLyAgICAgeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikKICAgIC8vICkKICAgIGJveF9kZWwKICAgIHBvcAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTIKICAgIC8vIHNlbGYubXlfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFZlY3RvcigKICAgIGJ5dGVjIDQgLy8gMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjUyLTU0CiAgICAvLyBzZWxmLm15X2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBWZWN0b3IoCiAgICAvLyAgICAgeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikKICAgIC8vICkKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTUKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgYnl0ZWMgNSAvLyAweDZkNzk1ZjZlNjU3Mzc0NjU2NDVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1NS01NwogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU1CiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3htYXBfc3RydWN0W2FyYzQuVUludDY0KDEyMyldID0gUm9vdFN0cnVjdCgKICAgIGJ5dGVjIDUgLy8gMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTUtNTcKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgLy8gICAgIG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU4CiAgICAvLyBzZWxmLm15X2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gVmVjdG9yKAogICAgdHhuIFNlbmRlcgogICAgcHVzaGJ5dGVzICJteV9sb2NhbHN0YXRlX3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU4LTYwCiAgICAvLyBzZWxmLm15X2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gVmVjdG9yKAogICAgLy8gICAgIHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpCiAgICAvLyApCiAgICBieXRlY18wIC8vIDB4MDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGFwcF9sb2NhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYxCiAgICAvLyBzZWxmLm15X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdFtUeG4uc2VuZGVyXSA9IFJvb3RTdHJ1Y3QoCiAgICB0eG4gU2VuZGVyCiAgICBwdXNoYnl0ZXMgIm15X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdCIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYxLTYzCiAgICAvLyBzZWxmLm15X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdFtUeG4uc2VuZGVyXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBieXRlY18xIC8vIDB4MDAwMjAwMDIwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYXBwX2xvY2FsX3B1dAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [214, 244], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [202], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [273], "errorMessage": "can only call when creating"}, {"pc": [205, 217, 247], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -87,7 +87,7 @@ class HelloArgs:
     name: str
 
 
-class _GlobalStateStructOptIn:
+class _StructsOptIn:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -103,13 +103,13 @@ class _GlobalStateStructOptIn:
         }))
 
 
-class GlobalStateStructParams:
+class StructsParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
-    def opt_in(self) -> "_GlobalStateStructOptIn":
-        return _GlobalStateStructOptIn(self.app_client)
+    def opt_in(self) -> "_StructsOptIn":
+        return _StructsOptIn(self.app_client)
 
     def hello(
         self,
@@ -146,7 +146,7 @@ class GlobalStateStructParams:
         )
 
 
-class _GlobalStateStructOptInTransaction:
+class _StructsOptInTransaction:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -162,13 +162,13 @@ class _GlobalStateStructOptInTransaction:
         }))
 
 
-class GlobalStateStructCreateTransactionParams:
+class StructsCreateTransactionParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
-    def opt_in(self) -> "_GlobalStateStructOptInTransaction":
-        return _GlobalStateStructOptInTransaction(self.app_client)
+    def opt_in(self) -> "_StructsOptInTransaction":
+        return _StructsOptInTransaction(self.app_client)
 
     def hello(
         self,
@@ -205,7 +205,7 @@ class GlobalStateStructCreateTransactionParams:
         )
 
 
-class _GlobalStateStructOptInSend:
+class _StructsOptInSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -224,13 +224,13 @@ class _GlobalStateStructOptInSend:
         return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
 
 
-class GlobalStateStructSend:
+class StructsSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
     @property
-    def opt_in(self) -> "_GlobalStateStructOptInSend":
-        return _GlobalStateStructOptInSend(self.app_client)
+    def opt_in(self) -> "_StructsOptInSend":
+        return _StructsOptInSend(self.app_client)
 
     def hello(
         self,
@@ -288,8 +288,8 @@ class BoxStateValue(typing.TypedDict):
     my_box_struct: Vector
     my_nested_box_struct: RootStruct
 
-class GlobalStateStructState:
-    """Methods to access state for the current GlobalStateStruct app"""
+class StructsState:
+    """Methods to access state for the current Structs app"""
 
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -493,8 +493,8 @@ class _MapState(typing.Generic[_KeyType, _ValueType]):
         return typing.cast(_ValueType | None, value)
 
 
-class GlobalStateStructClient:
-    """Client for interacting with GlobalStateStruct smart contract"""
+class StructsClient:
+    """Client for interacting with Structs smart contract"""
 
     @typing.overload
     def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
@@ -542,10 +542,10 @@ class GlobalStateStructClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = GlobalStateStructParams(self.app_client)
-        self.create_transaction = GlobalStateStructCreateTransactionParams(self.app_client)
-        self.send = GlobalStateStructSend(self.app_client)
-        self.state = GlobalStateStructState(self.app_client)
+        self.params = StructsParams(self.app_client)
+        self.create_transaction = StructsCreateTransactionParams(self.app_client)
+        self.send = StructsSend(self.app_client)
+        self.state = StructsState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -558,8 +558,8 @@ class GlobalStateStructClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
-    ) -> "GlobalStateStructClient":
-        return GlobalStateStructClient(
+    ) -> "StructsClient":
+        return StructsClient(
             algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -582,8 +582,8 @@ class GlobalStateStructClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "GlobalStateStructClient":
-        return GlobalStateStructClient(
+    ) -> "StructsClient":
+        return StructsClient(
             algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -622,8 +622,8 @@ class GlobalStateStructClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "GlobalStateStructClient":
-        return GlobalStateStructClient(
+    ) -> "StructsClient":
+        return StructsClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -633,8 +633,8 @@ class GlobalStateStructClient:
             )
         )
 
-    def new_group(self) -> "GlobalStateStructComposer":
-        return GlobalStateStructComposer(self)
+    def new_group(self) -> "StructsComposer":
+        return StructsComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -685,15 +685,15 @@ class GlobalStateStructClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class GlobalStateStructBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
-    """Parameters for creating GlobalStateStruct contract with bare calls"""
+class StructsBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
+    """Parameters for creating Structs contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
-class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalStateStructBareCallCreateParams, None, None]):
-    """Factory for deploying and managing GlobalStateStructClient smart contracts"""
+class StructsFactory(algokit_utils.TypedAppFactoryProtocol[StructsBareCallCreateParams, None, None]):
+    """Factory for deploying and managing StructsClient smart contracts"""
 
     def __init__(
         self,
@@ -716,9 +716,9 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
                 compilation_params=compilation_params,
             )
         )
-        self.params = GlobalStateStructFactoryParams(self.app_factory)
-        self.create_transaction = GlobalStateStructFactoryCreateTransaction(self.app_factory)
-        self.send = GlobalStateStructFactorySend(self.app_factory)
+        self.params = StructsFactoryParams(self.app_factory)
+        self.create_transaction = StructsFactoryCreateTransaction(self.app_factory)
+        self.send = StructsFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -737,7 +737,7 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
         *,
         on_update: algokit_utils.OnUpdate | None = None,
         on_schema_break: algokit_utils.OnSchemaBreak | None = None,
-        create_params: GlobalStateStructBareCallCreateParams | None = None,
+        create_params: StructsBareCallCreateParams | None = None,
         update_params: None = None,
         delete_params: None = None,
         existing_deployments: algokit_utils.ApplicationLookup | None = None,
@@ -745,7 +745,7 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
         app_name: str | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
-    ) -> tuple[GlobalStateStructClient, algokit_utils.AppFactoryDeployResult]:
+    ) -> tuple[StructsClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             on_update=on_update,
@@ -760,7 +760,7 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
             send_params=send_params,
         )
 
-        return GlobalStateStructClient(deploy_response[0]), deploy_response[1]
+        return StructsClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -772,9 +772,9 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> GlobalStateStructClient:
+    ) -> StructsClient:
         """Get an app client by creator address and name"""
-        return GlobalStateStructClient(
+        return StructsClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -795,9 +795,9 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> GlobalStateStructClient:
+    ) -> StructsClient:
         """Get an app client by app ID"""
-        return GlobalStateStructClient(
+        return StructsClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -809,17 +809,17 @@ class GlobalStateStructFactory(algokit_utils.TypedAppFactoryProtocol[GlobalState
         )
 
 
-class GlobalStateStructFactoryParams:
-    """Parameters for creating transactions for GlobalStateStruct contract"""
+class StructsFactoryParams:
+    """Parameters for creating transactions for Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = GlobalStateStructFactoryCreateParams(app_factory)
-        self.update = GlobalStateStructFactoryUpdateParams(app_factory)
-        self.delete = GlobalStateStructFactoryDeleteParams(app_factory)
+        self.create = StructsFactoryCreateParams(app_factory)
+        self.update = StructsFactoryUpdateParams(app_factory)
+        self.delete = StructsFactoryDeleteParams(app_factory)
 
-class GlobalStateStructFactoryCreateParams:
-    """Parameters for 'create' operations of GlobalStateStruct contract"""
+class StructsFactoryCreateParams:
+    """Parameters for 'create' operations of Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -894,8 +894,8 @@ class GlobalStateStructFactoryCreateParams:
             compilation_params=compilation_params
         )
 
-class GlobalStateStructFactoryUpdateParams:
-    """Parameters for 'update' operations of GlobalStateStruct contract"""
+class StructsFactoryUpdateParams:
+    """Parameters for 'update' operations of Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -912,8 +912,8 @@ class GlobalStateStructFactoryUpdateParams:
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
-class GlobalStateStructFactoryDeleteParams:
-    """Parameters for 'delete' operations of GlobalStateStruct contract"""
+class StructsFactoryDeleteParams:
+    """Parameters for 'delete' operations of Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -931,16 +931,16 @@ class GlobalStateStructFactoryDeleteParams:
             )
 
 
-class GlobalStateStructFactoryCreateTransaction:
-    """Create transactions for GlobalStateStruct contract"""
+class StructsFactoryCreateTransaction:
+    """Create transactions for Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = GlobalStateStructFactoryCreateTransactionCreate(app_factory)
+        self.create = StructsFactoryCreateTransactionCreate(app_factory)
 
 
-class GlobalStateStructFactoryCreateTransactionCreate:
-    """Create new instances of GlobalStateStruct contract"""
+class StructsFactoryCreateTransactionCreate:
+    """Create new instances of Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -956,16 +956,16 @@ class GlobalStateStructFactoryCreateTransactionCreate:
         )
 
 
-class GlobalStateStructFactorySend:
-    """Send calls to GlobalStateStruct contract"""
+class StructsFactorySend:
+    """Send calls to Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = GlobalStateStructFactorySendCreate(app_factory)
+        self.create = StructsFactorySendCreate(app_factory)
 
 
-class GlobalStateStructFactorySendCreate:
-    """Send create calls to GlobalStateStruct contract"""
+class StructsFactorySendCreate:
+    """Send create calls to Structs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -976,7 +976,7 @@ class GlobalStateStructFactorySendCreate:
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
-    ) -> tuple[GlobalStateStructClient, algokit_utils.SendAppCreateTransactionResult]:
+    ) -> tuple[StructsClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
@@ -984,16 +984,16 @@ class GlobalStateStructFactorySendCreate:
             send_params=send_params,
             compilation_params=compilation_params
         )
-        return GlobalStateStructClient(result[0]), result[1]
+        return StructsClient(result[0]), result[1]
 
 
-class _GlobalStateStructOpt_inComposer:
-    def __init__(self, composer: "GlobalStateStructComposer"):
+class _StructsOpt_inComposer:
+    def __init__(self, composer: "StructsComposer"):
         self.composer = composer
     def opt_in(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "GlobalStateStructComposer":
+    ) -> "StructsComposer":
         self.composer._composer.add_app_call_method_call(
             self.composer.client.params.opt_in.opt_in(
                 
@@ -1009,23 +1009,23 @@ class _GlobalStateStructOpt_inComposer:
         return self.composer
 
 
-class GlobalStateStructComposer:
-    """Composer for creating transaction groups for GlobalStateStruct contract calls"""
+class StructsComposer:
+    """Composer for creating transaction groups for Structs contract calls"""
 
-    def __init__(self, client: "GlobalStateStructClient"):
+    def __init__(self, client: "StructsClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
 
     @property
-    def opt_in(self) -> "_GlobalStateStructOpt_inComposer":
-        return _GlobalStateStructOpt_inComposer(self)
+    def opt_in(self) -> "_StructsOpt_inComposer":
+        return _StructsOpt_inComposer(self)
 
     def hello(
         self,
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "GlobalStateStructComposer":
+    ) -> "StructsComposer":
         self._composer.add_app_call_method_call(
             self.client.params.hello(
                 args=args,
@@ -1042,7 +1042,7 @@ class GlobalStateStructComposer:
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "GlobalStateStructComposer":
+    ) -> "StructsComposer":
         self._composer.add_app_call_method_call(
             self.client.params.give_me_root_struct(
                 
@@ -1061,7 +1061,7 @@ class GlobalStateStructComposer:
         *,
         args: list[bytes] | None = None,
         params: algokit_utils.CommonAppCallParams | None = None,
-    ) -> "GlobalStateStructComposer":
+    ) -> "StructsComposer":
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -1077,7 +1077,7 @@ class GlobalStateStructComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "GlobalStateStructComposer":
+    ) -> "StructsComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
