@@ -93,8 +93,7 @@ def test_create_2arg(lifecycle_factory: LifeCycleAppFactory) -> None:
 def test_deploy_create_1arg(lifecycle_factory: LifeCycleAppFactory) -> None:
     client, response = lifecycle_factory.deploy(
         create_params=LifeCycleAppMethodCallCreateParams(
-            args=CreateStringStringArgs(greeting="greeting"),
-            method="create(string)string",
+            args=CreateStringStringArgs(greeting="greeting")
         )
     )
 

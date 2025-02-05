@@ -198,31 +198,55 @@ class InitStakingContractArgs:
     """Dataclass for init_staking_contract arguments"""
     approvalProgramSize: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "initStakingContract(uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class LoadStakingContractDataArgs:
     """Dataclass for load_staking_contract_data arguments"""
     offset: int
     data: bytes | str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "loadStakingContractData(uint64,byte[])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorConfigArgs:
     """Dataclass for get_validator_config arguments"""
     validatorId: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorStateArgs:
     """Dataclass for get_validator_state arguments"""
     validatorId: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getValidatorState(uint64)(uint16,uint64,uint64,uint64)"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetValidatorOwnerAndManagerArgs:
     """Dataclass for get_validator_owner_and_manager arguments"""
     validatorId: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getValidatorOwnerAndManager(uint64)(address,address)"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolsArgs:
     """Dataclass for get_pools arguments"""
     validatorId: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "getPools(uint64)(uint64,uint16,uint64)[]"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolAppIdArgs:
@@ -230,35 +254,63 @@ class GetPoolAppIdArgs:
     validatorId: int
     poolId: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getPoolAppId(uint64,uint64)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPoolInfoArgs:
     """Dataclass for get_pool_info arguments"""
     poolKey: ValidatorPoolKey
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetCurMaxStakePerPoolArgs:
     """Dataclass for get_cur_max_stake_per_pool arguments"""
     validatorId: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getCurMaxStakePerPool(uint64)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DoesStakerNeedToPayMbrArgs:
     """Dataclass for does_staker_need_to_pay_mbr arguments"""
     staker: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "doesStakerNeedToPayMBR(address)bool"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetStakedPoolsForAccountArgs:
     """Dataclass for get_staked_pools_for_account arguments"""
     staker: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetTokenPayoutRatioArgs:
     """Dataclass for get_token_payout_ratio arguments"""
     validatorId: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "getTokenPayoutRatio(uint64)(uint64[24],uint64)"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetNodePoolAssignmentsArgs:
     """Dataclass for get_node_pool_assignments arguments"""
     validatorId: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "getNodePoolAssignments(uint64)((uint64[3])[8])"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AddValidatorArgs:
@@ -267,11 +319,19 @@ class AddValidatorArgs:
     nfdName: str
     config: ValidatorConfig
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorManagerArgs:
     """Dataclass for change_validator_manager arguments"""
     validatorId: int
     manager: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "changeValidatorManager(uint64,address)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorSunsetInfoArgs:
@@ -280,6 +340,10 @@ class ChangeValidatorSunsetInfoArgs:
     sunsettingOn: int
     sunsettingTo: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "changeValidatorSunsetInfo(uint64,uint64,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorNfdArgs:
     """Dataclass for change_validator_nfd arguments"""
@@ -287,11 +351,19 @@ class ChangeValidatorNfdArgs:
     nfdAppID: int
     nfdName: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "changeValidatorNFD(uint64,uint64,string)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorCommissionAddressArgs:
     """Dataclass for change_validator_commission_address arguments"""
     validatorId: int
     commissionAddress: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "changeValidatorCommissionAddress(uint64,address)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeValidatorRewardInfoArgs:
@@ -303,12 +375,20 @@ class ChangeValidatorRewardInfoArgs:
     GatingAssetMinBalance: int
     RewardPerPayout: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AddPoolArgs:
     """Dataclass for add_pool arguments"""
     mbrPayment: algokit_utils.AppMethodCallTransactionArgument
     validatorId: int
     nodeNum: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "addPool(pay,uint64,uint64)(uint64,uint64,uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AddStakeArgs:
@@ -317,10 +397,18 @@ class AddStakeArgs:
     validatorId: int
     valueToVerify: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "addStake(pay,uint64,uint64)(uint64,uint64,uint64)"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SetTokenPayoutRatioArgs:
     """Dataclass for set_token_payout_ratio arguments"""
     validatorId: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "setTokenPayoutRatio(uint64)(uint64[24],uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StakeUpdatedViaRewardsArgs:
@@ -331,6 +419,10 @@ class StakeUpdatedViaRewardsArgs:
     validatorCommission: int
     saturatedBurnToFeeSink: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StakeRemovedArgs:
     """Dataclass for stake_removed arguments"""
@@ -340,12 +432,20 @@ class StakeRemovedArgs:
     rewardRemoved: int
     stakerRemoved: bool
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class FindPoolForStakerArgs:
     """Dataclass for find_pool_for_staker arguments"""
     validatorId: int
     staker: str
     amountToStake: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class MovePoolToNodeArgs:
@@ -354,11 +454,19 @@ class MovePoolToNodeArgs:
     poolAppId: int
     nodeNum: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "movePoolToNode(uint64,uint64,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class EmptyTokenRewardsArgs:
     """Dataclass for empty_token_rewards arguments"""
     validatorId: int
     receiver: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "emptyTokenRewards(uint64,address)uint64"
 
 
 class ValidatorRegistryParams:
@@ -2345,17 +2453,19 @@ class ValidatorRegistryClient:
 class ValidatorRegistryMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         typing.Any,
-        typing.Any,
+        str | None,
     ]
 ):
     """Parameters for creating ValidatorRegistry contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )

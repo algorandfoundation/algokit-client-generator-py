@@ -100,6 +100,10 @@ class FooArgs:
     """Dataclass for foo arguments"""
     inputs: Inputs
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)"
+
 
 class _Arc56TestOptIn:
     def __init__(self, app_client: algokit_utils.AppClient):
@@ -679,17 +683,19 @@ class Arc56TestClient:
 class Arc56TestMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         typing.Any,
-        typing.Any,
+        str | None,
     ]
 ):
     """Parameters for creating Arc56Test contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )

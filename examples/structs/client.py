@@ -86,6 +86,10 @@ class HelloArgs:
     """Dataclass for hello arguments"""
     name: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello(string)string"
+
 
 class _GlobalStateStructOptIn:
     def __init__(self, app_client: algokit_utils.AppClient):

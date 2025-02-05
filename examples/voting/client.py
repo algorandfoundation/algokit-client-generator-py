@@ -78,10 +78,18 @@ class BootstrapArgs:
     """Dataclass for bootstrap arguments"""
     fund_min_bal_req: algokit_utils.AppMethodCallTransactionArgument
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "bootstrap(pay)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPreconditionsArgs:
     """Dataclass for get_preconditions arguments"""
     signature: bytes | str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "get_preconditions(byte[])(uint64,uint64,uint64,uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class VoteArgs:
@@ -89,6 +97,10 @@ class VoteArgs:
     fund_min_bal_req: algokit_utils.AppMethodCallTransactionArgument
     signature: bytes | str
     answer_ids: list[int]
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "vote(pay,byte[],uint8[])void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateArgs:
@@ -101,6 +113,10 @@ class CreateArgs:
     option_counts: list[int]
     quorum: int
     nft_image_url: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"
 
 
 class _VotingRoundAppDelete:
@@ -761,18 +777,20 @@ class VotingRoundAppClient:
 @dataclasses.dataclass(frozen=True)
 class VotingRoundAppMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str, bytes | str, str, int, int, list[int], int, str] | CreateArgs,
-        typing.Literal["create(string,byte[],string,uint64,uint64,uint8[],uint64,string)void"],
+        CreateArgs,
+        str | None,
     ]
 ):
     """Parameters for creating VotingRoundApp contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )

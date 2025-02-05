@@ -70,10 +70,18 @@ class AddArgs:
     a: int
     b: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "add(uint64,uint64)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPayTxnAmountArgs:
     """Dataclass for get_pay_txn_amount arguments"""
     pay_txn: algokit_utils.AppMethodCallTransactionArgument
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "get_pay_txn_amount(pay)uint64"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class NestedMethodCallArgs:
@@ -81,6 +89,10 @@ class NestedMethodCallArgs:
     _: str
     _pay_txn: algokit_utils.AppMethodCallTransactionArgument | None = None
     method_call: algokit_utils.AppMethodCallTransactionArgument
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "nested_method_call(string,pay,appl)byte[]"
 
 
 class NestedContractParams:

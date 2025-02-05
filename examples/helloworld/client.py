@@ -69,10 +69,18 @@ class HelloArgs:
     """Dataclass for hello arguments"""
     name: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloWorldCheckArgs:
     """Dataclass for hello_world_check arguments"""
     name: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello_world_check(string)void"
 
 
 class _HelloWorldAppUpdate:

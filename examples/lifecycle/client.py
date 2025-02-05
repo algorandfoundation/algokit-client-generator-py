@@ -69,16 +69,28 @@ class HelloStringStringArgs:
     """Dataclass for hello_string_string arguments"""
     name: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateStringStringArgs:
     """Dataclass for create_string_string arguments"""
     greeting: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "create(string)string"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateStringUint32VoidArgs:
     """Dataclass for create_string_uint32_void arguments"""
     greeting: str
     times: int
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "create(string,uint32)void"
 
 
 class _LifeCycleAppUpdate:
@@ -592,18 +604,20 @@ class LifeCycleAppClient:
 @dataclasses.dataclass(frozen=True)
 class LifeCycleAppMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str] | CreateStringStringArgs | tuple[str, int] | CreateStringUint32VoidArgs,
-        typing.Literal["create(string)string"] | typing.Literal["create(string,uint32)void"],
+        CreateStringStringArgs | CreateStringUint32VoidArgs,
+        str | None,
     ]
 ):
     """Parameters for creating LifeCycleApp contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
