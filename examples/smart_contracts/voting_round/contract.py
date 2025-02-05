@@ -33,15 +33,15 @@ class VotingPreconditions(arc4.Struct):
 
 class VotingRound(PermanenceControlARC4Contract):
     vote_id: GlobalState[arc4.String]
-    snapshot_public_key: GlobalState[arc4.DynamicBytes]
-    metadata_ipfs_cid: GlobalState[arc4.String]
-    start_time: GlobalState[arc4.UInt64]
-    end_time: GlobalState[arc4.UInt64]
+    snapshot_public_key: GlobalState[Bytes]
+    metadata_ipfs_cid: GlobalState[String]
+    start_time: GlobalState[UInt64]
+    end_time: GlobalState[UInt64]
     close_time: GlobalState[UInt64]
-    quorum: GlobalState[arc4.UInt64]
+    quorum: GlobalState[UInt64]
     voter_count: GlobalState[UInt64]
     is_bootstrapped: GlobalState[UInt64]
-    nft_image_url: GlobalState[arc4.String]
+    nft_image_url: GlobalState[String]
     nft_asset_id: GlobalState[UInt64]
     total_options: GlobalState[UInt64]
     option_counts: GlobalState[VoteIndexArray]
@@ -70,7 +70,7 @@ class VotingRound(PermanenceControlARC4Contract):
     @subroutine
     def allowed_to_vote(self, signature: Bytes) -> bool:
         ensure_budget(UInt64(2000))
-        return op.ed25519verify_bare(Txn.sender.bytes, signature, self.snapshot_public_key.value.native)
+        return op.ed25519verify_bare(Txn.sender.bytes, signature, self.snapshot_public_key.value)
 
     @subroutine
     def voting_open(self) -> bool:
@@ -99,27 +99,27 @@ class VotingRound(PermanenceControlARC4Contract):
         #  exactly once in the entire lifetime of the contract.
         self.vote_id = GlobalState(arc4.String, description="The identifier of this voting_round round")  # static
         self.snapshot_public_key = GlobalState(
-            arc4.DynamicBytes,
+            Bytes,
             description="The public key of the Ed25519 compatible private key "
             "that was used to encrypt entries in the vote gating snapshot",
         )  # static
         self.metadata_ipfs_cid = GlobalState(
-            arc4.String, description="The IPFS content ID of the voting_round metadata file"
+            String, description="The IPFS content ID of the voting_round metadata file"
         )  # static
         self.start_time = GlobalState(
-            arc4.UInt64, description="The unix timestamp of the starting time of voting_round"
+            UInt64, description="The unix timestamp of the starting time of voting_round"
         )  # static
         self.end_time = GlobalState(
-            arc4.UInt64, description="The unix timestamp of the ending time of voting_round"
+            UInt64, description="The unix timestamp of the ending time of voting_round"
         )  # static
         self.close_time = GlobalState(UInt64, description="The unix timestamp of the time the vote was closed")
-        self.quorum = GlobalState(arc4.UInt64, description="The minimum number of voters to reach quorum")  # static
+        self.quorum = GlobalState(UInt64, description="The minimum number of voters to reach quorum")  # static
         self.voter_count = GlobalState(UInt64, description="The minimum number of voters who have voted")
         self.is_bootstrapped = GlobalState(
             UInt64, description="Whether or not the contract has been bootstrapped with answers"
         )
         self.nft_image_url = GlobalState(
-            arc4.String, description="The IPFS URL of the default image to use as the media of the result NFT"
+            String, description="The IPFS URL of the default image to use as the media of the result NFT"
         )  # static
         self.nft_asset_id = GlobalState(UInt64, description="The asset ID of a result NFT if one has been created")
         self.total_options = GlobalState(UInt64, description="The total number of options")
@@ -149,15 +149,15 @@ class VotingRound(PermanenceControlARC4Contract):
         assert end_time.native >= Global.latest_timestamp, "End time should be in the future"
 
         self.vote_id.value = vote_id
-        self.snapshot_public_key.value = snapshot_public_key.copy()
-        self.metadata_ipfs_cid.value = metadata_ipfs_cid
-        self.start_time.value = start_time
-        self.end_time.value = end_time
-        self.quorum.value = quorum
+        self.snapshot_public_key.value = snapshot_public_key.native
+        self.metadata_ipfs_cid.value = metadata_ipfs_cid.native
+        self.start_time.value = start_time.native
+        self.end_time.value = end_time.native
+        self.quorum.value = quorum.native
         self.is_bootstrapped.value = UInt64(0)
         self.voter_count.value = UInt64(0)
         self.close_time.value = UInt64(0)
-        self.nft_image_url.value = nft_image_url
+        self.nft_image_url.value = nft_image_url.native
         self.nft_asset_id.value = UInt64(0)
         self.store_option_counts(option_counts)
 
@@ -202,11 +202,11 @@ class VotingRound(PermanenceControlARC4Contract):
             )
             + self.vote_id.value.native
             + String('.","properties":{"metadata":"ipfs://')
-            + self.metadata_ipfs_cid.value.native
+            + self.metadata_ipfs_cid.value
             + String('","id":"')
             + self.vote_id.value.native
             + String('","quorum":')
-            + self.itoa(self.quorum.value.native)
+            + self.itoa(self.quorum.value)
             + String(',"voterCount":')
             + self.itoa(self.voter_count.value)
             + String(',"tallies":[')
@@ -226,7 +226,7 @@ class VotingRound(PermanenceControlARC4Contract):
             default_frozen=False,
             asset_name=String("[VOTE RESULT] ") + self.vote_id.value.native,
             unit_name=String("VOTERSLT"),
-            url=self.nft_image_url.value.native,
+            url=self.nft_image_url.value,
             note=note + String("]}}"),
         ).submit()
 
