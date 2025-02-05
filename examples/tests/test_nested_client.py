@@ -6,10 +6,10 @@ from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
 from algokit_utils.transactions import PaymentParams
 
-from examples.nested.client import (
+from examples.smart_contracts.artifacts.nested.nested_client import (
     AddArgs,
     GetPayTxnAmountArgs,
-    NestedContractFactory,
+    NestedFactory,
     NestedMethodCallArgs,
 )
 
@@ -24,14 +24,14 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 @pytest.fixture
 def nested_factory(
     algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> NestedContractFactory:
+) -> NestedFactory:
     return algorand.client.get_typed_app_factory(
-        NestedContractFactory, default_sender=default_deployer.address
+        NestedFactory, default_sender=default_deployer.address
     )
 
 
 def test_nested_method_call_with_obj_args_without_pay_txn(
-    nested_factory: NestedContractFactory,
+    nested_factory: NestedFactory,
     algorand: AlgorandClient,
     default_deployer: algokit_utils.SigningAccount,
 ) -> None:
@@ -57,7 +57,7 @@ def test_nested_method_call_with_obj_args_without_pay_txn(
 
 
 def test_nested_method_call_with_tuple_args_without_pay_txn(
-    nested_factory: NestedContractFactory,
+    nested_factory: NestedFactory,
     algorand: AlgorandClient,
     default_deployer: algokit_utils.SigningAccount,
 ) -> None:
@@ -81,7 +81,7 @@ def test_nested_method_call_with_tuple_args_without_pay_txn(
 
 
 def test_nested_method_call_with_obj_args_with_pay_txn(
-    nested_factory: NestedContractFactory,
+    nested_factory: NestedFactory,
     algorand: AlgorandClient,
     default_deployer: algokit_utils.SigningAccount,
 ) -> None:
@@ -107,7 +107,7 @@ def test_nested_method_call_with_obj_args_with_pay_txn(
 
 
 def test_nested_method_call_with_tuple_args_with_pay_txn(
-    nested_factory: NestedContractFactory,
+    nested_factory: NestedFactory,
     algorand: AlgorandClient,
     default_deployer: algokit_utils.SigningAccount,
 ) -> None:

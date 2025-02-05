@@ -103,10 +103,30 @@ class State(ExampleARC4Contract):
 
     @arc4.abimethod(readonly=True)
     # FIXME: Uncomment this.
+    # def default_value_int(self, arg_with_default: arc4.UInt64 = arc4.UInt64(123)) -> arc4.UInt64:
+    def default_value_int(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
+        arg_with_default = arg_with_default or arc4.UInt64(123)
+        return arg_with_default
+
+    @arc4.abimethod(readonly=True)
+    # FIXME: Uncomment this.
     # def default_value_from_abi(self, arg_with_default: String = String("default value")) -> String:
     def default_value_from_abi(self, arg_with_default: String) -> String:
         arg_with_default = arg_with_default or String("default_string")
         return String("ABI, ") + arg_with_default
+
+    @arc4.abimethod(readonly=True)
+    # FIXME: Uncomment this.
+    # def default_value_from_global_state(self, arg_with_default: arc4.UInt64):
+    def default_value_from_global_state(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
+        return arg_with_default or arc4.UInt64(self.int1)
+
+    @arc4.abimethod(readonly=True)
+    # FIXME: Uncomment this.
+    # def default_value_from_local_state(self, arg_with_default: arc4.UInt64):
+    def default_value_from_local_state(self, arg_with_default: arc4.String) -> arc4.String:
+        arg_with_default = arg_with_default or arc4.String.from_bytes(self.local_bytes1[Txn.sender])
+        return arc4.String(String('Local state, ') + arg_with_default.native)
 
     @arc4.abimethod
     def structs(self, name_age: Input) -> Output:
