@@ -1,4 +1,5 @@
 import pathlib
+from itertools import chain, product
 
 import pytest
 
@@ -10,26 +11,27 @@ def to_camel_case(s: str) -> str:
 
 
 @pytest.mark.parametrize(
-    "app",
-    [
-        "arc56_test",
+    "app, extension",
+    chain(product([
         "duplicate_structs",
-        "structs",
         "hello_world",
         "lifecycle",
         "minimal",
+        "state",
+        "voting_round",
+    ], "arc32"), product([
+        "arc56_test",
+        "structs",
         "nested",
         "nfd",
         "reti",
-        "state",
-        "voting_round",
         "zero_coupon_bond",
-    ],
+    ], "arc56"))
 )
-def test_generate_clients(app: str) -> None:
+def test_generate_clients(app: str, extension: str) -> None:
     examples = pathlib.Path(__file__).parent.parent / "examples"
     app_path = examples / app
-    app_spec = app_path / f"{to_camel_case(app)}.arc32.json"
+    app_spec = app_path / f"{to_camel_case(app)}.{extension}.json"
     generated_path = app_path / "client_generated.py"
     approved_path = app_path / "client.py"
     generate_client(app_spec, generated_path)

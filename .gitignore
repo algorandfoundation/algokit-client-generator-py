@@ -170,4 +170,4 @@ node_modules
 
 smart_contracts/coverage/
 
-examples/*/client_generated.py
+examples/smart_contracts/artifacts/*/client_generated.py

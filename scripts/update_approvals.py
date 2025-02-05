@@ -19,8 +19,12 @@ def update_approvals() -> None:
         "voting_round",
     ]
     arc56_apps = [
+        "arc56_test",
         "structs",
         "nested",
+        "nfd",
+        "reti",
+        "zero_coupon_bond",
     ]
 
     for app, extension in chain(product(arc32_apps, ["arc32"]), product(arc56_apps, ["arc56"])):
