@@ -95,38 +95,31 @@ class State(ExampleARC4Contract):
         assert application, "application not provided"
         return UInt64(1)
 
-    @arc4.abimethod(readonly=True)
-    # FIXME: Uncomment this.
-    # def default_value(self, arg_with_default: String = String("default value")) -> String:
-    def default_value(self, arg_with_default: String) -> String:
-        return arg_with_default or String("default_string")
-
-    @arc4.abimethod(readonly=True)
-    # FIXME: Uncomment this.
-    # def default_value_int(self, arg_with_default: arc4.UInt64 = arc4.UInt64(123)) -> arc4.UInt64:
-    def default_value_int(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
-        arg_with_default = arg_with_default or arc4.UInt64(123)
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": arc4.String("default value")})
+    def default_value(self, arg_with_default: arc4.String) -> arc4.String:
         return arg_with_default
 
-    @arc4.abimethod(readonly=True)
-    # FIXME: Uncomment this.
-    # def default_value_from_abi(self, arg_with_default: String = String("default value")) -> String:
-    def default_value_from_abi(self, arg_with_default: String) -> String:
-        arg_with_default = arg_with_default or String("default_string")
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": arc4.UInt64(123)})
+    def default_value_int(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
+        return arg_with_default
+
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": arc4.String("default value")})
+    def default_value_from_abi(self, arg_with_default: arc4.String) -> arc4.String:
         return String("ABI, ") + arg_with_default
 
-    @arc4.abimethod(readonly=True)
-    # FIXME: Uncomment this.
-    # def default_value_from_global_state(self, arg_with_default: arc4.UInt64):
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": "int1"})
     def default_value_from_global_state(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
-        return arg_with_default or arc4.UInt64(self.int1)
+        return arg_with_default
 
+    # FIXME: While deprecating Beaker, we couldn't replicate the default behavior of a default argument value based
+    #  on local state. We needed to resort to this helper function.
     @arc4.abimethod(readonly=True)
-    # FIXME: Uncomment this.
-    # def default_value_from_local_state(self, arg_with_default: arc4.UInt64):
-    def default_value_from_local_state(self, arg_with_default: arc4.String) -> arc4.String:
-        arg_with_default = arg_with_default or arc4.String.from_bytes(self.local_bytes1[Txn.sender])
-        return arc4.String(String("Local state, ") + arg_with_default.native)
+    def get_local_bytes(self) -> String:
+        return String.from_bytes(self.local_bytes1[Txn.sender])
+
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": get_local_bytes})
+    def default_value_from_local_state(self, arg_with_default: String) -> arc4.String:
+        return arc4.String(String("Local state, ") + arg_with_default)
 
     @arc4.abimethod
     def structs(self, name_age: Input) -> Output:
