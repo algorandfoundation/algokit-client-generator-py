@@ -9,9 +9,8 @@ def to_camel_case(s: str) -> str:
 
 def update_approvals() -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
-    # TODO: Uncomment all apps.
     for app in [
-        # "duplicate_structs",
+        "duplicate_structs",
         "hello_world",
         "lifecycle",
         "minimal",
@@ -26,10 +25,8 @@ def update_approvals() -> None:
         except Exception as e:
             print(f"Error generating client for {app}: {e}")
 
-    # TODO: Uncomment all apps.
     for app in [
         "arc56_test",
-        # "duplicate_structs",
         "structs",
         "nested",
         "nfd",

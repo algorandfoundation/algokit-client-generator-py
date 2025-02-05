@@ -18,9 +18,8 @@ def main() -> None:
     smart_contracts = pathlib.Path(__file__).parent / "smart_contracts"
     artifacts = smart_contracts / "artifacts"
 
-    # TODO: Uncomment all apps.
     for app in [
-        # "duplicate_structs",
+        "duplicate_structs",
         "hello_world",
         "lifecycle",
         "minimal",
@@ -50,9 +49,7 @@ def main() -> None:
         except Exception as e:
             print(f"Error compiling contract for app {app}: {e}")
 
-    # TODO: Uncomment all apps.
     for app in [
-        # "duplicate_structs",
         "structs",
         "nested",
     ]:

@@ -19,7 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_a_that_uses_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_b_that_uses_same_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}], "name": "DuplicateStructsContract", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"SomeStruct": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, "desc": "\n        This contract is to be used as a test artifact to verify behavior around struct generation to ensure that \n        the scenarios similar to whats outlined in this contract can not result in a typed client with duplicate struct \n        definitions.\n    ", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5hcHByb3ZhbF9wcm9ncmFtOgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDYKICAgIG1ldGhvZCAibWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdCgpKHVpbnQ2NCx1aW50NjQpIgogICAgbWV0aG9kICJtZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSh1aW50NjQsdWludDY0KSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAyIG1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDMKICAgIGVyciAvLyByZWplY3QgdHJhbnNhY3Rpb24KCm1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAyOgogICAgLy8gY29udHJhY3QucHk6MTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gaXMgbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIG1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3QKICAgIGJ5dGUgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludCAxCiAgICByZXR1cm4KCm1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDM6CiAgICAvLyBjb250cmFjdC5weToyNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBpcyBub3QgY3JlYXRpbmcKICAgIGNhbGxzdWIgbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0CiAgICBieXRlIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnQgMQogICAgcmV0dXJuCgptYWluX2JhcmVfcm91dGluZ0A2OgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIHJlamVjdCB0cmFuc2FjdGlvbgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBpcyBjcmVhdGluZwogICAgaW50IDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy5kZWxlZ2F0b3JfY29udHJhY3QuY29udHJhY3QuRHVwbGljYXRlU3RydWN0c0NvbnRyYWN0Lm1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3QoKSAtPiBieXRlczoKbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdDoKICAgIC8vIGNvbnRyYWN0LnB5OjE5LTIwCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgLy8gZGVmIG1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3Qoc2VsZikgLT4gU29tZVN0cnVjdDoKICAgIHByb3RvIDAgMQogICAgLy8gY29udHJhY3QucHk6MjEtMjQKICAgIC8vIHJldHVybiBTb21lU3RydWN0KAogICAgLy8gICAgIGFyYzQuVUludDY0KDEpLAogICAgLy8gICAgIGFyYzQuVUludDY0KDIpLAogICAgLy8gKQogICAgYnl0ZSAweDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyCiAgICByZXRzdWIKCgovLyBzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5tZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSAtPiBieXRlczoKbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0OgogICAgLy8gY29udHJhY3QucHk6MjYtMjcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICAvLyBkZWYgbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0KHNlbGYpIC0+IFNvbWVTdHJ1Y3Q6CiAgICBwcm90byAwIDEKICAgIC8vIGNvbnRyYWN0LnB5OjI4LTMxCiAgICAvLyByZXR1cm4gU29tZVN0cnVjdCgKICAgIC8vICAgICBhcmM0LlVJbnQ2NCgzKSwKICAgIC8vICAgICBhcmM0LlVJbnQ2NCg0KSwKICAgIC8vICkKICAgIGJ5dGUgMHgwMDAwMDAwMDAwMDAwMDAzMDAwMDAwMDAwMDAwMDAwNAogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCgpzbWFydF9jb250cmFjdHMuZGVsZWdhdG9yX2NvbnRyYWN0LmNvbnRyYWN0LkR1cGxpY2F0ZVN0cnVjdHNDb250cmFjdC5jbGVhcl9zdGF0ZV9wcm9ncmFtOgogICAgLy8gY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHNDb250cmFjdChBUkM0Q29udHJhY3QpOgogICAgaW50IDEKICAgIHJldHVybgo="}}"""
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_a_that_uses_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_b_that_uses_same_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}], "name": "DuplicateStructs", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"SomeStruct": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, "desc": "\n        Used for snapshot testing to ensure no duplicate struct definitions in typed clients.\n    ", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToxMQogICAgLy8gY2xhc3MgRHVwbGljYXRlU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDcKICAgIHB1c2hieXRlc3MgMHg5ZjcyYWMwZiAweGE4NjE4NDQ5IC8vIG1ldGhvZCAibWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdCgpKHVpbnQ2NCx1aW50NjQpIiwgbWV0aG9kICJtZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSh1aW50NjQsdWludDY0KSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAzIG1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDQKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToxMQogICAgLy8gY2xhc3MgRHVwbGljYXRlU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgcHVzaGludCAwIC8vIDAKICAgIHJldHVybgoKbWFpbl9tZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3Rfcm91dGVANDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToyMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwMDAwMDAwMDAwMDAwMzAwMDAwMDAwMDAwMDAwMDQKICAgIGxvZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9tZXRob2RfYV90aGF0X3VzZXNfc3RydWN0X3JvdXRlQDM6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MTYKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyCiAgICBsb2cKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4KCm1haW5fYmFyZV9yb3V0aW5nQDc6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MTEKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
@@ -71,7 +71,7 @@ class SomeStruct:
     b: int
 
 
-class DuplicateStructsContractParams:
+class DuplicateStructsParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -108,7 +108,7 @@ class DuplicateStructsContractParams:
         )
 
 
-class DuplicateStructsContractCreateTransactionParams:
+class DuplicateStructsCreateTransactionParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -145,7 +145,7 @@ class DuplicateStructsContractCreateTransactionParams:
         )
 
 
-class DuplicateStructsContractSend:
+class DuplicateStructsSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
@@ -188,14 +188,14 @@ class DuplicateStructsContractSend:
         )
 
 
-class DuplicateStructsContractState:
-    """Methods to access state for the current DuplicateStructsContract app"""
+class DuplicateStructsState:
+    """Methods to access state for the current DuplicateStructs app"""
 
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-class DuplicateStructsContractClient:
-    """Client for interacting with DuplicateStructsContract smart contract"""
+class DuplicateStructsClient:
+    """Client for interacting with DuplicateStructs smart contract"""
 
     @typing.overload
     def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
@@ -243,10 +243,10 @@ class DuplicateStructsContractClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = DuplicateStructsContractParams(self.app_client)
-        self.create_transaction = DuplicateStructsContractCreateTransactionParams(self.app_client)
-        self.send = DuplicateStructsContractSend(self.app_client)
-        self.state = DuplicateStructsContractState(self.app_client)
+        self.params = DuplicateStructsParams(self.app_client)
+        self.create_transaction = DuplicateStructsCreateTransactionParams(self.app_client)
+        self.send = DuplicateStructsSend(self.app_client)
+        self.state = DuplicateStructsState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -259,8 +259,8 @@ class DuplicateStructsContractClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
-    ) -> "DuplicateStructsContractClient":
-        return DuplicateStructsContractClient(
+    ) -> "DuplicateStructsClient":
+        return DuplicateStructsClient(
             algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -283,8 +283,8 @@ class DuplicateStructsContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "DuplicateStructsContractClient":
-        return DuplicateStructsContractClient(
+    ) -> "DuplicateStructsClient":
+        return DuplicateStructsClient(
             algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -323,8 +323,8 @@ class DuplicateStructsContractClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "DuplicateStructsContractClient":
-        return DuplicateStructsContractClient(
+    ) -> "DuplicateStructsClient":
+        return DuplicateStructsClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -334,8 +334,8 @@ class DuplicateStructsContractClient:
             )
         )
 
-    def new_group(self) -> "DuplicateStructsContractComposer":
-        return DuplicateStructsContractComposer(self)
+    def new_group(self) -> "DuplicateStructsComposer":
+        return DuplicateStructsComposer(self)
 
     @typing.overload
     def decode_return_value(
@@ -380,15 +380,15 @@ class DuplicateStructsContractClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class DuplicateStructsContractBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
-    """Parameters for creating DuplicateStructsContract contract with bare calls"""
+class DuplicateStructsBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
+    """Parameters for creating DuplicateStructs contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
-class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[DuplicateStructsContractBareCallCreateParams, None, None]):
-    """Factory for deploying and managing DuplicateStructsContractClient smart contracts"""
+class DuplicateStructsFactory(algokit_utils.TypedAppFactoryProtocol[DuplicateStructsBareCallCreateParams, None, None]):
+    """Factory for deploying and managing DuplicateStructsClient smart contracts"""
 
     def __init__(
         self,
@@ -411,9 +411,9 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
                 compilation_params=compilation_params,
             )
         )
-        self.params = DuplicateStructsContractFactoryParams(self.app_factory)
-        self.create_transaction = DuplicateStructsContractFactoryCreateTransaction(self.app_factory)
-        self.send = DuplicateStructsContractFactorySend(self.app_factory)
+        self.params = DuplicateStructsFactoryParams(self.app_factory)
+        self.create_transaction = DuplicateStructsFactoryCreateTransaction(self.app_factory)
+        self.send = DuplicateStructsFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -432,7 +432,7 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
         *,
         on_update: algokit_utils.OnUpdate | None = None,
         on_schema_break: algokit_utils.OnSchemaBreak | None = None,
-        create_params: DuplicateStructsContractBareCallCreateParams | None = None,
+        create_params: DuplicateStructsBareCallCreateParams | None = None,
         update_params: None = None,
         delete_params: None = None,
         existing_deployments: algokit_utils.ApplicationLookup | None = None,
@@ -440,7 +440,7 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
         app_name: str | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
-    ) -> tuple[DuplicateStructsContractClient, algokit_utils.AppFactoryDeployResult]:
+    ) -> tuple[DuplicateStructsClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             on_update=on_update,
@@ -455,7 +455,7 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
             send_params=send_params,
         )
 
-        return DuplicateStructsContractClient(deploy_response[0]), deploy_response[1]
+        return DuplicateStructsClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -467,9 +467,9 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> DuplicateStructsContractClient:
+    ) -> DuplicateStructsClient:
         """Get an app client by creator address and name"""
-        return DuplicateStructsContractClient(
+        return DuplicateStructsClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -490,9 +490,9 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> DuplicateStructsContractClient:
+    ) -> DuplicateStructsClient:
         """Get an app client by app ID"""
-        return DuplicateStructsContractClient(
+        return DuplicateStructsClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -504,17 +504,17 @@ class DuplicateStructsContractFactory(algokit_utils.TypedAppFactoryProtocol[Dupl
         )
 
 
-class DuplicateStructsContractFactoryParams:
-    """Parameters for creating transactions for DuplicateStructsContract contract"""
+class DuplicateStructsFactoryParams:
+    """Parameters for creating transactions for DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = DuplicateStructsContractFactoryCreateParams(app_factory)
-        self.update = DuplicateStructsContractFactoryUpdateParams(app_factory)
-        self.delete = DuplicateStructsContractFactoryDeleteParams(app_factory)
+        self.create = DuplicateStructsFactoryCreateParams(app_factory)
+        self.update = DuplicateStructsFactoryUpdateParams(app_factory)
+        self.delete = DuplicateStructsFactoryDeleteParams(app_factory)
 
-class DuplicateStructsContractFactoryCreateParams:
-    """Parameters for 'create' operations of DuplicateStructsContract contract"""
+class DuplicateStructsFactoryCreateParams:
+    """Parameters for 'create' operations of DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -569,8 +569,8 @@ class DuplicateStructsContractFactoryCreateParams:
             compilation_params=compilation_params
         )
 
-class DuplicateStructsContractFactoryUpdateParams:
-    """Parameters for 'update' operations of DuplicateStructsContract contract"""
+class DuplicateStructsFactoryUpdateParams:
+    """Parameters for 'update' operations of DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -587,8 +587,8 @@ class DuplicateStructsContractFactoryUpdateParams:
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             )
 
-class DuplicateStructsContractFactoryDeleteParams:
-    """Parameters for 'delete' operations of DuplicateStructsContract contract"""
+class DuplicateStructsFactoryDeleteParams:
+    """Parameters for 'delete' operations of DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -606,16 +606,16 @@ class DuplicateStructsContractFactoryDeleteParams:
             )
 
 
-class DuplicateStructsContractFactoryCreateTransaction:
-    """Create transactions for DuplicateStructsContract contract"""
+class DuplicateStructsFactoryCreateTransaction:
+    """Create transactions for DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = DuplicateStructsContractFactoryCreateTransactionCreate(app_factory)
+        self.create = DuplicateStructsFactoryCreateTransactionCreate(app_factory)
 
 
-class DuplicateStructsContractFactoryCreateTransactionCreate:
-    """Create new instances of DuplicateStructsContract contract"""
+class DuplicateStructsFactoryCreateTransactionCreate:
+    """Create new instances of DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -631,16 +631,16 @@ class DuplicateStructsContractFactoryCreateTransactionCreate:
         )
 
 
-class DuplicateStructsContractFactorySend:
-    """Send calls to DuplicateStructsContract contract"""
+class DuplicateStructsFactorySend:
+    """Send calls to DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = DuplicateStructsContractFactorySendCreate(app_factory)
+        self.create = DuplicateStructsFactorySendCreate(app_factory)
 
 
-class DuplicateStructsContractFactorySendCreate:
-    """Send create calls to DuplicateStructsContract contract"""
+class DuplicateStructsFactorySendCreate:
+    """Send create calls to DuplicateStructs contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -651,7 +651,7 @@ class DuplicateStructsContractFactorySendCreate:
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
-    ) -> tuple[DuplicateStructsContractClient, algokit_utils.SendAppCreateTransactionResult]:
+    ) -> tuple[DuplicateStructsClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
@@ -659,13 +659,13 @@ class DuplicateStructsContractFactorySendCreate:
             send_params=send_params,
             compilation_params=compilation_params
         )
-        return DuplicateStructsContractClient(result[0]), result[1]
+        return DuplicateStructsClient(result[0]), result[1]
 
 
-class DuplicateStructsContractComposer:
-    """Composer for creating transaction groups for DuplicateStructsContract contract calls"""
+class DuplicateStructsComposer:
+    """Composer for creating transaction groups for DuplicateStructs contract calls"""
 
-    def __init__(self, client: "DuplicateStructsContractClient"):
+    def __init__(self, client: "DuplicateStructsClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
@@ -673,7 +673,7 @@ class DuplicateStructsContractComposer:
     def method_a_that_uses_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "DuplicateStructsContractComposer":
+    ) -> "DuplicateStructsComposer":
         self._composer.add_app_call_method_call(
             self.client.params.method_a_that_uses_struct(
                 
@@ -690,7 +690,7 @@ class DuplicateStructsContractComposer:
     def method_b_that_uses_same_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "DuplicateStructsContractComposer":
+    ) -> "DuplicateStructsComposer":
         self._composer.add_app_call_method_call(
             self.client.params.method_b_that_uses_same_struct(
                 
@@ -709,7 +709,7 @@ class DuplicateStructsContractComposer:
         *,
         args: list[bytes] | None = None,
         params: algokit_utils.CommonAppCallParams | None = None,
-    ) -> "DuplicateStructsContractComposer":
+    ) -> "DuplicateStructsComposer":
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -725,7 +725,7 @@ class DuplicateStructsContractComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "DuplicateStructsContractComposer":
+    ) -> "DuplicateStructsComposer":
         self._composer.add_transaction(txn, signer)
         return self
     
