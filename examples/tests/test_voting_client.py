@@ -6,12 +6,11 @@ import uuid
 from dataclasses import dataclass
 
 import algokit_utils
-from algokit_utils import CommonAppCallParams, CommonAppCallCreateParams
 import algokit_utils.applications
 import algokit_utils.transactions
 import algosdk
 import pytest
-from algokit_utils import AlgorandClient
+from algokit_utils import AlgorandClient, CommonAppCallCreateParams, CommonAppCallParams
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
 from algosdk.v2client.algod import AlgodClient

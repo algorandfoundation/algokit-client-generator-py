@@ -1,8 +1,9 @@
 from dataclasses import is_dataclass
+
 import algokit_utils
 import pytest
-from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
+from algokit_utils.models import AlgoAmount
 
 from examples.smart_contracts.artifacts.structs.structs_client import StructsFactory
 

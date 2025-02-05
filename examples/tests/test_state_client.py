@@ -2,9 +2,9 @@
 import algokit_utils
 import algokit_utils.applications
 import pytest
+from algokit_utils import AlgorandClient, CommonAppCallParams
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils import AlgorandClient, CommonAppCallParams
 
 from examples.smart_contracts.artifacts.state.state_client import (
     CallAbiArgs,

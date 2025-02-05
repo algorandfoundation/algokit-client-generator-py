@@ -1,7 +1,7 @@
-from itertools import product, chain
 import logging
 import pathlib
 import subprocess
+from itertools import chain, product
 from pathlib import Path
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)-10s: %(message)s")
