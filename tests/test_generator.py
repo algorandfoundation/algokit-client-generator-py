@@ -11,7 +11,7 @@ def to_camel_case(s: str) -> str:
 
 
 @pytest.mark.parametrize(
-    "app, extension",
+    ("app", "extension"),
     chain(
         product(
             [
