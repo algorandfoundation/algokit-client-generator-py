@@ -59,7 +59,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)
@@ -69,10 +69,18 @@ class HelloArgs:
     """Dataclass for hello arguments"""
     name: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloWorldCheckArgs:
     """Dataclass for hello_world_check arguments"""
     name: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "hello_world_check(string)void"
 
 
 class _HelloWorldAppUpdate:
@@ -498,7 +506,7 @@ class HelloWorldAppBareCallCreateParams(algokit_utils.AppClientBareCallCreatePar
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallUpdateParams(algokit_utils.AppClientBareCallCreateParams):
+class HelloWorldAppBareCallUpdateParams(algokit_utils.AppClientBareCallParams):
     """Parameters for calling HelloWorldApp contract with bare calls"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
@@ -506,7 +514,7 @@ class HelloWorldAppBareCallUpdateParams(algokit_utils.AppClientBareCallCreatePar
         return algokit_utils.AppClientBareCallParams(**self.__dict__)
 
 @dataclasses.dataclass(frozen=True)
-class HelloWorldAppBareCallDeleteParams(algokit_utils.AppClientBareCallCreateParams):
+class HelloWorldAppBareCallDeleteParams(algokit_utils.AppClientBareCallParams):
     """Parameters for calling HelloWorldApp contract with bare calls"""
     on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
@@ -712,7 +720,7 @@ class HelloWorldAppFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 class HelloWorldAppFactoryDeleteParams:
@@ -730,7 +738,7 @@ class HelloWorldAppFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 

@@ -59,7 +59,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)
@@ -80,10 +80,18 @@ class MintAsaArgs:
     nfdName: str
     url: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "mintAsa(string,string)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DeleteFieldsArgs:
     """Dataclass for delete_fields arguments"""
     fieldNames: list[bytes | str]
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "deleteFields(byte[][])void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateSegmentCountArgs:
@@ -91,20 +99,36 @@ class UpdateSegmentCountArgs:
     childNfdName: str
     childNfdAppID: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "updateSegmentCount(string,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetFieldUpdateCostArgs:
     """Dataclass for get_field_update_cost arguments"""
     fieldAndVals: list[bytes | str]
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "getFieldUpdateCost(byte[][])uint64"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateFieldsArgs:
     """Dataclass for update_fields arguments"""
     fieldAndVals: list[bytes | str]
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "updateFields(byte[][])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ReadFieldArgs:
     """Dataclass for read_field arguments"""
     fieldName: bytes | str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "readField(byte[])byte[]"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class OfferForSaleArgs:
@@ -112,11 +136,19 @@ class OfferForSaleArgs:
     sellAmount: int
     reservedFor: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "offerForSale(uint64,address)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PostOfferArgs:
     """Dataclass for post_offer arguments"""
     offer: int
     note: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "postOffer(uint64,string)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class MintPayoutArgs:
@@ -124,10 +156,18 @@ class MintPayoutArgs:
     oneYearPrice: int
     segmentPlatformCostInAlgo: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PurchaseArgs:
     """Dataclass for purchase arguments"""
     payment: algokit_utils.AppMethodCallTransactionArgument
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "purchase(pay)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class IsAddressInFieldArgs:
@@ -135,15 +175,27 @@ class IsAddressInFieldArgs:
     fieldName: str
     address: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "isAddressInField(string,address)bool"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateHashArgs:
     """Dataclass for update_hash arguments"""
     hash: bytes | str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "updateHash(byte[])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ContractLockArgs:
     """Dataclass for contract_lock arguments"""
     lock: bool
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "contractLock(bool)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SegmentLockArgs:
@@ -151,15 +203,27 @@ class SegmentLockArgs:
     lock: bool
     usdPrice: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "segmentLock(bool,uint64)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultOptInLockArgs:
     """Dataclass for vault_opt_in_lock arguments"""
     lock: bool
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "vaultOptInLock(bool)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultOptInArgs:
     """Dataclass for vault_opt_in arguments"""
     assets: list[int]
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "vaultOptIn(uint64[])void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class VaultSendArgs:
@@ -170,10 +234,18 @@ class VaultSendArgs:
     asset: int
     otherAssets: list[int]
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "vaultSend(uint64,address,string,uint64,uint64[])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class RenewArgs:
     """Dataclass for renew arguments"""
     payment: algokit_utils.AppMethodCallTransactionArgument
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "renew(pay)void"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SetPrimaryAddressArgs:
@@ -181,11 +253,19 @@ class SetPrimaryAddressArgs:
     fieldName: str
     address: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "setPrimaryAddress(string,address)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class RegistryAddingVerifiedAddressArgs:
     """Dataclass for registry_adding_verified_address arguments"""
     fieldBeingVerified: str
     fieldSetName: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "registryAddingVerifiedAddress(string,string)bool"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class RegistryRemovingVerifiedAddressArgs:
@@ -193,6 +273,10 @@ class RegistryRemovingVerifiedAddressArgs:
     fieldBeingChanged: str
     address: str
     mbrRefundDest: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "registryRemovingVerifiedAddress(string,address,address)bool"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateApplicationArgs:
@@ -209,10 +293,18 @@ class CreateApplicationArgs:
     segmentRootAppId: int
     segmentRootCommissionAddr: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateApplicationArgs:
     """Dataclass for update_application arguments"""
     versionNum: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "updateApplication(string)void"
 
 
 class _NfdInstanceUpdate:
@@ -1818,18 +1910,20 @@ class NfdInstanceClient:
 @dataclasses.dataclass(frozen=True)
 class NfdInstanceMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str, str, str, int, int, str, int, str, int, int, str] | CreateApplicationArgs,
-        typing.Literal["createApplication(string,address,address,uint64,uint64,address,uint64,address,uint64,uint64,address)void"],
+        CreateApplicationArgs,
+        str | None,
     ]
 ):
     """Parameters for creating NfdInstance contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
@@ -1837,18 +1931,20 @@ class NfdInstanceMethodCallCreateParams(
 @dataclasses.dataclass(frozen=True)
 class NfdInstanceMethodCallUpdateParams(
     algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str] | UpdateApplicationArgs,
-        typing.Literal["updateApplication(string)void"],
+        UpdateApplicationArgs,
+        str | None,
     ]
 ):
     """Parameters for calling NfdInstance contract using ABI"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
@@ -2529,7 +2625,7 @@ class NfdInstanceFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 class NfdInstanceFactoryDeleteParams:
@@ -2547,7 +2643,7 @@ class NfdInstanceFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 

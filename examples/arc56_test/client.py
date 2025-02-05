@@ -59,7 +59,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)
@@ -99,6 +99,10 @@ class FooUint16BarUint16:
 class FooArgs:
     """Dataclass for foo arguments"""
     inputs: Inputs
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)"
 
 
 class _Arc56TestOptIn:
@@ -679,17 +683,19 @@ class Arc56TestClient:
 class Arc56TestMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
         typing.Any,
-        typing.Any,
+        str | None,
     ]
 ):
     """Parameters for creating Arc56Test contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
@@ -911,7 +917,7 @@ class Arc56TestFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 class Arc56TestFactoryDeleteParams:
@@ -929,7 +935,7 @@ class Arc56TestFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 

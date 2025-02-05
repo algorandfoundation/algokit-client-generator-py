@@ -384,11 +384,11 @@ def generate_structs_for_args(context: GeneratorContext) -> DocumentParts:
             if not has_appl_to_right and is_appl_type:
                 has_appl_to_right = True
 
-        typed_dict_name = f"{context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
+        data_class_name = f"{context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
 
         yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class {typed_dict_name}:
+class {data_class_name}:
     \"\"\"Dataclass for {method.abi.client_method_name} arguments\"\"\"
 """)
         yield Part.IncIndent
@@ -398,7 +398,11 @@ class {typed_dict_name}:
             is_optional = arg.has_default or arg.name in optional_args
             python_type = f"{arg.python_type} | None = None" if is_optional else arg.python_type
             yield f"{arg.name}: {python_type}"
-
+        yield Part.Gap1
+        yield f"""@property
+    def abi_method_signature(self) -> str:
+        return "{method.abi.method.get_signature()}"
+"""
         yield Part.DecIndent
 
 
