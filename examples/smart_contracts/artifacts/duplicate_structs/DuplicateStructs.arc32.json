@@ -67,7 +67,7 @@
     },
     "contract": {
         "name": "DuplicateStructs",
-        "desc": "\n        Used for snapshot testing to ensure no duplicate struct definitions in typed clients.\n    ",
+        "desc": "\n    Used for snapshot testing to ensure no duplicate struct definitions in typed clients.\n    ",
         "methods": [
             {
                 "name": "method_a_that_uses_struct",

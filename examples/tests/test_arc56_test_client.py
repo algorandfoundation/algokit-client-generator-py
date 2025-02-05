@@ -26,12 +26,8 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 
 @pytest.fixture
-def arc56_test_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> Arc56TestFactory:
-    return algorand.client.get_typed_app_factory(
-        Arc56TestFactory, default_sender=default_deployer.address
-    )
+def arc56_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> Arc56TestFactory:
+    return algorand.client.get_typed_app_factory(Arc56TestFactory, default_sender=default_deployer.address)
 
 
 @pytest.fixture
@@ -57,24 +53,16 @@ def test_arc56_demo(
     )
 
     # call with a default sender
-    outputs = client.send.foo(
-        args=FooArgs(
-            inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))
-        )
-    )
+    outputs = client.send.foo(args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))))
     assert outputs.abi_return
     assert outputs.abi_return.sum == 3
     assert outputs.abi_return.difference == 5
 
     # call with a different sender
     bob = algorand.account.random()
-    algorand.account.ensure_funded_from_environment(
-        bob, AlgoAmount.from_micro_algo(10_000_000)
-    )
+    algorand.account.ensure_funded_from_environment(bob, AlgoAmount.from_micro_algo(10_000_000))
     bob_outputs = client.send.foo(
-        args=FooArgs(
-            inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))
-        ),
+        args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
         params=CommonAppCallParams(sender=bob.address),
     )
     assert bob_outputs.abi_return
@@ -83,9 +71,7 @@ def test_arc56_demo(
 
     # Overwrite some of the transaction fields
     client.send.foo(
-        args=FooArgs(
-            inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))
-        ),
+        args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
         params=CommonAppCallParams(
             validity_window=50,
             note=b"Hello world",
@@ -102,11 +88,7 @@ def test_arc56_demo(
         algorand.new_group()
         .add_app_call_method_call(
             client.params.foo(
-                args=FooArgs(
-                    inputs=Inputs(
-                        add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5)
-                    )
-                ),
+                args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
                 params=CommonAppCallParams(
                     validity_window=50,
                     note=b"Hello world",
@@ -115,11 +97,7 @@ def test_arc56_demo(
         )
         .add_app_call_method_call(
             another_client.params.foo(
-                args=FooArgs(
-                    inputs=Inputs(
-                        add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5)
-                    )
-                ),
+                args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
                 params=CommonAppCallParams(
                     validity_window=50,
                     note=b"Hello world",
@@ -138,31 +116,16 @@ def test_arc56_demo(
     assert decoded.difference == 5
 
     with pytest.raises(Exception, match="subtract.a must be greater than subtract.b"):
-        client.send.foo(
-            args=FooArgs(
-                inputs=Inputs(
-                    add=InputsAdd(a=1, b=100), subtract=InputsSubtract(a=1, b=2)
-                )
-            )
-        )
+        client.send.foo(args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=100), subtract=InputsSubtract(a=1, b=2))))
 
     assert client.state.global_state.global_key == 1337
     assert another_client.state.global_state.global_key == 1338
-    assert client.state.global_state.global_map.get_value("foo") == FooUint16BarUint16(
-        foo=13, bar=37
-    )
+    assert client.state.global_state.global_map.get_value("foo") == FooUint16BarUint16(foo=13, bar=37)
 
-    client.app_client.fund_app_account(
-        FundAppAccountParams(amount=AlgoAmount.from_micro_algo(1_000_000))
-    )
-    client.send.opt_in.opt_in_to_application(
-        send_params={"populate_app_call_resources": True}
-    )
+    client.app_client.fund_app_account(FundAppAccountParams(amount=AlgoAmount.from_micro_algo(1_000_000)))
+    client.send.opt_in.opt_in_to_application(send_params={"populate_app_call_resources": True})
     assert client.state.local_state(default_deployer.address).local_key == 1337
-    assert (
-        client.state.local_state(default_deployer.address).local_map.get_value(b"foo")
-        == "bar"
-    )
+    assert client.state.local_state(default_deployer.address).local_map.get_value(b"foo") == "bar"
     client.state.box.box_map.get_value
     assert client.state.box.box_key == "baz"
     assert client.state.box.box_map.get_value(

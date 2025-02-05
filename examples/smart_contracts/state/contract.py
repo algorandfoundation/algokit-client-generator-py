@@ -126,7 +126,7 @@ class State(ExampleARC4Contract):
     # def default_value_from_local_state(self, arg_with_default: arc4.UInt64):
     def default_value_from_local_state(self, arg_with_default: arc4.String) -> arc4.String:
         arg_with_default = arg_with_default or arc4.String.from_bytes(self.local_bytes1[Txn.sender])
-        return arc4.String(String('Local state, ') + arg_with_default.native)
+        return arc4.String(String("Local state, ") + arg_with_default.native)
 
     @arc4.abimethod
     def structs(self, name_age: Input) -> Output:

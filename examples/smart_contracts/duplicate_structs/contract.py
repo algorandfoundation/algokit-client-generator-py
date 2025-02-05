@@ -11,7 +11,7 @@ class SomeStruct(arc4.Struct):
 
 class DuplicateStructs(ARC4Contract):
     """
-        Used for snapshot testing to ensure no duplicate struct definitions in typed clients.
+    Used for snapshot testing to ensure no duplicate struct definitions in typed clients.
     """
 
     @arc4.abimethod

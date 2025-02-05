@@ -20,11 +20,7 @@ class Structs(ARC4Contract):
     def __init__(self) -> None:
         self.my_struct = GlobalState(Vector(x=arc4.String("1"), y=arc4.String("2")))
         self.my_nested_struct = GlobalState(
-            RootStruct(
-                nested=NestedStruct(
-                    content=Vector(x=arc4.String("1"), y=arc4.String("2"))
-                )
-            )
+            RootStruct(nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2"))))
         )
         self.my_localstate_struct = LocalState(Vector)
         self.my_nested_localstate_struct = LocalState(RootStruct)
@@ -39,9 +35,7 @@ class Structs(ARC4Contract):
 
     @arc4.abimethod()
     def give_me_root_struct(self) -> RootStruct:
-        return RootStruct(
-            nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2")))
-        )
+        return RootStruct(nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2"))))
 
     @arc4.abimethod(allow_actions=["OptIn"])
     def opt_in(self) -> None:
@@ -49,15 +43,11 @@ class Structs(ARC4Contract):
         self.my_nested_box_struct.value = RootStruct(
             nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2")))
         )
-        self.my_boxmap_struct[arc4.UInt64(123)] = Vector(
-            x=arc4.String("1"), y=arc4.String("2")
-        )
+        self.my_boxmap_struct[arc4.UInt64(123)] = Vector(x=arc4.String("1"), y=arc4.String("2"))
         self.my_nested_boxmap_struct[arc4.UInt64(123)] = RootStruct(
             nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2")))
         )
-        self.my_localstate_struct[Txn.sender] = Vector(
-            x=arc4.String("1"), y=arc4.String("2")
-        )
+        self.my_localstate_struct[Txn.sender] = Vector(x=arc4.String("1"), y=arc4.String("2"))
         self.my_nested_localstate_struct[Txn.sender] = RootStruct(
             nested=NestedStruct(content=Vector(x=arc4.String("1"), y=arc4.String("2")))
         )

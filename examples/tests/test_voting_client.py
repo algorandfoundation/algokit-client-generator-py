@@ -6,7 +6,7 @@ import uuid
 from dataclasses import dataclass
 
 import algokit_utils
-from algokit_utils import  CommonAppCallParams, CommonAppCallCreateParams
+from algokit_utils import CommonAppCallParams, CommonAppCallCreateParams
 import algokit_utils.applications
 import algokit_utils.transactions
 import algosdk
@@ -35,12 +35,8 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 
 @pytest.fixture
-def voting_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> VotingRoundFactory:
-    return algorand.client.get_typed_app_factory(
-        VotingRoundFactory, default_sender=default_deployer.address
-    )
+def voting_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> VotingRoundFactory:
+    return algorand.client.get_typed_app_factory(VotingRoundFactory, default_sender=default_deployer.address)
 
 
 @pytest.fixture
@@ -103,18 +99,14 @@ def random_voting_round_app(
             nft_image_url="ipfs://cid",
             option_counts=question_counts,
         ),
-        params=CommonAppCallCreateParams(
-            static_fee=AlgoAmount.from_micro_algo(1000 + 1000 * 4)
-        ),
+        params=CommonAppCallCreateParams(static_fee=AlgoAmount.from_micro_algo(1000 + 1000 * 4)),
         compilation_params={
             "deletable": True,
         },
     )
     assert result.abi_return is None
 
-    random_answer_ids = [
-        random.randint(0, question_counts[i] - 1) for i in range(question_count)
-    ]
+    random_answer_ids = [random.randint(0, question_counts[i] - 1) for i in range(question_count)]
     signing_key = SigningKey(private_key[: algosdk.constants.key_len_bytes])
     signed = signing_key.sign(voter.public_key)
     signature = signed.signature
@@ -143,16 +135,10 @@ def test_struct_mapping(random_voting_round_app: RandomVotingAppDeployment) -> N
     signature = random_voting_round_app.signature
 
     input_params = algokit_utils.applications.FundAppAccountParams(
-        amount=AlgoAmount.from_micro_algo(
-            200_000 + 1_000 + 2_500 + 400 * (1 + 8 * total_question_options)
-        )
+        amount=AlgoAmount.from_micro_algo(200_000 + 1_000 + 2_500 + 400 * (1 + 8 * total_question_options))
     )
     client.create_transaction.bootstrap(
-        args=BootstrapArgs(
-            fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                params=input_params
-            )
-        ),
+        args=BootstrapArgs(fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=input_params)),
         params=CommonAppCallParams(
             box_references=["V"],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
@@ -190,10 +176,7 @@ def test_global_state(random_voting_round_app: RandomVotingAppDeployment) -> Non
     assert state["nft_image_url"] == b"ipfs://cid"
     assert state["nft_asset_id"] == 0
     assert state["total_options"] == total_question_options
-    assert (
-        algosdk.abi.ABIType.from_string("uint8[]").decode(state["option_counts"])
-        == question_counts
-    )
+    assert algosdk.abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
 
 
 def test_works_with_separate_transactions(
@@ -217,18 +200,11 @@ def test_works_with_separate_transactions(
 
     input_params = algokit_utils.applications.FundAppAccountParams(
         amount=AlgoAmount.from_micro_algo(
-            200_000
-            + 1_000
-            + 2_500
-            + 400 * (1 + 8 * random_voting_round_app.total_question_options)
+            200_000 + 1_000 + 2_500 + 400 * (1 + 8 * random_voting_round_app.total_question_options)
         )
     )
     client.send.bootstrap(
-        args=BootstrapArgs(
-            fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                params=input_params
-            )
-        ),
+        args=BootstrapArgs(fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=input_params)),
         params=CommonAppCallParams(
             box_references=["V"],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
@@ -236,16 +212,12 @@ def test_works_with_separate_transactions(
     )
 
     input_params = algokit_utils.applications.FundAppAccountParams(
-        amount=AlgoAmount.from_micro_algo(
-            400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500
-        )
+        amount=AlgoAmount.from_micro_algo(400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500)
     )
     client.send.vote(
         args=VoteArgs(
             answer_ids=random_voting_round_app.random_answer_ids,
-            fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                params=input_params
-            ),
+            fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=input_params),
             signature=signature,
         ),
         params=CommonAppCallParams(
@@ -275,16 +247,11 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
 
     params_1 = FundAppAccountParams(
         amount=AlgoAmount.from_micro_algo(
-            200_000
-            + 1_000
-            + 2_500
-            + 400 * (1 + 8 * random_voting_round_app.total_question_options)
+            200_000 + 1_000 + 2_500 + 400 * (1 + 8 * random_voting_round_app.total_question_options)
         )
     )
     params_2 = FundAppAccountParams(
-        amount=AlgoAmount.from_micro_algo(
-            400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500
-        )
+        amount=AlgoAmount.from_micro_algo(400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500)
     )
 
     result = (
@@ -301,9 +268,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
         .add_app_call_method_call(
             client.params.bootstrap(
                 args=BootstrapArgs(
-                    fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                        params=params_1
-                    )
+                    fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=params_1)
                 ),
                 params=CommonAppCallParams(
                     box_references=["V"],
@@ -315,9 +280,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
             client.params.vote(
                 args=VoteArgs(
                     answer_ids=random_voting_round_app.random_answer_ids,
-                    fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                        params=params_2
-                    ),
+                    fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=params_2),
                     signature=signature,
                 ),
                 params=CommonAppCallParams(
@@ -350,16 +313,11 @@ def test_it_works_using_the_fluent_composer(
 
     params_1 = FundAppAccountParams(
         amount=AlgoAmount.from_micro_algo(
-            200_000
-            + 1_000
-            + 2_500
-            + 400 * (1 + 8 * random_voting_round_app.total_question_options)
+            200_000 + 1_000 + 2_500 + 400 * (1 + 8 * random_voting_round_app.total_question_options)
         )
     )
     params_2 = FundAppAccountParams(
-        amount=AlgoAmount.from_micro_algo(
-            400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500
-        )
+        amount=AlgoAmount.from_micro_algo(400 * (32 + 2 + len(random_voting_round_app.random_answer_ids)) + 2_500)
     )
 
     result = (
@@ -372,11 +330,7 @@ def test_it_works_using_the_fluent_composer(
             ),
         )
         .bootstrap(
-            args=BootstrapArgs(
-                fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                    params=params_1
-                )
-            ),
+            args=BootstrapArgs(fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=params_1)),
             params=CommonAppCallParams(
                 box_references=["V"],
                 static_fee=AlgoAmount.from_micro_algo(1_000 + 1_000 * 4),
@@ -385,9 +339,7 @@ def test_it_works_using_the_fluent_composer(
         .vote(
             args=VoteArgs(
                 answer_ids=random_voting_round_app.random_answer_ids,
-                fund_min_bal_req=client.app_client.create_transaction.fund_app_account(
-                    params=params_2
-                ),
+                fund_min_bal_req=client.app_client.create_transaction.fund_app_account(params=params_2),
                 signature=signature,
             ),
             params=CommonAppCallParams(
