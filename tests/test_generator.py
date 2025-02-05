@@ -12,21 +12,30 @@ def to_camel_case(s: str) -> str:
 
 @pytest.mark.parametrize(
     "app, extension",
-    chain(product([
-        "duplicate_structs",
-        "hello_world",
-        "lifecycle",
-        "minimal",
-        "state",
-        "voting_round",
-    ], ["arc32"]), product([
-        "arc56_test",
-        "structs",
-        "nested",
-        "nfd",
-        "reti",
-        "zero_coupon_bond",
-    ], ["arc56"]))
+    chain(
+        product(
+            [
+                "duplicate_structs",
+                "hello_world",
+                "lifecycle",
+                "minimal",
+                "state",
+                "voting_round",
+            ],
+            ["arc32"],
+        ),
+        product(
+            [
+                "arc56_test",
+                "structs",
+                "nested",
+                "nfd",
+                "reti",
+                "zero_coupon_bond",
+            ],
+            ["arc56"],
+        ),
+    ),
 )
 def test_generate_clients(app: str, extension: str) -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"

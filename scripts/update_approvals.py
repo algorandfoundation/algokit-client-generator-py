@@ -1,5 +1,5 @@
 import pathlib
-from itertools import product, chain
+from itertools import chain, product
 
 from algokit_client_generator import generate_client
 
