@@ -59,7 +59,7 @@ def _init_dataclass(cls: type, data: dict) -> object:
         field_value = data.get(field.name)
         # Check if the field expects another dataclass and the value is a dict.
         if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(field.type, field_value)
+            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
         else:
             field_values[field.name] = field_value
     return cls(**field_values)
@@ -82,11 +82,19 @@ class CallAbiArgs:
     """Dataclass for call_abi arguments"""
     value: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "call_abi(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiTxnArgs:
     """Dataclass for call_abi_txn arguments"""
     txn: algokit_utils.AppMethodCallTransactionArgument
     value: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "call_abi_txn(pay,string)string"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CallWithReferencesArgs:
@@ -95,35 +103,63 @@ class CallWithReferencesArgs:
     account: str | bytes
     application: int
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "call_with_references(asset,account,application)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueArgs:
     """Dataclass for default_value arguments"""
     arg_with_default: str | None = None
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "default_value(string)string"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueIntArgs:
     """Dataclass for default_value_int arguments"""
     arg_with_default: int | None = None
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "default_value_int(uint64)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromAbiArgs:
     """Dataclass for default_value_from_abi arguments"""
     arg_with_default: str | None = None
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "default_value_from_abi(string)string"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromGlobalStateArgs:
     """Dataclass for default_value_from_global_state arguments"""
     arg_with_default: int | None = None
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "default_value_from_global_state(uint64)uint64"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueFromLocalStateArgs:
     """Dataclass for default_value_from_local_state arguments"""
     arg_with_default: str | None = None
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "default_value_from_local_state(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StructsArgs:
     """Dataclass for structs arguments"""
     name_age: Input
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "structs((string,uint64))(string,uint64)"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SetGlobalArgs:
@@ -133,6 +169,10 @@ class SetGlobalArgs:
     bytes1: str
     bytes2: bytes | str | tuple[int, int, int, int]
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "set_global(uint64,uint64,string,byte[4])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SetLocalArgs:
     """Dataclass for set_local arguments"""
@@ -141,26 +181,46 @@ class SetLocalArgs:
     bytes1: str
     bytes2: bytes | str | tuple[int, int, int, int]
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "set_local(uint64,uint64,string,byte[4])void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SetBoxArgs:
     """Dataclass for set_box arguments"""
     name: bytes | str | tuple[int, int, int, int]
     value: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "set_box(byte[4],string)void"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CreateAbiArgs:
     """Dataclass for create_abi arguments"""
     input: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "create_abi(string)string"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class UpdateAbiArgs:
     """Dataclass for update_abi arguments"""
     input: str
 
+    @property
+    def abi_method_signature(self) -> str:
+        return "update_abi(string)string"
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DeleteAbiArgs:
     """Dataclass for delete_abi arguments"""
     input: str
+
+    @property
+    def abi_method_signature(self) -> str:
+        return "delete_abi(string)string"
 
 
 class _StateUpdate:
@@ -1509,18 +1569,20 @@ class StateClient:
 @dataclasses.dataclass(frozen=True)
 class StateMethodCallCreateParams(
     algokit_utils.AppClientCreateSchema, algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str] | CreateAbiArgs,
-        typing.Literal["create_abi(string)string"],
+        CreateAbiArgs,
+        str | None,
     ]
 ):
     """Parameters for creating State contract using ABI"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallCreateParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
@@ -1536,24 +1598,26 @@ class StateBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
 @dataclasses.dataclass(frozen=True)
 class StateMethodCallUpdateParams(
     algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str] | UpdateAbiArgs,
-        typing.Literal["update_abi(string)string"],
+        UpdateAbiArgs,
+        str | None,
     ]
 ):
     """Parameters for calling State contract using ABI"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
 
 @dataclasses.dataclass(frozen=True)
-class StateBareCallUpdateParams(algokit_utils.AppClientBareCallCreateParams):
+class StateBareCallUpdateParams(algokit_utils.AppClientBareCallParams):
     """Parameters for calling State contract with bare calls"""
     on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
 
@@ -1563,24 +1627,26 @@ class StateBareCallUpdateParams(algokit_utils.AppClientBareCallCreateParams):
 @dataclasses.dataclass(frozen=True)
 class StateMethodCallDeleteParams(
     algokit_utils.BaseAppClientMethodCallParams[
-        tuple[str] | DeleteAbiArgs,
-        typing.Literal["delete_abi(string)string"],
+        DeleteAbiArgs,
+        str | None,
     ]
 ):
     """Parameters for calling State contract using ABI"""
     on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallParams:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCallParams(
             **{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }
         )
 
 @dataclasses.dataclass(frozen=True)
-class StateBareCallDeleteParams(algokit_utils.AppClientBareCallCreateParams):
+class StateBareCallDeleteParams(algokit_utils.AppClientBareCallParams):
     """Parameters for calling State contract with bare calls"""
     on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
 
@@ -2103,7 +2169,7 @@ class StateFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 class StateFactoryDeleteParams:
@@ -2121,7 +2187,7 @@ class StateFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
 
