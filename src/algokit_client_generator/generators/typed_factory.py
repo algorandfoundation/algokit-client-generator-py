@@ -147,6 +147,7 @@ def _generate_operation_params_class(context: GeneratorContext, operation: str) 
     class_name = f"{context.contract_name}Factory{operation.title()}Params"
     method_name = "create" if operation == "create" else f"deploy_{operation}"
 
+    bare_params_class = "AppFactoryCreateParams" if operation == "create" else "AppClientBareCallParams"
     yield utils.indented(f"""
 class {class_name}:
     \"\"\"Parameters for '{operation}' operations of {context.contract_name} contract\"\"\"
@@ -163,7 +164,7 @@ class {class_name}:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            algokit_utils.{bare_params_class}(**dataclasses.asdict(params)),
             {'compilation_params=compilation_params' if operation == 'create' else ''})
 """)
 
@@ -255,20 +256,10 @@ def _generate_abi_params_class(
 ) -> Iterator[DocumentParts]:
     """Generate ABI params class with proper indentation"""
     # Build method signature and args unions
-    method_data = []
+    args_dataclasses = []
     for method in abi_methods:
         if method.abi and method.abi.args:
-            args_type = f"tuple[{', '.join(arg.python_type for arg in method.abi.args)}]"
-            args_union = (
-                f"{args_type} | {context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
-            )
-            method_sig = f'typing.Literal["{method.abi.method.get_signature()}"]'
-            method_data.append((args_union, method_sig))
-
-    args_unions: tuple[str, ...] = ()
-    method_signatures: tuple[str, ...] = ()
-    if method_data:
-        args_unions, method_signatures = zip(*method_data, strict=False)
+            args_dataclasses.append(f"{context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args")
 
     # Get unique on_complete values
     on_completes = {
@@ -279,8 +270,7 @@ def _generate_abi_params_class(
 
     class_name = f"{context.contract_name}MethodCall{type_suffix}Params"
     create_schema = "algokit_utils.AppClientCreateSchema, " if is_create else ""
-    args_union_str = " | ".join(args_unions) if args_unions else "typing.Any"
-    method_sig_str = " | ".join(method_signatures) if method_signatures else "typing.Any"
+    args_union_str = " | ".join(args_dataclasses) if args_dataclasses else "typing.Any"
     on_complete_str = ", ".join(sorted(on_completes))
 
     yield utils.indented(f"""
@@ -288,17 +278,19 @@ def _generate_abi_params_class(
 class {class_name}(
     {create_schema}algokit_utils.BaseAppClientMethodCallParams[
         {args_union_str},
-        {method_sig_str},
+        str | None,
     ]
 ):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
     on_complete: typing.Literal[{on_complete_str}] | None = None
+    method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params:
         method_args = _parse_abi_args(self.args)
         return algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params(
             **{{
                 **self.__dict__,
+                "method": self.method or getattr(self.args, "abi_method_signature", None),
                 "args": method_args,
             }}
         )
@@ -316,10 +308,10 @@ def _generate_bare_params_class(
     )
 
     class_name = f"{context.contract_name}BareCall{type_suffix}Params"
-
+    sub_class = "AppClientBareCallCreateParams" if is_create else "AppClientBareCallParams"
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
-class {class_name}(algokit_utils.AppClientBareCallCreateParams):
+class {class_name}(algokit_utils.{sub_class}):
     \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
     on_complete: typing.Literal[{on_complete_options}] | None = None
 
