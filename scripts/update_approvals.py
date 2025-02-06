@@ -11,16 +11,16 @@ def update_approvals() -> None:
     arc32_apps = [
         "duplicate_structs",
         "hello_world",
-        "lifecycle",
+        "LifeCycle",
         "minimal",
         "state",
         "voting_round",
     ]
     arc56_apps = [
-        "arc56_test",
+        "ARC56_test",
         "structs",
         "nested",
-        "nfd",
+        "NFD",
         "reti",
         "zero_coupon_bond",
     ]
