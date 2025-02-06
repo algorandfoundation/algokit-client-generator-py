@@ -2,12 +2,9 @@ import pathlib
 from itertools import chain, product
 
 import pytest
+from inflection import camelize
 
 from algokit_client_generator import generate_client
-
-
-def to_camel_case(s: str) -> str:
-    return "".join([x.capitalize() for x in s.split("_")])
 
 
 @pytest.mark.parametrize(
@@ -17,7 +14,7 @@ def to_camel_case(s: str) -> str:
             [
                 "duplicate_structs",
                 "hello_world",
-                "lifecycle",
+                "life_cycle",
                 "minimal",
                 "state",
                 "voting_round",
@@ -40,7 +37,7 @@ def to_camel_case(s: str) -> str:
 def test_generate_clients(app: str, extension: str) -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
     app_path = artifacts / app
-    app_spec = app_path / f"{to_camel_case(app)}.{extension}.json"
+    app_spec = app_path / f"{camelize(app)}.{extension}.json"
     generated_path = app_path / "client_generated.py"
     approved_path = app_path / f"{app}_client.py"
     generate_client(app_spec, generated_path)

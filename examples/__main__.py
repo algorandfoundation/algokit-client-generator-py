@@ -19,7 +19,7 @@ def main() -> None:
     arc32_apps = [
         "duplicate_structs",
         "hello_world",
-        "lifecycle",
+        "life_cycle",
         "minimal",
         "state",
         "voting_round",

@@ -11,7 +11,7 @@ def update_approvals() -> None:
     arc32_apps = [
         "duplicate_structs",
         "hello_world",
-        "LifeCycle",
+        "life_cycle",
         "minimal",
         "state",
         "voting_round",

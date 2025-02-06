@@ -4,7 +4,7 @@ import pytest
 from algokit_utils import AlgorandClient, CommonAppCallCreateParams, OperationPerformed
 from algokit_utils.models import AlgoAmount
 
-from examples.smart_contracts.artifacts.lifecycle.lifecycle_client import (
+from examples.smart_contracts.artifacts.life_cycle.life_cycle_client import (
     CreateStringStringArgs,
     CreateStringUint32VoidArgs,
     HelloStringStringArgs,
