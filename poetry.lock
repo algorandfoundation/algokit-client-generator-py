@@ -2,12 +2,12 @@
 
 [[package]]
 name = "algokit-utils"
-version = "3.0.0b4"
+version = "3.0.0b5"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "algokit_utils-3.0.0b4-py3-none-any.whl", hash = "sha256:ff6ad8551d93a8b1babe216c35022deaf142212b148b3dfc82ebd40bf0808ce3"},
+    {file = "algokit_utils-3.0.0b5-py3-none-any.whl", hash = "sha256:2208fe123df98c728dc90038bdf8cf8faec8e098f7e747c4e6fc0b9b9fb5498c"},
 ]
 
 [package.dependencies]
@@ -2133,4 +2133,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "9e89a746da06abc3efd677d8664fa89e755454dd3cea0d275ddb4a80f8db077a"
+content-hash = "048e008cf8ffc01289bb95d74f177cefa9d9f231775dd8aeb787a7c575ab4844"
