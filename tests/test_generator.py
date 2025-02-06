@@ -23,10 +23,10 @@ from algokit_client_generator import generate_client
         ),
         product(
             [
-                "arc56_test",
+                "ARC56_test",
                 "structs",
                 "nested",
-                "nfd",
+                "NFD",
                 "reti",
                 "zero_coupon_bond",
             ],
