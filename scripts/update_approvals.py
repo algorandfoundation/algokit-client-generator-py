@@ -2,6 +2,7 @@ import pathlib
 from itertools import chain, product
 
 from inflection import camelize
+
 from algokit_client_generator import generate_client
 
 
