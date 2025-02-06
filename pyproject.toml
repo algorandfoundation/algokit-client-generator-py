@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 algokit-utils = "^v3.0.0b5"
 
 [tool.poetry.group.dev.dependencies]
@@ -20,8 +20,8 @@ python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
 poethepoet = "^0.20.0"
 pytest-xdist = "^3.5.0"
-puyapy = "^4.1.1"
-algorand-python = "^2.4.1"
+puyapy = { version = "^4.1.1", python = "^3.12" }
+algorand-python = { version = "^2.4.1", python = "^3.12" }
 setuptools = "^75.8.0"
 pytest-sugar = "^1.0.0"
 
