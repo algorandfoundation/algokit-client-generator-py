@@ -9,10 +9,6 @@ logger = logging.getLogger(__name__)
 root_path = Path(__file__).parent
 
 
-def to_camel_case(s: str) -> str:
-    return "".join([x.capitalize() for x in s.split("_")])
-
-
 def main() -> None:
     smart_contracts = pathlib.Path(__file__).parent / "smart_contracts"
     artifacts = smart_contracts / "artifacts"
