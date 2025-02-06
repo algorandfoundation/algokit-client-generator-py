@@ -36,7 +36,7 @@ algokit generate client path/to/application.json --output path/to/output/client_
 
 ## Examples
 
-There are a range of [examples](./examples) that you can look at to see a source smart contract (e.g. `{contract.py}`), the generated client (`client_generated.py`) and some tests that demonstrate how you can use the client (`test_client.py`).
+There are a range of [examples](./examples) that you can look at to see a source smart contract (e.g. `{app_name}/contract.py`), the generated client (`artifacts/{app_name}/{app_name}_client.py`) and some tests that demonstrate how you can use the client (`tests/{app_name}_test_client.py`).
 
 ## Contributing
 
@@ -72,9 +72,11 @@ If you want to contribute to this project the following information will be help
 
 ### Building examples
 
-In the `examples` folder there is a series of example contracts along with their generated client. These contracts are written in various languages including [Algorand Python](https://github.com/algorandfoundation/puya), [TealScript](https://github.com/algorandfoundation/TEALScript) and [Beaker](https://github.com/algorandfoundation/beaker) (for backwards compatibility with ARC-32 and previous versions of the generator).
+In the `examples` folder there is a series of example contracts along with their generated client. These contracts are originally written in various languages including [Algorand Python](https://github.com/algorandfoundation/puya), [Algorand TypeScript](https://github.com/algorandfoundation/puya-ts), and [TealScript](https://github.com/algorandfoundation/TEALScript).
 
-If you want to make changes to any of the smart contract examples and re-generate the ARC-32/56 application.json files then change the corresponding `examples/{contract}/{contract}.py` file and then run:
+Some contracts are directly imported through the ARC-32/56 app spec and not through contract source code.
+
+If you want to make changes to any of the smart contract examples and re-generate the ARC-32/56 JSON specs files then change the corresponding `examples/smart_contracts/{app_name}/contract.py` file and then run:
 
 ```
 poetry run python -m examples
@@ -83,6 +85,8 @@ poetry run python -m examples
 Or in Visual Studio Code you can use the default build task (Ctrl+Shift+B).
 
 To regenerate the generated clients run `poetry run poe update-approvals`.
+
+This package currently depends on Python 3.10, however the development depends on Python 3.12. This is represented by the `pyproject.toml` file which requires 3.10 with additional requirements on dev dependencies.
 
 ### Continuous Integration / Continuous Deployment (CI/CD)
 
