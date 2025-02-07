@@ -111,13 +111,7 @@ class State(ExampleARC4Contract):
     def default_value_from_global_state(self, arg_with_default: arc4.UInt64) -> arc4.UInt64:
         return arg_with_default
 
-    # FIXME: While deprecating Beaker, we couldn't replicate the default behavior of a default argument value based
-    #  on local state. We needed to resort to this helper function.
-    @arc4.abimethod(readonly=True)
-    def get_local_bytes(self) -> String:
-        return String.from_bytes(self.local_bytes1[Txn.sender])
-
-    @arc4.abimethod(readonly=True, default_args={"arg_with_default": get_local_bytes})
+    @arc4.abimethod(readonly=True, default_args={"arg_with_default": "local_bytes1"})
     def default_value_from_local_state(self, arg_with_default: String) -> arc4.String:
         return arc4.String(String("Local state, ") + arg_with_default)
 
