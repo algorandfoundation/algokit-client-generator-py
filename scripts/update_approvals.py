@@ -1,9 +1,8 @@
 import pathlib
 from itertools import chain, product
 
-from inflection import camelize
-
 from algokit_client_generator import generate_client
+from algokit_client_generator.utils import to_pascal_case
 
 
 def update_approvals() -> None:
@@ -27,7 +26,7 @@ def update_approvals() -> None:
 
     for app, extension in chain(product(arc32_apps, ["arc32"]), product(arc56_apps, ["arc56"])):
         app_path = artifacts / app
-        app_spec = app_path / f"{camelize(app)}.{extension}.json"
+        app_spec = app_path / f"{to_pascal_case(app)}.{extension}.json"
         approved_path = app_path / f"{app}_client.py"
         try:
             generate_client(app_spec, approved_path)
