@@ -2,7 +2,7 @@ import pathlib
 from itertools import chain, product
 
 from algokit_client_generator import generate_client
-from algokit_client_generator.utils import to_pascal_case
+from algokit_client_generator.utils import to_pascal_case, to_snake_case
 
 
 def update_approvals() -> None:
@@ -16,10 +16,10 @@ def update_approvals() -> None:
         "voting_round",
     ]
     arc56_apps = [
-        "ARC56_test",
+        "arc56_test",
         "structs",
         "nested",
-        "NFD",
+        "nfd",
         "reti",
         "zero_coupon_bond",
     ]
@@ -27,7 +27,7 @@ def update_approvals() -> None:
     for app, extension in chain(product(arc32_apps, ["arc32"]), product(arc56_apps, ["arc56"])):
         app_path = artifacts / app
         app_spec = app_path / f"{to_pascal_case(app)}.{extension}.json"
-        approved_path = app_path / f"{app}_client.py"
+        approved_path = app_path / f"{to_snake_case(app)}_client.py"
         try:
             generate_client(app_spec, approved_path)
         except Exception as e:
