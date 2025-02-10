@@ -95,3 +95,6 @@ This project uses [GitHub Actions](https://docs.github.com/en/actions/learn-gith
 ### Approval tests
 
 Making any changes to the generated code will result in the approval tests failing. The approval tests work by generating a version of client and outputting it to `./examples/APP_NAME/client_generated.py` then comparing to the approved version `./examples/APP_NAME/client.py`. If you make a change and break the approval tests, you will need to update the approved version by overwriting it with the generated version. You can run `poetry run poe update-approvals` to update all approved clients in one go.
+
+
+
