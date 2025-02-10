@@ -3,6 +3,7 @@ from itertools import chain, product
 
 from algokit_client_generator import generate_client
 from algokit_client_generator.utils import to_pascal_case, to_snake_case
+from scripts._helpers import enable_mypy
 
 
 def update_approvals() -> None:
@@ -30,6 +31,7 @@ def update_approvals() -> None:
         approved_path = app_path / f"{to_snake_case(app)}_client.py"
         try:
             generate_client(app_spec, approved_path)
+            enable_mypy(approved_path)
         except Exception as e:
             print(f"Error generating client for {app}: {e}")
 

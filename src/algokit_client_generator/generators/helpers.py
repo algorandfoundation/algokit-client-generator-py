@@ -11,12 +11,12 @@ def generate_abi_args_parser(indent_size: int = 4) -> DocumentParts:
     """
     yield utils.indented(
         """
-def _parse_abi_args(args: typing.Any | None = None) -> list[typing.Any] | None:
+def _parse_abi_args(args: object | None = None) -> list[object] | None:
     \"\"\"Helper to parse ABI args into the format expected by underlying client\"\"\"
     if args is None:
         return None
 
-    def convert_dataclass(value: typing.Any) -> typing.Any:
+    def convert_dataclass(value: object) -> object:
         if dataclasses.is_dataclass(value):
             return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
         elif isinstance(value, (list, tuple)):
