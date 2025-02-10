@@ -20,6 +20,8 @@ python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
 poethepoet = "^0.20.0"
 pytest-xdist = "^3.5.0"
+puyapy = { version = "^4.1.1", python = "^3.12" }
+algorand-python = { version = "^2.4.1", python = "^3.12" }
 setuptools = "^75.8.0"
 pytest-sugar = "^1.0.0"
 
