@@ -5,7 +5,8 @@ from algokit_client_generator.document import DocumentParts
 def disable_linting() -> DocumentParts:
     yield "# flake8: noqa"  # this works for flake8 and ruff
     yield "# fmt: off"  # disable formatting
-    yield "# type: ignore"  # disable common type warnings
+    # https://mypy.readthedocs.io/en/stable/common_issues.html#ignoring-a-whole-file
+    yield "# mypy: ignore-errors"  # ignore common mypy warnings
 
 
 def generate_header_comments(context: GeneratorContext) -> DocumentParts:
