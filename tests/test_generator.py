@@ -5,6 +5,7 @@ import pytest
 
 from algokit_client_generator import generate_client
 from algokit_client_generator.utils import to_pascal_case, to_snake_case
+from scripts._helpers import enable_mypy
 
 
 @pytest.mark.parametrize(
@@ -41,4 +42,5 @@ def test_generate_clients(app: str, extension: str) -> None:
     generated_path = app_path / "client_generated.py"
     approved_path = app_path / f"{to_snake_case(app)}_client.py"
     generate_client(app_spec, generated_path)
+    enable_mypy(generated_path)
     assert generated_path.read_text() == approved_path.read_text()

@@ -100,7 +100,7 @@ class {context.contract_name}Composer:
     def __init__(self, client: "{context.contract_name}Client"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], typing.Any] | None] = []
+        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 """)
     yield Part.IncIndent
 
