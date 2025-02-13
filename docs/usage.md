@@ -402,7 +402,7 @@ result = client
         )
     )
     .method_two(args=SomeOtherMethodArgs(arg1="foo"))
-    .execute()
+    .send()
 
 # Strongly typed as the return type of methodOne
 result_of_method_one = result.returns[0]
@@ -426,7 +426,7 @@ result = algorand
         )
     )
     .add_app_call_method_call(client.params.method_two(args=SomeOtherMethodArgs(arg1="foo")))
-    .execute()
+    .send()
 
 # returns will contain a result object for each ABI method call in the transaction group
 for (return_value in result.returns) {
