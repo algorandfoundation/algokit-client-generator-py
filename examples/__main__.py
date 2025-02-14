@@ -27,6 +27,7 @@ def main() -> None:
     arc56_apps = [
         "structs",
         "nested",
+        "state",
     ]
 
     for app, options in chain(
@@ -35,6 +36,7 @@ def main() -> None:
         app_path = smart_contracts / app / "contract.py"
         app_artifacts = artifacts / app
         try:
+            print(f"Compiling contract for app {app}")
             subprocess.run(
                 [
                     "algokit",
@@ -52,6 +54,7 @@ def main() -> None:
                 text=True,
                 check=True,
             )
+            print(f"Contract compiled for app {app}")
         except Exception as e:
             print(f"Error compiling contract for app {app}: {e}")
 

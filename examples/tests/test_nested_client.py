@@ -6,7 +6,7 @@ from algokit_utils import AlgorandClient
 from algokit_utils.models import AlgoAmount
 from algokit_utils.transactions import PaymentParams
 
-from examples.smart_contracts.artifacts.nested.nested_client import (
+from examples.smart_contracts.artifacts.nested.nested_arc56_client import (
     AddArgs,
     GetPayTxnAmountArgs,
     NestedFactory,

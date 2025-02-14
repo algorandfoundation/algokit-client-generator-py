@@ -19,6 +19,7 @@ def update_approvals() -> None:
     arc56_apps = [
         "arc56_test",
         "structs",
+        "state",
         "nested",
         "nfd",
         "reti",
@@ -28,7 +29,7 @@ def update_approvals() -> None:
     for app, extension in chain(product(arc32_apps, ["arc32"]), product(arc56_apps, ["arc56"])):
         app_path = artifacts / app
         app_spec = app_path / f"{to_pascal_case(app)}.{extension}.json"
-        approved_path = app_path / f"{to_snake_case(app)}_client.py"
+        approved_path = app_path / f"{to_snake_case(app)}_{extension}_client.py"
         try:
             generate_client(app_spec, approved_path)
             enable_mypy(approved_path)

@@ -3,7 +3,7 @@ import pytest
 from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
 
-from examples.smart_contracts.artifacts.minimal.minimal_client import MinimalFactory
+from examples.smart_contracts.artifacts.minimal.minimal_arc32_client import MinimalFactory
 
 
 @pytest.fixture

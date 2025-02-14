@@ -39,8 +39,8 @@ def test_generate_clients(app: str, extension: str) -> None:
     artifacts = pathlib.Path(__file__).parent.parent / "examples" / "smart_contracts" / "artifacts"
     app_path = artifacts / app
     app_spec = app_path / f"{to_pascal_case(app)}.{extension}.json"
-    generated_path = app_path / "client_generated.py"
-    approved_path = app_path / f"{to_snake_case(app)}_client.py"
+    generated_path = app_path / f"client_generated_{extension}.py"
+    approved_path = app_path / f"{to_snake_case(app)}_{extension}_client.py"
     generate_client(app_spec, generated_path)
     enable_mypy(generated_path)
     assert generated_path.read_text() == approved_path.read_text()

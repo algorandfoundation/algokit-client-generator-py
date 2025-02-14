@@ -4,7 +4,7 @@ from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient, CommonAppCallParams
 
-from examples.smart_contracts.artifacts.hello_world.hello_world_client import (
+from examples.smart_contracts.artifacts.hello_world.hello_world_arc32_client import (
     HelloArgs,
     HelloWorldClient,
     HelloWorldFactory,

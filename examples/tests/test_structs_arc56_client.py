@@ -5,7 +5,7 @@ import pytest
 from algokit_utils import AlgorandClient
 from algokit_utils.models import AlgoAmount
 
-from examples.smart_contracts.artifacts.structs.structs_client import StructsFactory
+from examples.smart_contracts.artifacts.structs.structs_arc56_client import StructsFactory
 
 
 @pytest.fixture
@@ -94,3 +94,11 @@ def test_nested_structs_from_state_are_dataclasses(
     assert box_map_struct.y == "2"
     assert nested_box_map_struct.nested.content.x == "1"
     assert nested_box_map_struct.nested.content.y == "2"
+
+def test_struct_with_name_variation(my_test_factory: StructsFactory) -> None:
+    client, _ = my_test_factory.deploy()
+    struct = client.send.give_me_struct_with_name_variations().abi_return
+    assert struct is not None
+    assert struct.first_VariatIon == "1"
+    assert struct.secondVariation == "2"
+    assert struct.third_variation == "3"

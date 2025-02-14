@@ -16,7 +16,7 @@ from algokit_utils.models import AlgoAmount
 from algosdk.v2client.algod import AlgodClient
 from nacl.signing import SigningKey
 
-from examples.smart_contracts.artifacts.voting_round.voting_round_client import (
+from examples.smart_contracts.artifacts.voting_round.voting_round_arc32_client import (
     BootstrapArgs,
     CreateArgs,
     GetPreconditionsArgs,

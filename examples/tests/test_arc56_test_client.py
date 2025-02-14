@@ -6,7 +6,7 @@ from algokit_utils import AlgorandClient, CommonAppCallParams
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
 
-from examples.smart_contracts.artifacts.arc56_test.arc56_test_client import (
+from examples.smart_contracts.artifacts.arc56_test.arc56_test_arc56_client import (
     Arc56TestClient,
     Arc56TestFactory,
     FooArgs,
