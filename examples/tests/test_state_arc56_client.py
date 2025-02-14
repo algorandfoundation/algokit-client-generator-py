@@ -5,8 +5,9 @@ import pytest
 from algokit_utils import AlgorandClient, CommonAppCallParams
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
+from algosdk.error import AlgodHTTPError
 
-from examples.smart_contracts.artifacts.state.state_client import (
+from examples.smart_contracts.artifacts.state.state_arc56_client import (
     CallAbiArgs,
     CallWithReferencesArgs,
     DefaultValueArgs,
@@ -29,13 +30,13 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 
 @pytest.fixture
-def state_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> StateFactory:
+def state_factory_arc56(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> StateFactory:
     return algorand.client.get_typed_app_factory(StateFactory, default_sender=default_deployer.address)
 
 
 @pytest.fixture
-def deployed_state_app_client(state_factory: StateFactory) -> StateClient:
-    client, _ = state_factory.deploy(
+def deployed_state_app_client(state_factory_arc56: StateFactory) -> StateClient:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={
             "deploy_time_params": {"VALUE": 1},
             "deletable": True,
@@ -46,8 +47,8 @@ def deployed_state_app_client(state_factory: StateFactory) -> StateClient:
     return client
 
 
-def test_exposes_state_correctly(state_factory: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
-    client, _ = state_factory.deploy(
+def test_exposes_state_correctly(state_factory_arc56: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.send.set_global(args=SetGlobalArgs(int1=1, bytes1="asdf", bytes2=b"\x01\x02\x03\x04", int2=2))
@@ -66,16 +67,23 @@ def test_exposes_state_correctly(state_factory: StateFactory, default_deployer: 
     assert local_state["local_bytes1"] == b"asdf"
     assert local_state["local_bytes2"] == b"\x01\x02\x03\x04"
 
+    # NOTE: Accessors are normalized to snake case, raw keys in the loaded app spec aren't 
+    client.state.global_state.bytes_not_in_snake_case  # Should not throw KeyError
+    client.state.local_state(default_deployer.address).local_bytes_not_in_snake_case # Should not throw KeyError
+    client.state.box.box_map_not_in_snake_case
+    with pytest.raises(AlgodHTTPError, match="box not found"):
+        client.state.box.box_not_in_snake_case
+    
 
-def test_readonly_methods_dont_consume_algos(state_factory: StateFactory) -> None:
-    client, _ = state_factory.deploy(
+def test_readonly_methods_dont_consume_algos(state_factory_arc56: StateFactory) -> None:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
     tx_cost = AlgoAmount.from_micro_algo(1_000)
 
-    low_funds_account = state_factory.algorand.account.random()
-    state_factory.algorand.account.ensure_funded_from_environment(low_funds_account, tx_cost)
+    low_funds_account = state_factory_arc56.algorand.account.random()
+    state_factory_arc56.algorand.account.ensure_funded_from_environment(low_funds_account, tx_cost)
 
     result = client.send.call_abi(
         args=CallAbiArgs(value="oh hi"),
@@ -92,8 +100,8 @@ def test_readonly_methods_dont_consume_algos(state_factory: StateFactory) -> Non
     assert result2.abi_return == "Hello, oh hi 2"
 
 
-def test_arguments_with_defaults(state_factory: StateFactory) -> None:
-    client, _ = state_factory.deploy(
+def test_arguments_with_defaults(state_factory_arc56: StateFactory) -> None:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
@@ -136,8 +144,8 @@ def test_arguments_with_defaults(state_factory: StateFactory) -> None:
     assert local_default.abi_return == "Local state, default value"
 
 
-def test_methods_can_be_composed(state_factory: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
-    client, _ = state_factory.deploy(
+def test_methods_can_be_composed(state_factory_arc56: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.new_group().opt_in.opt_in().set_local(
@@ -151,8 +159,8 @@ def test_methods_can_be_composed(state_factory: StateFactory, default_deployer: 
     assert local_state["local_int2"] == 0
 
 
-def test_call_with_references(state_factory: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
-    client, _ = state_factory.deploy(
+def test_call_with_references(state_factory_arc56: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+    client, _ = state_factory_arc56.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.send.call_with_references(

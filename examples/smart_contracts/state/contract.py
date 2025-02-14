@@ -11,6 +11,7 @@ from algopy import (
     TemplateVar,
     Txn,
     UInt64,
+    Box,
     arc4,
     gtxn,
 )
@@ -34,21 +35,27 @@ class State(ExampleARC4Contract):
     value: UInt64
     bytes1: Bytes
     bytes2: Bytes
+    bytesNotInSnakeCase: Bytes
     int1: UInt64
     int2: UInt64
     local_bytes1: LocalState[Bytes]
     local_bytes2: LocalState[Bytes]
+    localBytesNotInSnakeCase: LocalState[Bytes]
     local_int1: LocalState[UInt64]
     local_int2: LocalState[UInt64]
     box: BoxMap[arc4.StaticArray[arc4.Byte, Literal[4]], arc4.String]
+    boxNotInSnakeCase: Box[arc4.String]
+    boxMapNotInSnakeCase: BoxMap[arc4.StaticArray[arc4.Byte, Literal[4]], arc4.String]
 
     def __init__(self) -> None:
         self.local_int1 = LocalState(UInt64)
         self.local_int2 = LocalState(UInt64)
         self.local_bytes1 = LocalState(Bytes)
         self.local_bytes2 = LocalState(Bytes)
-
+        self.localBytesNotInSnakeCase = LocalState(Bytes)
         self.box = BoxMap(arc4.StaticArray[arc4.Byte, Literal[4]], arc4.String, key_prefix=b"")
+        self.boxNotInSnakeCase = Box(arc4.String, key=b"a")
+        self.boxMapNotInSnakeCase = BoxMap(arc4.StaticArray[arc4.Byte, Literal[4]], arc4.String, key_prefix=b"b")
 
     @arc4.baremethod(create="require", allow_actions=["NoOp", "OptIn"])
     def create(self) -> None:
