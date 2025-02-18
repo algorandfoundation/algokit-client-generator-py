@@ -2,6 +2,29 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0 (2025-02-18)
+
+### Feature
+
+* V2 - leveraging new AlgoKit interfaces and support for algokit-utils-py v3 ([#33](https://github.com/algorandfoundation/algokit-client-generator-py/issues/33)) ([`de55aae`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/de55aaeab9b45753723cfda55bbc058358749bd5))
+
+### Fix
+
+* Update to latest utils to fix state key name normalization issues similarly to utils-ts ([#43](https://github.com/algorandfoundation/algokit-client-generator-py/issues/43)) ([`f7f9078`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/f7f9078998c58a66bbd7adc23a3a132be55f9b48))
+* Correcting the ignore declaration for a more appropriate mypy global ignore ([#41](https://github.com/algorandfoundation/algokit-client-generator-py/issues/41)) ([`83a3836`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/83a383699a9ccd15a72709825d3bd891f5236990))
+* Disable mypy for end user; keep selective ignores for local examples ([#40](https://github.com/algorandfoundation/algokit-client-generator-py/issues/40)) ([`7755be2`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/7755be2708faec9e5cecf9cf04d7151d3ebcda7d))
+* Minor patches in dataclass inheritance; fixes for mypy errors; addressing internal feedback ([#37](https://github.com/algorandfoundation/algokit-client-generator-py/issues/37)) ([`82a1a1c`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/82a1a1c304782877550d2f2ea137787b56b91015))
+* Ensure nested dataclasses in state accessors are loaded properly ([#36](https://github.com/algorandfoundation/algokit-client-generator-py/issues/36)) ([`58f13aa`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/58f13aae382136fb4ce37f1b0c44717e5258d2d3))
+* Extra section in migration for state access; adding @property decorator for direct state access ([#35](https://github.com/algorandfoundation/algokit-client-generator-py/issues/35)) ([`e8b49e5`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/e8b49e57de9cb27fc9ec18a93050929c63e574c4))
+
+### Breaking
+
+* Generator overhaul with ARC-56 support and TypeScript alignment ([`de55aae`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/de55aaeab9b45753723cfda55bbc058358749bd5))
+
+### Documentation
+
+* Patch typo; ignore cd on changes in docs folder only ([#42](https://github.com/algorandfoundation/algokit-client-generator-py/issues/42)) ([`0034c28`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/0034c283fd6597ecfb00a98fbaa9611feb610948))
+
 ## v1.1.7 (2024-08-08)
 
 
