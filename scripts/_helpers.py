@@ -9,9 +9,9 @@ def enable_mypy(approved_path: pathlib.Path) -> None:
     """
     # Read the file text with line endings preserved
     lines = approved_path.read_text().splitlines(keepends=True)
-    assert (
-        lines[2] == "# mypy: ignore-errors\n"
-    ), f"Expected third line to be '# mypy: ignore-errors', got {lines[2]!r} in {approved_path}"
+    assert lines[2] == "# mypy: ignore-errors\n", (
+        f"Expected third line to be '# mypy: ignore-errors', got {lines[2]!r} in {approved_path}"
+    )
     # Replace the third line with the updated mypy comment
     lines[2] = '# mypy: disable-error-code="no-any-return, no-untyped-call, misc, type-arg"\n'
     approved_path.write_text("".join(lines))

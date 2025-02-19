@@ -51,7 +51,7 @@ class {class_name}:
 {method_params}
     self.composer._composer.add_app_{OPERATION_TO_METHOD_CALL_PREFIX[operation]}_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
-            {'args=args,' if method.abi.args else ''}
+            {"args=args," if method.abi.args else ""}
             params=params,
             {compilation_params}
         )
@@ -130,7 +130,7 @@ def {operation}(self) -> "{class_name}":
 {method_params}
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
-            {'args=args, ' if method.abi.args else ''}
+            {"args=args, " if method.abi.args else ""}
             params=params,
         )
     )

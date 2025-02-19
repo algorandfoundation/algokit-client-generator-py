@@ -158,8 +158,12 @@ def _generate_method_body(
 
     call_params = f"""algokit_utils.AppClientMethodCallParams(**{{
         **dataclasses.asdict(params),
-        "method": "{method_sig}",{'''
-        "args": method_args, ''' if include_args else ''}
+        "method": "{method_sig}",{
+        '''
+        "args": method_args, '''
+        if include_args
+        else ""
+    }
     }})"""
     send_params = ", send_params=send_params" if property_type == PropertyType.SEND else ""
     compilation_params = ", compilation_params=compilation_params" if operation == "update" else ""
@@ -222,12 +226,12 @@ def bare(
     self,
     params: algokit_utils.AppClientBareCallParams | None = None,
     send_params: algokit_utils.SendParams | None = None,
-    {'compilation_params: algokit_utils.AppClientCompilationParams | None = None' if operation == 'update' else ''}
+    {"compilation_params: algokit_utils.AppClientCompilationParams | None = None" if operation == "update" else ""}
 ) -> algokit_utils.SendAppTransactionResult:
     return self.app_client.send.bare.{operation}(
         params=params,
         send_params=send_params,
-        {'compilation_params=compilation_params' if operation == 'update' else ''}
+        {"compilation_params=compilation_params" if operation == "update" else ""}
     )
 """)
 
@@ -350,11 +354,11 @@ def {operation}(self) -> "{operation_class}":
 def clear_state(
     self,
     params: algokit_utils.AppClientBareCallParams | None = None,
-    {'send_params: algokit_utils.SendParams | None = None' if property_type == PropertyType.SEND else ''}
+    {"send_params: algokit_utils.SendParams | None = None" if property_type == PropertyType.SEND else ""}
 ) -> {CLEAR_STATE_PROPERTY_TO_RETURN_CLASS[property_type]}:
     return self.app_client.{property_type.value}.bare.clear_state(
         params,
-        {'send_params=send_params,' if property_type == PropertyType.SEND else ''}
+        {"send_params=send_params," if property_type == PropertyType.SEND else ""}
     )
 """)
 
@@ -774,15 +778,15 @@ def _generate_state_class(  # noqa: PLR0913
 class {class_name}:
     def __init__(self, app_client: algokit_utils.AppClient{extra_params}):
         self.app_client = app_client
-        {'self.address = address' if extra_params else ''}
+        {"self.address = address" if extra_params else ""}
         # Pre-generated mapping of value types to their struct classes
         self._struct_classes: dict[str, typing.Type[typing.Any]] = {struct_mapping_str}
 
-    def get_all(self) -> {value_type_name or 'dict[str, typing.Any]'}:
+    def get_all(self) -> {value_type_name or "dict[str, typing.Any]"}:
         \"\"\"Get all current keyed values from {state_type} state\"\"\"
-        result = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_all()
+        result = self.app_client.state.{state_type}{"(self.address)" if extra_params else ""}.get_all()
         if not result:
-            return {'typing.cast(' + value_type_name + ', {})' if value_type_name else '{}'}
+            return {"typing.cast(" + value_type_name + ", {})" if value_type_name else "{}"}
 
         converted = {{}}
         for key, value in result.items():
@@ -792,7 +796,7 @@ class {class_name}:
                 _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
                 else value
             )
-        return {'typing.cast(' + value_type_name + ', converted)' if value_type_name else 'converted'}
+        return {"typing.cast(" + value_type_name + ", converted)" if value_type_name else "converted"}
 """)
 
     # Generate methods for individual keys
@@ -805,7 +809,7 @@ class {class_name}:
                 f"""@property
     def {utils.get_method_name(key_name)}(self) -> {python_type}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
-        value = self.app_client.state.{state_type}{'(self.address)' if extra_params else ''}.get_value("{key_name}")
+        value = self.app_client.state.{state_type}{"(self.address)" if extra_params else ""}.get_value("{key_name}")
         if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes:
             return _init_dataclass(self._struct_classes["{key_info.value_type}"], value)  # type: ignore
         return typing.cast({python_type}, value)
@@ -826,9 +830,9 @@ class {class_name}:
 def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_type}]":
     \"\"\"Get values from the {map_name} map in {state_type} state\"\"\"
     return _MapState(
-        self.app_client.state.{state_type}{'(self.address)' if extra_params else ''},
+        self.app_client.state.{state_type}{"(self.address)" if extra_params else ""},
         "{map_name}",
-        {f'self._struct_classes.get("{map_info.value_type}")' if is_value_struct else 'None'}
+        {f'self._struct_classes.get("{map_info.value_type}")' if is_value_struct else "None"}
     )
 """)
             yield Part.DecIndent
@@ -874,11 +878,11 @@ class {context.contract_name}State:
         decorator = "@property" if state_type != "local_state" else ""
         yield utils.indented(f"""
     {decorator}
-def {state_type.split('_')[0]}{'_state' if state_type != 'box' else ''}(
-    self{', address: str' if state_type == 'local_state' else ''}
+def {state_type.split("_")[0]}{"_state" if state_type != "box" else ""}(
+    self{", address: str" if state_type == "local_state" else ""}
 ) -> "{class_name}":
         \"\"\"Methods to access {state_type} for the current app\"\"\"
-        return {class_name}(self.app_client{', address' if state_type == 'local_state' else ''})
+        return {class_name}(self.app_client{", address" if state_type == "local_state" else ""})
 """)
 
     yield Part.DecIndent
