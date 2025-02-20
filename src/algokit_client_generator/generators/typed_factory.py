@@ -71,7 +71,7 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
 
     yield Part.IncIndent
     yield utils.indented(f"""
-{method_params} -> algokit_utils.App{operation.title()}{'MethodCall' if method.abi else ''}Params:
+{method_params} -> algokit_utils.App{operation.title()}{"MethodCall" if method.abi else ""}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
     params = params or algokit_utils.CommonAppCallCreateParams()
     return self.app_factory.params.{operation}(
@@ -79,10 +79,10 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
             **{{
             **dataclasses.asdict(params),
             "method": "{method_sig}",
-            "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
+            "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
             }}
         ),
-        {'compilation_params=compilation_params' if operation == "create" else ''}
+        {"compilation_params=compilation_params" if operation == "create" else ""}
     )
 """)
     yield Part.DecIndent
@@ -117,7 +117,7 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
                 **{{
                 **dataclasses.asdict(params),
                 "method": "{method.abi.method.get_signature()}",
-                "args": {'_parse_abi_args(args)' if args_type != 'None' else 'None'},
+                "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
                 }}
             ),
             send_params=send_params,
@@ -159,13 +159,13 @@ class {class_name}:
         self,
         *,
         params: algokit_utils.CommonAppCallCreateParams | None = None,
-        {'compilation_params: algokit_utils.AppClientCompilationParams | None = None' if operation == 'create' else '' }
+        {"compilation_params: algokit_utils.AppClientCompilationParams | None = None" if operation == "create" else ""}
     ) -> algokit_utils.App{operation.title()}Params:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
             algokit_utils.{bare_params_class}(**dataclasses.asdict(params)),
-            {'compilation_params=compilation_params' if operation == 'create' else ''})
+            {"compilation_params=compilation_params" if operation == "create" else ""})
 """)
 
     if operation == "create":
@@ -281,13 +281,13 @@ class {class_name}(
         str | None,
     ]
 ):
-    \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract using ABI\"\"\"
+    \"\"\"Parameters for {"creating" if is_create else "calling"} {context.contract_name} contract using ABI\"\"\"
     on_complete: typing.Literal[{on_complete_str}] | None = None
     method: str | None = None
 
-    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params:
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params:
         method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCall{'Create' if is_create else ''}Params(
+        return algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params(
             **{{
                 **self.__dict__,
                 "method": self.method or getattr(self.args, "abi_method_signature", None),
@@ -312,11 +312,11 @@ def _generate_bare_params_class(
     yield utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
 class {class_name}(algokit_utils.{sub_class}):
-    \"\"\"Parameters for {'creating' if is_create else 'calling'} {context.contract_name} contract with bare calls\"\"\"
+    \"\"\"Parameters for {"creating" if is_create else "calling"} {context.contract_name} contract with bare calls\"\"\"
     on_complete: typing.Literal[{on_complete_options}] | None = None
 
-    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCall{'Create' if is_create else ''}Params:
-        return algokit_utils.AppClientBareCall{'Create' if is_create else ''}Params(**self.__dict__)
+    def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCall{"Create" if is_create else ""}Params:
+        return algokit_utils.AppClientBareCall{"Create" if is_create else ""}Params(**self.__dict__)
 """)
 
 
