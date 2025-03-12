@@ -11,12 +11,15 @@ OPERATION_TO_METHOD_CALL_PREFIX = {
     "delete": "delete",
     "opt_in": "call",
     "call": "call",
+    "close_out": "call",
 }
 
 
 def get_operation_composer_class_name(contract_name: str, operation: str) -> str:
     """Get the class name for a specific operation composer"""
-    return f"_{contract_name}{operation.capitalize()}Composer"
+    # Convert snake_case operation to PascalCase (e.g., close_out -> CloseOut)
+    operation_pascal = utils.to_pascal_case(operation)
+    return f"_{contract_name}{operation_pascal}Composer"
 
 
 def generate_operation_composer(
@@ -79,6 +82,9 @@ def generate_composer(context: GeneratorContext) -> DocumentParts:
             m for m in context.methods.all_methods if m.call_config == "call" and "delete_application" in m.on_complete
         ],
         "opt_in": [m for m in context.methods.all_methods if m.call_config == "call" and "opt_in" in m.on_complete],
+        "close_out": [
+            m for m in context.methods.all_methods if m.call_config == "call" and "close_out" in m.on_complete
+        ],
     }
 
     operation_class_names: dict[str, str] = {}
