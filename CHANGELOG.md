@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.1 (2025-03-13)
+
+### Fix
+
+* Ensure close_out calls are generated in composer ([#54](https://github.com/algorandfoundation/algokit-client-generator-py/issues/54)) ([`c96d18a`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/c96d18aeb45780d8a0c23162198e297a0c8ed3d8))
+
 ## v2.0.0 (2025-02-18)
 
 ### Feature
