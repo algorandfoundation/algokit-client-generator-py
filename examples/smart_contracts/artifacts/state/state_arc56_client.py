@@ -2384,7 +2384,7 @@ class _StateDeleteComposer:
         return self.composer
 
 
-class _StateOpt_inComposer:
+class _StateOptInComposer:
     def __init__(self, composer: "StateComposer"):
         self.composer = composer
     def opt_in(
@@ -2423,8 +2423,8 @@ class StateComposer:
         return _StateDeleteComposer(self)
 
     @property
-    def opt_in(self) -> "_StateOpt_inComposer":
-        return _StateOpt_inComposer(self)
+    def opt_in(self) -> "_StateOptInComposer":
+        return _StateOptInComposer(self)
 
     def error(
         self,

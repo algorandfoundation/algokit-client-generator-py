@@ -1032,7 +1032,7 @@ class Arc56TestFactorySendCreate:
             )
 
 
-class _Arc56TestOpt_inComposer:
+class _Arc56TestOptInComposer:
     def __init__(self, composer: "Arc56TestComposer"):
         self.composer = composer
     def opt_in_to_application(
@@ -1063,8 +1063,8 @@ class Arc56TestComposer:
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
-    def opt_in(self) -> "_Arc56TestOpt_inComposer":
-        return _Arc56TestOpt_inComposer(self)
+    def opt_in(self) -> "_Arc56TestOptInComposer":
+        return _Arc56TestOptInComposer(self)
 
     def foo(
         self,

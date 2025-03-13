@@ -1069,7 +1069,7 @@ class StructsFactorySendCreate:
         return StructsClient(result[0]), result[1]
 
 
-class _StructsOpt_inComposer:
+class _StructsOptInComposer:
     def __init__(self, composer: "StructsComposer"):
         self.composer = composer
     def opt_in(
@@ -1100,8 +1100,8 @@ class StructsComposer:
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
-    def opt_in(self) -> "_StructsOpt_inComposer":
-        return _StructsOpt_inComposer(self)
+    def opt_in(self) -> "_StructsOptInComposer":
+        return _StructsOptInComposer(self)
 
     def hello(
         self,
