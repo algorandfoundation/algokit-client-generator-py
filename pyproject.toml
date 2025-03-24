@@ -11,14 +11,14 @@ python = "^3.10"
 algokit-utils = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = ">=0.8.6,<0.10.0"
+ruff = ">=0.8.6,<0.12.0"
 mypy = "*"
 pytest = "*"
 pytest-cov = "*"
 pip-audit = "^2.5.5"
 python-semantic-release = "^7.33.4"
 pre-commit = "^3.3.2"
-poethepoet = ">=0.20,<0.33"
+poethepoet = ">=0.20,<0.34"
 pytest-xdist = "^3.5.0"
 puyapy = { version = "^4.1.1", python = "^3.12" }
 algorand-python = { version = "^2.4.1", python = "^3.12" }

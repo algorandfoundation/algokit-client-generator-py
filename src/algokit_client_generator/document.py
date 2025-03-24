@@ -33,7 +33,7 @@ class RenderContext:
         return self.line_mode_stack[-1]
 
 
-def convert_part_inner(part: DocumentPart, context: RenderContext) -> str | None:  # noqa: PLR0911, C901, PLR0912: ignore[PLR0911]
+def convert_part_inner(part: DocumentPart, context: RenderContext) -> str | None:  # noqa: PLR0911, C901, PLR0912 #  type: ignore[PLR0911]
     match part:
         case Part.IncIndent:
             context.indent += context.indent_inc
