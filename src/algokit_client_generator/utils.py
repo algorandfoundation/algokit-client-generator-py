@@ -169,7 +169,7 @@ def get_struct_name(struct_name: str) -> str:
     return sanitizer.make_safe_type_identifier(cleaned)
 
 
-def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901, PLR0912: ignore[PLR0911]
+def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901, PLR0912  # type: ignore[PLR0911]
     match abi_type:
         case abi.UintType():
             return "int"
