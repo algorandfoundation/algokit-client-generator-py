@@ -123,7 +123,7 @@ def test_arc56_demo(
     assert client.state.global_state.global_map.get_value("foo") == FooUint16BarUint16(foo=13, bar=37)
 
     client.app_client.fund_app_account(FundAppAccountParams(amount=AlgoAmount.from_micro_algo(1_000_000)))
-    client.send.opt_in.opt_in_to_application(send_params={"populate_app_call_resources": True})
+    client.send.opt_in.opt_in_to_application()
     assert client.state.local_state(default_deployer.address).local_key == 1337
     assert client.state.local_state(default_deployer.address).local_map.get_value(b"foo") == "bar"
     client.state.box.box_map.get_value

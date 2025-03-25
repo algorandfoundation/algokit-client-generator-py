@@ -55,7 +55,7 @@ def test_nested_structs_from_state_are_dataclasses(
 
     client.algorand.account.ensure_funded_from_environment(client.app_address, AlgoAmount.from_algo(10))
 
-    client.send.opt_in.opt_in(send_params={"populate_app_call_resources": True})
+    client.send.opt_in.opt_in()
     all_local_state = client.state.local_state(default_deployer.address).get_all()
     local_state = client.state.local_state(default_deployer.address).my_localstate_struct
 
