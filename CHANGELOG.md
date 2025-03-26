@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.1.0 (2025-03-26)
+
+### Feature
+
+* Bump utils dependency to v4 ([`386539b`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/386539b0e2c5fb6111b2d7617230ccd2cc58cb12))
+
 ## v2.0.1 (2025-03-13)
 
 ### Fix
