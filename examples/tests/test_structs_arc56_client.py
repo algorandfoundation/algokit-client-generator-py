@@ -95,6 +95,7 @@ def test_nested_structs_from_state_are_dataclasses(
     assert nested_box_map_struct.nested.content.x == "1"
     assert nested_box_map_struct.nested.content.y == "2"
 
+
 def test_struct_with_name_variation(my_test_factory: StructsFactory) -> None:
     client, _ = my_test_factory.deploy()
     struct = client.send.give_me_struct_with_name_variations().abi_return

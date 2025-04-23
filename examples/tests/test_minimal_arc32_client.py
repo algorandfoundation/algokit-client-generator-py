@@ -1,7 +1,7 @@
 import algokit_utils
 import pytest
-from algokit_utils.models import AlgoAmount
 from algokit_utils import AlgorandClient
+from algokit_utils.models import AlgoAmount
 
 from examples.smart_contracts.artifacts.minimal.minimal_arc32_client import MinimalFactory
 
@@ -14,12 +14,8 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 
 @pytest.fixture
-def minimal_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> MinimalFactory:
-    return algorand.client.get_typed_app_factory(
-        MinimalFactory, default_sender=default_deployer.address
-    )
+def minimal_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> MinimalFactory:
+    return algorand.client.get_typed_app_factory(MinimalFactory, default_sender=default_deployer.address)
 
 
 def test_delete(minimal_factory: MinimalFactory) -> None:
