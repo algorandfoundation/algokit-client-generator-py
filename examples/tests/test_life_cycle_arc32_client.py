@@ -107,6 +107,7 @@ def test_deploy_create_2arg(lifecycle_factory: LifeCycleFactory) -> None:
     assert call_response.abi_return
     assert call_response.abi_return == "Deploy Greetings, 2 Arg\nDeploy Greetings, 2 Arg\n"
 
+
 def test_operation_methods_exist_in_composer(lifecycle_factory: LifeCycleFactory) -> None:
     client, _ = lifecycle_factory.deploy(
         create_params=LifeCycleMethodCallCreateParams(

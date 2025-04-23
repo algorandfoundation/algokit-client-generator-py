@@ -96,12 +96,14 @@ lint.ignore = [
   "Q002", # bad quotes docstring
   "Q003", # avoidable escaped quotes
   "W191", # indentation contains tabs
+  "B018", # found useless expression
+  "N815", # mixed case variable in class scope
+  "N801", # invalid class name
+  "PGH004", # blanket noqa
 ]
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
   "docs",
-  # Exclude examples as it deals with pregenerated code.
-  "examples"
 ]
 # Assume Python 3.10.
 target-version = "py310"

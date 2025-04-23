@@ -1,14 +1,14 @@
 import algokit_utils
 import pytest
+from algokit_utils import AlgorandClient, CommonAppCallParams
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algokit_utils import AlgorandClient, CommonAppCallParams
 
 from examples.smart_contracts.artifacts.hello_world.hello_world_arc32_client import (
     HelloArgs,
+    HelloWorldCheckArgs,
     HelloWorldClient,
     HelloWorldFactory,
-    HelloWorldCheckArgs,
 )
 
 
@@ -20,12 +20,8 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 
 @pytest.fixture
-def helloworld_factory(
-    algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount
-) -> HelloWorldFactory:
-    return algorand.client.get_typed_app_factory(
-        HelloWorldFactory, default_sender=default_deployer.address
-    )
+def helloworld_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> HelloWorldFactory:
+    return algorand.client.get_typed_app_factory(HelloWorldFactory, default_sender=default_deployer.address)
 
 
 def test_calls_hello(helloworld_factory: HelloWorldFactory) -> None:
@@ -34,7 +30,7 @@ def test_calls_hello(helloworld_factory: HelloWorldFactory) -> None:
             "deletable": True,
             "updatable": True,
         },
-        on_update=OnUpdate.UpdateApp
+        on_update=OnUpdate.UpdateApp,
     )
 
     # Test with dict args
@@ -58,9 +54,7 @@ def test_composer_with_manual_transaction(
     client, _ = helloworld_factory.deploy()
 
     # Create transactions to add manually
-    transactions = client.create_transaction.hello_world_check(
-        args=HelloWorldCheckArgs(name="World")
-    )
+    transactions = client.create_transaction.hello_world_check(args=HelloWorldCheckArgs(name="World"))
 
     # Get client from creator and name
     client2 = algorand.client.get_typed_app_client_by_creator_and_name(

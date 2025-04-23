@@ -4,6 +4,7 @@ from algopy import (
     Account,
     Application,
     Asset,
+    Box,
     BoxMap,
     Bytes,
     LocalState,
@@ -11,7 +12,6 @@ from algopy import (
     TemplateVar,
     Txn,
     UInt64,
-    Box,
     arc4,
     gtxn,
 )

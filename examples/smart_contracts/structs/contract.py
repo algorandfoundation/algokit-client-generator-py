@@ -46,7 +46,9 @@ class Structs(ARC4Contract):
 
     @arc4.abimethod()
     def give_me_struct_with_name_variations(self) -> Struct_WithNameVariations:
-        return Struct_WithNameVariations(first_VariatIon=arc4.String("1"), secondVariation=arc4.String("2"), third_variation=arc4.String("3"))
+        return Struct_WithNameVariations(
+            first_VariatIon=arc4.String("1"), secondVariation=arc4.String("2"), third_variation=arc4.String("3")
+        )
 
     @arc4.abimethod(allow_actions=["OptIn"])
     def opt_in(self) -> None:

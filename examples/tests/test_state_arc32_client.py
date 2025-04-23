@@ -46,7 +46,9 @@ def deployed_state_app_client(state_factory_arc32: StateFactory) -> StateClient:
     return client
 
 
-def test_exposes_state_correctly(state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+def test_exposes_state_correctly(
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
@@ -66,10 +68,10 @@ def test_exposes_state_correctly(state_factory_arc32: StateFactory, default_depl
     assert local_state["local_bytes1"] == b"asdf"
     assert local_state["local_bytes2"] == b"\x01\x02\x03\x04"
 
-    # NOTE: Accessors are normalized to snake case, raw keys in the loaded app spec aren't 
-    client.state.global_state.bytes_not_in_snake_case  
+    # NOTE: Accessors are normalized to snake case, raw keys in the loaded app spec aren't
+    client.state.global_state.bytes_not_in_snake_case
     client.state.local_state(default_deployer.address).local_bytes_not_in_snake_case
-    # NOTE: Arc 32 loses the info on box states during arc56 conversion hence no explicit box accessor 
+    # NOTE: Arc 32 loses the info on box states during arc56 conversion hence no explicit box accessor
     # gets generated
 
 
@@ -142,7 +144,9 @@ def test_arguments_with_defaults(state_factory_arc32: StateFactory) -> None:
     assert local_default.abi_return == "Local state, default value"
 
 
-def test_methods_can_be_composed(state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+def test_methods_can_be_composed(
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
@@ -157,7 +161,9 @@ def test_methods_can_be_composed(state_factory_arc32: StateFactory, default_depl
     assert local_state["local_int2"] == 0
 
 
-def test_call_with_references(state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount) -> None:
+def test_call_with_references(
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
