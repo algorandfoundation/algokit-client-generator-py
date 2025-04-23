@@ -47,7 +47,7 @@ def main() -> None:
                     f"--out-dir={app_artifacts}",
                     "--no-output-teal",
                     "--no-output-source-map",
-                    *options
+                    *options,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
