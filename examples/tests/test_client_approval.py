@@ -5,7 +5,7 @@ This is similar to the TypeScript approval-tests.spec.ts.
 
 import importlib
 import pathlib
-from typing import Any
+from types import ModuleType
 
 import pytest
 
@@ -35,7 +35,7 @@ def get_artifacts_path() -> pathlib.Path:
     return pathlib.Path(__file__).parent.parent / "smart_contracts" / "artifacts"
 
 
-def import_client_module(app_name: str, extension: str, mode: str = "full") -> Any:
+def import_client_module(app_name: str, extension: str, mode: str = "full") -> ModuleType:
     """Dynamically import a client module."""
     if mode == "minimal":
         # For minimal clients, we need to construct a proper module name

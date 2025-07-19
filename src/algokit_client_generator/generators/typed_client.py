@@ -8,6 +8,7 @@ import algosdk
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
+from algokit_client_generator.generators.helpers import get_abi_method_operations
 from algokit_client_generator.spec import ABIStruct, ContractMethod
 
 APPL_TYPE_TXNS = [algosdk.abi.ABITransactionType.APPL, algosdk.abi.ABITransactionType.ANY]
@@ -267,22 +268,7 @@ def _generate_class_methods(
 ) -> Iterator[DocumentParts]:
     """Generate methods for a given class type"""
 
-    # Generate operation classes first
-    operations = {}
-    if context.mode == "full":
-        operations["update"] = [
-            m for m in context.methods.all_methods if m.call_config == "call" and "update_application" in m.on_complete
-        ]
-        operations["delete"] = [
-            m for m in context.methods.all_methods if m.call_config == "call" and "delete_application" in m.on_complete
-        ]
-
-    operations["opt_in"] = [
-        m for m in context.methods.all_methods if m.call_config == "call" and "opt_in" in m.on_complete
-    ]
-    operations["close_out"] = [
-        m for m in context.methods.all_methods if m.call_config == "call" and "close_out" in m.on_complete
-    ]
+    operations = get_abi_method_operations(context)
 
     # Generate all operation classes first
     operation_class_names = {}
