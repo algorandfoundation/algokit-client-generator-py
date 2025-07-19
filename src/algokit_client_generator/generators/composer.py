@@ -74,18 +74,21 @@ def generate_composer(context: GeneratorContext) -> DocumentParts:
     """Generate the composer class for creating transaction groups"""
 
     # First generate operation classes
-    operations = {
-        "update": [
+    operations = {}
+    if context.mode == "full":
+        operations["update"] = [
             m for m in context.methods.all_methods if m.call_config == "call" and "update_application" in m.on_complete
-        ],
-        "delete": [
+        ]
+        operations["delete"] = [
             m for m in context.methods.all_methods if m.call_config == "call" and "delete_application" in m.on_complete
-        ],
-        "opt_in": [m for m in context.methods.all_methods if m.call_config == "call" and "opt_in" in m.on_complete],
-        "close_out": [
-            m for m in context.methods.all_methods if m.call_config == "call" and "close_out" in m.on_complete
-        ],
-    }
+        ]
+
+    operations["opt_in"] = [
+        m for m in context.methods.all_methods if m.call_config == "call" and "opt_in" in m.on_complete
+    ]
+    operations["close_out"] = [
+        m for m in context.methods.all_methods if m.call_config == "call" and "close_out" in m.on_complete
+    ]
 
     operation_class_names: dict[str, str] = {}
     for operation, methods in operations.items():
@@ -122,6 +125,11 @@ def {operation}(self) -> "{class_name}":
     # Generate methods for no_op ABI calls
     for method in context.methods.all_abi_methods:
         if not method.abi or "no_op" not in method.on_complete:
+            continue
+
+        if context.mode == "minimal" and (
+            method.call_config == "create" or method.on_complete in (["update_application"], ["delete_application"])
+        ):
             continue
 
         method_params, has_args = _generate_common_method_params(

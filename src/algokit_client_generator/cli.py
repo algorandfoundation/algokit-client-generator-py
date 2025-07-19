@@ -40,6 +40,14 @@ def get_args_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Preserve original names for structs and methods",
     )
+    parser.add_argument(
+        "-m",
+        "--mode",
+        choices=["full", "minimal"],
+        default="full",
+        help="Generate client in specified mode. The 'full' mode includes all features, "
+        "'minimal' generates a smaller client without deployment features",
+    )
     return parser
 
 
@@ -47,12 +55,12 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
-def walk_dir(path: Path, output: Path) -> None:
+def walk_dir(path: Path, output: Path, *, preserve_names: bool = False, mode: str = "full") -> None:
     for child in path.iterdir():
         if child.is_dir():
-            walk_dir(child, output)
+            walk_dir(child, output, preserve_names=preserve_names, mode=mode)
         elif child.name.lower() == "application.json":
-            generate_client(child, child.parent / output)
+            generate_client(child, child.parent / output, preserve_names=preserve_names, mode=mode)
 
 
 def process(parser: argparse.ArgumentParser) -> None:
@@ -69,13 +77,13 @@ def process(parser: argparse.ArgumentParser) -> None:
             )
         if output.is_absolute():
             raise ArgumentError(f"Output must be a relative path when using the --walk option: {output}")
-        walk_dir(args.app_spec, args.output)
+        walk_dir(args.app_spec, args.output, preserve_names=args.preserve_names, mode=args.mode)
     elif len(sys.argv) == 1:  # if user invokes with no arguments display help
         parser.print_usage()
     else:
         if not app_spec.is_file():
             raise ArgumentError(f"Application Specification must be a path to an application.json: {app_spec}")
-        generate_client(app_spec, output, preserve_names=args.preserve_names)
+        generate_client(app_spec, output, preserve_names=args.preserve_names, mode=args.mode)
 
 
 def main() -> None:

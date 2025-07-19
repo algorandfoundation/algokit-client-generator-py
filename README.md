@@ -34,6 +34,33 @@ Or if you have [AlgoKit](https://github.com/algorandfoundation/algokit-cli) 1.1+
 algokit generate client path/to/application.json --output path/to/output/client_generated.py
 ```
 
+### Generation modes
+
+The generator supports two modes:
+
+#### Full mode (default)
+
+```bash
+algokitgen-py path/to/application.json path/to/output/client_generated.py
+```
+
+-   Includes factory class for creating and deploying smart contracts
+-   Includes deployment types and methods
+-   Includes all deployment-related metadata (source code, bytecode, template variables)
+-   Includes client class for interacting with already deployed contracts
+-   Best for development, deployment and interaction workflows or where output size is less important
+
+#### Minimal mode
+
+```bash
+algokitgen-py path/to/application.json path/to/output/client_generated.py --mode minimal
+```
+
+-   Excludes factory class and deployment capabilities
+-   Excludes deployment-related metadata to reduce output size
+-   Only includes client class for interacting with already deployed contracts
+-   Best for scenarios that only need to interact with existing contracts
+
 ## Examples
 
 There are a range of [examples](./examples) that you can look at to see a source smart contract (e.g. `{app_name}/contract.py`), the generated client (`artifacts/{app_name}/{app_name}_client.py`) and some tests that demonstrate how you can use the client (`tests/{app_name}_test_client.py`).
@@ -78,7 +105,7 @@ Some contracts are directly imported through the ARC-32/56 app spec and not thro
 
 If you want to make changes to any of the smart contract examples and re-generate the ARC-32/56 JSON specs files then change the corresponding `examples/smart_contracts/{app_name}/contract.py` file and then run:
 
-```
+```bash
 poetry run python -m examples
 ```
 
