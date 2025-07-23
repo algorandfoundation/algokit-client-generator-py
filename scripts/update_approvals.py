@@ -26,15 +26,24 @@ def update_approvals() -> None:
         "zero_coupon_bond",
     ]
 
-    for app, extension in chain(product(arc32_apps, ["arc32"]), product(arc56_apps, ["arc56"])):
+    # Generate both full and minimal clients for each app
+    modes = ["full", "minimal"]
+
+    for app, extension, mode in chain(product(arc32_apps, ["arc32"], modes), product(arc56_apps, ["arc56"], modes)):
         app_path = artifacts / app
         app_spec = app_path / f"{to_pascal_case(app)}.{extension}.json"
-        approved_path = app_path / f"{to_snake_case(app)}_{extension}_client.py"
+
+        # Generate filename based on mode
+        if mode == "minimal":
+            approved_path = app_path / f"{to_snake_case(app)}_{extension}_client_minimal.py"
+        else:
+            approved_path = app_path / f"{to_snake_case(app)}_{extension}_client.py"
+
         try:
-            generate_client(app_spec, approved_path)
+            generate_client(app_spec, approved_path, mode=mode)
             enable_mypy(approved_path)
         except Exception as e:
-            print(f"Error generating client for {app}: {e}")
+            print(f"Error generating {mode} client for {app}: {e}")
 
 
 if __name__ == "__main__":

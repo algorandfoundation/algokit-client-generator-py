@@ -32,7 +32,8 @@ def generate(context: GeneratorContext) -> DocumentParts:
     yield generate_helpers(context)
     yield Part.Gap2
     yield generate_typed_client(context)
-    yield Part.Gap2
-    yield generate_typed_factory(context)
+    if context.mode == "full":
+        yield Part.Gap2
+        yield generate_typed_factory(context)
     yield Part.Gap2
     yield generate_composer(context)

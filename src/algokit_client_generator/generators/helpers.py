@@ -1,6 +1,7 @@
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
+from algokit_client_generator.spec import ContractMethod
 
 
 def generate_abi_args_parser(indent_size: int = 4) -> DocumentParts:
@@ -69,3 +70,23 @@ def generate_helpers(context: GeneratorContext) -> DocumentParts:
     yield Part.Gap1
     yield generate_dataclass_initializer(context)
     yield Part.Gap1
+
+
+def get_abi_method_operations(context: GeneratorContext) -> dict[str, list[ContractMethod]]:
+    operations = {}
+    if context.mode == "full":
+        operations["update"] = [
+            m for m in context.methods.all_methods if m.call_config == "call" and "update_application" in m.on_complete
+        ]
+        operations["delete"] = [
+            m for m in context.methods.all_methods if m.call_config == "call" and "delete_application" in m.on_complete
+        ]
+
+    operations["opt_in"] = [
+        m for m in context.methods.all_methods if m.call_config == "call" and "opt_in" in m.on_complete
+    ]
+    operations["close_out"] = [
+        m for m in context.methods.all_methods if m.call_config == "call" and "close_out" in m.on_complete
+    ]
+
+    return operations
