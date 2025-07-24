@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.2.0 (2025-07-24)
+
+### Feature
+
+* Add support for generating a minimal client ([#76](https://github.com/algorandfoundation/algokit-client-generator-py/issues/76)) ([`8dbfa88`](https://github.com/algorandfoundation/algokit-client-generator-py/commit/8dbfa889cb4cca3c3f3bebcb6905e8240734f052))
+
 ## v2.1.0 (2025-03-26)
 
 ### Feature
