@@ -19,8 +19,12 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
 
     def convert_dataclass(value: object) -> object:
         if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
+            # Leave transaction params/arguments intact so composer can extract them correctly
+            if value.__class__.__module__.startswith("algokit_utils.transactions"):
+                return value
+            if not isinstance(value, Transaction):
+                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        if isinstance(value, (list, tuple)):
             return type(value)(convert_dataclass(item) for item in value)
         return value
 
@@ -28,14 +32,15 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
         case tuple():
             method_args = list(args)
         case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+            # If the args object is a transaction argument, pass it through directly
+            if args.__class__.__module__.startswith("algokit_utils.transactions"):
+                method_args = [args]
+            else:
+                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
 """,
         indent_size=indent_size,
     )

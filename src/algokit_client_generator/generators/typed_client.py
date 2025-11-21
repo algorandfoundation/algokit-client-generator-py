@@ -3,7 +3,7 @@
 from collections.abc import Generator, Iterator
 from enum import Enum
 
-import algosdk
+import algokit_algosdk as algosdk
 
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext

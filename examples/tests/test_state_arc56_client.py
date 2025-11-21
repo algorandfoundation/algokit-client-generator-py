@@ -2,10 +2,10 @@
 import algokit_utils
 import algokit_utils.applications
 import pytest
+from algokit_algod_client.exceptions import UnexpectedStatusError
 from algokit_utils import AlgorandClient, CommonAppCallParams
 from algokit_utils.applications import OnUpdate
 from algokit_utils.models import AlgoAmount
-from algosdk.error import AlgodHTTPError
 
 from examples.smart_contracts.artifacts.state.state_arc56_client import (
     CallAbiArgs,
@@ -73,7 +73,7 @@ def test_exposes_state_correctly(
     client.state.global_state.bytes_not_in_snake_case  # Should not throw KeyError
     client.state.local_state(default_deployer.address).local_bytes_not_in_snake_case  # Should not throw KeyError
     client.state.box.box_map_not_in_snake_case
-    with pytest.raises(AlgodHTTPError, match="box not found"):
+    with pytest.raises(UnexpectedStatusError, match="box not found"):
         client.state.box.box_not_in_snake_case
 
 
@@ -82,7 +82,7 @@ def test_readonly_methods_dont_consume_algos(state_factory_arc56: StateFactory) 
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
-    tx_cost = AlgoAmount.from_micro_algo(1_000)
+    tx_cost = AlgoAmount.from_algo(1)
 
     low_funds_account = state_factory_arc56.algorand.account.random()
     state_factory_arc56.algorand.account.ensure_funded_from_environment(low_funds_account, tx_cost)

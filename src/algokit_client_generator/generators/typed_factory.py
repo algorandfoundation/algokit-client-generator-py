@@ -263,7 +263,7 @@ def _generate_abi_params_class(
 
     # Get unique on_complete values
     on_completes = {
-        f"OnComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}OC"
+        f"OnApplicationComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}"
         for method in abi_methods
         for on_complete in method.on_complete
     }
@@ -302,7 +302,7 @@ def _generate_bare_params_class(
 ) -> Iterator[DocumentParts]:
     """Generate bare params class with proper indentation"""
     on_complete_options = ", ".join(
-        f"OnComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}OC"
+        f"OnApplicationComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}"
         for method in bare_methods
         for on_complete in method.on_complete
     )

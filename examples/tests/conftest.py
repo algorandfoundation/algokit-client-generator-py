@@ -2,7 +2,7 @@ import uuid
 
 import algokit_utils
 import pytest
-from algosdk.v2client.algod import AlgodClient
+from algokit_algod_client import AlgodClient
 
 
 def get_unique_name() -> str:

@@ -80,7 +80,7 @@ def test_readonly_methods_dont_consume_algos(state_factory_arc32: StateFactory) 
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
 
-    tx_cost = AlgoAmount.from_micro_algo(1_000)
+    tx_cost = AlgoAmount.from_algo(1)
 
     low_funds_account = state_factory_arc32.algorand.account.random()
     state_factory_arc32.algorand.account.ensure_funded_from_environment(low_funds_account, tx_cost)

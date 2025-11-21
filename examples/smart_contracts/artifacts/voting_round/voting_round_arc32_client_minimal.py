@@ -8,16 +8,15 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+import algokit_algosdk as algosdk
+from algokit_algosdk.source_map import SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
 _APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication"], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "signature"}], "name": "get_preconditions", "returns": {"type": "(uint64,uint64,uint64,uint64)", "struct": "VotingPreconditions"}, "events": [], "readonly": true}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "vote_id"}, {"type": "byte[]", "name": "snapshot_public_key"}, {"type": "string", "name": "metadata_ipfs_cid"}, {"type": "uint64", "name": "start_time"}, {"type": "uint64", "name": "end_time"}, {"type": "uint8[]", "name": "option_counts"}, {"type": "uint64", "name": "quorum"}, {"type": "string", "name": "nft_image_url"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}], "name": "bootstrap", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "close", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}, {"type": "byte[]", "name": "signature"}, {"type": "uint8[]", "name": "answer_ids"}], "name": "vote", "returns": {"type": "void"}, "events": []}], "name": "VotingRound", "state": {"keys": {"box": {}, "global": {"close_time": {"key": "Y2xvc2VfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the time the vote was closed"}, "end_time": {"key": "ZW5kX3RpbWU=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the ending time of voting_round"}, "is_bootstrapped": {"key": "aXNfYm9vdHN0cmFwcGVk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "Whether or not the contract has been bootstrapped with answers"}, "metadata_ipfs_cid": {"key": "bWV0YWRhdGFfaXBmc19jaWQ=", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS content ID of the voting_round metadata file"}, "nft_asset_id": {"key": "bmZ0X2Fzc2V0X2lk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The asset ID of a result NFT if one has been created"}, "nft_image_url": {"key": "bmZ0X2ltYWdlX3VybA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS URL of the default image to use as the media of the result NFT"}, "option_counts": {"key": "b3B0aW9uX2NvdW50cw==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The number of options for each question"}, "quorum": {"key": "cXVvcnVt", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters to reach quorum"}, "snapshot_public_key": {"key": "c25hcHNob3RfcHVibGljX2tleQ==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The public key of the Ed25519 compatible private key that was used to encrypt entries in the vote gating snapshot"}, "start_time": {"key": "c3RhcnRfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the starting time of voting_round"}, "total_options": {"key": "dG90YWxfb3B0aW9ucw==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The total number of options"}, "vote_id": {"key": "dm90ZV9pZA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The identifier of this voting_round round"}, "voter_count": {"key": "dm90ZXJfY291bnQ=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters who have voted"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 5, "ints": 8}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"VotingPreconditions": [{"name": "is_voting_open", "type": "uint64"}, {"name": "is_allowed_to_vote", "type": "uint64"}, {"name": "has_already_voted", "type": "uint64"}, {"name": "current_time", "type": "uint64"}]}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
@@ -29,8 +28,12 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
 
     def convert_dataclass(value: object) -> object:
         if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
+            # Leave transaction params/arguments intact so composer can extract them correctly
+            if value.__class__.__module__.startswith("algokit_utils.transactions"):
+                return value
+            if not isinstance(value, Transaction):
+                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        if isinstance(value, (list, tuple)):
             return type(value)(convert_dataclass(item) for item in value)
         return value
 
@@ -38,14 +41,15 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
         case tuple():
             method_args = list(args)
         case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+            # If the args object is a transaction argument, pass it through directly
+            if args.__class__.__module__.startswith("algokit_utils.transactions"):
+                method_args = [args]
+            else:
+                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
 
 def _init_dataclass(cls: type, data: dict) -> object:
     """

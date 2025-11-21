@@ -8,16 +8,15 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+import algokit_algosdk as algosdk
+from algokit_algosdk.source_map import SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
 _APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_struct_with_name_variations", "returns": {"type": "(string,string,string)", "struct": "Struct_WithNameVariations"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}, "struct_with_name_variations": {"key": "c3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25z", "keyType": "AVMString", "valueType": "Struct_WithNameVariations"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Struct_WithNameVariations": [{"name": "first_VariatIon", "type": "string"}, {"name": "secondVariation", "type": "string"}, {"name": "third_variation", "type": "string"}], "Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "events": [], "networks": {}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [221, 252, 282], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [209], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [311], "errorMessage": "can only call when creating"}, {"pc": [212, 224, 255, 285], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
@@ -29,8 +28,12 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
 
     def convert_dataclass(value: object) -> object:
         if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
+            # Leave transaction params/arguments intact so composer can extract them correctly
+            if value.__class__.__module__.startswith("algokit_utils.transactions"):
+                return value
+            if not isinstance(value, Transaction):
+                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
+        if isinstance(value, (list, tuple)):
             return type(value)(convert_dataclass(item) for item in value)
         return value
 
@@ -38,14 +41,15 @@ def _parse_abi_args(args: object | None = None) -> list[object] | None:
         case tuple():
             method_args = list(args)
         case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
+            # If the args object is a transaction argument, pass it through directly
+            if args.__class__.__module__.startswith("algokit_utils.transactions"):
+                method_args = [args]
+            else:
+                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
         case _:
             raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
 
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
+    return [convert_dataclass(arg) for arg in method_args] if method_args else None
 
 def _init_dataclass(cls: type, data: dict) -> object:
     """

@@ -8,14 +8,13 @@ def generate_imports(context: GeneratorContext) -> DocumentParts:
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+import algokit_algosdk as algosdk
+from algokit_algosdk.source_map import SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 """)
