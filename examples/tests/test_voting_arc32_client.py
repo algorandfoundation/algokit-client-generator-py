@@ -5,15 +5,15 @@ import random
 import uuid
 from dataclasses import dataclass
 
+import algokit_algosdk as algosdk
 import algokit_utils
 import algokit_utils.applications
 import algokit_utils.transactions
-import algosdk
 import pytest
+from algokit_algod_client import AlgodClient
 from algokit_utils import AlgorandClient, CommonAppCallCreateParams, CommonAppCallParams
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
-from algosdk.v2client.algod import AlgodClient
 from nacl.signing import SigningKey
 
 from examples.smart_contracts.artifacts.voting_round.voting_round_arc32_client import (
@@ -73,10 +73,10 @@ def random_voting_round_app(
     voting_factory: VotingRoundFactory, default_deployer: algokit_utils.SigningAccount
 ) -> RandomVotingAppDeployment:
     algod = voting_factory.algorand.client.algod
-    status = algod.status()
-    last_round = status["last-round"]
-    last_round = algod.block_info(last_round)
-    current_time = last_round["block"]["ts"]
+    status = algod.get_status()
+    last_round = status.last_round
+    block = algod.get_block(last_round)
+    current_time = block.block.timestamp or 0
 
     voter = default_deployer
     quorum = random.randint(1, 1000)

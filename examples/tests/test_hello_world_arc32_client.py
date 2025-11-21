@@ -91,7 +91,9 @@ def test_simulate_hello(helloworld_factory: HelloWorldFactory) -> None:
 
     assert response.returns[0].value == "Hello, mate"
     assert response.simulate_response
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
+    budget = response.simulate_response.txn_groups[0].app_budget_consumed
+    assert budget is not None
+    assert budget < 50
 
 
 def test_can_be_cloned(helloworld_factory: HelloWorldFactory) -> None:

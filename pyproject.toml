@@ -7,8 +7,8 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-algokit-utils = "^4.0.1"
+python = ">=3.10,<3.11"
+algokit-utils = {path = "../../dist/algokit_utils-4.2.2-py3-none-any.whl"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.8.6,<0.13.0"
@@ -147,4 +147,3 @@ upload_to_repository = false
 tag_commit = true
 branch = "main"
 commit_message = "{version}\n\nskip-checks: true"
-

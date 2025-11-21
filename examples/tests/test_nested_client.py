@@ -23,7 +23,9 @@ def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
 
 @pytest.fixture
 def nested_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> NestedFactory:
-    return algorand.client.get_typed_app_factory(NestedFactory, default_sender=default_deployer.address)
+    return algorand.client.get_typed_app_factory(
+        NestedFactory, default_sender=default_deployer.address, default_signer=default_deployer.signer
+    )
 
 
 def test_nested_method_call_with_obj_args_without_pay_txn(

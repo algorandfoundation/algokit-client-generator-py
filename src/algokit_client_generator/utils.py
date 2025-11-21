@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING, Protocol
 
-from algosdk import abi
+from algokit_algosdk import abi
 
 from algokit_client_generator.document import DocumentParts, Part
 

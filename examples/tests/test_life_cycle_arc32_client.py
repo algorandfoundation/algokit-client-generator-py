@@ -1,6 +1,6 @@
 import algokit_utils
-import algosdk
 import pytest
+from algokit_transact import OnApplicationComplete
 from algokit_utils import AlgorandClient, CommonAppCallCreateParams, OperationPerformed
 from algokit_utils.models import AlgoAmount
 
@@ -27,7 +27,8 @@ def lifecycle_factory(algorand: AlgorandClient, default_deployer: algokit_utils.
 
 def test_create_bare(lifecycle_factory: LifeCycleFactory) -> None:
     client, create_result = lifecycle_factory.send.create.bare(compilation_params={"updatable": True})
-    assert create_result.transaction.application_call.on_complete == algosdk.transaction.OnComplete.NoOpOC
+    assert create_result.transaction.app_call
+    assert create_result.transaction.app_call.on_complete == OnApplicationComplete.NoOp
 
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="Bare"))
     assert response.abi_return == "Hello, Bare\n"
@@ -35,10 +36,11 @@ def test_create_bare(lifecycle_factory: LifeCycleFactory) -> None:
 
 def test_create_bare_optin(lifecycle_factory: LifeCycleFactory) -> None:
     client, create_result = lifecycle_factory.send.create.bare(
-        params=CommonAppCallCreateParams(on_complete=algosdk.transaction.OnComplete.OptInOC),
+        params=CommonAppCallCreateParams(on_complete=OnApplicationComplete.OptIn),
         compilation_params={"updatable": True},
     )
-    assert create_result.transaction.application_call.on_complete == algosdk.transaction.OnComplete.OptInOC
+    assert create_result.transaction.app_call
+    assert create_result.transaction.app_call.on_complete == OnApplicationComplete.OptIn
 
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="Bare"))
     assert response.abi_return == "Hello, Bare\n"
