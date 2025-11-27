@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from enum import Enum
 
 
-class Part(Enum):
+class Part(str, Enum):
     IncIndent = "IncIndent"
     DecIndent = "DecIndent"
     Indent = "Indent"
@@ -15,7 +15,7 @@ class Part(Enum):
 
 
 DocumentPart = str | Part
-DocumentParts = DocumentPart | Iterable["DocumentParts"]
+DocumentParts = Iterable[DocumentPart]
 _MINIMUM_RENDERED_LENGTH = 5
 
 
@@ -75,18 +75,9 @@ def convert_part_inner(part: DocumentPart, context: RenderContext) -> str | None
             raise Exception(f"Unexpected part: {unknown}")
 
 
-def expand_parts(parts: DocumentParts) -> Iterable[DocumentPart]:
-    match parts:
-        case str() | Part():
-            yield parts
-        case _:
-            for part in parts:
-                yield from expand_parts(part)
-
-
 def convert_part(parts: DocumentParts, context: RenderContext) -> list[str]:
     results = []
-    for part in expand_parts(parts):
+    for part in parts:
         result = convert_part_inner(part, context)
         context.last_part = part
         if result is not None:

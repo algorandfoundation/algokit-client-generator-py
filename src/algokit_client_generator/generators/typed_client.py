@@ -1,6 +1,5 @@
 # /generators/typed_client.py
 
-from collections.abc import Generator, Iterator
 from enum import Enum
 
 import algokit_algosdk as algosdk
@@ -187,10 +186,10 @@ def generate_operation_class(
     property_type: PropertyType,
     operation: str,
     methods: list[ContractMethod],
-) -> Generator[DocumentParts, None, str | None]:
+) -> DocumentParts:
     """Generate a class for a specific operation (update, delete, etc)"""
     if not methods:
-        return None
+        return
 
     # Generate the operation class with a unique name based on property_type
     class_name = f"_{context.contract_name}{context.sanitizer.make_safe_type_identifier(operation)}"
@@ -199,7 +198,7 @@ def generate_operation_class(
     elif property_type == PropertyType.SEND:
         class_name += "Send"
 
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -210,19 +209,19 @@ class {class_name}:
     if any(not method.abi for method in methods):
         yield Part.Gap1
         if property_type == PropertyType.PARAMS:
-            yield utils.indented(f"""
+            yield from utils.indented(f"""
 def bare(
     self, params: algokit_utils.AppClientBareCallParams | None = None
 ) -> {OPERATION_TO_RETURN_PARAMS_TYPE[operation]}:
     return self.app_client.params.bare.{operation}(params)
 """)
         elif property_type == PropertyType.CREATE_TRANSACTION:
-            yield utils.indented(f"""
+            yield from utils.indented(f"""
 def bare(self, params: algokit_utils.AppClientBareCallParams | None = None) -> Transaction:
     return self.app_client.create_transaction.bare.{operation}(params)
 """)
         else:  # SEND
-            yield utils.indented(f"""
+            yield from utils.indented(f"""
 def bare(
     self,
     params: algokit_utils.AppClientBareCallParams | None = None,
@@ -255,17 +254,17 @@ def bare(
             operation=operation,
             include_args=include_args,
         )
-        yield utils.indented(f"{method_params}\n{method_body}")
+        yield from utils.indented(f"{method_params}\n{method_body}")
 
     yield Part.DecIndent
-    return class_name
+    yield class_name
 
 
 def _generate_class_methods(
     context: GeneratorContext,
     class_name: str,
     property_type: PropertyType,
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate methods for a given class type"""
 
     operations = get_abi_method_operations(context)
@@ -282,7 +281,7 @@ def _generate_class_methods(
             yield Part.Gap2
 
     # Then generate the main class with properties
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
@@ -309,7 +308,7 @@ class {class_name}:
         )
         operation_class = operation_class_names.get(operation, default_class_name)
 
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
 @property
 def {operation}(self) -> "{operation_class}":
     return {operation_class}(self.app_client)
@@ -340,11 +339,11 @@ def {operation}(self) -> "{operation_class}":
             include_args=include_args,
         )
 
-        yield utils.indented(f"{method_params}\n{method_body}")
+        yield from utils.indented(f"{method_params}\n{method_body}")
 
     # Add clear_state method
     yield Part.Gap1
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def clear_state(
     self,
     params: algokit_utils.AppClientBareCallParams | None = None,
@@ -384,7 +383,7 @@ def generate_structs_for_args(context: GeneratorContext) -> DocumentParts:
 
         data_class_name = f"{context.sanitizer.make_safe_type_identifier(method.abi.client_method_name)}Args"
 
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class {data_class_name}:
     \"\"\"Dataclass for {method.abi.client_method_name} arguments\"\"\"
@@ -409,7 +408,7 @@ class {data_class_name}:
 
 def generate_class_definition(context: GeneratorContext) -> DocumentParts:
     """Generate the class definition and docstring"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}Client:
     \"\"\"Client for interacting with {context.app_spec.name} smart contract\"\"\"
 """)
@@ -417,7 +416,7 @@ class {context.contract_name}Client:
 
 def generate_constructor_overloads(context: GeneratorContext) -> DocumentParts:
     """Generate constructor overloads"""
-    yield utils.indented("""
+    yield from utils.indented("""
 @typing.overload
 def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
 
@@ -438,7 +437,7 @@ def __init__(
 
 def generate_constructor(context: GeneratorContext) -> DocumentParts:
     """Generate the actual constructor implementation"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def __init__(
     self,
     app_client: algokit_utils.AppClient | None = None,
@@ -478,7 +477,7 @@ def __init__(
 
 def generate_static_methods(context: GeneratorContext) -> DocumentParts:
     """Generate static factory methods"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 @staticmethod
 def from_creator_and_name(
     creator_address: str,
@@ -531,7 +530,7 @@ def from_network(
 
 def generate_properties(context: GeneratorContext) -> DocumentParts:
     """Generate property accessors"""
-    yield utils.indented("""
+    yield from utils.indented("""
 @property
 def app_id(self) -> int:
     return self.app_client.app_id
@@ -556,7 +555,7 @@ def algorand(self) -> _AlgoKitAlgorandClient:
 
 def generate_clone_method(context: GeneratorContext) -> DocumentParts:
     """Generate clone method"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def clone(
     self,
     app_name: str | None = None,
@@ -651,18 +650,18 @@ def decode_return_value(
 
     # Yield all the overloads first
     for overload in overloads:
-        yield utils.indented(overload)
+        yield from utils.indented(overload)
 
     if len(overloads) > 0:
         yield Part.Gap1
 
     # Then yield the implementation
-    yield utils.indented(implementation)
+    yield from utils.indented(implementation)
 
 
 def generate_new_group(context: GeneratorContext) -> DocumentParts:
     """Generate new_group method for creating transaction groups"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def new_group(self) -> "{context.contract_name}Composer":
     return {context.contract_name}Composer(self)
 """)
@@ -726,7 +725,7 @@ def _generate_state_typeddict(
     if not keys:
         return
 
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}(typing.TypedDict):
     \"\"\"Shape of {state_type} state key values\"\"\"
 """)
@@ -745,7 +744,7 @@ def _generate_state_class(  # noqa: PLR0913
     maps: dict,
     value_type_name: str | None = None,
     extra_params: str = "",
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate a state access class with typed methods"""
 
     # Pre-generate the struct mapping for this state type
@@ -768,7 +767,7 @@ def _generate_state_class(  # noqa: PLR0913
         else "{}"
     )
 
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}:
     def __init__(self, app_client: algokit_utils.AppClient{extra_params}):
         self.app_client = app_client
@@ -819,7 +818,7 @@ class {class_name}:
             is_value_struct = map_info.value_type in context.structs
             yield Part.Gap1
             yield Part.IncIndent
-            yield utils.indented(f"""
+            yield from utils.indented(f"""
 @property
 def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_type}]":
     \"\"\"Get values from the {map_name} map in {state_type} state\"\"\"
@@ -835,7 +834,7 @@ def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_typ
 def generate_state_methods(context: GeneratorContext) -> DocumentParts:
     """Generate state methods for accessing global, local and box state"""
     if not context.app_spec.state:
-        return ""
+        return
 
     state_configs = [
         ("global_state", "GlobalStateValue", "_GlobalState", ""),
@@ -847,11 +846,11 @@ def generate_state_methods(context: GeneratorContext) -> DocumentParts:
     for state_type, value_type, _, _ in state_configs:
         keys = getattr(context.app_spec.state.keys, state_type)
         if keys:
-            yield from _generate_state_typeddict(state_type, keys, value_type, context.structs)
+            yield from _generate_state_typeddict(state_type, keys, value_type)
             yield Part.Gap1
 
     # Generate main state class
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}State:
     \"\"\"Methods to access state for the current {context.app_spec.name} app\"\"\"
 
@@ -870,7 +869,7 @@ class {context.contract_name}State:
 
         yield Part.Gap1
         decorator = "@property" if state_type != "local_state" else ""
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
     {decorator}
 def {state_type.split("_")[0]}{"_state" if state_type != "box" else ""}(
     self{", address: str" if state_type == "local_state" else ""}
@@ -903,7 +902,7 @@ def {state_type.split("_")[0]}{"_state" if state_type != "box" else ""}(
 
     # Generate MapState class if needed
     if any(bool(getattr(context.app_spec.state.maps, t)) for t in ["global_state", "local_state", "box"]):
-        yield utils.indented("""
+        yield from utils.indented("""
 _KeyType = typing.TypeVar("_KeyType")
 _ValueType = typing.TypeVar("_ValueType")
 
@@ -945,11 +944,11 @@ def generate_typed_client(context: GeneratorContext) -> DocumentParts:
 
     # Generate structs
     yield Part.Gap2
-    yield generate_structs(context)
+    yield from generate_structs(context)
 
     # Generate supporting classes
     yield Part.Gap2
-    yield generate_structs_for_args(context)
+    yield from generate_structs_for_args(context)
     yield Part.Gap2
     yield from _generate_class_methods(context, f"{context.contract_name}Params", PropertyType.PARAMS)
     yield Part.Gap2
@@ -959,24 +958,24 @@ def generate_typed_client(context: GeneratorContext) -> DocumentParts:
     yield Part.Gap2
     yield from _generate_class_methods(context, f"{context.contract_name}Send", PropertyType.SEND)
     yield Part.Gap2
-    yield generate_state_methods(context)
+    yield from generate_state_methods(context)
     yield Part.Gap2
 
     # Generate main client class
-    yield generate_class_definition(context)
+    yield from generate_class_definition(context)
     yield Part.Gap1
     yield Part.IncIndent
-    yield generate_constructor_overloads(context)
+    yield from generate_constructor_overloads(context)
     yield Part.Gap1
-    yield generate_constructor(context)
+    yield from generate_constructor(context)
     yield Part.Gap1
-    yield generate_static_methods(context)
+    yield from generate_static_methods(context)
     yield Part.Gap1
-    yield generate_properties(context)
+    yield from generate_properties(context)
     yield Part.Gap1
-    yield generate_clone_method(context)
+    yield from generate_clone_method(context)
     yield Part.Gap1
-    yield generate_new_group(context)
+    yield from generate_new_group(context)
     yield Part.Gap1
-    yield generate_decode_return_value(context)
+    yield from generate_decode_return_value(context)
     yield Part.DecIndent
