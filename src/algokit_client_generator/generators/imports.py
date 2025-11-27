@@ -4,7 +4,7 @@ from algokit_client_generator.document import DocumentParts
 
 
 def generate_imports(context: GeneratorContext) -> DocumentParts:
-    yield utils.lines("""
+    yield from utils.lines("""
 # common
 import dataclasses
 import typing

@@ -1,5 +1,3 @@
-from collections.abc import Generator
-
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
@@ -27,14 +25,14 @@ def generate_operation_composer(
     context: GeneratorContext,
     operation: str,
     methods: list[ContractMethod],
-) -> Generator[DocumentParts, None, None]:
+) -> DocumentParts:
     """Generate a composer class for a specific operation"""
     if not methods:
         return
 
     class_name = get_operation_composer_class_name(context.contract_name, operation)
 
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}:
     def __init__(self, composer: \"{context.contract_name}Composer\"):
         self.composer = composer
@@ -51,7 +49,7 @@ class {class_name}:
         method_params += f' -> "{context.contract_name}Composer":'
         compilation_params = "compilation_params=compilation_params" if operation == "update" else ""
 
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
 {method_params}
     self.composer._composer.add_app_{OPERATION_TO_METHOD_CALL_PREFIX[operation]}_method_call(
         self.composer.client.params.{operation}.{method.abi.client_method_name}(
@@ -82,13 +80,13 @@ def generate_composer(context: GeneratorContext) -> DocumentParts:
             class_name = get_operation_composer_class_name(context.contract_name, operation)
             operation_class_names[operation] = class_name
 
-            class_name_gen = generate_operation_composer(context, operation, methods)
+            class_name_gen = list(generate_operation_composer(context, operation, methods))
             if class_name_gen:  # Only proceed if generator exists
                 yield from class_name_gen
                 yield Part.Gap2
 
     # Then generate main composer class
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}Composer:
     \"\"\"Composer for creating transaction groups for {context.contract_name} contract calls\"\"\"
 
@@ -102,7 +100,7 @@ class {context.contract_name}Composer:
     # Generate properties for operations
     for operation, class_name in operation_class_names.items():
         yield Part.Gap1
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
 @property
 def {operation}(self) -> "{class_name}":
     return {class_name}(self)
@@ -126,7 +124,7 @@ def {operation}(self) -> "{class_name}":
         method_params += f' -> "{context.contract_name}Composer":'
 
         yield Part.Gap1
-        yield utils.indented(f"""
+        yield from utils.indented(f"""
 {method_params}
     self._composer.add_app_call_method_call(
         self.client.params.{method.abi.client_method_name}(
@@ -144,7 +142,7 @@ def {operation}(self) -> "{class_name}":
 
     # Add utility methods
     yield Part.Gap1
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def clear_state(
     self,
     *,
