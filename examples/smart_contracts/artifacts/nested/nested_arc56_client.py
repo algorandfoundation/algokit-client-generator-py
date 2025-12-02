@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Nested", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CiABASYBBBUffHUxG0EAeIIDBP5r32kEn9g1+AQ0rzlCNhoAjgMARgAsAAOBAEMxGRREMRhENhoBMRaBAglJOBAiEkQxFiIJSTgQgQYSRIgAVihMULAiQzEZFEQxGEQxFiIJSTgQIhJEiAAzKExQsCJDMRkURDEYRDYaATYaAogAEShMULAiQzEZQP+fMRgURCJDigIBi/4Xi/8XCBaJigEBi/84CBaJigMBi/84F0kVFlcGAkxQiQ==", "clear": "CoEBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOAogICAgcHVzaGJ5dGVzcyAweGZlNmJkZjY5IDB4OWZkODM1ZjggMHgzNGFmMzk0MiAvLyBtZXRob2QgImFkZCh1aW50NjQsdWludDY0KXVpbnQ2NCIsIG1ldGhvZCAiZ2V0X3BheV90eG5fYW1vdW50KHBheSl1aW50NjQiLCBtZXRob2QgIm5lc3RlZF9tZXRob2RfY2FsbChzdHJpbmcscGF5LGFwcGwpYnl0ZVtdIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9hZGRfcm91dGVAMyBtYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0IG1haW5fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDUKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA1OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICB0eG4gR3JvdXBJbmRleAogICAgcHVzaGludCAyIC8vIDIKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgcHVzaGludCA2IC8vIGFwcGwKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBhcHBsCiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgbmVzdGVkX21ldGhvZF9jYWxsCiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgaW50Y18wIC8vIHBheQogICAgPT0KICAgIGFzc2VydCAvLyB0cmFuc2FjdGlvbiB0eXBlIGlzIHBheQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgZ2V0X3BheV90eG5fYW1vdW50CiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2FkZF9yb3V0ZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo1CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDEyCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLmFkZChhOiBieXRlcywgYjogYnl0ZXMpIC0+IGJ5dGVzOgphZGQ6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjUtNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgYWRkKHNlbGYsIGE6IGFyYzQuVUludDY0LCBiOiBhcmM0LlVJbnQ2NCkgLT4gYXJjNC5VSW50NjQ6CiAgICBwcm90byAyIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NwogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KGEubmF0aXZlICsgYi5uYXRpdmUpCiAgICBmcmFtZV9kaWcgLTIKICAgIGJ0b2kKICAgIGZyYW1lX2RpZyAtMQogICAgYnRvaQogICAgKwogICAgaXRvYgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLm5lc3RlZC5jb250cmFjdC5OZXN0ZWQuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLm5lc3RlZF9tZXRob2RfY2FsbChfOiBieXRlcywgX3BheV90eG46IHVpbnQ2NCwgbWV0aG9kX2NhbGw6IHVpbnQ2NCkgLT4gYnl0ZXM6Cm5lc3RlZF9tZXRob2RfY2FsbDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MTMtMTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIG5lc3RlZF9tZXRob2RfY2FsbCgKICAgIC8vICAgICBzZWxmLAogICAgLy8gICAgIF86IGFyYzQuU3RyaW5nLAogICAgLy8gICAgIF9wYXlfdHhuOiBndHhuLlBheW1lbnRUcmFuc2FjdGlvbiwKICAgIC8vICAgICBtZXRob2RfY2FsbDogZ3R4bi5BcHBsaWNhdGlvbkNhbGxUcmFuc2FjdGlvbiwKICAgIC8vICkgLT4gYXJjNC5EeW5hbWljQnl0ZXM6CiAgICBwcm90byAzIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MjAKICAgIC8vIHJldHVybiBhcmM0LkR5bmFtaWNCeXRlcyhtZXRob2RfY2FsbC50eG5faWQpCiAgICBmcmFtZV9kaWcgLTEKICAgIGd0eG5zIFR4SUQKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [50, 91, 117], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [144], "errorMessage": "can only call when creating"}, {"pc": [53, 94, 120], "errorMessage": "can only call when not creating"}, {"pc": [78], "errorMessage": "transaction type is appl"}, {"pc": [67, 104], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AddArgs:
@@ -108,39 +59,39 @@ class NestedParams:
         args: tuple[int, int] | AddArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "add(uint64,uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="add(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def get_pay_txn_amount(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_pay_txn_amount(pay)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_pay_txn_amount(pay)uint64",
+            args=_unpack_args(args),
+        ))
 
     def nested_method_call(
         self,
         args: tuple[str, algokit_utils.AppMethodCallTransactionArgument | None, algokit_utils.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "nested_method_call(string,pay,appl)byte[]",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="nested_method_call(string,pay,appl)byte[]",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -162,39 +113,39 @@ class NestedCreateTransactionParams:
         args: tuple[int, int] | AddArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "add(uint64,uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="add(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def get_pay_txn_amount(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | GetPayTxnAmountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_pay_txn_amount(pay)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_pay_txn_amount(pay)uint64",
+            args=_unpack_args(args),
+        ))
 
     def nested_method_call(
         self,
         args: tuple[str, algokit_utils.AppMethodCallTransactionArgument | None, algokit_utils.AppMethodCallTransactionArgument] | NestedMethodCallArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "nested_method_call(string,pay,appl)byte[]",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="nested_method_call(string,pay,appl)byte[]",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -217,15 +168,14 @@ class NestedSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "add(uint64,uint64)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="add(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def get_pay_txn_amount(
         self,
@@ -233,15 +183,14 @@ class NestedSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_pay_txn_amount(pay)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_pay_txn_amount(pay)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def nested_method_call(
         self,
@@ -249,15 +198,14 @@ class NestedSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bytes]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "nested_method_call(string,pay,appl)byte[]",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bytes], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="nested_method_call(string,pay,appl)byte[]",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bytes], response)
 
     def clear_state(
         self,
@@ -391,7 +339,7 @@ class NestedClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -453,18 +401,7 @@ class NestedClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -508,7 +445,7 @@ class NestedFactory(algokit_utils.TypedAppFactoryProtocol[NestedBareCallCreatePa
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -616,8 +553,12 @@ class NestedFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def add(
         self,
@@ -629,12 +570,11 @@ class NestedFactoryCreateParams:
         """Creates a new instance using the add(uint64,uint64)uint64 ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "add(uint64,uint64)uint64",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='add(uint64,uint64)uint64',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -649,12 +589,11 @@ class NestedFactoryCreateParams:
         """Creates a new instance using the get_pay_txn_amount(pay)uint64 ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "get_pay_txn_amount(pay)uint64",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='get_pay_txn_amount(pay)uint64',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -669,12 +608,11 @@ class NestedFactoryCreateParams:
         """Creates a new instance using the nested_method_call(string,pay,appl)byte[] ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "nested_method_call(string,pay,appl)byte[]",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='nested_method_call(string,pay,appl)byte[]',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -694,8 +632,12 @@ class NestedFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class NestedFactoryDeleteParams:
     """Parameters for 'delete' operations of Nested contract"""
@@ -712,8 +654,12 @@ class NestedFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class NestedFactoryCreateTransaction:
@@ -737,7 +683,10 @@ class NestedFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -765,9 +714,12 @@ class NestedFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return NestedClient(result[0]), result[1]
 
@@ -778,7 +730,6 @@ class NestedComposer:
     def __init__(self, client: "NestedClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def add(
         self,
@@ -789,11 +740,6 @@ class NestedComposer:
             self.client.params.add(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "add(uint64,uint64)uint64", v
             )
         )
         return self
@@ -809,11 +755,6 @@ class NestedComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "get_pay_txn_amount(pay)uint64", v
-            )
-        )
         return self
 
     def nested_method_call(
@@ -827,11 +768,6 @@ class NestedComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "nested_method_call(string,pay,appl)byte[]", v
-            )
-        )
         return self
 
     def clear_state(
@@ -843,12 +779,7 @@ class NestedComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -870,7 +801,7 @@ class NestedComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -887,3 +818,39 @@ class NestedComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "a"}, {"type": "uint64", "name": "b"}], "name": "add", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "pay_txn"}], "name": "get_pay_txn_amount", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "_"}, {"type": "pay", "name": "_pay_txn"}, {"type": "appl", "name": "method_call"}], "name": "nested_method_call", "returns": {"type": "byte[]"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Nested", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CiABASYBBBUffHUxG0EAeIIDBP5r32kEn9g1+AQ0rzlCNhoAjgMARgAsAAOBAEMxGRREMRhENhoBMRaBAglJOBAiEkQxFiIJSTgQgQYSRIgAVihMULAiQzEZFEQxGEQxFiIJSTgQIhJEiAAzKExQsCJDMRkURDEYRDYaATYaAogAEShMULAiQzEZQP+fMRgURCJDigIBi/4Xi/8XCBaJigEBi/84CBaJigMBi/84F0kVFlcGAkxQiQ==", "clear": "CoEBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxCiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOAogICAgcHVzaGJ5dGVzcyAweGZlNmJkZjY5IDB4OWZkODM1ZjggMHgzNGFmMzk0MiAvLyBtZXRob2QgImFkZCh1aW50NjQsdWludDY0KXVpbnQ2NCIsIG1ldGhvZCAiZ2V0X3BheV90eG5fYW1vdW50KHBheSl1aW50NjQiLCBtZXRob2QgIm5lc3RlZF9tZXRob2RfY2FsbChzdHJpbmcscGF5LGFwcGwpYnl0ZVtdIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9hZGRfcm91dGVAMyBtYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0IG1haW5fbmVzdGVkX21ldGhvZF9jYWxsX3JvdXRlQDUKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX25lc3RlZF9tZXRob2RfY2FsbF9yb3V0ZUA1OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICB0eG4gR3JvdXBJbmRleAogICAgcHVzaGludCAyIC8vIDIKICAgIC0KICAgIGR1cAogICAgZ3R4bnMgVHlwZUVudW0KICAgIGludGNfMCAvLyBwYXkKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBwYXkKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgcHVzaGludCA2IC8vIGFwcGwKICAgID09CiAgICBhc3NlcnQgLy8gdHJhbnNhY3Rpb24gdHlwZSBpcyBhcHBsCiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjEzCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgbmVzdGVkX21ldGhvZF9jYWxsCiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2dldF9wYXlfdHhuX2Ftb3VudF9yb3V0ZUA0OgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4biBHcm91cEluZGV4CiAgICBpbnRjXzAgLy8gMQogICAgLQogICAgZHVwCiAgICBndHhucyBUeXBlRW51bQogICAgaW50Y18wIC8vIHBheQogICAgPT0KICAgIGFzc2VydCAvLyB0cmFuc2FjdGlvbiB0eXBlIGlzIHBheQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGNhbGxzdWIgZ2V0X3BheV90eG5fYW1vdW50CiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2FkZF9yb3V0ZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo1CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBOZXN0ZWQoQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGFkZAogICAgYnl0ZWNfMCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgTmVzdGVkKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDEyCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLmFkZChhOiBieXRlcywgYjogYnl0ZXMpIC0+IGJ5dGVzOgphZGQ6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbmVzdGVkL2NvbnRyYWN0LnB5OjUtNgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgYWRkKHNlbGYsIGE6IGFyYzQuVUludDY0LCBiOiBhcmM0LlVJbnQ2NCkgLT4gYXJjNC5VSW50NjQ6CiAgICBwcm90byAyIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6NwogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KGEubmF0aXZlICsgYi5uYXRpdmUpCiAgICBmcmFtZV9kaWcgLTIKICAgIGJ0b2kKICAgIGZyYW1lX2RpZyAtMQogICAgYnRvaQogICAgKwogICAgaXRvYgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLm5lc3RlZC5jb250cmFjdC5OZXN0ZWQuZ2V0X3BheV90eG5fYW1vdW50KHBheV90eG46IHVpbnQ2NCkgLT4gYnl0ZXM6CmdldF9wYXlfdHhuX2Ftb3VudDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6OS0xMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgZ2V0X3BheV90eG5fYW1vdW50KHNlbGYsIHBheV90eG46IGd0eG4uUGF5bWVudFRyYW5zYWN0aW9uKSAtPiBhcmM0LlVJbnQ2NDoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL25lc3RlZC9jb250cmFjdC5weToxMQogICAgLy8gcmV0dXJuIGFyYzQuVUludDY0KHBheV90eG4uYW1vdW50KQogICAgZnJhbWVfZGlnIC0xCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5uZXN0ZWQuY29udHJhY3QuTmVzdGVkLm5lc3RlZF9tZXRob2RfY2FsbChfOiBieXRlcywgX3BheV90eG46IHVpbnQ2NCwgbWV0aG9kX2NhbGw6IHVpbnQ2NCkgLT4gYnl0ZXM6Cm5lc3RlZF9tZXRob2RfY2FsbDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MTMtMTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgLy8gZGVmIG5lc3RlZF9tZXRob2RfY2FsbCgKICAgIC8vICAgICBzZWxmLAogICAgLy8gICAgIF86IGFyYzQuU3RyaW5nLAogICAgLy8gICAgIF9wYXlfdHhuOiBndHhuLlBheW1lbnRUcmFuc2FjdGlvbiwKICAgIC8vICAgICBtZXRob2RfY2FsbDogZ3R4bi5BcHBsaWNhdGlvbkNhbGxUcmFuc2FjdGlvbiwKICAgIC8vICkgLT4gYXJjNC5EeW5hbWljQnl0ZXM6CiAgICBwcm90byAzIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9uZXN0ZWQvY29udHJhY3QucHk6MjAKICAgIC8vIHJldHVybiBhcmM0LkR5bmFtaWNCeXRlcyhtZXRob2RfY2FsbC50eG5faWQpCiAgICBmcmFtZV9kaWcgLTEKICAgIGd0eG5zIFR4SUQKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [50, 91, 117], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [144], "errorMessage": "can only call when creating"}, {"pc": [53, 94, 120], "errorMessage": "can only call when not creating"}, {"pc": [78], "errorMessage": "transaction type is appl"}, {"pc": [67, 104], "errorMessage": "transaction type is pay"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

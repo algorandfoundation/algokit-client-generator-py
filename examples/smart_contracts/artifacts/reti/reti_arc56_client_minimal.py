@@ -9,64 +9,73 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "approvalProgramSize"}], "name": "initStakingContract", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "offset"}, {"type": "byte[]", "name": "data"}], "name": "loadStakingContractData", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "finalizeStakingContract", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "gas", "returns": {"type": "void"}, "desc": "gas is a dummy no-op call that can be used to pool-up resource references and opcode cost"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getMbrAmounts", "returns": {"type": "(uint64,uint64,uint64,uint64)", "struct": "MbrAmounts"}, "desc": "Returns the MBR amounts needed for various actions:\n[\n addValidatorMbr: uint64 - mbr needed to add a new validator - paid to validator contract\n addPoolMbr: uint64 - mbr needed to add a new pool - paid to validator\n poolInitMbr: uint64 - mbr needed to initStorage() of pool - paid to pool itself\n addStakerMbr: uint64 - mbr staker needs to add to first staking payment (stays w/ validator)\n]", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getProtocolConstraints", "returns": {"type": "(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)", "struct": "Constraints"}, "desc": "Returns the protocol constraints so that UIs can limit what users specify for validator configuration parameters.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getNumValidators", "returns": {"type": "uint64"}, "desc": "Returns the current number of validators", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorConfig", "returns": {"type": "(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "struct": "ValidatorConfig"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorState", "returns": {"type": "(uint16,uint64,uint64,uint64)", "struct": "ValidatorCurState"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorOwnerAndManager", "returns": {"type": "(address,address)"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "PoolInfo[] - array of pools\nNot callable from other contracts because 1K return but can be called w/ simulate which bumps log returns", "name": "validatorId"}], "name": "getPools", "returns": {"type": "(uint64,uint16,uint64)[]"}, "desc": "Return list of all pools for this validator.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "uint64", "name": "poolId"}], "name": "getPoolAppId", "returns": {"type": "uint64"}, "desc": "getPoolAppId is useful for callers to determine app to call for removing stake if they don't have staking or\nwant to get staker list for an account.  The staking pool also uses it to get the app id of staking pool 1\n(which contains reward tokens if being used) so that the amount available can be determined.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "name": "poolKey", "struct": "ValidatorPoolKey"}], "name": "getPoolInfo", "returns": {"type": "(uint64,uint16,uint64)", "struct": "PoolInfo"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}], "name": "getCurMaxStakePerPool", "returns": {"type": "uint64"}, "desc": "Calculate the maximum stake per pool for a given validator.\nNormally this would be maxAlgoPerPool, but it should also never go above MaxAllowedStake / numPools so\nas pools are added the max allowed per pool can reduce.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "address", "name": "staker"}], "name": "doesStakerNeedToPayMBR", "returns": {"type": "bool"}, "desc": "Helper callers can call w/ simulate to determine if 'AddStaker' MBR should be included w/ staking amount", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "address", "desc": "The account to retrieve staked pools for.\n ValidatorPoolKey[] - The array of staked pools for the account.", "name": "staker"}], "name": "getStakedPoolsForAccount", "returns": {"type": "(uint64,uint64,uint64)[]"}, "desc": "Retrieves the staked pools for an account.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.\n PoolTokenPayoutRatio - The token payout ratio for the validator.", "name": "validatorId"}], "name": "getTokenPayoutRatio", "returns": {"type": "(uint64[24],uint64)", "struct": "PoolTokenPayoutRatio"}, "desc": "Retrieves the token payout ratio for a given validator - returning the pool ratios of whole so that token\npayouts across pools can be based on a stable snaphost of stake.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getNodePoolAssignments", "returns": {"type": "((uint64[3])[8])", "struct": "NodePoolAssignmentConfig"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getNFDRegistryID", "returns": {"type": "uint64"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment from caller which covers mbr increase of new validator storage", "name": "mbrPayment"}, {"type": "string", "desc": "(Optional) Name of nfd (used as double-check against id specified in config)", "name": "nfdName"}, {"type": "(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "desc": "ValidatorConfig struct", "name": "config", "struct": "ValidatorConfig"}], "name": "addValidator", "returns": {"type": "uint64", "desc": "uint64 validator id"}, "desc": "Adds a new validator\nRequires at least 10 ALGO as the 'fee' for the transaction to help dissuade spammed validator adds.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "address", "name": "owner"}, {"type": "address", "name": "manager"}], "name": "retiOP_addedValidator", "desc": "Logs the addition of a new validator to the system, its initial owner and manager"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to change the manager for.", "name": "validatorId"}, {"type": "address", "desc": "The new manager address.", "name": "manager"}], "name": "changeValidatorManager", "returns": {"type": "void"}, "desc": "Changes the Validator manager for a specific Validator id.\n[ ONLY OWNER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to update.", "name": "validatorId"}, {"type": "uint64", "desc": "The new sunset timestamp.", "name": "sunsettingOn"}, {"type": "uint64", "desc": "The new sunset to validator id.", "name": "sunsettingTo"}], "name": "changeValidatorSunsetInfo", "returns": {"type": "void"}, "desc": "Updates the sunset information for a given validator.\n[ ONLY OWNER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to update.", "name": "validatorId"}, {"type": "uint64", "desc": "The application id of the NFD to assign to the validator.", "name": "nfdAppID"}, {"type": "string", "desc": "The name of the NFD (which must match)", "name": "nfdName"}], "name": "changeValidatorNFD", "returns": {"type": "void"}, "desc": "Changes the NFD for a validator in the validatorList contract.\n[ ONLY OWNER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "address", "name": "commissionAddress"}], "name": "changeValidatorCommissionAddress", "returns": {"type": "void"}, "desc": "Change the commission address that validator rewards are sent to.\n     [ ONLY OWNER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "uint8", "name": "EntryGatingType"}, {"type": "address", "name": "EntryGatingAddress"}, {"type": "uint64[4]", "name": "EntryGatingAssets"}, {"type": "uint64", "name": "GatingAssetMinBalance"}, {"type": "uint64", "name": "RewardPerPayout"}], "name": "changeValidatorRewardInfo", "returns": {"type": "void"}, "desc": "Allow the additional rewards (gating entry, additional token rewards) information be changed at will.\n[ ONLY OWNER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment from caller which covers mbr increase of adding a new pool", "name": "mbrPayment"}, {"type": "uint64", "desc": "is id of validator to pool to (must be owner or manager)", "name": "validatorId"}, {"type": "uint64", "desc": "is node number to add to", "name": "nodeNum"}], "name": "addPool", "returns": {"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey pool key to created pool", "struct": "ValidatorPoolKey"}, "desc": "Adds a new pool to a validator's pool set, returning the 'key' to reference the pool in the future for staking, etc.\nThe caller must pay the cost of the validators MBR increase as well as the MBR that will be needed for the pool itself.\n\n\n[ ONLY OWNER OR MANAGER CAN call ]", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "num"}, {"type": "uint64", "name": "poolAppId"}], "name": "retiOP_validatorAddedPool", "desc": "Logs the addition of a new pool to a particular validator ID"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment coming from staker to place into a pool", "name": "stakedAmountPayment"}, {"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "uint64", "desc": "only if validator has gating to enter - this is asset id or nfd id that corresponds to gating.\nTxn sender is factored in as well if that is part of gating.\n*", "name": "valueToVerify"}], "name": "addStake", "returns": {"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey - The key of the validator pool.", "struct": "ValidatorPoolKey"}, "desc": "Adds stake to a validator pool.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountStaked"}], "name": "retiOP_stakeAdded", "desc": "Logs how much stake was added by a staker to a particular staking pool"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "validator id (and thus pool) calling us.  Verified so that sender MUST be pool 1 of this validator.", "name": "validatorId"}], "name": "setTokenPayoutRatio", "returns": {"type": "(uint64[24],uint64)", "desc": "PoolTokenPayoutRatio - the finished ratio data", "struct": "PoolTokenPayoutRatio"}, "desc": "setTokenPayoutRatio is called by Staking Pool # 1 (ONLY) to ask the validator (us) to calculate the ratios\nof stake in the pools for subsequent token payouts (ie: 2 pools, '100' algo total staked, 60 in pool 1, and 40\nin pool 2)  This is done so we have a stable snapshot of stake - taken once per epoch - only triggered by\npool 1 doing payout.  pools other than 1 doing payout call pool 1 to ask it do it first.\nIt would be 60/40% in the poolPctOfWhole values.  The token reward payouts then use these values instead of\ntheir 'current' stake which changes as part of the payouts themselves (and people could be changing stake\nduring the epoch updates across pools)\n\n\nMultiple pools will call us via pool 1 (pool2-pool1-validator, etc.) so don't assert on pool1 calling multiple\ntimes in same epoch.  Just return."}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey type", "name": "poolKey", "struct": "ValidatorPoolKey"}, {"type": "uint64", "desc": "amount this validator's total stake increased via rewards", "name": "algoToAdd"}, {"type": "uint64", "desc": "amount this validator's total stake increased via rewards (that should be", "name": "rewardTokenAmountReserved"}, {"type": "uint64", "desc": "the commission amount the validator was paid, if any", "name": "validatorCommission"}, {"type": "uint64", "desc": "if the pool was in saturated state, the amount sent back to the fee sink.\nseen as 'accounted for/pending spent')", "name": "saturatedBurnToFeeSink"}], "name": "stakeUpdatedViaRewards", "returns": {"type": "void"}, "desc": "stakeUpdatedViaRewards is called by Staking pools to inform the validator (us) that a particular amount of total\nstake has been added to the specified pool.  This is used to update the stats we have in our PoolInfo storage.\nThe calling App id is validated against our pool list as well.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "validatorCommission"}, {"type": "uint64", "name": "saturatedBurnToFeeSink"}, {"type": "uint64", "name": "algoAdded"}, {"type": "uint64", "name": "rewardTokenHeldBack"}], "name": "retiOP_epochRewardUpdate", "desc": "Logs how much algo was detected as being added to a staking pool as part of epoch reward calculations.\nCommission amount to validator, excess burned if pool is saturated, and the amount of tokens held back are logged as well."}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "desc": "calling us from which stake was removed", "name": "poolKey", "struct": "ValidatorPoolKey"}, {"type": "address", "name": "staker"}, {"type": "uint64", "desc": "algo amount removed", "name": "amountRemoved"}, {"type": "uint64", "desc": "if applicable, amount of token reward removed (by pool 1 caller) or TO remove and pay out (via pool 1 from different pool caller)", "name": "rewardRemoved"}, {"type": "bool", "name": "stakerRemoved"}], "name": "stakeRemoved", "returns": {"type": "void"}, "desc": "stakeRemoved is called by Staking pools to inform the validator (us) that a particular amount of total stake has been removed\nfrom the specified pool.  This is used to update the stats we have in our PoolInfo storage.\nIf any amount of rewardRemoved is specified, then that amount of reward is sent to the use\nThe calling App id is validated against our pool list as well.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountUnstaked"}, {"type": "uint64", "name": "rewardTokensReceived"}, {"type": "uint64", "name": "rewardTokenAssetId"}], "name": "retiOP_stakeRemoved", "desc": "Logs how much stake was removed by a staker from a particular staking pool"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "address", "desc": "The address of the staker.", "name": "staker"}, {"type": "uint64", "desc": "The amount to stake.", "name": "amountToStake"}], "name": "findPoolForStaker", "returns": {"type": "((uint64,uint64,uint64),bool,bool)", "desc": "ValidatorPoolKey, boolean, boolean - The pool for the staker, true/false on whether the staker is 'new'\nto this VALIDATOR, and true/false if staker is new to the protocol."}, "desc": "Finds the pool for a staker based on the provided validator id, staker address, and amount to stake.\nFirst checks the stakers 'already staked list' for the validator preferring those (adding if possible) then adds\nto new pool if necessary.", "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "nodeNum"}], "name": "movePoolToNode", "returns": {"type": "void"}, "desc": "Find the specified pool (in any node number) and move it to the specified node.\nThe pool account is forced offline if moved so prior node will still run for 320 rounds but\nnew key goes online on new node soon after (320 rounds after it goes online)\nNo-op if success, asserts if not found or can't move  (no space in target)\n[ ONLY OWNER OR MANAGER CAN CHANGE ]"}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "address", "desc": "the account to send the tokens to (must already be opted-in to the reward token)", "name": "receiver"}], "name": "emptyTokenRewards", "returns": {"type": "uint64", "desc": "uint64 the amount of reward token sent"}, "desc": "Sends the reward tokens held in pool 1 to specified receiver.\nThis is intended to be used by the owner when they want to get reward tokens 'back' which they sent to\nthe first pool (likely because validator is sunsetting.  Any tokens currently 'reserved' for stakers to claim will\nNOT be sent as they must be held back for stakers to later claim.\n[ ONLY OWNER CAN CALL]"}], "name": "ValidatorRegistry", "state": {"keys": {"box": {"stakingPoolApprovalProgram": {"key": "cG9vbFRlbXBsYXRlQXBwcm92YWxCeXRlcw==", "keyType": "AVMBytes", "valueType": "AVMBytes"}}, "global": {"stakingPoolInitialized": {"key": "aW5pdA==", "keyType": "AVMBytes", "valueType": "bool"}, "numValidators": {"key": "bnVtVg==", "keyType": "AVMBytes", "valueType": "uint64"}, "numStakers": {"key": "bnVtU3Rha2Vycw==", "keyType": "AVMBytes", "valueType": "uint64"}, "totalAlgoStaked": {"key": "c3Rha2Vk", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {}}, "maps": {"box": {"validatorList": {"keyType": "uint64", "valueType": "ValidatorInfo", "prefix": "dg=="}, "stakerPoolSet": {"keyType": "address", "valueType": "(uint64,uint64,uint64)[6]", "prefix": "c3Bz"}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 3}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"ValidatorInfo": [{"name": "config", "type": [{"name": "id", "type": "uint64"}, {"name": "owner", "type": "address"}, {"name": "manager", "type": "address"}, {"name": "nfdForInfo", "type": "uint64"}, {"name": "entryGatingType", "type": "uint8"}, {"name": "entryGatingAddress", "type": "address"}, {"name": "entryGatingAssets", "type": "uint64[4]"}, {"name": "gatingAssetMinBalance", "type": "uint64"}, {"name": "rewardTokenId", "type": "uint64"}, {"name": "rewardPerPayout", "type": "uint64"}, {"name": "epochRoundLength", "type": "uint32"}, {"name": "percentToValidator", "type": "uint32"}, {"name": "validatorCommissionAddress", "type": "address"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "poolsPerNode", "type": "uint8"}, {"name": "sunsettingOn", "type": "uint64"}, {"name": "sunsettingTo", "type": "uint64"}]}, {"name": "state", "type": [{"name": "numPools", "type": "uint16"}, {"name": "totalStakers", "type": "uint64"}, {"name": "totalAlgoStaked", "type": "uint64"}, {"name": "rewardTokenHeldBack", "type": "uint64"}]}, {"name": "pools", "type": "(uint64,uint16,uint64)[24]"}, {"name": "tokenPayoutRatio", "type": [{"name": "poolPctOfWhole", "type": "uint64[24]"}, {"name": "updatedForPayout", "type": "uint64"}]}, {"name": "nodePoolAssignments", "type": [{"name": "nodes", "type": "(uint64[3])[8]"}]}], "MbrAmounts": [{"name": "addValidatorMbr", "type": "uint64"}, {"name": "addPoolMbr", "type": "uint64"}, {"name": "poolInitMbr", "type": "uint64"}, {"name": "addStakerMbr", "type": "uint64"}], "Constraints": [{"name": "epochPayoutRoundsMin", "type": "uint64"}, {"name": "epochPayoutRoundsMax", "type": "uint64"}, {"name": "minPctToValidatorWFourDecimals", "type": "uint64"}, {"name": "maxPctToValidatorWFourDecimals", "type": "uint64"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "maxAlgoPerValidator", "type": "uint64"}, {"name": "amtConsideredSaturated", "type": "uint64"}, {"name": "maxNodes", "type": "uint64"}, {"name": "maxPoolsPerNode", "type": "uint64"}, {"name": "maxStakersPerPool", "type": "uint64"}], "ValidatorConfig": [{"name": "id", "type": "uint64"}, {"name": "owner", "type": "address"}, {"name": "manager", "type": "address"}, {"name": "nfdForInfo", "type": "uint64"}, {"name": "entryGatingType", "type": "uint8"}, {"name": "entryGatingAddress", "type": "address"}, {"name": "entryGatingAssets", "type": "uint64[4]"}, {"name": "gatingAssetMinBalance", "type": "uint64"}, {"name": "rewardTokenId", "type": "uint64"}, {"name": "rewardPerPayout", "type": "uint64"}, {"name": "epochRoundLength", "type": "uint32"}, {"name": "percentToValidator", "type": "uint32"}, {"name": "validatorCommissionAddress", "type": "address"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "poolsPerNode", "type": "uint8"}, {"name": "sunsettingOn", "type": "uint64"}, {"name": "sunsettingTo", "type": "uint64"}], "ValidatorCurState": [{"name": "numPools", "type": "uint16"}, {"name": "totalStakers", "type": "uint64"}, {"name": "totalAlgoStaked", "type": "uint64"}, {"name": "rewardTokenHeldBack", "type": "uint64"}], "PoolInfo": [{"name": "poolAppId", "type": "uint64"}, {"name": "totalStakers", "type": "uint16"}, {"name": "totalAlgoStaked", "type": "uint64"}], "ValidatorPoolKey": [{"name": "id", "type": "uint64"}, {"name": "poolId", "type": "uint64"}, {"name": "poolAppId", "type": "uint64"}], "PoolTokenPayoutRatio": [{"name": "poolPctOfWhole", "type": "uint64[24]"}, {"name": "updatedForPayout", "type": "uint64"}], "NodePoolAssignmentConfig": [{"name": "nodes", "type": "(uint64[3])[8]"}]}, "desc": "", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "address", "name": "owner"}, {"type": "address", "name": "manager"}], "name": "retiOP_addedValidator", "desc": "Logs the addition of a new validator to the system, its initial owner and manager"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "num"}, {"type": "uint64", "name": "poolAppId"}], "name": "retiOP_validatorAddedPool", "desc": "Logs the addition of a new pool to a particular validator ID"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountStaked"}], "name": "retiOP_stakeAdded", "desc": "Logs how much stake was added by a staker to a particular staking pool"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "validatorCommission"}, {"type": "uint64", "name": "saturatedBurnToFeeSink"}, {"type": "uint64", "name": "algoAdded"}, {"type": "uint64", "name": "rewardTokenHeldBack"}], "name": "retiOP_epochRewardUpdate", "desc": "Logs how much algo was detected as being added to a staking pool as part of epoch reward calculations.\nCommission amount to validator, excess burned if pool is saturated, and the amount of tokens held back are logged as well."}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountUnstaked"}, {"type": "uint64", "name": "rewardTokensReceived"}, {"type": "uint64", "name": "rewardTokenAssetId"}], "name": "retiOP_stakeRemoved", "desc": "Logs how much stake was removed by a staker from a particular staking pool"}], "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [554], "errorMessage": "pool id must be between 1 and number of pools for this validator", "teal": 582}, {"pc": [586], "errorMessage": "argument 0 (poolKey) for getPoolInfo must be a (uint64,uint64,uint64)", "teal": 618}, {"pc": [723], "errorMessage": "argument 0 (staker) for doesStakerNeedToPayMBR must be a address", "teal": 771}, {"pc": [758], "errorMessage": "argument 0 (staker) for getStakedPoolsForAccount must be a address", "teal": 815}, {"pc": [805], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 877}, {"pc": [915], "errorMessage": "the specified validator id doesn't exist", "teal": 1015}, {"pc": [953], "errorMessage": "argument 0 (config) for addValidator must be a (uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "teal": 1064}, {"pc": [969], "errorMessage": "argument 2 (mbrPayment) for addValidator must be a pay transaction", "teal": 1080}, {"pc": [994], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 1119}, {"pc": [1007], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"amount\",\"expected\":\"this.getMbrAmounts().addValidatorMbr\"}", "teal": 1130}, {"pc": [1018], "errorMessage": "fee must be 10 ALGO or more to prevent spamming of validators", "teal": 1140}, {"pc": [1084], "errorMessage": "provided NFD must be valid", "teal": 1208}, {"pc": [1096], "errorMessage": "global state value does not exist: AppID.fromUint64(config.nfdForInfo).globalState('i.owner.a')", "teal": 1223}, {"pc": [1098], "errorMessage": "If specifying NFD, account adding validator must be owner", "teal": 1227}, {"pc": [1134], "errorMessage": "provided NFD App id for gating must be valid NFD", "teal": 1263}, {"pc": [1171], "errorMessage": "argument 0 (manager) for changeValidatorManager must be a address", "teal": 1298}, {"pc": [1194], "errorMessage": "needs to at least be valid address", "teal": 1331}, {"pc": [1293], "errorMessage": "provided NFD must be valid", "teal": 1446}, {"pc": [1301], "errorMessage": "global state value does not exist: AppID.fromUint64(nfdAppID).globalState('i.owner.a')", "teal": 1459}, {"pc": [1303], "errorMessage": "If specifying NFD, account adding validator must be owner", "teal": 1463}, {"pc": [1326], "errorMessage": "argument 0 (commissionAddress) for changeValidatorCommissionAddress must be a address", "teal": 1488}, {"pc": [1380], "errorMessage": "argument 2 (EntryGatingAssets) for changeValidatorRewardInfo must be a uint64[4]", "teal": 1548}, {"pc": [1389], "errorMessage": "argument 3 (EntryGatingAddress) for changeValidatorRewardInfo must be a address", "teal": 1558}, {"pc": [1397], "errorMessage": "argument 4 (EntryGatingType) for changeValidatorRewardInfo must be a uint8", "teal": 1568}, {"pc": [1430], "errorMessage": "invalid Entry gating type", "teal": 1609}, {"pc": [1471], "errorMessage": "provided NFD App id for gating must be valid NFD", "teal": 1654}, {"pc": [1558], "errorMessage": "argument 2 (mbrPayment) for addPool must be a pay transaction", "teal": 1740}, {"pc": [1583], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 1780}, {"pc": [1596], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"amount\",\"expected\":\"this.getMbrAmounts().addPoolMbr\"}", "teal": 1791}, {"pc": [1605], "errorMessage": "specified validator id isn't valid", "teal": 1804}, {"pc": [1628], "errorMessage": "already at max pool size", "teal": 1829}, {"pc": [1658], "errorMessage": "box value does not exist: this.stakingPoolApprovalProgram.size", "teal": 1884}, {"pc": [1794], "errorMessage": "numPools as uint16 overflowed 16 bits", "teal": 2011}, {"pc": [1839], "errorMessage": "argument 2 (stakedAmountPayment) for addStake must be a pay transaction", "teal": 2061}, {"pc": [1861], "errorMessage": "specified validator id isn't valid", "teal": 2097}, {"pc": [1894], "errorMessage": "can't stake with a validator that is past its sunsetting time", "teal": 2134}, {"pc": [1906], "errorMessage": "transaction verification failed: {\"txn\":\"stakedAmountPayment\",\"field\":\"sender\",\"expected\":\"staker\"}", "teal": 2154}, {"pc": [1914], "errorMessage": "transaction verification failed: {\"txn\":\"stakedAmountPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 2163}, {"pc": [1983], "errorMessage": "total staked for all of a validators pools may not exceed hard cap", "teal": 2234}, {"pc": [2033], "errorMessage": "No pool available with free stake.  Validator needs to add another pool", "teal": 2278}, {"pc": [2093], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 2331}, {"pc": [2236], "errorMessage": "global state value does not exist: AppID.fromUint64(pool1AppID).globalState('lastPayout')", "teal": 2480}, {"pc": [2400], "errorMessage": "wideRatio failed", "teal": 2631}, {"pc": [2470], "errorMessage": "argument 4 (poolKey) for stakeUpdatedViaRewards must be a (uint64,uint64,uint64)", "teal": 2705}, {"pc": [2658], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 2871}, {"pc": [2697], "errorMessage": "argument 0 (stakerRemoved) for stakeRemoved must be a bool", "teal": 2905}, {"pc": [2716], "errorMessage": "argument 3 (staker) for stakeRemoved must be a address", "teal": 2925}, {"pc": [2724], "errorMessage": "argument 4 (poolKey) for stakeRemoved must be a (uint64,uint64,uint64)", "teal": 2935}, {"pc": [2782], "errorMessage": "should only be called if algo or reward was removed", "teal": 3005}, {"pc": [2919], "errorMessage": "rewardRemoved can't be set if validator doesn't have reward token!", "teal": 3120}, {"pc": [2939], "errorMessage": "reward being removed must be covered by hold back amount", "teal": 3142}, {"pc": [3050], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 3251}, {"pc": [3104], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 3301}, {"pc": [3317], "errorMessage": "argument 1 (staker) for findPoolForStaker must be a address", "teal": 3491}, {"pc": [3363], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 3558}, {"pc": [3539], "errorMessage": "must stake at least the minimum for this pool", "teal": 3742}, {"pc": [3728], "errorMessage": "node number out of allowable range", "teal": 3940}, {"pc": [3781], "errorMessage": "can't move to same node", "teal": 4000}, {"pc": [3855], "errorMessage": "couldn't find pool app id in nodes to move", "teal": 4080}, {"pc": [3866], "errorMessage": "argument 0 (receiver) for emptyTokenRewards must be a address", "teal": 4096}, {"pc": [3922], "errorMessage": "this validator doesn't have a reward token defined", "teal": 4166}, {"pc": [3996], "errorMessage": "balance of remaining reward tokens should match the held back amount", "teal": 4243}, {"pc": [4021], "errorMessage": "can only be called by validator owner", "teal": 4277}, {"pc": [4060], "errorMessage": "can only be called by owner or manager of validator", "teal": 4316}, {"pc": [4077], "errorMessage": "the specified validator id isn't valid", "teal": 4340}, {"pc": [4086], "errorMessage": "pool id not in valid range", "teal": 4351}, {"pc": [4124], "errorMessage": "pool id outside of range of pools created for this validator", "teal": 4384}, {"pc": [4162], "errorMessage": "The passed in app id doesn't match the passed in ids", "teal": 4418}, {"pc": [4202], "errorMessage": "global state value does not exist: AppID.fromUint64(poolKey.poolAppId).globalState('validatorId')", "teal": 4443}, {"pc": [4226], "errorMessage": "global state value does not exist: AppID.fromUint64(poolKey.poolAppId).globalState('poolId')", "teal": 4459}, {"pc": [4274], "errorMessage": "global state value does not exist: AppID.fromUint64(validatorConfig.nfdForInfo).globalState('i.owner.a')", "teal": 4517}, {"pc": [4356], "errorMessage": "sender must be owner to add new validator", "teal": 4595}, {"pc": [4379], "errorMessage": "gating type not valid", "teal": 4618}, {"pc": [4402], "errorMessage": "epoch length not in allowable range", "teal": 4641}, {"pc": [4425], "errorMessage": "commission percentage not valid", "teal": 4664}, {"pc": [4445], "errorMessage": "validatorCommissionAddress must be set if percent to validator is not 0", "teal": 4688}, {"pc": [4455], "errorMessage": "staking pool must have minimum entry of 1 algo", "teal": 4700}, {"pc": [4478], "errorMessage": "number of pools per node must be be between 1 and the maximum allowed number", "teal": 4723}, {"pc": [4499], "errorMessage": "sunsettingOn must be later than now if set", "teal": 4745}, {"pc": [4633], "errorMessage": "global state value does not exist: AppID.fromUint64(poolAppId).globalState('numStakers')", "teal": 4894}, {"pc": [4641], "errorMessage": "global state value does not exist: AppID.fromUint64(poolAppId).globalState('staked')", "teal": 4904}, {"pc": [4834], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 5077}, {"pc": [4913], "errorMessage": "No empty slot available in the staker pool set", "teal": 5171}, {"pc": [4950], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 5227}, {"pc": [5088], "errorMessage": "No matching slot found when told to remove a pool from the stakers set", "teal": 5352}, {"pc": [5156], "errorMessage": "node number not in valid range", "teal": 5423}, {"pc": [5230], "errorMessage": "no available space in specified node for this pool", "teal": 5504}, {"pc": [5343], "errorMessage": "must have required minimum balance of validator defined token to add stake", "teal": 5640}, {"pc": [5362], "errorMessage": "specified asset must be created by creator that the validator defined as a requirement to stake", "teal": 5665}, {"pc": [5432], "errorMessage": "specified asset must be identical to the asset id defined as a requirement to stake", "teal": 5736}, {"pc": [5455], "errorMessage": "specified asset must be created by creator that is one of the linked addresses in an nfd", "teal": 5762}, {"pc": [5473], "errorMessage": "provided NFD must be valid", "teal": 5785}, {"pc": [5479], "errorMessage": "global state value does not exist: AppID.fromUint64(userOfferedNFDAppID).globalState('i.owner.a')", "teal": 5798}, {"pc": [5495], "errorMessage": "provided nfd for entry isn't owned or linked to the staker", "teal": 5810}, {"pc": [5514], "errorMessage": "global state value does not exist: AppID.fromUint64(userOfferedNFDAppID).globalState('i.parentAppID')", "teal": 5823}, {"pc": [5523], "errorMessage": "specified nfd must be a segment of the nfd the validator specified as a requirement", "teal": 5831}, {"pc": [5540], "errorMessage": "global state value does not exist: AppID.fromUint64(nfdAppID).globalState('i.name')", "teal": 5858}, {"pc": [5733], "errorMessage": "wideRatio failed", "teal": 6056}, {"pc": [5760], "errorMessage": "wideRatio failed", "teal": 6091}, {"pc": [5885], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 6219}, {"pc": [6155], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 6259}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoConfig:
+    """Struct for ValidatorInfo_config"""
+    id: int
+    owner: str
+    manager: str
+    nfdForInfo: int
+    entryGatingType: int
+    entryGatingAddress: str
+    entryGatingAssets: tuple[int, int, int, int]
+    gatingAssetMinBalance: int
+    rewardTokenId: int
+    rewardPerPayout: int
+    epochRoundLength: int
+    percentToValidator: int
+    validatorCommissionAddress: str
+    minEntryStake: int
+    maxAlgoPerPool: int
+    poolsPerNode: int
+    sunsettingOn: int
+    sunsettingTo: int
 
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoState:
+    """Struct for ValidatorInfo_state"""
+    numPools: int
+    totalStakers: int
+    totalAlgoStaked: int
+    rewardTokenHeldBack: int
 
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoTokenPayoutRatio:
+    """Struct for ValidatorInfo_tokenPayoutRatio"""
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    updatedForPayout: int
 
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfoNodePoolAssignments:
+    """Struct for ValidatorInfo_nodePoolAssignments"""
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
 
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
+@dataclasses.dataclass(frozen=True)
+class ValidatorInfo:
+    """Struct for ValidatorInfo"""
+    config: ValidatorInfoConfig
+    state: ValidatorInfoState
+    pools: tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
+    tokenPayoutRatio: ValidatorInfoTokenPayoutRatio
+    nodePoolAssignments: ValidatorInfoNodePoolAssignments
 
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
+@dataclasses.dataclass(frozen=True)
+class MbrAmounts:
+    """Struct for MbrAmounts"""
+    addValidatorMbr: int
+    addPoolMbr: int
+    poolInitMbr: int
+    addStakerMbr: int
 
 @dataclasses.dataclass(frozen=True)
 class Constraints:
@@ -82,32 +91,6 @@ class Constraints:
     maxNodes: int
     maxPoolsPerNode: int
     maxStakersPerPool: int
-
-@dataclasses.dataclass(frozen=True)
-class MbrAmounts:
-    """Struct for MbrAmounts"""
-    addValidatorMbr: int
-    addPoolMbr: int
-    poolInitMbr: int
-    addStakerMbr: int
-
-@dataclasses.dataclass(frozen=True)
-class NodePoolAssignmentConfig:
-    """Struct for NodePoolAssignmentConfig"""
-    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
-
-@dataclasses.dataclass(frozen=True)
-class PoolInfo:
-    """Struct for PoolInfo"""
-    poolAppId: int
-    totalStakers: int
-    totalAlgoStaked: int
-
-@dataclasses.dataclass(frozen=True)
-class PoolTokenPayoutRatio:
-    """Struct for PoolTokenPayoutRatio"""
-    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
-    updatedForPayout: int
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorConfig:
@@ -140,54 +123,11 @@ class ValidatorCurState:
     rewardTokenHeldBack: int
 
 @dataclasses.dataclass(frozen=True)
-class ValidatorInfoConfig:
-    """Struct for ValidatorInfoConfig"""
-    id: int
-    owner: str
-    manager: str
-    nfdForInfo: int
-    entryGatingType: int
-    entryGatingAddress: str
-    entryGatingAssets: tuple[int, int, int, int]
-    gatingAssetMinBalance: int
-    rewardTokenId: int
-    rewardPerPayout: int
-    epochRoundLength: int
-    percentToValidator: int
-    validatorCommissionAddress: str
-    minEntryStake: int
-    maxAlgoPerPool: int
-    poolsPerNode: int
-    sunsettingOn: int
-    sunsettingTo: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoState:
-    """Struct for ValidatorInfoState"""
-    numPools: int
+class PoolInfo:
+    """Struct for PoolInfo"""
+    poolAppId: int
     totalStakers: int
     totalAlgoStaked: int
-    rewardTokenHeldBack: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoTokenPayoutRatio:
-    """Struct for ValidatorInfoTokenPayoutRatio"""
-    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
-    updatedForPayout: int
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfoNodePoolAssignments:
-    """Struct for ValidatorInfoNodePoolAssignments"""
-    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
-
-@dataclasses.dataclass(frozen=True)
-class ValidatorInfo:
-    """Struct for ValidatorInfo"""
-    config: ValidatorInfoConfig
-    state: ValidatorInfoState
-    pools: tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]
-    tokenPayoutRatio: ValidatorInfoTokenPayoutRatio
-    nodePoolAssignments: ValidatorInfoNodePoolAssignments
 
 @dataclasses.dataclass(frozen=True)
 class ValidatorPoolKey:
@@ -196,6 +136,16 @@ class ValidatorPoolKey:
     poolId: int
     poolAppId: int
 
+@dataclasses.dataclass(frozen=True)
+class PoolTokenPayoutRatio:
+    """Struct for PoolTokenPayoutRatio"""
+    poolPctOfWhole: tuple[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]
+    updatedForPayout: int
+
+@dataclasses.dataclass(frozen=True)
+class NodePoolAssignmentConfig:
+    """Struct for NodePoolAssignmentConfig"""
+    nodes: tuple[tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]], tuple[tuple[int, int, int]]]
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class InitStakingContractArgs:
@@ -482,417 +432,417 @@ class ValidatorRegistryParams:
         args: tuple[int] | InitStakingContractArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "initStakingContract(uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="initStakingContract(uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "loadStakingContractData(uint64,byte[])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="loadStakingContractData(uint64,byte[])void",
+            args=_unpack_args(args),
+        ))
 
     def finalize_staking_contract(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "finalizeStakingContract()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="finalizeStakingContract()void",
+        ))
 
     def gas(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ))
 
     def get_mbr_amounts(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        ))
 
     def get_protocol_constraints(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        ))
 
     def get_num_validators(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNumValidators()uint64",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNumValidators()uint64",
+        ))
 
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorOwnerAndManager(uint64)(address,address)",
+            args=_unpack_args(args),
+        ))
 
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPools(uint64)(uint64,uint16,uint64)[]",
+            args=_unpack_args(args),
+        ))
 
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolAppId(uint64,uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolAppId(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getCurMaxStakePerPool(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getCurMaxStakePerPool(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "doesStakerNeedToPayMBR(address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="doesStakerNeedToPayMBR(address)bool",
+            args=_unpack_args(args),
+        ))
 
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            args=_unpack_args(args),
+        ))
 
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNodePoolAssignments(uint64)((uint64[3])[8])",
+            args=_unpack_args(args),
+        ))
 
     def get_nfd_registry_id(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNFDRegistryID()uint64",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNFDRegistryID()uint64",
+        ))
 
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorManager(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorManager(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorNFD(uint64,uint64,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorNFD(uint64,uint64,string)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorCommissionAddress(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorCommissionAddress(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ))
 
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            args=_unpack_args(args),
+        ))
 
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            args=_unpack_args(args),
+        ))
 
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "movePoolToNode(uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="movePoolToNode(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "emptyTokenRewards(uint64,address)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="emptyTokenRewards(uint64,address)uint64",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -914,417 +864,417 @@ class ValidatorRegistryCreateTransactionParams:
         args: tuple[int] | InitStakingContractArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "initStakingContract(uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="initStakingContract(uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def load_staking_contract_data(
         self,
         args: tuple[int, bytes | str] | LoadStakingContractDataArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "loadStakingContractData(uint64,byte[])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="loadStakingContractData(uint64,byte[])void",
+            args=_unpack_args(args),
+        ))
 
     def finalize_staking_contract(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "finalizeStakingContract()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="finalizeStakingContract()void",
+        ))
 
     def gas(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ))
 
     def get_mbr_amounts(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        ))
 
     def get_protocol_constraints(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        ))
 
     def get_num_validators(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNumValidators()uint64",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNumValidators()uint64",
+        ))
 
     def get_validator_config(
         self,
         args: tuple[int] | GetValidatorConfigArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_validator_state(
         self,
         args: tuple[int] | GetValidatorStateArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_validator_owner_and_manager(
         self,
         args: tuple[int] | GetValidatorOwnerAndManagerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorOwnerAndManager(uint64)(address,address)",
+            args=_unpack_args(args),
+        ))
 
     def get_pools(
         self,
         args: tuple[int] | GetPoolsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPools(uint64)(uint64,uint16,uint64)[]",
+            args=_unpack_args(args),
+        ))
 
     def get_pool_app_id(
         self,
         args: tuple[int, int] | GetPoolAppIdArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolAppId(uint64,uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolAppId(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def get_pool_info(
         self,
         args: tuple[ValidatorPoolKey] | GetPoolInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_cur_max_stake_per_pool(
         self,
         args: tuple[int] | GetCurMaxStakePerPoolArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getCurMaxStakePerPool(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getCurMaxStakePerPool(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def does_staker_need_to_pay_mbr(
         self,
         args: tuple[str] | DoesStakerNeedToPayMbrArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "doesStakerNeedToPayMBR(address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="doesStakerNeedToPayMBR(address)bool",
+            args=_unpack_args(args),
+        ))
 
     def get_staked_pools_for_account(
         self,
         args: tuple[str] | GetStakedPoolsForAccountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            args=_unpack_args(args),
+        ))
 
     def get_token_payout_ratio(
         self,
         args: tuple[int] | GetTokenPayoutRatioArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ))
 
     def get_node_pool_assignments(
         self,
         args: tuple[int] | GetNodePoolAssignmentsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNodePoolAssignments(uint64)((uint64[3])[8])",
+            args=_unpack_args(args),
+        ))
 
     def get_nfd_registry_id(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNFDRegistryID()uint64",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNFDRegistryID()uint64",
+        ))
 
     def add_validator(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str, ValidatorConfig] | AddValidatorArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_manager(
         self,
         args: tuple[int, str] | ChangeValidatorManagerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorManager(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorManager(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_sunset_info(
         self,
         args: tuple[int, int, int] | ChangeValidatorSunsetInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_nfd(
         self,
         args: tuple[int, int, str] | ChangeValidatorNfdArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorNFD(uint64,uint64,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorNFD(uint64,uint64,string)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_commission_address(
         self,
         args: tuple[int, str] | ChangeValidatorCommissionAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorCommissionAddress(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorCommissionAddress(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def change_validator_reward_info(
         self,
         args: tuple[int, int, str, tuple[int, int, int, int], int, int] | ChangeValidatorRewardInfoArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def add_pool(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddPoolArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def add_stake(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, int, int] | AddStakeArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def set_token_payout_ratio(
         self,
         args: tuple[int] | SetTokenPayoutRatioArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ))
 
     def stake_updated_via_rewards(
         self,
         args: tuple[ValidatorPoolKey, int, int, int, int] | StakeUpdatedViaRewardsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def stake_removed(
         self,
         args: tuple[ValidatorPoolKey, str, int, int, bool] | StakeRemovedArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            args=_unpack_args(args),
+        ))
 
     def find_pool_for_staker(
         self,
         args: tuple[int, str, int] | FindPoolForStakerArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            args=_unpack_args(args),
+        ))
 
     def move_pool_to_node(
         self,
         args: tuple[int, int, int] | MovePoolToNodeArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "movePoolToNode(uint64,uint64,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="movePoolToNode(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def empty_token_rewards(
         self,
         args: tuple[int, str] | EmptyTokenRewardsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "emptyTokenRewards(uint64,address)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="emptyTokenRewards(uint64,address)uint64",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -1347,15 +1297,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "initStakingContract(uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="initStakingContract(uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def load_staking_contract_data(
         self,
@@ -1363,85 +1312,79 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "loadStakingContractData(uint64,byte[])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="loadStakingContractData(uint64,byte[])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def finalize_staking_contract(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "finalizeStakingContract()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="finalizeStakingContract()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def gas(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def get_mbr_amounts(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[MbrAmounts]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getMbrAmounts()(uint64,uint64,uint64,uint64)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(MbrAmounts, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[MbrAmounts], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getMbrAmounts()(uint64,uint64,uint64,uint64)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[MbrAmounts], response)
 
     def get_protocol_constraints(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Constraints]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(Constraints, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[Constraints], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[Constraints], response)
 
     def get_num_validators(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNumValidators()uint64",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNumValidators()uint64",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def get_validator_config(
         self,
@@ -1449,15 +1392,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorConfig]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorConfig, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorConfig], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorConfig], response)
 
     def get_validator_state(
         self,
@@ -1465,15 +1407,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorCurState]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorCurState, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorCurState], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorState(uint64)(uint16,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorCurState], response)
 
     def get_validator_owner_and_manager(
         self,
@@ -1481,15 +1422,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[tuple[str, str]]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getValidatorOwnerAndManager(uint64)(address,address)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[tuple[str, str]], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getValidatorOwnerAndManager(uint64)(address,address)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[tuple[str, str]], response)
 
     def get_pools(
         self,
@@ -1497,15 +1437,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPools(uint64)(uint64,uint16,uint64)[]",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPools(uint64)(uint64,uint16,uint64)[]",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]], response)
 
     def get_pool_app_id(
         self,
@@ -1513,15 +1452,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolAppId(uint64,uint64)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolAppId(uint64,uint64)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def get_pool_info(
         self,
@@ -1529,15 +1467,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolInfo]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolInfo, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[PoolInfo], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[PoolInfo], response)
 
     def get_cur_max_stake_per_pool(
         self,
@@ -1545,15 +1482,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getCurMaxStakePerPool(uint64)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getCurMaxStakePerPool(uint64)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def does_staker_need_to_pay_mbr(
         self,
@@ -1561,15 +1497,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "doesStakerNeedToPayMBR(address)bool",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bool], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="doesStakerNeedToPayMBR(address)bool",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bool], response)
 
     def get_staked_pools_for_account(
         self,
@@ -1577,15 +1512,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[list[tuple[int, int, int]]], response)
 
     def get_token_payout_ratio(
         self,
@@ -1593,15 +1527,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolTokenPayoutRatio, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], response)
 
     def get_node_pool_assignments(
         self,
@@ -1609,29 +1542,27 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[NodePoolAssignmentConfig]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNodePoolAssignments(uint64)((uint64[3])[8])",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(NodePoolAssignmentConfig, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[NodePoolAssignmentConfig], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNodePoolAssignments(uint64)((uint64[3])[8])",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[NodePoolAssignmentConfig], response)
 
     def get_nfd_registry_id(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getNFDRegistryID()uint64",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getNFDRegistryID()uint64",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def add_validator(
         self,
@@ -1639,15 +1570,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def change_validator_manager(
         self,
@@ -1655,15 +1585,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorManager(uint64,address)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorManager(uint64,address)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def change_validator_sunset_info(
         self,
@@ -1671,15 +1600,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorSunsetInfo(uint64,uint64,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorSunsetInfo(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def change_validator_nfd(
         self,
@@ -1687,15 +1615,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorNFD(uint64,uint64,string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorNFD(uint64,uint64,string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def change_validator_commission_address(
         self,
@@ -1703,15 +1630,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorCommissionAddress(uint64,address)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorCommissionAddress(uint64,address)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def change_validator_reward_info(
         self,
@@ -1719,15 +1645,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def add_pool(
         self,
@@ -1735,15 +1660,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorPoolKey]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorPoolKey, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addPool(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], response)
 
     def add_stake(
         self,
@@ -1751,15 +1675,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[ValidatorPoolKey]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(ValidatorPoolKey, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="addStake(pay,uint64,uint64)(uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[ValidatorPoolKey], response)
 
     def set_token_payout_ratio(
         self,
@@ -1767,15 +1690,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setTokenPayoutRatio(uint64)(uint64[24],uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PoolTokenPayoutRatio, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setTokenPayoutRatio(uint64)(uint64[24],uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[PoolTokenPayoutRatio], response)
 
     def stake_updated_via_rewards(
         self,
@@ -1783,15 +1705,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def stake_removed(
         self,
@@ -1799,15 +1720,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def find_pool_for_staker(
         self,
@@ -1815,15 +1735,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[tuple[tuple[int, int, int], bool, bool]], response)
 
     def move_pool_to_node(
         self,
@@ -1831,15 +1750,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "movePoolToNode(uint64,uint64,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="movePoolToNode(uint64,uint64,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def empty_token_rewards(
         self,
@@ -1847,15 +1765,14 @@ class ValidatorRegistrySend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "emptyTokenRewards(uint64,address)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="emptyTokenRewards(uint64,address)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def clear_state(
         self,
@@ -1904,54 +1821,34 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def staking_pool_initialized(self) -> bool:
         """Get the current value of the stakingPoolInitialized key in global_state state"""
         value = self.app_client.state.global_state.get_value("stakingPoolInitialized")
-        if isinstance(value, dict) and "bool" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["bool"], value)  # type: ignore
         return typing.cast(bool, value)
 
     @property
     def num_validators(self) -> int:
         """Get the current value of the numValidators key in global_state state"""
         value = self.app_client.state.global_state.get_value("numValidators")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def num_stakers(self) -> int:
         """Get the current value of the numStakers key in global_state state"""
         value = self.app_client.state.global_state.get_value("numStakers")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def total_algo_staked(self) -> int:
         """Get the current value of the totalAlgoStaked key in global_state state"""
         value = self.app_client.state.global_state.get_value("totalAlgoStaked")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _BoxState:
@@ -1959,32 +1856,16 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "ValidatorInfo": ValidatorInfo
-        }
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def staking_pool_approval_program(self) -> bytes:
         """Get the current value of the stakingPoolApprovalProgram key in box state"""
         value = self.app_client.state.box.get_value("stakingPoolApprovalProgram")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
@@ -1993,7 +1874,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "validatorList",
-            self._struct_classes.get("ValidatorInfo")
         )
 
     @property
@@ -2002,7 +1882,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "stakerPoolSet",
-            None
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -2017,26 +1896,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -2155,7 +2026,7 @@ class ValidatorRegistryClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -2403,18 +2274,7 @@ class ValidatorRegistryClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class ValidatorRegistryComposer:
@@ -2423,7 +2283,6 @@ class ValidatorRegistryComposer:
     def __init__(self, client: "ValidatorRegistryClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def init_staking_contract(
         self,
@@ -2434,11 +2293,6 @@ class ValidatorRegistryComposer:
             self.client.params.init_staking_contract(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "initStakingContract(uint64)void", v
             )
         )
         return self
@@ -2454,11 +2308,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "loadStakingContractData(uint64,byte[])void", v
-            )
-        )
         return self
 
     def finalize_staking_contract(
@@ -2469,11 +2318,6 @@ class ValidatorRegistryComposer:
             self.client.params.finalize_staking_contract(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "finalizeStakingContract()void", v
             )
         )
         return self
@@ -2488,11 +2332,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "gas()void", v
-            )
-        )
         return self
 
     def get_mbr_amounts(
@@ -2503,11 +2342,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_mbr_amounts(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getMbrAmounts()(uint64,uint64,uint64,uint64)", v
             )
         )
         return self
@@ -2522,11 +2356,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getProtocolConstraints()(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)", v
-            )
-        )
         return self
 
     def get_num_validators(
@@ -2537,11 +2366,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_num_validators(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getNumValidators()uint64", v
             )
         )
         return self
@@ -2557,11 +2381,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getValidatorConfig(uint64)(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", v
-            )
-        )
         return self
 
     def get_validator_state(
@@ -2573,11 +2392,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_validator_state(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getValidatorState(uint64)(uint16,uint64,uint64,uint64)", v
             )
         )
         return self
@@ -2593,11 +2407,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getValidatorOwnerAndManager(uint64)(address,address)", v
-            )
-        )
         return self
 
     def get_pools(
@@ -2609,11 +2418,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_pools(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getPools(uint64)(uint64,uint16,uint64)[]", v
             )
         )
         return self
@@ -2629,11 +2433,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getPoolAppId(uint64,uint64)uint64", v
-            )
-        )
         return self
 
     def get_pool_info(
@@ -2645,11 +2444,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_pool_info(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getPoolInfo((uint64,uint64,uint64))(uint64,uint16,uint64)", v
             )
         )
         return self
@@ -2665,11 +2459,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getCurMaxStakePerPool(uint64)uint64", v
-            )
-        )
         return self
 
     def does_staker_need_to_pay_mbr(
@@ -2681,11 +2470,6 @@ class ValidatorRegistryComposer:
             self.client.params.does_staker_need_to_pay_mbr(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "doesStakerNeedToPayMBR(address)bool", v
             )
         )
         return self
@@ -2701,11 +2485,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getStakedPoolsForAccount(address)(uint64,uint64,uint64)[]", v
-            )
-        )
         return self
 
     def get_token_payout_ratio(
@@ -2717,11 +2496,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_token_payout_ratio(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getTokenPayoutRatio(uint64)(uint64[24],uint64)", v
             )
         )
         return self
@@ -2737,11 +2511,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getNodePoolAssignments(uint64)((uint64[3])[8])", v
-            )
-        )
         return self
 
     def get_nfd_registry_id(
@@ -2752,11 +2521,6 @@ class ValidatorRegistryComposer:
             self.client.params.get_nfd_registry_id(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getNFDRegistryID()uint64", v
             )
         )
         return self
@@ -2772,11 +2536,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "addValidator(pay,string,(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64))uint64", v
-            )
-        )
         return self
 
     def change_validator_manager(
@@ -2788,11 +2547,6 @@ class ValidatorRegistryComposer:
             self.client.params.change_validator_manager(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "changeValidatorManager(uint64,address)void", v
             )
         )
         return self
@@ -2808,11 +2562,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "changeValidatorSunsetInfo(uint64,uint64,uint64)void", v
-            )
-        )
         return self
 
     def change_validator_nfd(
@@ -2824,11 +2573,6 @@ class ValidatorRegistryComposer:
             self.client.params.change_validator_nfd(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "changeValidatorNFD(uint64,uint64,string)void", v
             )
         )
         return self
@@ -2844,11 +2588,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "changeValidatorCommissionAddress(uint64,address)void", v
-            )
-        )
         return self
 
     def change_validator_reward_info(
@@ -2860,11 +2599,6 @@ class ValidatorRegistryComposer:
             self.client.params.change_validator_reward_info(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "changeValidatorRewardInfo(uint64,uint8,address,uint64[4],uint64,uint64)void", v
             )
         )
         return self
@@ -2880,11 +2614,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "addPool(pay,uint64,uint64)(uint64,uint64,uint64)", v
-            )
-        )
         return self
 
     def add_stake(
@@ -2896,11 +2625,6 @@ class ValidatorRegistryComposer:
             self.client.params.add_stake(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "addStake(pay,uint64,uint64)(uint64,uint64,uint64)", v
             )
         )
         return self
@@ -2916,11 +2640,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "setTokenPayoutRatio(uint64)(uint64[24],uint64)", v
-            )
-        )
         return self
 
     def stake_updated_via_rewards(
@@ -2932,11 +2651,6 @@ class ValidatorRegistryComposer:
             self.client.params.stake_updated_via_rewards(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "stakeUpdatedViaRewards((uint64,uint64,uint64),uint64,uint64,uint64,uint64)void", v
             )
         )
         return self
@@ -2952,11 +2666,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "stakeRemoved((uint64,uint64,uint64),address,uint64,uint64,bool)void", v
-            )
-        )
         return self
 
     def find_pool_for_staker(
@@ -2968,11 +2677,6 @@ class ValidatorRegistryComposer:
             self.client.params.find_pool_for_staker(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "findPoolForStaker(uint64,address,uint64)((uint64,uint64,uint64),bool,bool)", v
             )
         )
         return self
@@ -2988,11 +2692,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "movePoolToNode(uint64,uint64,uint64)void", v
-            )
-        )
         return self
 
     def empty_token_rewards(
@@ -3006,11 +2705,6 @@ class ValidatorRegistryComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "emptyTokenRewards(uint64,address)uint64", v
-            )
-        )
         return self
 
     def clear_state(
@@ -3022,12 +2716,7 @@ class ValidatorRegistryComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -3049,7 +2738,7 @@ class ValidatorRegistryComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -3066,3 +2755,52 @@ class ValidatorRegistryComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "approvalProgramSize"}], "name": "initStakingContract", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "offset"}, {"type": "byte[]", "name": "data"}], "name": "loadStakingContractData", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "finalizeStakingContract", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "gas", "returns": {"type": "void"}, "desc": "gas is a dummy no-op call that can be used to pool-up resource references and opcode cost", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getMbrAmounts", "returns": {"type": "(uint64,uint64,uint64,uint64)", "struct": "MbrAmounts"}, "desc": "Returns the MBR amounts needed for various actions:\n[\n addValidatorMbr: uint64 - mbr needed to add a new validator - paid to validator contract\n addPoolMbr: uint64 - mbr needed to add a new pool - paid to validator\n poolInitMbr: uint64 - mbr needed to initStorage() of pool - paid to pool itself\n addStakerMbr: uint64 - mbr staker needs to add to first staking payment (stays w/ validator)\n]", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getProtocolConstraints", "returns": {"type": "(uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)", "struct": "Constraints"}, "desc": "Returns the protocol constraints so that UIs can limit what users specify for validator configuration parameters.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getNumValidators", "returns": {"type": "uint64"}, "desc": "Returns the current number of validators", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorConfig", "returns": {"type": "(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "struct": "ValidatorConfig"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorState", "returns": {"type": "(uint16,uint64,uint64,uint64)", "struct": "ValidatorCurState"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getValidatorOwnerAndManager", "returns": {"type": "(address,address)"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "PoolInfo[] - array of pools\nNot callable from other contracts because 1K return but can be called w/ simulate which bumps log returns", "name": "validatorId"}], "name": "getPools", "returns": {"type": "(uint64,uint16,uint64)[]"}, "desc": "Return list of all pools for this validator.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "uint64", "name": "poolId"}], "name": "getPoolAppId", "returns": {"type": "uint64"}, "desc": "getPoolAppId is useful for callers to determine app to call for removing stake if they don't have staking or\nwant to get staker list for an account.  The staking pool also uses it to get the app id of staking pool 1\n(which contains reward tokens if being used) so that the amount available can be determined.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "name": "poolKey", "struct": "ValidatorPoolKey"}], "name": "getPoolInfo", "returns": {"type": "(uint64,uint16,uint64)", "struct": "PoolInfo"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}], "name": "getCurMaxStakePerPool", "returns": {"type": "uint64"}, "desc": "Calculate the maximum stake per pool for a given validator.\nNormally this would be maxAlgoPerPool, but it should also never go above MaxAllowedStake / numPools so\nas pools are added the max allowed per pool can reduce.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "address", "name": "staker"}], "name": "doesStakerNeedToPayMBR", "returns": {"type": "bool"}, "desc": "Helper callers can call w/ simulate to determine if 'AddStaker' MBR should be included w/ staking amount", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "address", "desc": "The account to retrieve staked pools for.\n ValidatorPoolKey[] - The array of staked pools for the account.", "name": "staker"}], "name": "getStakedPoolsForAccount", "returns": {"type": "(uint64,uint64,uint64)[]"}, "desc": "Retrieves the staked pools for an account.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.\n PoolTokenPayoutRatio - The token payout ratio for the validator.", "name": "validatorId"}], "name": "getTokenPayoutRatio", "returns": {"type": "(uint64[24],uint64)", "struct": "PoolTokenPayoutRatio"}, "desc": "Retrieves the token payout ratio for a given validator - returning the pool ratios of whole so that token\npayouts across pools can be based on a stable snaphost of stake.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}], "name": "getNodePoolAssignments", "returns": {"type": "((uint64[3])[8])", "struct": "NodePoolAssignmentConfig"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getNFDRegistryID", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment from caller which covers mbr increase of new validator storage", "name": "mbrPayment"}, {"type": "string", "desc": "(Optional) Name of nfd (used as double-check against id specified in config)", "name": "nfdName"}, {"type": "(uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "desc": "ValidatorConfig struct", "name": "config", "struct": "ValidatorConfig"}], "name": "addValidator", "returns": {"type": "uint64", "desc": "uint64 validator id"}, "desc": "Adds a new validator\nRequires at least 10 ALGO as the 'fee' for the transaction to help dissuade spammed validator adds.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "address", "name": "owner"}, {"type": "address", "name": "manager"}], "name": "retiOP_addedValidator", "desc": "Logs the addition of a new validator to the system, its initial owner and manager"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to change the manager for.", "name": "validatorId"}, {"type": "address", "desc": "The new manager address.", "name": "manager"}], "name": "changeValidatorManager", "returns": {"type": "void"}, "desc": "Changes the Validator manager for a specific Validator id.\n[ ONLY OWNER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to update.", "name": "validatorId"}, {"type": "uint64", "desc": "The new sunset timestamp.", "name": "sunsettingOn"}, {"type": "uint64", "desc": "The new sunset to validator id.", "name": "sunsettingTo"}], "name": "changeValidatorSunsetInfo", "returns": {"type": "void"}, "desc": "Updates the sunset information for a given validator.\n[ ONLY OWNER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator to update.", "name": "validatorId"}, {"type": "uint64", "desc": "The application id of the NFD to assign to the validator.", "name": "nfdAppID"}, {"type": "string", "desc": "The name of the NFD (which must match)", "name": "nfdName"}], "name": "changeValidatorNFD", "returns": {"type": "void"}, "desc": "Changes the NFD for a validator in the validatorList contract.\n[ ONLY OWNER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "address", "name": "commissionAddress"}], "name": "changeValidatorCommissionAddress", "returns": {"type": "void"}, "desc": "Change the commission address that validator rewards are sent to.\n     [ ONLY OWNER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "validatorId"}, {"type": "uint8", "name": "EntryGatingType"}, {"type": "address", "name": "EntryGatingAddress"}, {"type": "uint64[4]", "name": "EntryGatingAssets"}, {"type": "uint64", "name": "GatingAssetMinBalance"}, {"type": "uint64", "name": "RewardPerPayout"}], "name": "changeValidatorRewardInfo", "returns": {"type": "void"}, "desc": "Allow the additional rewards (gating entry, additional token rewards) information be changed at will.\n[ ONLY OWNER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment from caller which covers mbr increase of adding a new pool", "name": "mbrPayment"}, {"type": "uint64", "desc": "is id of validator to pool to (must be owner or manager)", "name": "validatorId"}, {"type": "uint64", "desc": "is node number to add to", "name": "nodeNum"}], "name": "addPool", "returns": {"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey pool key to created pool", "struct": "ValidatorPoolKey"}, "desc": "Adds a new pool to a validator's pool set, returning the 'key' to reference the pool in the future for staking, etc.\nThe caller must pay the cost of the validators MBR increase as well as the MBR that will be needed for the pool itself.\n\n\n[ ONLY OWNER OR MANAGER CAN call ]", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "num"}, {"type": "uint64", "name": "poolAppId"}], "name": "retiOP_validatorAddedPool", "desc": "Logs the addition of a new pool to a particular validator ID"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "payment coming from staker to place into a pool", "name": "stakedAmountPayment"}, {"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "uint64", "desc": "only if validator has gating to enter - this is asset id or nfd id that corresponds to gating.\nTxn sender is factored in as well if that is part of gating.\n*", "name": "valueToVerify"}], "name": "addStake", "returns": {"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey - The key of the validator pool.", "struct": "ValidatorPoolKey"}, "desc": "Adds stake to a validator pool.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountStaked"}], "name": "retiOP_stakeAdded", "desc": "Logs how much stake was added by a staker to a particular staking pool"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "validator id (and thus pool) calling us.  Verified so that sender MUST be pool 1 of this validator.", "name": "validatorId"}], "name": "setTokenPayoutRatio", "returns": {"type": "(uint64[24],uint64)", "desc": "PoolTokenPayoutRatio - the finished ratio data", "struct": "PoolTokenPayoutRatio"}, "desc": "setTokenPayoutRatio is called by Staking Pool # 1 (ONLY) to ask the validator (us) to calculate the ratios\nof stake in the pools for subsequent token payouts (ie: 2 pools, '100' algo total staked, 60 in pool 1, and 40\nin pool 2)  This is done so we have a stable snapshot of stake - taken once per epoch - only triggered by\npool 1 doing payout.  pools other than 1 doing payout call pool 1 to ask it do it first.\nIt would be 60/40% in the poolPctOfWhole values.  The token reward payouts then use these values instead of\ntheir 'current' stake which changes as part of the payouts themselves (and people could be changing stake\nduring the epoch updates across pools)\n\n\nMultiple pools will call us via pool 1 (pool2-pool1-validator, etc.) so don't assert on pool1 calling multiple\ntimes in same epoch.  Just return.", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "desc": "ValidatorPoolKey type", "name": "poolKey", "struct": "ValidatorPoolKey"}, {"type": "uint64", "desc": "amount this validator's total stake increased via rewards", "name": "algoToAdd"}, {"type": "uint64", "desc": "amount this validator's total stake increased via rewards (that should be", "name": "rewardTokenAmountReserved"}, {"type": "uint64", "desc": "the commission amount the validator was paid, if any", "name": "validatorCommission"}, {"type": "uint64", "desc": "if the pool was in saturated state, the amount sent back to the fee sink.\nseen as 'accounted for/pending spent')", "name": "saturatedBurnToFeeSink"}], "name": "stakeUpdatedViaRewards", "returns": {"type": "void"}, "desc": "stakeUpdatedViaRewards is called by Staking pools to inform the validator (us) that a particular amount of total\nstake has been added to the specified pool.  This is used to update the stats we have in our PoolInfo storage.\nThe calling App id is validated against our pool list as well.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "validatorCommission"}, {"type": "uint64", "name": "saturatedBurnToFeeSink"}, {"type": "uint64", "name": "algoAdded"}, {"type": "uint64", "name": "rewardTokenHeldBack"}], "name": "retiOP_epochRewardUpdate", "desc": "Logs how much algo was detected as being added to a staking pool as part of epoch reward calculations.\nCommission amount to validator, excess burned if pool is saturated, and the amount of tokens held back are logged as well."}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(uint64,uint64,uint64)", "desc": "calling us from which stake was removed", "name": "poolKey", "struct": "ValidatorPoolKey"}, {"type": "address", "name": "staker"}, {"type": "uint64", "desc": "algo amount removed", "name": "amountRemoved"}, {"type": "uint64", "desc": "if applicable, amount of token reward removed (by pool 1 caller) or TO remove and pay out (via pool 1 from different pool caller)", "name": "rewardRemoved"}, {"type": "bool", "name": "stakerRemoved"}], "name": "stakeRemoved", "returns": {"type": "void"}, "desc": "stakeRemoved is called by Staking pools to inform the validator (us) that a particular amount of total stake has been removed\nfrom the specified pool.  This is used to update the stats we have in our PoolInfo storage.\nIf any amount of rewardRemoved is specified, then that amount of reward is sent to the use\nThe calling App id is validated against our pool list as well.", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountUnstaked"}, {"type": "uint64", "name": "rewardTokensReceived"}, {"type": "uint64", "name": "rewardTokenAssetId"}], "name": "retiOP_stakeRemoved", "desc": "Logs how much stake was removed by a staker from a particular staking pool"}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "address", "desc": "The address of the staker.", "name": "staker"}, {"type": "uint64", "desc": "The amount to stake.", "name": "amountToStake"}], "name": "findPoolForStaker", "returns": {"type": "((uint64,uint64,uint64),bool,bool)", "desc": "ValidatorPoolKey, boolean, boolean - The pool for the staker, true/false on whether the staker is 'new'\nto this VALIDATOR, and true/false if staker is new to the protocol."}, "desc": "Finds the pool for a staker based on the provided validator id, staker address, and amount to stake.\nFirst checks the stakers 'already staked list' for the validator preferring those (adding if possible) then adds\nto new pool if necessary.", "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "nodeNum"}], "name": "movePoolToNode", "returns": {"type": "void"}, "desc": "Find the specified pool (in any node number) and move it to the specified node.\nThe pool account is forced offline if moved so prior node will still run for 320 rounds but\nnew key goes online on new node soon after (320 rounds after it goes online)\nNo-op if success, asserts if not found or can't move  (no space in target)\n[ ONLY OWNER OR MANAGER CAN CHANGE ]", "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "desc": "The id of the validator.", "name": "validatorId"}, {"type": "address", "desc": "the account to send the tokens to (must already be opted-in to the reward token)", "name": "receiver"}], "name": "emptyTokenRewards", "returns": {"type": "uint64", "desc": "uint64 the amount of reward token sent"}, "desc": "Sends the reward tokens held in pool 1 to specified receiver.\nThis is intended to be used by the owner when they want to get reward tokens 'back' which they sent to\nthe first pool (likely because validator is sunsetting.  Any tokens currently 'reserved' for stakers to claim will\nNOT be sent as they must be held back for stakers to later claim.\n[ ONLY OWNER CAN CALL]", "events": []}], "name": "ValidatorRegistry", "state": {"keys": {"box": {"stakingPoolApprovalProgram": {"key": "cG9vbFRlbXBsYXRlQXBwcm92YWxCeXRlcw==", "keyType": "AVMBytes", "valueType": "AVMBytes"}}, "global": {"stakingPoolInitialized": {"key": "aW5pdA==", "keyType": "AVMBytes", "valueType": "bool"}, "numValidators": {"key": "bnVtVg==", "keyType": "AVMBytes", "valueType": "uint64"}, "numStakers": {"key": "bnVtU3Rha2Vycw==", "keyType": "AVMBytes", "valueType": "uint64"}, "totalAlgoStaked": {"key": "c3Rha2Vk", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {}}, "maps": {"box": {"validatorList": {"keyType": "uint64", "valueType": "ValidatorInfo", "prefix": "dg=="}, "stakerPoolSet": {"keyType": "address", "valueType": "(uint64,uint64,uint64)[6]", "prefix": "c3Bz"}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 3}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"ValidatorInfo": [{"name": "config", "type": [{"name": "id", "type": "uint64"}, {"name": "owner", "type": "address"}, {"name": "manager", "type": "address"}, {"name": "nfdForInfo", "type": "uint64"}, {"name": "entryGatingType", "type": "uint8"}, {"name": "entryGatingAddress", "type": "address"}, {"name": "entryGatingAssets", "type": "uint64[4]"}, {"name": "gatingAssetMinBalance", "type": "uint64"}, {"name": "rewardTokenId", "type": "uint64"}, {"name": "rewardPerPayout", "type": "uint64"}, {"name": "epochRoundLength", "type": "uint32"}, {"name": "percentToValidator", "type": "uint32"}, {"name": "validatorCommissionAddress", "type": "address"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "poolsPerNode", "type": "uint8"}, {"name": "sunsettingOn", "type": "uint64"}, {"name": "sunsettingTo", "type": "uint64"}]}, {"name": "state", "type": [{"name": "numPools", "type": "uint16"}, {"name": "totalStakers", "type": "uint64"}, {"name": "totalAlgoStaked", "type": "uint64"}, {"name": "rewardTokenHeldBack", "type": "uint64"}]}, {"name": "pools", "type": "(uint64,uint16,uint64)[24]"}, {"name": "tokenPayoutRatio", "type": [{"name": "poolPctOfWhole", "type": "uint64[24]"}, {"name": "updatedForPayout", "type": "uint64"}]}, {"name": "nodePoolAssignments", "type": [{"name": "nodes", "type": "(uint64[3])[8]"}]}], "MbrAmounts": [{"name": "addValidatorMbr", "type": "uint64"}, {"name": "addPoolMbr", "type": "uint64"}, {"name": "poolInitMbr", "type": "uint64"}, {"name": "addStakerMbr", "type": "uint64"}], "Constraints": [{"name": "epochPayoutRoundsMin", "type": "uint64"}, {"name": "epochPayoutRoundsMax", "type": "uint64"}, {"name": "minPctToValidatorWFourDecimals", "type": "uint64"}, {"name": "maxPctToValidatorWFourDecimals", "type": "uint64"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "maxAlgoPerValidator", "type": "uint64"}, {"name": "amtConsideredSaturated", "type": "uint64"}, {"name": "maxNodes", "type": "uint64"}, {"name": "maxPoolsPerNode", "type": "uint64"}, {"name": "maxStakersPerPool", "type": "uint64"}], "ValidatorConfig": [{"name": "id", "type": "uint64"}, {"name": "owner", "type": "address"}, {"name": "manager", "type": "address"}, {"name": "nfdForInfo", "type": "uint64"}, {"name": "entryGatingType", "type": "uint8"}, {"name": "entryGatingAddress", "type": "address"}, {"name": "entryGatingAssets", "type": "uint64[4]"}, {"name": "gatingAssetMinBalance", "type": "uint64"}, {"name": "rewardTokenId", "type": "uint64"}, {"name": "rewardPerPayout", "type": "uint64"}, {"name": "epochRoundLength", "type": "uint32"}, {"name": "percentToValidator", "type": "uint32"}, {"name": "validatorCommissionAddress", "type": "address"}, {"name": "minEntryStake", "type": "uint64"}, {"name": "maxAlgoPerPool", "type": "uint64"}, {"name": "poolsPerNode", "type": "uint8"}, {"name": "sunsettingOn", "type": "uint64"}, {"name": "sunsettingTo", "type": "uint64"}], "ValidatorCurState": [{"name": "numPools", "type": "uint16"}, {"name": "totalStakers", "type": "uint64"}, {"name": "totalAlgoStaked", "type": "uint64"}, {"name": "rewardTokenHeldBack", "type": "uint64"}], "PoolInfo": [{"name": "poolAppId", "type": "uint64"}, {"name": "totalStakers", "type": "uint16"}, {"name": "totalAlgoStaked", "type": "uint64"}], "ValidatorPoolKey": [{"name": "id", "type": "uint64"}, {"name": "poolId", "type": "uint64"}, {"name": "poolAppId", "type": "uint64"}], "PoolTokenPayoutRatio": [{"name": "poolPctOfWhole", "type": "uint64[24]"}, {"name": "updatedForPayout", "type": "uint64"}], "NodePoolAssignmentConfig": [{"name": "nodes", "type": "(uint64[3])[8]"}]}, "desc": "", "events": [{"args": [{"type": "uint64", "name": "id"}, {"type": "address", "name": "owner"}, {"type": "address", "name": "manager"}], "name": "retiOP_addedValidator", "desc": "Logs the addition of a new validator to the system, its initial owner and manager"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "num"}, {"type": "uint64", "name": "poolAppId"}], "name": "retiOP_validatorAddedPool", "desc": "Logs the addition of a new pool to a particular validator ID"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountStaked"}], "name": "retiOP_stakeAdded", "desc": "Logs how much stake was added by a staker to a particular staking pool"}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "uint64", "name": "validatorCommission"}, {"type": "uint64", "name": "saturatedBurnToFeeSink"}, {"type": "uint64", "name": "algoAdded"}, {"type": "uint64", "name": "rewardTokenHeldBack"}], "name": "retiOP_epochRewardUpdate", "desc": "Logs how much algo was detected as being added to a staking pool as part of epoch reward calculations.\nCommission amount to validator, excess burned if pool is saturated, and the amount of tokens held back are logged as well."}, {"args": [{"type": "uint64", "name": "id"}, {"type": "uint16", "name": "poolNum"}, {"type": "uint64", "name": "poolAppId"}, {"type": "address", "name": "staker"}, {"type": "uint64", "name": "amountUnstaked"}, {"type": "uint64", "name": "rewardTokensReceived"}, {"type": "uint64", "name": "rewardTokenAssetId"}], "name": "retiOP_stakeRemoved", "desc": "Logs how much stake was removed by a staker from a particular staking pool"}], "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [554], "errorMessage": "pool id must be between 1 and number of pools for this validator", "teal": 582}, {"pc": [586], "errorMessage": "argument 0 (poolKey) for getPoolInfo must be a (uint64,uint64,uint64)", "teal": 618}, {"pc": [723], "errorMessage": "argument 0 (staker) for doesStakerNeedToPayMBR must be a address", "teal": 771}, {"pc": [758], "errorMessage": "argument 0 (staker) for getStakedPoolsForAccount must be a address", "teal": 815}, {"pc": [805], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 877}, {"pc": [915], "errorMessage": "the specified validator id doesn't exist", "teal": 1015}, {"pc": [953], "errorMessage": "argument 0 (config) for addValidator must be a (uint64,address,address,uint64,uint8,address,uint64[4],uint64,uint64,uint64,uint32,uint32,address,uint64,uint64,uint8,uint64,uint64)", "teal": 1064}, {"pc": [969], "errorMessage": "argument 2 (mbrPayment) for addValidator must be a pay transaction", "teal": 1080}, {"pc": [994], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 1119}, {"pc": [1007], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"amount\",\"expected\":\"this.getMbrAmounts().addValidatorMbr\"}", "teal": 1130}, {"pc": [1018], "errorMessage": "fee must be 10 ALGO or more to prevent spamming of validators", "teal": 1140}, {"pc": [1084], "errorMessage": "provided NFD must be valid", "teal": 1208}, {"pc": [1096], "errorMessage": "global state value does not exist: AppID.fromUint64(config.nfdForInfo).globalState('i.owner.a')", "teal": 1223}, {"pc": [1098], "errorMessage": "If specifying NFD, account adding validator must be owner", "teal": 1227}, {"pc": [1134], "errorMessage": "provided NFD App id for gating must be valid NFD", "teal": 1263}, {"pc": [1171], "errorMessage": "argument 0 (manager) for changeValidatorManager must be a address", "teal": 1298}, {"pc": [1194], "errorMessage": "needs to at least be valid address", "teal": 1331}, {"pc": [1293], "errorMessage": "provided NFD must be valid", "teal": 1446}, {"pc": [1301], "errorMessage": "global state value does not exist: AppID.fromUint64(nfdAppID).globalState('i.owner.a')", "teal": 1459}, {"pc": [1303], "errorMessage": "If specifying NFD, account adding validator must be owner", "teal": 1463}, {"pc": [1326], "errorMessage": "argument 0 (commissionAddress) for changeValidatorCommissionAddress must be a address", "teal": 1488}, {"pc": [1380], "errorMessage": "argument 2 (EntryGatingAssets) for changeValidatorRewardInfo must be a uint64[4]", "teal": 1548}, {"pc": [1389], "errorMessage": "argument 3 (EntryGatingAddress) for changeValidatorRewardInfo must be a address", "teal": 1558}, {"pc": [1397], "errorMessage": "argument 4 (EntryGatingType) for changeValidatorRewardInfo must be a uint8", "teal": 1568}, {"pc": [1430], "errorMessage": "invalid Entry gating type", "teal": 1609}, {"pc": [1471], "errorMessage": "provided NFD App id for gating must be valid NFD", "teal": 1654}, {"pc": [1558], "errorMessage": "argument 2 (mbrPayment) for addPool must be a pay transaction", "teal": 1740}, {"pc": [1583], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 1780}, {"pc": [1596], "errorMessage": "transaction verification failed: {\"txn\":\"mbrPayment\",\"field\":\"amount\",\"expected\":\"this.getMbrAmounts().addPoolMbr\"}", "teal": 1791}, {"pc": [1605], "errorMessage": "specified validator id isn't valid", "teal": 1804}, {"pc": [1628], "errorMessage": "already at max pool size", "teal": 1829}, {"pc": [1658], "errorMessage": "box value does not exist: this.stakingPoolApprovalProgram.size", "teal": 1884}, {"pc": [1794], "errorMessage": "numPools as uint16 overflowed 16 bits", "teal": 2011}, {"pc": [1839], "errorMessage": "argument 2 (stakedAmountPayment) for addStake must be a pay transaction", "teal": 2061}, {"pc": [1861], "errorMessage": "specified validator id isn't valid", "teal": 2097}, {"pc": [1894], "errorMessage": "can't stake with a validator that is past its sunsetting time", "teal": 2134}, {"pc": [1906], "errorMessage": "transaction verification failed: {\"txn\":\"stakedAmountPayment\",\"field\":\"sender\",\"expected\":\"staker\"}", "teal": 2154}, {"pc": [1914], "errorMessage": "transaction verification failed: {\"txn\":\"stakedAmountPayment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 2163}, {"pc": [1983], "errorMessage": "total staked for all of a validators pools may not exceed hard cap", "teal": 2234}, {"pc": [2033], "errorMessage": "No pool available with free stake.  Validator needs to add another pool", "teal": 2278}, {"pc": [2093], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 2331}, {"pc": [2236], "errorMessage": "global state value does not exist: AppID.fromUint64(pool1AppID).globalState('lastPayout')", "teal": 2480}, {"pc": [2400], "errorMessage": "wideRatio failed", "teal": 2631}, {"pc": [2470], "errorMessage": "argument 4 (poolKey) for stakeUpdatedViaRewards must be a (uint64,uint64,uint64)", "teal": 2705}, {"pc": [2658], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 2871}, {"pc": [2697], "errorMessage": "argument 0 (stakerRemoved) for stakeRemoved must be a bool", "teal": 2905}, {"pc": [2716], "errorMessage": "argument 3 (staker) for stakeRemoved must be a address", "teal": 2925}, {"pc": [2724], "errorMessage": "argument 4 (poolKey) for stakeRemoved must be a (uint64,uint64,uint64)", "teal": 2935}, {"pc": [2782], "errorMessage": "should only be called if algo or reward was removed", "teal": 3005}, {"pc": [2919], "errorMessage": "rewardRemoved can't be set if validator doesn't have reward token!", "teal": 3120}, {"pc": [2939], "errorMessage": "reward being removed must be covered by hold back amount", "teal": 3142}, {"pc": [3050], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 3251}, {"pc": [3104], "errorMessage": "poolKey.poolId as uint16 overflowed 16 bits", "teal": 3301}, {"pc": [3317], "errorMessage": "argument 1 (staker) for findPoolForStaker must be a address", "teal": 3491}, {"pc": [3363], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 3558}, {"pc": [3539], "errorMessage": "must stake at least the minimum for this pool", "teal": 3742}, {"pc": [3728], "errorMessage": "node number out of allowable range", "teal": 3940}, {"pc": [3781], "errorMessage": "can't move to same node", "teal": 4000}, {"pc": [3855], "errorMessage": "couldn't find pool app id in nodes to move", "teal": 4080}, {"pc": [3866], "errorMessage": "argument 0 (receiver) for emptyTokenRewards must be a address", "teal": 4096}, {"pc": [3922], "errorMessage": "this validator doesn't have a reward token defined", "teal": 4166}, {"pc": [3996], "errorMessage": "balance of remaining reward tokens should match the held back amount", "teal": 4243}, {"pc": [4021], "errorMessage": "can only be called by validator owner", "teal": 4277}, {"pc": [4060], "errorMessage": "can only be called by owner or manager of validator", "teal": 4316}, {"pc": [4077], "errorMessage": "the specified validator id isn't valid", "teal": 4340}, {"pc": [4086], "errorMessage": "pool id not in valid range", "teal": 4351}, {"pc": [4124], "errorMessage": "pool id outside of range of pools created for this validator", "teal": 4384}, {"pc": [4162], "errorMessage": "The passed in app id doesn't match the passed in ids", "teal": 4418}, {"pc": [4202], "errorMessage": "global state value does not exist: AppID.fromUint64(poolKey.poolAppId).globalState('validatorId')", "teal": 4443}, {"pc": [4226], "errorMessage": "global state value does not exist: AppID.fromUint64(poolKey.poolAppId).globalState('poolId')", "teal": 4459}, {"pc": [4274], "errorMessage": "global state value does not exist: AppID.fromUint64(validatorConfig.nfdForInfo).globalState('i.owner.a')", "teal": 4517}, {"pc": [4356], "errorMessage": "sender must be owner to add new validator", "teal": 4595}, {"pc": [4379], "errorMessage": "gating type not valid", "teal": 4618}, {"pc": [4402], "errorMessage": "epoch length not in allowable range", "teal": 4641}, {"pc": [4425], "errorMessage": "commission percentage not valid", "teal": 4664}, {"pc": [4445], "errorMessage": "validatorCommissionAddress must be set if percent to validator is not 0", "teal": 4688}, {"pc": [4455], "errorMessage": "staking pool must have minimum entry of 1 algo", "teal": 4700}, {"pc": [4478], "errorMessage": "number of pools per node must be be between 1 and the maximum allowed number", "teal": 4723}, {"pc": [4499], "errorMessage": "sunsettingOn must be later than now if set", "teal": 4745}, {"pc": [4633], "errorMessage": "global state value does not exist: AppID.fromUint64(poolAppId).globalState('numStakers')", "teal": 4894}, {"pc": [4641], "errorMessage": "global state value does not exist: AppID.fromUint64(poolAppId).globalState('staked')", "teal": 4904}, {"pc": [4834], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 5077}, {"pc": [4913], "errorMessage": "No empty slot available in the staker pool set", "teal": 5171}, {"pc": [4950], "errorMessage": "box value does not exist: this.stakerPoolSet(staker).value", "teal": 5227}, {"pc": [5088], "errorMessage": "No matching slot found when told to remove a pool from the stakers set", "teal": 5352}, {"pc": [5156], "errorMessage": "node number not in valid range", "teal": 5423}, {"pc": [5230], "errorMessage": "no available space in specified node for this pool", "teal": 5504}, {"pc": [5343], "errorMessage": "must have required minimum balance of validator defined token to add stake", "teal": 5640}, {"pc": [5362], "errorMessage": "specified asset must be created by creator that the validator defined as a requirement to stake", "teal": 5665}, {"pc": [5432], "errorMessage": "specified asset must be identical to the asset id defined as a requirement to stake", "teal": 5736}, {"pc": [5455], "errorMessage": "specified asset must be created by creator that is one of the linked addresses in an nfd", "teal": 5762}, {"pc": [5473], "errorMessage": "provided NFD must be valid", "teal": 5785}, {"pc": [5479], "errorMessage": "global state value does not exist: AppID.fromUint64(userOfferedNFDAppID).globalState('i.owner.a')", "teal": 5798}, {"pc": [5495], "errorMessage": "provided nfd for entry isn't owned or linked to the staker", "teal": 5810}, {"pc": [5514], "errorMessage": "global state value does not exist: AppID.fromUint64(userOfferedNFDAppID).globalState('i.parentAppID')", "teal": 5823}, {"pc": [5523], "errorMessage": "specified nfd must be a segment of the nfd the validator specified as a requirement", "teal": 5831}, {"pc": [5540], "errorMessage": "global state value does not exist: AppID.fromUint64(nfdAppID).globalState('i.name')", "teal": 5858}, {"pc": [5733], "errorMessage": "wideRatio failed", "teal": 6056}, {"pc": [5760], "errorMessage": "wideRatio failed", "teal": 6091}, {"pc": [5885], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 6219}, {"pc": [6155], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 6259}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'ValidatorInfo': ValidatorInfo,
+    'ValidatorInfo_config': ValidatorInfoConfig,
+    'ValidatorInfo_state': ValidatorInfoState,
+    'ValidatorInfo_tokenPayoutRatio': ValidatorInfoTokenPayoutRatio,
+    'ValidatorInfo_nodePoolAssignments': ValidatorInfoNodePoolAssignments,
+    'MbrAmounts': MbrAmounts,
+    'Constraints': Constraints,
+    'ValidatorConfig': ValidatorConfig,
+    'ValidatorCurState': ValidatorCurState,
+    'PoolInfo': PoolInfo,
+    'ValidatorPoolKey': ValidatorPoolKey,
+    'PoolTokenPayoutRatio': PoolTokenPayoutRatio,
+    'NodePoolAssignmentConfig': NodePoolAssignmentConfig,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

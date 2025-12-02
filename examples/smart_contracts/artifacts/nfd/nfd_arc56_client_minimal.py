@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "nfdName"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "purchaseAmount"}, {"type": "uint64", "name": "expTime"}, {"type": "address", "name": "commission1Addr"}, {"type": "uint64", "name": "commission1Pct"}, {"type": "address", "name": "commission2Addr"}, {"type": "uint64", "name": "commission2Pct"}, {"type": "uint64", "name": "segmentRootAppId"}, {"type": "address", "name": "segmentRootCommissionAddr"}], "name": "createApplication", "returns": {"type": "void"}}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "versionNum"}], "name": "updateApplication", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "gas", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "nfdName"}, {"type": "string", "name": "url"}], "name": "mintAsa", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldNames"}], "name": "deleteFields", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "childNfdName"}, {"type": "uint64", "name": "childNfdAppID"}], "name": "updateSegmentCount", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldAndVals"}], "name": "getFieldUpdateCost", "returns": {"type": "uint64"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldAndVals"}], "name": "updateFields", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "fieldName"}], "name": "readField", "returns": {"type": "byte[]"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "sellAmount"}, {"type": "address", "name": "reservedFor"}], "name": "offerForSale", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "uint64", "name": "amount"}, {"type": "address", "name": "reservedFor"}], "name": "nfd_offerForSale", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "cancelSale", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "offer"}, {"type": "string", "name": "note"}], "name": "postOffer", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "sender"}, {"type": "uint64", "name": "amount"}, {"type": "string", "name": "note"}], "name": "nfd_postedOffer", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "oneYearPrice"}, {"type": "uint64", "name": "segmentPlatformCostInAlgo"}], "name": "mintPayout", "returns": {"type": "(uint64,address,uint64,address,uint64)", "struct": "PayoutInfo"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "payment"}], "name": "purchase", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "sellAmount"}, {"type": "uint64", "name": "offerAmount"}, {"type": "uint64", "name": "overpaymentRefund"}, {"type": "address", "name": "convFeeAddr"}, {"type": "uint64", "name": "convFeeAmount"}], "name": "nfd_purchased", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "fieldName"}, {"type": "address", "name": "address"}], "name": "isAddressInField", "returns": {"type": "bool"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getRenewPrice", "returns": {"type": "uint64"}, "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "hash"}], "name": "updateHash", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}], "name": "contractLock", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}, {"type": "uint64", "name": "usdPrice"}], "name": "segmentLock", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}], "name": "vaultOptInLock", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64[]", "name": "assets"}], "name": "vaultOptIn", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "amount"}, {"type": "address", "name": "receiver"}, {"type": "string", "name": "note"}, {"type": "uint64", "name": "asset"}, {"type": "uint64[]", "name": "otherAssets"}], "name": "vaultSend", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "The payment transaction from which the renewal period is determined..", "name": "payment"}], "name": "renew", "returns": {"type": "void"}, "desc": "Renew adds more time to an existing NFDs expiration, or renews it if expired.\n\n\nAs part of v2-v3 upgrade, the NFDs are converted from lifetime NFDs to renewal NFDs. The v2 contract is upgraded\nto v3, then renew is called on the (now v3) nfd to turn it into a renewal (note the if curExpiration === 0 check)\n\n\nIf already renewal, then it extends the current expiration time by the time specified (minimum 1 yr) (365 / price paid * mint price)\nExpirations can never be more than NFD_MAX_EXPIRATION_DAYS days in the future.\n\n\nIF the NFD is expired:\n    x The current owner can take it back over at base price - and NFD metadata doesn't have to be cleared - they\n    get it back as-is.\n    x If not current owner, then the price goes from high of base price * 10,000 down to base price over 24 hrs where\n    'buyer' has to pay at least that price.  The NFD MUST ALREADY HAVE ITS METADATA CLEARED!", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "origOwner"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "priceOneYear"}, {"type": "uint64", "name": "renewAmount"}, {"type": "uint64", "name": "expTime"}], "name": "nfd_renewed", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "fieldName"}, {"type": "address", "name": "address"}], "name": "setPrimaryAddress", "returns": {"type": "void"}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "desc": "- MUST START with u.cav. (!)\ngets 'added' to 'set' in next arg - must be fixed-sized bytes", "name": "fieldBeingVerified"}, {"type": "string", "desc": "(must BE v.ca[...].as)", "name": "fieldSetName"}], "name": "registryAddingVerifiedAddress", "returns": {"type": "bool", "desc": "true if added or already present, false otherwise"}, "desc": "Approved call from registry instructing us to move the specified u.cav.xx field and add to the specified\nverified field.", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressLinked", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "desc": "The field being changed in the address registry.", "name": "fieldBeingChanged"}, {"type": "address", "desc": "The address to be removed from the field.", "name": "address"}, {"type": "address", "desc": "the address to send reclaimed MBR (if any)\n boolean - true if valid removed", "name": "mbrRefundDest"}], "name": "registryRemovingVerifiedAddress", "returns": {"type": "bool"}, "desc": "Approved call from registry instructing us to REMOVE an address from the specified verified address set", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressUnlinked", "desc": ""}]}], "name": "NFDInstance", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {"boxes": {"keyType": "AVMBytes", "valueType": "AVMBytes"}}, "global": {"globalState": {"keyType": "AVMBytes", "valueType": "AVMBytes"}}, "local": {}}, "schema": {"global": {"bytes": 30, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"PayoutInfo": [{"name": "amountToSeller", "type": "uint64"}, {"name": "commissionAddress", "type": "address"}, {"name": "amountToCommission", "type": "uint64"}, {"name": "segmentRootOwner", "type": "address"}, {"name": "amountToSegmentRoot", "type": "uint64"}]}, "desc": "", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "uint64", "name": "amount"}, {"type": "address", "name": "reservedFor"}], "name": "nfd_offerForSale", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "sender"}, {"type": "uint64", "name": "amount"}, {"type": "string", "name": "note"}], "name": "nfd_postedOffer", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "sellAmount"}, {"type": "uint64", "name": "offerAmount"}, {"type": "uint64", "name": "overpaymentRefund"}, {"type": "address", "name": "convFeeAddr"}, {"type": "uint64", "name": "convFeeAmount"}], "name": "nfd_purchased", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "origOwner"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "priceOneYear"}, {"type": "uint64", "name": "renewAmount"}, {"type": "uint64", "name": "expTime"}], "name": "nfd_renewed", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressLinked", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressUnlinked", "desc": ""}], "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [44], "errorMessage": "argument 0 (segmentRootCommissionAddr) for createApplication must be a address", "teal": 37}, {"pc": [60], "errorMessage": "argument 3 (commission2Addr) for createApplication must be a address", "teal": 55}, {"pc": [72], "errorMessage": "argument 5 (commission1Addr) for createApplication must be a address", "teal": 69}, {"pc": [88], "errorMessage": "argument 8 (buyer) for createApplication must be a address", "teal": 87}, {"pc": [96], "errorMessage": "argument 9 (seller) for createApplication must be a address", "teal": 97}, {"pc": [117], "errorMessage": "caller must be NFD registry!", "teal": 122}, {"pc": [217], "errorMessage": "commission must be between 1 and 50%", "teal": 224}, {"pc": [251], "errorMessage": "commission must be between 1 and 50%", "teal": 262}, {"pc": [382], "errorMessage": "parent commission address must be set if parent app id is set and parent is unlocked", "teal": 370}, {"pc": [393], "errorMessage": "the segment commission agent should be the parent nfd's seller", "teal": 384}, {"pc": [420], "errorMessage": "contract must be unlocked to upgrade", "teal": 420}, {"pc": [426], "errorMessage": "caller must be NFD registry!", "teal": 429}, {"pc": [449], "errorMessage": "can't still be in minting state", "teal": 459}, {"pc": [467], "errorMessage": "NFD can't be expired for these v1/v2 operations", "teal": 481}, {"pc": [731], "errorMessage": "unknown method", "teal": 677}, {"pc": [768], "errorMessage": "caller must be NFD registry!", "teal": 721}, {"pc": [959], "errorMessage": "field not removable or no permissions to remove", "teal": 942}, {"pc": [963], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 950}, {"pc": [1067], "errorMessage": "field not removable or no permissions to remove", "teal": 1075}, {"pc": [1111], "errorMessage": "caller must be NFD registry!", "teal": 1130}, {"pc": [1121], "errorMessage": "child NFD MUST still be in pre-claim state!", "teal": 1144}, {"pc": [1144], "errorMessage": "passed in child name must match name in created nfd state", "teal": 1172}, {"pc": [1177], "errorMessage": "parent must be suffix of child", "teal": 1209}, {"pc": [1346], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 1381}, {"pc": [1386], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 1423}, {"pc": [1487], "errorMessage": "can't update fields if NFD expired", "teal": 1537}, {"pc": [1615], "errorMessage": "invalid update call by registry", "teal": 1644}, {"pc": [1717], "errorMessage": "field not updatable or no permissions to update", "teal": 1738}, {"pc": [1763], "errorMessage": "can't update fields if NFD expired", "teal": 1799}, {"pc": [1803], "errorMessage": "field not updatable or no permissions to update", "teal": 1844}, {"pc": [1902], "errorMessage": "must be user-defined or verified field to fetch", "teal": 1953}, {"pc": [1914], "errorMessage": "box value does not exist: this.boxes(fieldName).value", "teal": 1971}, {"pc": [1944], "errorMessage": "box value does not exist: this.boxes(boxName).value", "teal": 2005}, {"pc": [1994], "errorMessage": "box value does not exist: this.boxes(boxName).value", "teal": 2057}, {"pc": [2021], "errorMessage": "argument 0 (reservedFor) for offerForSale must be a address", "teal": 2093}, {"pc": [2039], "errorMessage": "can't sell if NFD expired", "teal": 2117}, {"pc": [2089], "errorMessage": "can only be sold if no user-defined or verified properties remain", "teal": 2165}, {"pc": [2106], "errorMessage": "must be sold for at least MIN amount", "teal": 2185}, {"pc": [2252], "errorMessage": "can't update fields if NFD expired", "teal": 2323}, {"pc": [2265], "errorMessage": "must be for sale", "teal": 2340}, {"pc": [2420], "errorMessage": "caller must be NFD registry!", "teal": 2484}, {"pc": [2652], "errorMessage": "argument 0 (payment) for purchase must be a pay transaction", "teal": 2751}, {"pc": [2677], "errorMessage": "can't be expired", "teal": 2782}, {"pc": [2681], "errorMessage": "must be for sale", "teal": 2789}, {"pc": [2733], "errorMessage": "payment sender must be same as purchase caller", "teal": 2830}, {"pc": [2749], "errorMessage": "Reserved owner set, but sender isn't the reserved address", "teal": 2853}, {"pc": [2795], "errorMessage": "offer must be at least min amount", "teal": 2900}, {"pc": [2801], "errorMessage": "offer must be at least sell amount", "teal": 2910}, {"pc": [2823], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"amount\",\"expected\":\"origOfferamt\"}", "teal": 2935}, {"pc": [2831], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 2944}, {"pc": [3291], "errorMessage": "argument 0 (address) for isAddressInField must be a address", "teal": 3406}, {"pc": [3336], "errorMessage": "box value does not exist: this.boxes(fieldName).value", "teal": 3458}, {"pc": [3553], "errorMessage": "must pass 32-byte hash that isn't 0", "teal": 3711}, {"pc": [3567], "errorMessage": "only txnlab or owner can request an nfd nft hash update", "teal": 3729}, {"pc": [3603], "errorMessage": "argument 0 (lock) for contractLock must be a bool", "teal": 3782}, {"pc": [3649], "errorMessage": "argument 1 (lock) for segmentLock must be a bool", "teal": 3835}, {"pc": [3732], "errorMessage": "amount must be at least NFD_MIN_SEGMENT_USD dollars in algo", "teal": 3930}, {"pc": [3747], "errorMessage": "argument 0 (lock) for vaultOptInLock must be a bool", "teal": 3952}, {"pc": [3812], "errorMessage": "sender must be owner when vault locked", "teal": 4032}, {"pc": [3817], "errorMessage": "part of opt-in for new asset, must have prior txn paying MBR", "teal": 4042}, {"pc": [3830], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"typeEnum\",\"expected\":\"pay\"}", "teal": 4061}, {"pc": [3838], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 4070}, {"pc": [3853], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"amount\",\"expected\":\"100_000 * assets.length\"}", "teal": 4084}, {"pc": [3954], "errorMessage": "argument 3 (receiver) for vaultSend must be a address", "teal": 4198}, {"pc": [3994], "errorMessage": "can't specify other assets if sending algo from vault", "teal": 4247}, {"pc": [4061], "errorMessage": "can only send one asset if amount == 0", "teal": 4329}, {"pc": [4128], "errorMessage": "receiver must be owner", "teal": 4402}, {"pc": [4246], "errorMessage": "argument 0 (payment) for renew must be a pay transaction", "teal": 4545}, {"pc": [4265], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 4585}, {"pc": [4395], "errorMessage": "can't claim expired nfd unless all metadata is cleared", "teal": 4714}, {"pc": [4403], "errorMessage": "must pay at least minimum renewal price", "teal": 4727}, {"pc": [4559], "errorMessage": "global state value does not exist: parentAppId.globalState(NFD_KEY_OWNER)", "teal": 4900}, {"pc": [4725], "errorMessage": "argument 0 (address) for setPrimaryAddress must be a address", "teal": 5047}, {"pc": [4811], "errorMessage": "caller must be NFD registry!", "teal": 5134}, {"pc": [4829], "errorMessage": "field being verified MUST START with u.cav", "teal": 5148}, {"pc": [4838], "errorMessage": "destination field MUST START with v.ca[....]", "teal": 5158}, {"pc": [4853], "errorMessage": "destination field must end END with .as", "teal": 5173}, {"pc": [4859], "errorMessage": "referenced field to add as verified address must have value in box storage", "teal": 5186}, {"pc": [4868], "errorMessage": "box value does not exist: this.boxes(fieldBeingVerified).value", "teal": 5201}, {"pc": [4933], "errorMessage": "argument 0 (mbrRefundDest) for registryRemovingVerifiedAddress must be a address", "teal": 5261}, {"pc": [4941], "errorMessage": "argument 1 (address) for registryRemovingVerifiedAddress must be a address", "teal": 5271}, {"pc": [4971], "errorMessage": "caller must be NFD registry!", "teal": 5310}, {"pc": [4983], "errorMessage": "can't be for sale", "teal": 5326}, {"pc": [4992], "errorMessage": "verified field MUST START with v.ca[....]", "teal": 5337}, {"pc": [5007], "errorMessage": "verified field must end END with .as", "teal": 5355}, {"pc": [5016], "errorMessage": "box value does not exist: this.boxes(fieldBeingChanged).size", "teal": 5370}, {"pc": [5184], "errorMessage": "sender must be owner", "teal": 5550}, {"pc": [5189], "errorMessage": "part of opt-in for new asset, must have prior txn paying MBR", "teal": 5560}, {"pc": [5202], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"typeEnum\",\"expected\":\"pay\"}", "teal": 5579}, {"pc": [5210], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 5588}, {"pc": [5223], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"amount\",\"expected\":\"100_000 * (this.txn.numAppArgs - 1)\"}", "teal": 5601}, {"pc": [5326], "errorMessage": "global state value does not exist: AppID.fromUint64(appId).globalState(key)", "teal": 5738}, {"pc": [5380], "errorMessage": "internal fields can never be deleted", "teal": 5804}, {"pc": [5397], "errorMessage": "must be owned", "teal": 5828}, {"pc": [5409], "errorMessage": "can't be for sale", "teal": 5844}, {"pc": [5466], "errorMessage": "internal fields can never be updated", "teal": 5906}, {"pc": [5521], "errorMessage": "must be owned", "teal": 5963}, {"pc": [5526], "errorMessage": "can't be for sale", "teal": 5971}, {"pc": [5532], "errorMessage": "sender must be owner", "teal": 5981}, {"pc": [5562], "errorMessage": "updating v.caAlgo field isn't allowed via regular field update", "teal": 6017}, {"pc": [5683], "errorMessage": "can't be for sale", "teal": 6162}, {"pc": [5688], "errorMessage": "can't be expired", "teal": 6170}, {"pc": [5773], "errorMessage": "max expiration exceeded parameters defined by registry", "teal": 6282}, {"pc": [5941], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6515}, {"pc": [5956], "errorMessage": "address 'set' should already have at least two values", "teal": 6533}, {"pc": [6024], "errorMessage": "address must be found in set in order to move it", "teal": 6615}, {"pc": [6090], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6698}, {"pc": [6109], "errorMessage": "existing set must be multiple of key being added", "teal": 6719}, {"pc": [6216], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6855}, {"pc": [6385], "errorMessage": "sender must be owner", "teal": 7064}, {"pc": [6400], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 7073}, {"pc": [6616], "errorMessage": "this contract does not implement the given ABI method for call UpdateApplication", "teal": 7114}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class PayoutInfo:
@@ -76,7 +27,6 @@ class PayoutInfo:
     amountToCommission: int
     segmentRootOwner: str
     amountToSegmentRoot: int
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class MintAsaArgs:
@@ -319,307 +269,307 @@ class NfdInstanceParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ))
 
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintAsa(string,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintAsa(string,string)void",
+            args=_unpack_args(args),
+        ))
 
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "deleteFields(byte[][])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="deleteFields(byte[][])void",
+            args=_unpack_args(args),
+        ))
 
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateSegmentCount(string,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateSegmentCount(string,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getFieldUpdateCost(byte[][])uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getFieldUpdateCost(byte[][])uint64",
+            args=_unpack_args(args),
+        ))
 
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateFields(byte[][])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateFields(byte[][])void",
+            args=_unpack_args(args),
+        ))
 
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "readField(byte[])byte[]",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="readField(byte[])byte[]",
+            args=_unpack_args(args),
+        ))
 
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "offerForSale(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="offerForSale(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def cancel_sale(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "cancelSale()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="cancelSale()void",
+        ))
 
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "postOffer(uint64,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="postOffer(uint64,string)void",
+            args=_unpack_args(args),
+        ))
 
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "purchase(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="purchase(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "isAddressInField(string,address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="isAddressInField(string,address)bool",
+            args=_unpack_args(args),
+        ))
 
     def get_renew_price(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getRenewPrice()uint64",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getRenewPrice()uint64",
+        ))
 
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateHash(byte[])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateHash(byte[])void",
+            args=_unpack_args(args),
+        ))
 
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "contractLock(bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="contractLock(bool)void",
+            args=_unpack_args(args),
+        ))
 
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "segmentLock(bool,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="segmentLock(bool,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptInLock(bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptInLock(bool)void",
+            args=_unpack_args(args),
+        ))
 
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptIn(uint64[])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptIn(uint64[])void",
+            args=_unpack_args(args),
+        ))
 
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultSend(uint64,address,string,uint64,uint64[])void",
+            args=_unpack_args(args),
+        ))
 
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "renew(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="renew(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setPrimaryAddress(string,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setPrimaryAddress(string,address)void",
+            args=_unpack_args(args),
+        ))
 
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryAddingVerifiedAddress(string,string)bool",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryAddingVerifiedAddress(string,string)bool",
+            args=_unpack_args(args),
+        ))
 
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryRemovingVerifiedAddress(string,address,address)bool",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -640,307 +590,307 @@ class NfdInstanceCreateTransactionParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ))
 
     def mint_asa(
         self,
         args: tuple[str, str] | MintAsaArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintAsa(string,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintAsa(string,string)void",
+            args=_unpack_args(args),
+        ))
 
     def delete_fields(
         self,
         args: tuple[list[bytes | str]] | DeleteFieldsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "deleteFields(byte[][])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="deleteFields(byte[][])void",
+            args=_unpack_args(args),
+        ))
 
     def update_segment_count(
         self,
         args: tuple[str, int] | UpdateSegmentCountArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateSegmentCount(string,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateSegmentCount(string,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def get_field_update_cost(
         self,
         args: tuple[list[bytes | str]] | GetFieldUpdateCostArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getFieldUpdateCost(byte[][])uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getFieldUpdateCost(byte[][])uint64",
+            args=_unpack_args(args),
+        ))
 
     def update_fields(
         self,
         args: tuple[list[bytes | str]] | UpdateFieldsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateFields(byte[][])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateFields(byte[][])void",
+            args=_unpack_args(args),
+        ))
 
     def read_field(
         self,
         args: tuple[bytes | str] | ReadFieldArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "readField(byte[])byte[]",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="readField(byte[])byte[]",
+            args=_unpack_args(args),
+        ))
 
     def offer_for_sale(
         self,
         args: tuple[int, str] | OfferForSaleArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "offerForSale(uint64,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="offerForSale(uint64,address)void",
+            args=_unpack_args(args),
+        ))
 
     def cancel_sale(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "cancelSale()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="cancelSale()void",
+        ))
 
     def post_offer(
         self,
         args: tuple[int, str] | PostOfferArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "postOffer(uint64,string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="postOffer(uint64,string)void",
+            args=_unpack_args(args),
+        ))
 
     def mint_payout(
         self,
         args: tuple[int, int] | MintPayoutArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def purchase(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | PurchaseArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "purchase(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="purchase(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def is_address_in_field(
         self,
         args: tuple[str, str] | IsAddressInFieldArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "isAddressInField(string,address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="isAddressInField(string,address)bool",
+            args=_unpack_args(args),
+        ))
 
     def get_renew_price(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getRenewPrice()uint64",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getRenewPrice()uint64",
+        ))
 
     def update_hash(
         self,
         args: tuple[bytes | str] | UpdateHashArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateHash(byte[])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateHash(byte[])void",
+            args=_unpack_args(args),
+        ))
 
     def contract_lock(
         self,
         args: tuple[bool] | ContractLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "contractLock(bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="contractLock(bool)void",
+            args=_unpack_args(args),
+        ))
 
     def segment_lock(
         self,
         args: tuple[bool, int] | SegmentLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "segmentLock(bool,uint64)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="segmentLock(bool,uint64)void",
+            args=_unpack_args(args),
+        ))
 
     def vault_opt_in_lock(
         self,
         args: tuple[bool] | VaultOptInLockArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptInLock(bool)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptInLock(bool)void",
+            args=_unpack_args(args),
+        ))
 
     def vault_opt_in(
         self,
         args: tuple[list[int]] | VaultOptInArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptIn(uint64[])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptIn(uint64[])void",
+            args=_unpack_args(args),
+        ))
 
     def vault_send(
         self,
         args: tuple[int, str, str, int, list[int]] | VaultSendArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultSend(uint64,address,string,uint64,uint64[])void",
+            args=_unpack_args(args),
+        ))
 
     def renew(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | RenewArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "renew(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="renew(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def set_primary_address(
         self,
         args: tuple[str, str] | SetPrimaryAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setPrimaryAddress(string,address)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setPrimaryAddress(string,address)void",
+            args=_unpack_args(args),
+        ))
 
     def registry_adding_verified_address(
         self,
         args: tuple[str, str] | RegistryAddingVerifiedAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryAddingVerifiedAddress(string,string)bool",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryAddingVerifiedAddress(string,string)bool",
+            args=_unpack_args(args),
+        ))
 
     def registry_removing_verified_address(
         self,
         args: tuple[str, str, str] | RegistryRemovingVerifiedAddressArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryRemovingVerifiedAddress(string,address,address)bool",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -962,14 +912,13 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "gas()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="gas()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def mint_asa(
         self,
@@ -977,15 +926,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintAsa(string,string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintAsa(string,string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def delete_fields(
         self,
@@ -993,15 +941,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "deleteFields(byte[][])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="deleteFields(byte[][])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def update_segment_count(
         self,
@@ -1009,15 +956,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateSegmentCount(string,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateSegmentCount(string,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def get_field_update_cost(
         self,
@@ -1025,15 +971,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getFieldUpdateCost(byte[][])uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getFieldUpdateCost(byte[][])uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def update_fields(
         self,
@@ -1041,15 +986,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateFields(byte[][])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateFields(byte[][])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def read_field(
         self,
@@ -1057,15 +1001,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bytes]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "readField(byte[])byte[]",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bytes], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="readField(byte[])byte[]",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bytes], response)
 
     def offer_for_sale(
         self,
@@ -1073,29 +1016,27 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "offerForSale(uint64,address)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="offerForSale(uint64,address)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def cancel_sale(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "cancelSale()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="cancelSale()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def post_offer(
         self,
@@ -1103,15 +1044,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "postOffer(uint64,string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="postOffer(uint64,string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def mint_payout(
         self,
@@ -1119,15 +1059,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[PayoutInfo]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(PayoutInfo, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[PayoutInfo], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[PayoutInfo], response)
 
     def purchase(
         self,
@@ -1135,15 +1074,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "purchase(pay)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="purchase(pay)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def is_address_in_field(
         self,
@@ -1151,29 +1089,27 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "isAddressInField(string,address)bool",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bool], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="isAddressInField(string,address)bool",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bool], response)
 
     def get_renew_price(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "getRenewPrice()uint64",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="getRenewPrice()uint64",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def update_hash(
         self,
@@ -1181,15 +1117,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "updateHash(byte[])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="updateHash(byte[])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def contract_lock(
         self,
@@ -1197,15 +1132,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "contractLock(bool)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="contractLock(bool)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def segment_lock(
         self,
@@ -1213,15 +1147,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "segmentLock(bool,uint64)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="segmentLock(bool,uint64)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def vault_opt_in_lock(
         self,
@@ -1229,15 +1162,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptInLock(bool)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptInLock(bool)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def vault_opt_in(
         self,
@@ -1245,15 +1177,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultOptIn(uint64[])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultOptIn(uint64[])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def vault_send(
         self,
@@ -1261,15 +1192,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vaultSend(uint64,address,string,uint64,uint64[])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vaultSend(uint64,address,string,uint64,uint64[])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def renew(
         self,
@@ -1277,15 +1207,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "renew(pay)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="renew(pay)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def set_primary_address(
         self,
@@ -1293,15 +1222,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "setPrimaryAddress(string,address)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="setPrimaryAddress(string,address)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def registry_adding_verified_address(
         self,
@@ -1309,15 +1237,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryAddingVerifiedAddress(string,string)bool",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bool], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryAddingVerifiedAddress(string,string)bool",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bool], response)
 
     def registry_removing_verified_address(
         self,
@@ -1325,15 +1252,14 @@ class NfdInstanceSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[bool]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "registryRemovingVerifiedAddress(string,address,address)bool",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[bool], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="registryRemovingVerifiedAddress(string,address,address)bool",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[bool], response)
 
     def clear_state(
         self,
@@ -1371,23 +1297,11 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return {}
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return converted
+        return typing.cast(dict[str, typing.Any], result)
 
     @property
     def global_state(self) -> "_MapState[bytes, bytes]":
@@ -1395,7 +1309,6 @@ class _GlobalState:
         return _MapState(
             self.app_client.state.global_state,
             "globalState",
-            None
         )
 
 class _BoxState:
@@ -1403,23 +1316,11 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> dict[str, typing.Any]:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return {}
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return converted
+        return typing.cast(dict[str, typing.Any], result)
 
     @property
     def boxes(self) -> "_MapState[bytes, bytes]":
@@ -1427,7 +1328,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "boxes",
-            None
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -1442,26 +1342,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -1580,7 +1472,7 @@ class NfdInstanceClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -1780,18 +1672,7 @@ class NfdInstanceClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class NfdInstanceComposer:
@@ -1800,7 +1681,6 @@ class NfdInstanceComposer:
     def __init__(self, client: "NfdInstanceClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def gas(
         self,
@@ -1810,11 +1690,6 @@ class NfdInstanceComposer:
             self.client.params.gas(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "gas()void", v
             )
         )
         return self
@@ -1830,11 +1705,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "mintAsa(string,string)void", v
-            )
-        )
         return self
 
     def delete_fields(
@@ -1846,11 +1716,6 @@ class NfdInstanceComposer:
             self.client.params.delete_fields(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "deleteFields(byte[][])void", v
             )
         )
         return self
@@ -1866,11 +1731,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "updateSegmentCount(string,uint64)void", v
-            )
-        )
         return self
 
     def get_field_update_cost(
@@ -1882,11 +1742,6 @@ class NfdInstanceComposer:
             self.client.params.get_field_update_cost(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getFieldUpdateCost(byte[][])uint64", v
             )
         )
         return self
@@ -1902,11 +1757,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "updateFields(byte[][])void", v
-            )
-        )
         return self
 
     def read_field(
@@ -1918,11 +1768,6 @@ class NfdInstanceComposer:
             self.client.params.read_field(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "readField(byte[])byte[]", v
             )
         )
         return self
@@ -1938,11 +1783,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "offerForSale(uint64,address)void", v
-            )
-        )
         return self
 
     def cancel_sale(
@@ -1953,11 +1793,6 @@ class NfdInstanceComposer:
             self.client.params.cancel_sale(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "cancelSale()void", v
             )
         )
         return self
@@ -1973,11 +1808,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "postOffer(uint64,string)void", v
-            )
-        )
         return self
 
     def mint_payout(
@@ -1989,11 +1819,6 @@ class NfdInstanceComposer:
             self.client.params.mint_payout(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "mintPayout(uint64,uint64)(uint64,address,uint64,address,uint64)", v
             )
         )
         return self
@@ -2009,11 +1834,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "purchase(pay)void", v
-            )
-        )
         return self
 
     def is_address_in_field(
@@ -2027,11 +1847,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "isAddressInField(string,address)bool", v
-            )
-        )
         return self
 
     def get_renew_price(
@@ -2042,11 +1857,6 @@ class NfdInstanceComposer:
             self.client.params.get_renew_price(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "getRenewPrice()uint64", v
             )
         )
         return self
@@ -2062,11 +1872,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "updateHash(byte[])void", v
-            )
-        )
         return self
 
     def contract_lock(
@@ -2078,11 +1883,6 @@ class NfdInstanceComposer:
             self.client.params.contract_lock(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "contractLock(bool)void", v
             )
         )
         return self
@@ -2098,11 +1898,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "segmentLock(bool,uint64)void", v
-            )
-        )
         return self
 
     def vault_opt_in_lock(
@@ -2114,11 +1909,6 @@ class NfdInstanceComposer:
             self.client.params.vault_opt_in_lock(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "vaultOptInLock(bool)void", v
             )
         )
         return self
@@ -2134,11 +1924,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "vaultOptIn(uint64[])void", v
-            )
-        )
         return self
 
     def vault_send(
@@ -2150,11 +1935,6 @@ class NfdInstanceComposer:
             self.client.params.vault_send(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "vaultSend(uint64,address,string,uint64,uint64[])void", v
             )
         )
         return self
@@ -2170,11 +1950,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "renew(pay)void", v
-            )
-        )
         return self
 
     def set_primary_address(
@@ -2186,11 +1961,6 @@ class NfdInstanceComposer:
             self.client.params.set_primary_address(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "setPrimaryAddress(string,address)void", v
             )
         )
         return self
@@ -2206,11 +1976,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "registryAddingVerifiedAddress(string,string)bool", v
-            )
-        )
         return self
 
     def registry_removing_verified_address(
@@ -2224,11 +1989,6 @@ class NfdInstanceComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "registryRemovingVerifiedAddress(string,address,address)bool", v
-            )
-        )
         return self
 
     def clear_state(
@@ -2240,12 +2000,7 @@ class NfdInstanceComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -2267,7 +2022,7 @@ class NfdInstanceComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -2284,3 +2039,40 @@ class NfdInstanceComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "nfdName"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "purchaseAmount"}, {"type": "uint64", "name": "expTime"}, {"type": "address", "name": "commission1Addr"}, {"type": "uint64", "name": "commission1Pct"}, {"type": "address", "name": "commission2Addr"}, {"type": "uint64", "name": "commission2Pct"}, {"type": "uint64", "name": "segmentRootAppId"}, {"type": "address", "name": "segmentRootCommissionAddr"}], "name": "createApplication", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "versionNum"}], "name": "updateApplication", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "gas", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "nfdName"}, {"type": "string", "name": "url"}], "name": "mintAsa", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldNames"}], "name": "deleteFields", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "childNfdName"}, {"type": "uint64", "name": "childNfdAppID"}], "name": "updateSegmentCount", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldAndVals"}], "name": "getFieldUpdateCost", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[][]", "name": "fieldAndVals"}], "name": "updateFields", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "fieldName"}], "name": "readField", "returns": {"type": "byte[]"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "sellAmount"}, {"type": "address", "name": "reservedFor"}], "name": "offerForSale", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "uint64", "name": "amount"}, {"type": "address", "name": "reservedFor"}], "name": "nfd_offerForSale", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "cancelSale", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "offer"}, {"type": "string", "name": "note"}], "name": "postOffer", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "sender"}, {"type": "uint64", "name": "amount"}, {"type": "string", "name": "note"}], "name": "nfd_postedOffer", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "oneYearPrice"}, {"type": "uint64", "name": "segmentPlatformCostInAlgo"}], "name": "mintPayout", "returns": {"type": "(uint64,address,uint64,address,uint64)", "struct": "PayoutInfo"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "payment"}], "name": "purchase", "returns": {"type": "void"}, "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "sellAmount"}, {"type": "uint64", "name": "offerAmount"}, {"type": "uint64", "name": "overpaymentRefund"}, {"type": "address", "name": "convFeeAddr"}, {"type": "uint64", "name": "convFeeAmount"}], "name": "nfd_purchased", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "fieldName"}, {"type": "address", "name": "address"}], "name": "isAddressInField", "returns": {"type": "bool"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "getRenewPrice", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "hash"}], "name": "updateHash", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}], "name": "contractLock", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}, {"type": "uint64", "name": "usdPrice"}], "name": "segmentLock", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "bool", "name": "lock"}], "name": "vaultOptInLock", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64[]", "name": "assets"}], "name": "vaultOptIn", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "amount"}, {"type": "address", "name": "receiver"}, {"type": "string", "name": "note"}, {"type": "uint64", "name": "asset"}, {"type": "uint64[]", "name": "otherAssets"}], "name": "vaultSend", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "desc": "The payment transaction from which the renewal period is determined..", "name": "payment"}], "name": "renew", "returns": {"type": "void"}, "desc": "Renew adds more time to an existing NFDs expiration, or renews it if expired.\n\n\nAs part of v2-v3 upgrade, the NFDs are converted from lifetime NFDs to renewal NFDs. The v2 contract is upgraded\nto v3, then renew is called on the (now v3) nfd to turn it into a renewal (note the if curExpiration === 0 check)\n\n\nIf already renewal, then it extends the current expiration time by the time specified (minimum 1 yr) (365 / price paid * mint price)\nExpirations can never be more than NFD_MAX_EXPIRATION_DAYS days in the future.\n\n\nIF the NFD is expired:\n    x The current owner can take it back over at base price - and NFD metadata doesn't have to be cleared - they\n    get it back as-is.\n    x If not current owner, then the price goes from high of base price * 10,000 down to base price over 24 hrs where\n    'buyer' has to pay at least that price.  The NFD MUST ALREADY HAVE ITS METADATA CLEARED!", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "origOwner"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "priceOneYear"}, {"type": "uint64", "name": "renewAmount"}, {"type": "uint64", "name": "expTime"}], "name": "nfd_renewed", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "fieldName"}, {"type": "address", "name": "address"}], "name": "setPrimaryAddress", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "desc": "- MUST START with u.cav. (!)\ngets 'added' to 'set' in next arg - must be fixed-sized bytes", "name": "fieldBeingVerified"}, {"type": "string", "desc": "(must BE v.ca[...].as)", "name": "fieldSetName"}], "name": "registryAddingVerifiedAddress", "returns": {"type": "bool", "desc": "true if added or already present, false otherwise"}, "desc": "Approved call from registry instructing us to move the specified u.cav.xx field and add to the specified\nverified field.", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressLinked", "desc": ""}]}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "desc": "The field being changed in the address registry.", "name": "fieldBeingChanged"}, {"type": "address", "desc": "The address to be removed from the field.", "name": "address"}, {"type": "address", "desc": "the address to send reclaimed MBR (if any)\n boolean - true if valid removed", "name": "mbrRefundDest"}], "name": "registryRemovingVerifiedAddress", "returns": {"type": "bool"}, "desc": "Approved call from registry instructing us to REMOVE an address from the specified verified address set", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressUnlinked", "desc": ""}]}], "name": "NFDInstance", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {"boxes": {"keyType": "AVMBytes", "valueType": "AVMBytes"}}, "global": {"globalState": {"keyType": "AVMBytes", "valueType": "AVMBytes"}}, "local": {}}, "schema": {"global": {"bytes": 30, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"PayoutInfo": [{"name": "amountToSeller", "type": "uint64"}, {"name": "commissionAddress", "type": "address"}, {"name": "amountToCommission", "type": "uint64"}, {"name": "segmentRootOwner", "type": "address"}, {"name": "amountToSegmentRoot", "type": "uint64"}]}, "desc": "", "events": [{"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "uint64", "name": "amount"}, {"type": "address", "name": "reservedFor"}], "name": "nfd_offerForSale", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}], "name": "nfd_saleCancelled", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "sender"}, {"type": "uint64", "name": "amount"}, {"type": "string", "name": "note"}], "name": "nfd_postedOffer", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "seller"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "sellAmount"}, {"type": "uint64", "name": "offerAmount"}, {"type": "uint64", "name": "overpaymentRefund"}, {"type": "address", "name": "convFeeAddr"}, {"type": "uint64", "name": "convFeeAmount"}], "name": "nfd_purchased", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "origOwner"}, {"type": "address", "name": "buyer"}, {"type": "uint64", "name": "priceOneYear"}, {"type": "uint64", "name": "renewAmount"}, {"type": "uint64", "name": "expTime"}], "name": "nfd_renewed", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressLinked", "desc": ""}, {"args": [{"type": "uint64", "name": "appId"}, {"type": "string", "name": "name"}, {"type": "address", "name": "address"}], "name": "nfd_addressUnlinked", "desc": ""}], "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [44], "errorMessage": "argument 0 (segmentRootCommissionAddr) for createApplication must be a address", "teal": 37}, {"pc": [60], "errorMessage": "argument 3 (commission2Addr) for createApplication must be a address", "teal": 55}, {"pc": [72], "errorMessage": "argument 5 (commission1Addr) for createApplication must be a address", "teal": 69}, {"pc": [88], "errorMessage": "argument 8 (buyer) for createApplication must be a address", "teal": 87}, {"pc": [96], "errorMessage": "argument 9 (seller) for createApplication must be a address", "teal": 97}, {"pc": [117], "errorMessage": "caller must be NFD registry!", "teal": 122}, {"pc": [217], "errorMessage": "commission must be between 1 and 50%", "teal": 224}, {"pc": [251], "errorMessage": "commission must be between 1 and 50%", "teal": 262}, {"pc": [382], "errorMessage": "parent commission address must be set if parent app id is set and parent is unlocked", "teal": 370}, {"pc": [393], "errorMessage": "the segment commission agent should be the parent nfd's seller", "teal": 384}, {"pc": [420], "errorMessage": "contract must be unlocked to upgrade", "teal": 420}, {"pc": [426], "errorMessage": "caller must be NFD registry!", "teal": 429}, {"pc": [449], "errorMessage": "can't still be in minting state", "teal": 459}, {"pc": [467], "errorMessage": "NFD can't be expired for these v1/v2 operations", "teal": 481}, {"pc": [731], "errorMessage": "unknown method", "teal": 677}, {"pc": [768], "errorMessage": "caller must be NFD registry!", "teal": 721}, {"pc": [959], "errorMessage": "field not removable or no permissions to remove", "teal": 942}, {"pc": [963], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 950}, {"pc": [1067], "errorMessage": "field not removable or no permissions to remove", "teal": 1075}, {"pc": [1111], "errorMessage": "caller must be NFD registry!", "teal": 1130}, {"pc": [1121], "errorMessage": "child NFD MUST still be in pre-claim state!", "teal": 1144}, {"pc": [1144], "errorMessage": "passed in child name must match name in created nfd state", "teal": 1172}, {"pc": [1177], "errorMessage": "parent must be suffix of child", "teal": 1209}, {"pc": [1346], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 1381}, {"pc": [1386], "errorMessage": "box value does not exist: this.boxes(name).size", "teal": 1423}, {"pc": [1487], "errorMessage": "can't update fields if NFD expired", "teal": 1537}, {"pc": [1615], "errorMessage": "invalid update call by registry", "teal": 1644}, {"pc": [1717], "errorMessage": "field not updatable or no permissions to update", "teal": 1738}, {"pc": [1763], "errorMessage": "can't update fields if NFD expired", "teal": 1799}, {"pc": [1803], "errorMessage": "field not updatable or no permissions to update", "teal": 1844}, {"pc": [1902], "errorMessage": "must be user-defined or verified field to fetch", "teal": 1953}, {"pc": [1914], "errorMessage": "box value does not exist: this.boxes(fieldName).value", "teal": 1971}, {"pc": [1944], "errorMessage": "box value does not exist: this.boxes(boxName).value", "teal": 2005}, {"pc": [1994], "errorMessage": "box value does not exist: this.boxes(boxName).value", "teal": 2057}, {"pc": [2021], "errorMessage": "argument 0 (reservedFor) for offerForSale must be a address", "teal": 2093}, {"pc": [2039], "errorMessage": "can't sell if NFD expired", "teal": 2117}, {"pc": [2089], "errorMessage": "can only be sold if no user-defined or verified properties remain", "teal": 2165}, {"pc": [2106], "errorMessage": "must be sold for at least MIN amount", "teal": 2185}, {"pc": [2252], "errorMessage": "can't update fields if NFD expired", "teal": 2323}, {"pc": [2265], "errorMessage": "must be for sale", "teal": 2340}, {"pc": [2420], "errorMessage": "caller must be NFD registry!", "teal": 2484}, {"pc": [2652], "errorMessage": "argument 0 (payment) for purchase must be a pay transaction", "teal": 2751}, {"pc": [2677], "errorMessage": "can't be expired", "teal": 2782}, {"pc": [2681], "errorMessage": "must be for sale", "teal": 2789}, {"pc": [2733], "errorMessage": "payment sender must be same as purchase caller", "teal": 2830}, {"pc": [2749], "errorMessage": "Reserved owner set, but sender isn't the reserved address", "teal": 2853}, {"pc": [2795], "errorMessage": "offer must be at least min amount", "teal": 2900}, {"pc": [2801], "errorMessage": "offer must be at least sell amount", "teal": 2910}, {"pc": [2823], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"amount\",\"expected\":\"origOfferamt\"}", "teal": 2935}, {"pc": [2831], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 2944}, {"pc": [3291], "errorMessage": "argument 0 (address) for isAddressInField must be a address", "teal": 3406}, {"pc": [3336], "errorMessage": "box value does not exist: this.boxes(fieldName).value", "teal": 3458}, {"pc": [3553], "errorMessage": "must pass 32-byte hash that isn't 0", "teal": 3711}, {"pc": [3567], "errorMessage": "only txnlab or owner can request an nfd nft hash update", "teal": 3729}, {"pc": [3603], "errorMessage": "argument 0 (lock) for contractLock must be a bool", "teal": 3782}, {"pc": [3649], "errorMessage": "argument 1 (lock) for segmentLock must be a bool", "teal": 3835}, {"pc": [3732], "errorMessage": "amount must be at least NFD_MIN_SEGMENT_USD dollars in algo", "teal": 3930}, {"pc": [3747], "errorMessage": "argument 0 (lock) for vaultOptInLock must be a bool", "teal": 3952}, {"pc": [3812], "errorMessage": "sender must be owner when vault locked", "teal": 4032}, {"pc": [3817], "errorMessage": "part of opt-in for new asset, must have prior txn paying MBR", "teal": 4042}, {"pc": [3830], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"typeEnum\",\"expected\":\"pay\"}", "teal": 4061}, {"pc": [3838], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 4070}, {"pc": [3853], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"amount\",\"expected\":\"100_000 * assets.length\"}", "teal": 4084}, {"pc": [3954], "errorMessage": "argument 3 (receiver) for vaultSend must be a address", "teal": 4198}, {"pc": [3994], "errorMessage": "can't specify other assets if sending algo from vault", "teal": 4247}, {"pc": [4061], "errorMessage": "can only send one asset if amount == 0", "teal": 4329}, {"pc": [4128], "errorMessage": "receiver must be owner", "teal": 4402}, {"pc": [4246], "errorMessage": "argument 0 (payment) for renew must be a pay transaction", "teal": 4545}, {"pc": [4265], "errorMessage": "transaction verification failed: {\"txn\":\"payment\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 4585}, {"pc": [4395], "errorMessage": "can't claim expired nfd unless all metadata is cleared", "teal": 4714}, {"pc": [4403], "errorMessage": "must pay at least minimum renewal price", "teal": 4727}, {"pc": [4559], "errorMessage": "global state value does not exist: parentAppId.globalState(NFD_KEY_OWNER)", "teal": 4900}, {"pc": [4725], "errorMessage": "argument 0 (address) for setPrimaryAddress must be a address", "teal": 5047}, {"pc": [4811], "errorMessage": "caller must be NFD registry!", "teal": 5134}, {"pc": [4829], "errorMessage": "field being verified MUST START with u.cav", "teal": 5148}, {"pc": [4838], "errorMessage": "destination field MUST START with v.ca[....]", "teal": 5158}, {"pc": [4853], "errorMessage": "destination field must end END with .as", "teal": 5173}, {"pc": [4859], "errorMessage": "referenced field to add as verified address must have value in box storage", "teal": 5186}, {"pc": [4868], "errorMessage": "box value does not exist: this.boxes(fieldBeingVerified).value", "teal": 5201}, {"pc": [4933], "errorMessage": "argument 0 (mbrRefundDest) for registryRemovingVerifiedAddress must be a address", "teal": 5261}, {"pc": [4941], "errorMessage": "argument 1 (address) for registryRemovingVerifiedAddress must be a address", "teal": 5271}, {"pc": [4971], "errorMessage": "caller must be NFD registry!", "teal": 5310}, {"pc": [4983], "errorMessage": "can't be for sale", "teal": 5326}, {"pc": [4992], "errorMessage": "verified field MUST START with v.ca[....]", "teal": 5337}, {"pc": [5007], "errorMessage": "verified field must end END with .as", "teal": 5355}, {"pc": [5016], "errorMessage": "box value does not exist: this.boxes(fieldBeingChanged).size", "teal": 5370}, {"pc": [5184], "errorMessage": "sender must be owner", "teal": 5550}, {"pc": [5189], "errorMessage": "part of opt-in for new asset, must have prior txn paying MBR", "teal": 5560}, {"pc": [5202], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"typeEnum\",\"expected\":\"pay\"}", "teal": 5579}, {"pc": [5210], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"receiver\",\"expected\":\"this.app.address\"}", "teal": 5588}, {"pc": [5223], "errorMessage": "transaction verification failed: {\"txn\":\"this.txnGroup[this.txn.groupIndex - 1]\",\"field\":\"amount\",\"expected\":\"100_000 * (this.txn.numAppArgs - 1)\"}", "teal": 5601}, {"pc": [5326], "errorMessage": "global state value does not exist: AppID.fromUint64(appId).globalState(key)", "teal": 5738}, {"pc": [5380], "errorMessage": "internal fields can never be deleted", "teal": 5804}, {"pc": [5397], "errorMessage": "must be owned", "teal": 5828}, {"pc": [5409], "errorMessage": "can't be for sale", "teal": 5844}, {"pc": [5466], "errorMessage": "internal fields can never be updated", "teal": 5906}, {"pc": [5521], "errorMessage": "must be owned", "teal": 5963}, {"pc": [5526], "errorMessage": "can't be for sale", "teal": 5971}, {"pc": [5532], "errorMessage": "sender must be owner", "teal": 5981}, {"pc": [5562], "errorMessage": "updating v.caAlgo field isn't allowed via regular field update", "teal": 6017}, {"pc": [5683], "errorMessage": "can't be for sale", "teal": 6162}, {"pc": [5688], "errorMessage": "can't be expired", "teal": 6170}, {"pc": [5773], "errorMessage": "max expiration exceeded parameters defined by registry", "teal": 6282}, {"pc": [5941], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6515}, {"pc": [5956], "errorMessage": "address 'set' should already have at least two values", "teal": 6533}, {"pc": [6024], "errorMessage": "address must be found in set in order to move it", "teal": 6615}, {"pc": [6090], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6698}, {"pc": [6109], "errorMessage": "existing set must be multiple of key being added", "teal": 6719}, {"pc": [6216], "errorMessage": "box value does not exist: this.boxes(key).value", "teal": 6855}, {"pc": [6385], "errorMessage": "sender must be owner", "teal": 7064}, {"pc": [6400], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 7073}, {"pc": [6616], "errorMessage": "this contract does not implement the given ABI method for call UpdateApplication", "teal": 7114}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'PayoutInfo': PayoutInfo,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

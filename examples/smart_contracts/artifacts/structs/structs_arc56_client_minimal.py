@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_struct_with_name_variations", "returns": {"type": "(string,string,string)", "struct": "Struct_WithNameVariations"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}, "struct_with_name_variations": {"key": "c3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25z", "keyType": "AVMString", "valueType": "Struct_WithNameVariations"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Struct_WithNameVariations": [{"name": "first_VariatIon", "type": "string"}, {"name": "secondVariation", "type": "string"}, {"name": "third_variation", "type": "string"}], "Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "events": [], "networks": {}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [221, 252, 282], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [209], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [311], "errorMessage": "can only call when creating"}, {"pc": [212, 224, 255, 285], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class Vector:
@@ -91,7 +42,6 @@ class StructWithNameVariations:
     secondVariation: str
     third_variation: str
 
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloArgs:
     """Dataclass for hello arguments"""
@@ -110,12 +60,12 @@ class _StructsOptIn:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.params.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StructsParams:
@@ -131,35 +81,35 @@ class StructsParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ))
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ))
 
     def clear_state(
         self,
@@ -180,12 +130,12 @@ class _StructsOptInTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.create_transaction.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StructsCreateTransactionParams:
@@ -201,35 +151,35 @@ class StructsCreateTransactionParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ))
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ))
 
     def clear_state(
         self,
@@ -251,14 +201,13 @@ class _StructsOptInSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
 
 class StructsSend:
@@ -275,43 +224,40 @@ class StructsSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[RootStruct]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(RootStruct, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[RootStruct], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[RootStruct], response)
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[StructWithNameVariations]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(StructWithNameVariations, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[StructWithNameVariations], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[StructWithNameVariations], response)
 
     def clear_state(
         self,
@@ -371,50 +317,28 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct,
-            "Struct_WithNameVariations": StructWithNameVariations
-        }
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def my_struct(self) -> Vector:
         """Get the current value of the my_struct key in global_state state"""
         value = self.app_client.state.global_state.get_value("my_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_struct(self) -> RootStruct:
         """Get the current value of the my_nested_struct key in global_state state"""
         value = self.app_client.state.global_state.get_value("my_nested_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
     @property
     def struct_with_name_variations(self) -> StructWithNameVariations:
         """Get the current value of the struct_with_name_variations key in global_state state"""
         value = self.app_client.state.global_state.get_value("struct_with_name_variations")
-        if isinstance(value, dict) and "Struct_WithNameVariations" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Struct_WithNameVariations"], value)  # type: ignore
         return typing.cast(StructWithNameVariations, value)
 
 class _LocalState:
@@ -422,41 +346,22 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct
-        }
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        if not result:
-            return typing.cast(LocalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(LocalStateValue, converted)
+        return typing.cast(LocalStateValue, result)
 
     @property
     def my_localstate_struct(self) -> Vector:
         """Get the current value of the my_localstate_struct key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("my_localstate_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_localstate_struct(self) -> RootStruct:
         """Get the current value of the my_nested_localstate_struct key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("my_nested_localstate_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
 class _BoxState:
@@ -464,41 +369,22 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct
-        }
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def my_box_struct(self) -> Vector:
         """Get the current value of the my_box_struct key in box state"""
         value = self.app_client.state.box.get_value("my_box_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_box_struct(self) -> RootStruct:
         """Get the current value of the my_nested_box_struct key in box state"""
         value = self.app_client.state.box.get_value("my_nested_box_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
     @property
@@ -507,7 +393,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "my_boxmap_struct",
-            self._struct_classes.get("Vector")
         )
 
     @property
@@ -516,7 +401,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "my_nested_boxmap_struct",
-            self._struct_classes.get("RootStruct")
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -531,26 +415,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -669,7 +545,7 @@ class StructsClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -737,18 +613,7 @@ class StructsClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class _StructsOptInComposer:
@@ -765,11 +630,6 @@ class _StructsOptInComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "opt_in()void", v
-            )
-        )
         return self.composer
 
 
@@ -779,7 +639,6 @@ class StructsComposer:
     def __init__(self, client: "StructsClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def opt_in(self) -> "_StructsOptInComposer":
@@ -796,11 +655,6 @@ class StructsComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
-            )
-        )
         return self
 
     def give_me_root_struct(
@@ -811,11 +665,6 @@ class StructsComposer:
             self.client.params.give_me_root_struct(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "give_me_root_struct()(((string,string)))", v
             )
         )
         return self
@@ -830,11 +679,6 @@ class StructsComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "give_me_struct_with_name_variations()(string,string,string)", v
-            )
-        )
         return self
 
     def clear_state(
@@ -846,12 +690,7 @@ class StructsComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -873,7 +712,7 @@ class StructsComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -890,3 +729,43 @@ class StructsComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_struct_with_name_variations", "returns": {"type": "(string,string,string)", "struct": "Struct_WithNameVariations"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}, "struct_with_name_variations": {"key": "c3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25z", "keyType": "AVMString", "valueType": "Struct_WithNameVariations"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}], "NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Struct_WithNameVariations": [{"name": "first_VariatIon", "type": "string"}, {"name": "secondVariation", "type": "string"}, {"name": "third_variation", "type": "string"}]}, "events": [], "networks": {}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [221, 252, 282], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [209], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [311], "errorMessage": "can only call when creating"}, {"pc": [212, 224, 255, 285], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'Vector': Vector,
+    'NestedStruct': NestedStruct,
+    'RootStruct': RootStruct,
+    'Struct_WithNameVariations': StructWithNameVariations,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)
