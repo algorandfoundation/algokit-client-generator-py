@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "input"}], "name": "create_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "update_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "delete_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "error", "returns": {"type": "void"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "value"}], "name": "call_abi", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "txn"}, {"type": "string", "name": "value"}], "name": "call_abi_txn", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "asset", "name": "asset"}, {"type": "account", "name": "account"}, {"type": "application", "name": "application"}], "name": "call_with_references", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "AA1kZWZhdWx0IHZhbHVl", "source": "literal", "type": "string"}, "name": "arg_with_default"}], "name": "default_value", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "AAAAAAAAAHs=", "source": "literal", "type": "uint64"}, "name": "arg_with_default"}], "name": "default_value_int", "returns": {"type": "uint64"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "AA1kZWZhdWx0IHZhbHVl", "source": "literal", "type": "string"}, "name": "arg_with_default"}], "name": "default_value_from_abi", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "aW50MQ==", "source": "global", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_global_state", "returns": {"type": "uint64"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "bG9jYWxfYnl0ZXMx", "source": "local", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_local_state", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(string,uint64)", "name": "name_age", "struct": "Input"}], "name": "structs", "returns": {"type": "(string,uint64)", "struct": "Output"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_global", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_local", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[4]", "name": "name"}, {"type": "string", "name": "value"}], "name": "set_box", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "State", "state": {"keys": {"box": {"boxNotInSnakeCase": {"key": "YQ==", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"value": {"key": "dmFsdWU=", "keyType": "AVMString", "valueType": "AVMUint64"}, "bytes1": {"key": "Ynl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytes2": {"key": "Ynl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytesNotInSnakeCase": {"key": "Ynl0ZXNOb3RJblNuYWtlQ2FzZQ==", "keyType": "AVMString", "valueType": "AVMBytes"}, "int1": {"key": "aW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "int2": {"key": "aW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {"local_bytes1": {"key": "bG9jYWxfYnl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes2": {"key": "bG9jYWxfYnl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "localBytesNotInSnakeCase": {"key": "bG9jYWxCeXRlc05vdEluU25ha2VDYXNl", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_int1": {"key": "bG9jYWxfaW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "local_int2": {"key": "bG9jYWxfaW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}}, "maps": {"box": {"box": {"keyType": "byte[4]", "valueType": "string", "prefix": ""}, "boxMapNotInSnakeCase": {"keyType": "byte[4]", "valueType": "string", "prefix": "Yg=="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 3}, "local": {"bytes": 3, "ints": 2}}}, "structs": {"Input": [{"name": "name", "type": "string"}, {"name": "age", "type": "uint64"}], "Output": [{"name": "message", "type": "string"}, {"name": "result", "type": "uint64"}]}, "events": [], "networks": {}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [617, 917], "errorMessage": "Check app is deletable"}, {"pc": [606, 911], "errorMessage": "Check app is updatable"}, {"pc": [426], "errorMessage": "Deliberate error"}, {"pc": [442], "errorMessage": "OnCompletion is not DeleteApplication"}, {"pc": [136, 154, 183, 212, 231, 253, 268, 287, 302, 317, 352, 392, 422, 504], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [431], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [474], "errorMessage": "OnCompletion is not UpdateApplication"}, {"pc": [668], "errorMessage": "account not provided"}, {"pc": [671], "errorMessage": "application not provided"}, {"pc": [662], "errorMessage": "asset not provided"}, {"pc": [508, 570], "errorMessage": "can only call when creating"}, {"pc": [139, 157, 186, 215, 234, 256, 271, 290, 305, 320, 355, 395, 425, 434, 445, 477, 553, 561], "errorMessage": "can only call when not creating"}, {"pc": [365], "errorMessage": "transaction type is pay"}, {"pc": [927], "errorMessage": "unauthorized"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class Input:
@@ -79,7 +30,6 @@ class Output:
     """Struct for Output"""
     message: str
     result: int
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class CallAbiArgs:
@@ -235,12 +185,12 @@ class _StateOptIn:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.params.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StateParams:
@@ -255,168 +205,168 @@ class StateParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "error()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="error()void",
+        ))
 
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi(string)string",
+            args=_unpack_args(args),
+        ))
 
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi_txn(pay,string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi_txn(pay,string)string",
+            args=_unpack_args(args),
+        ))
 
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_with_references(asset,account,application)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_with_references(asset,account,application)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value(string)string",
+            args=_unpack_args(args),
+        ))
 
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_int(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_int(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_abi(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_abi(string)string",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_global_state(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_global_state(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_local_state(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_local_state(string)string",
+            args=_unpack_args(args),
+        ))
 
     def structs(
         self,
         args: tuple[Input] | StructsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "structs((string,uint64))(string,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="structs((string,uint64))(string,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_global(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_global(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ))
 
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_local(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_local(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ))
 
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_box(byte[4],string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_box(byte[4],string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -437,12 +387,12 @@ class _StateOptInTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.create_transaction.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StateCreateTransactionParams:
@@ -457,168 +407,168 @@ class StateCreateTransactionParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "error()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="error()void",
+        ))
 
     def call_abi(
         self,
         args: tuple[str] | CallAbiArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi(string)string",
+            args=_unpack_args(args),
+        ))
 
     def call_abi_txn(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, str] | CallAbiTxnArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi_txn(pay,string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi_txn(pay,string)string",
+            args=_unpack_args(args),
+        ))
 
     def call_with_references(
         self,
         args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_with_references(asset,account,application)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_with_references(asset,account,application)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value(
         self,
         args: tuple[str | None] | DefaultValueArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value(string)string",
+            args=_unpack_args(args),
+        ))
 
     def default_value_int(
         self,
         args: tuple[int | None] | DefaultValueIntArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_int(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_int(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_abi(
         self,
         args: tuple[str | None] | DefaultValueFromAbiArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_abi(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_abi(string)string",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_global_state(
         self,
         args: tuple[int | None] | DefaultValueFromGlobalStateArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_global_state(uint64)uint64",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_global_state(uint64)uint64",
+            args=_unpack_args(args),
+        ))
 
     def default_value_from_local_state(
         self,
         args: tuple[str | None] | DefaultValueFromLocalStateArgs | None = None,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_local_state(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_local_state(string)string",
+            args=_unpack_args(args),
+        ))
 
     def structs(
         self,
         args: tuple[Input] | StructsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "structs((string,uint64))(string,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="structs((string,uint64))(string,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def set_global(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetGlobalArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_global(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_global(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ))
 
     def set_local(
         self,
         args: tuple[int, int, str, bytes | str | tuple[int, int, int, int]] | SetLocalArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_local(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_local(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ))
 
     def set_box(
         self,
         args: tuple[bytes | str | tuple[int, int, int, int], str] | SetBoxArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_box(byte[4],string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_box(byte[4],string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -640,14 +590,13 @@ class _StateOptInSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
 
 class StateSend:
@@ -663,14 +612,13 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "error()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="error()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def call_abi(
         self,
@@ -678,15 +626,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def call_abi_txn(
         self,
@@ -694,15 +641,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_abi_txn(pay,string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_abi_txn(pay,string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def call_with_references(
         self,
@@ -710,15 +656,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "call_with_references(asset,account,application)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="call_with_references(asset,account,application)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def default_value(
         self,
@@ -726,15 +671,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def default_value_int(
         self,
@@ -742,15 +686,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_int(uint64)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_int(uint64)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def default_value_from_abi(
         self,
@@ -758,15 +701,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_abi(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_abi(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def default_value_from_global_state(
         self,
@@ -774,15 +716,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_global_state(uint64)uint64",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_global_state(uint64)uint64",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
 
     def default_value_from_local_state(
         self,
@@ -790,15 +731,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "default_value_from_local_state(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="default_value_from_local_state(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def structs(
         self,
@@ -806,15 +746,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Output]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "structs((string,uint64))(string,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(Output, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[Output], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="structs((string,uint64))(string,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[Output], response)
 
     def set_global(
         self,
@@ -822,15 +761,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_global(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_global(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def set_local(
         self,
@@ -838,15 +776,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_local(uint64,uint64,string,byte[4])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_local(uint64,uint64,string,byte[4])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def set_box(
         self,
@@ -854,15 +791,14 @@ class StateSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "set_box(byte[4],string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="set_box(byte[4],string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -927,70 +863,46 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def value(self) -> int:
         """Get the current value of the value key in global_state state"""
         value = self.app_client.state.global_state.get_value("value")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def bytes1(self) -> bytes:
         """Get the current value of the bytes1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes1")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def bytes2(self) -> bytes:
         """Get the current value of the bytes2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytes2")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def bytes_not_in_snake_case(self) -> bytes:
         """Get the current value of the bytesNotInSnakeCase key in global_state state"""
         value = self.app_client.state.global_state.get_value("bytesNotInSnakeCase")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def int1(self) -> int:
         """Get the current value of the int1 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int1")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def int2(self) -> int:
         """Get the current value of the int2 key in global_state state"""
         value = self.app_client.state.global_state.get_value("int2")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _LocalState:
@@ -998,62 +910,40 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        if not result:
-            return typing.cast(LocalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(LocalStateValue, converted)
+        return typing.cast(LocalStateValue, result)
 
     @property
     def local_bytes1(self) -> bytes:
         """Get the current value of the local_bytes1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes1")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def local_bytes2(self) -> bytes:
         """Get the current value of the local_bytes2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_bytes2")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def local_bytes_not_in_snake_case(self) -> bytes:
         """Get the current value of the localBytesNotInSnakeCase key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("localBytesNotInSnakeCase")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def local_int1(self) -> int:
         """Get the current value of the local_int1 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int1")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def local_int2(self) -> int:
         """Get the current value of the local_int2 key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("local_int2")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class _BoxState:
@@ -1061,30 +951,16 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def box_not_in_snake_case(self) -> str:
         """Get the current value of the boxNotInSnakeCase key in box state"""
         value = self.app_client.state.box.get_value("boxNotInSnakeCase")
-        if isinstance(value, dict) and "string" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["string"], value)  # type: ignore
         return typing.cast(str, value)
 
     @property
@@ -1093,7 +969,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "box",
-            None
         )
 
     @property
@@ -1102,7 +977,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "boxMapNotInSnakeCase",
-            None
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -1117,26 +991,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -1255,7 +1121,7 @@ class StateClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -1401,18 +1267,7 @@ class StateClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class _StateOptInComposer:
@@ -1429,11 +1284,6 @@ class _StateOptInComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "opt_in()void", v
-            )
-        )
         return self.composer
 
 
@@ -1443,7 +1293,6 @@ class StateComposer:
     def __init__(self, client: "StateClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def opt_in(self) -> "_StateOptInComposer":
@@ -1459,11 +1308,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "error()void", v
-            )
-        )
         return self
 
     def call_abi(
@@ -1475,11 +1319,6 @@ class StateComposer:
             self.client.params.call_abi(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "call_abi(string)string", v
             )
         )
         return self
@@ -1495,11 +1334,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "call_abi_txn(pay,string)string", v
-            )
-        )
         return self
 
     def call_with_references(
@@ -1511,11 +1345,6 @@ class StateComposer:
             self.client.params.call_with_references(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "call_with_references(asset,account,application)uint64", v
             )
         )
         return self
@@ -1531,11 +1360,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "default_value(string)string", v
-            )
-        )
         return self
 
     def default_value_int(
@@ -1547,11 +1371,6 @@ class StateComposer:
             self.client.params.default_value_int(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "default_value_int(uint64)uint64", v
             )
         )
         return self
@@ -1567,11 +1386,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "default_value_from_abi(string)string", v
-            )
-        )
         return self
 
     def default_value_from_global_state(
@@ -1583,11 +1397,6 @@ class StateComposer:
             self.client.params.default_value_from_global_state(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "default_value_from_global_state(uint64)uint64", v
             )
         )
         return self
@@ -1603,11 +1412,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "default_value_from_local_state(string)string", v
-            )
-        )
         return self
 
     def structs(
@@ -1619,11 +1423,6 @@ class StateComposer:
             self.client.params.structs(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "structs((string,uint64))(string,uint64)", v
             )
         )
         return self
@@ -1639,11 +1438,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "set_global(uint64,uint64,string,byte[4])void", v
-            )
-        )
         return self
 
     def set_local(
@@ -1655,11 +1449,6 @@ class StateComposer:
             self.client.params.set_local(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "set_local(uint64,uint64,string,byte[4])void", v
             )
         )
         return self
@@ -1675,11 +1464,6 @@ class StateComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "set_box(byte[4],string)void", v
-            )
-        )
         return self
 
     def clear_state(
@@ -1691,12 +1475,7 @@ class StateComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -1718,7 +1497,7 @@ class StateComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -1735,3 +1514,41 @@ class StateComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "input"}], "name": "create_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "update_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "delete_abi", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "error", "returns": {"type": "void"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "value"}], "name": "call_abi", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "txn"}, {"type": "string", "name": "value"}], "name": "call_abi_txn", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "asset", "name": "asset"}, {"type": "account", "name": "account"}, {"type": "application", "name": "application"}], "name": "call_with_references", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "AA1kZWZhdWx0IHZhbHVl", "source": "literal", "type": "string"}, "name": "arg_with_default"}], "name": "default_value", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "AAAAAAAAAHs=", "source": "literal", "type": "uint64"}, "name": "arg_with_default"}], "name": "default_value_int", "returns": {"type": "uint64"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "AA1kZWZhdWx0IHZhbHVl", "source": "literal", "type": "string"}, "name": "arg_with_default"}], "name": "default_value_from_abi", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "aW50MQ==", "source": "global", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_global_state", "returns": {"type": "uint64"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "bG9jYWxfYnl0ZXMx", "source": "local", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_local_state", "returns": {"type": "string"}, "events": [], "readonly": true, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(string,uint64)", "name": "name_age", "struct": "Input"}], "name": "structs", "returns": {"type": "(string,uint64)", "struct": "Output"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_global", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_local", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[4]", "name": "name"}, {"type": "string", "name": "value"}], "name": "set_box", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "State", "state": {"keys": {"box": {"boxNotInSnakeCase": {"key": "YQ==", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"value": {"key": "dmFsdWU=", "keyType": "AVMString", "valueType": "AVMUint64"}, "bytes1": {"key": "Ynl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytes2": {"key": "Ynl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytesNotInSnakeCase": {"key": "Ynl0ZXNOb3RJblNuYWtlQ2FzZQ==", "keyType": "AVMString", "valueType": "AVMBytes"}, "int1": {"key": "aW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "int2": {"key": "aW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {"local_bytes1": {"key": "bG9jYWxfYnl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes2": {"key": "bG9jYWxfYnl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "localBytesNotInSnakeCase": {"key": "bG9jYWxCeXRlc05vdEluU25ha2VDYXNl", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_int1": {"key": "bG9jYWxfaW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "local_int2": {"key": "bG9jYWxfaW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}}, "maps": {"box": {"box": {"keyType": "byte[4]", "valueType": "string", "prefix": ""}, "boxMapNotInSnakeCase": {"keyType": "byte[4]", "valueType": "string", "prefix": "Yg=="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 3}, "local": {"bytes": 3, "ints": 2}}}, "structs": {"Input": [{"name": "name", "type": "string"}, {"name": "age", "type": "uint64"}], "Output": [{"name": "message", "type": "string"}, {"name": "result", "type": "uint64"}]}, "events": [], "networks": {}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [617, 917], "errorMessage": "Check app is deletable"}, {"pc": [606, 911], "errorMessage": "Check app is updatable"}, {"pc": [426], "errorMessage": "Deliberate error"}, {"pc": [442], "errorMessage": "OnCompletion is not DeleteApplication"}, {"pc": [136, 154, 183, 212, 231, 253, 268, 287, 302, 317, 352, 392, 422, 504], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [431], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [474], "errorMessage": "OnCompletion is not UpdateApplication"}, {"pc": [668], "errorMessage": "account not provided"}, {"pc": [671], "errorMessage": "application not provided"}, {"pc": [662], "errorMessage": "asset not provided"}, {"pc": [508, 570], "errorMessage": "can only call when creating"}, {"pc": [139, 157, 186, 215, 234, 256, 271, 290, 305, 320, 355, 395, 425, 434, 445, 477, 553, 561], "errorMessage": "can only call when not creating"}, {"pc": [365], "errorMessage": "transaction type is pay"}, {"pc": [927], "errorMessage": "unauthorized"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'Input': Input,
+    'Output': Output,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

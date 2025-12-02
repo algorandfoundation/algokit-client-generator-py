@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_struct_with_name_variations", "returns": {"type": "(string,string,string)", "struct": "Struct_WithNameVariations"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}, "struct_with_name_variations": {"key": "c3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25z", "keyType": "AVMString", "valueType": "Struct_WithNameVariations"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Struct_WithNameVariations": [{"name": "first_VariatIon", "type": "string"}, {"name": "secondVariation", "type": "string"}, {"name": "third_variation", "type": "string"}], "Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}]}, "byteCode": {"approval": "CiABASYGCgAEAAcAATEAATIOAAIAAgAEAAcAATEAATINbXlfYm94X3N0cnVjdBRteV9uZXN0ZWRfYm94X3N0cnVjdBhteV9ib3htYXBfc3RydWN0AAAAAAAAAHsfbXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3QAAAAAAAAAezEYQAAhgAlteV9zdHJ1Y3QoZ4AQbXlfbmVzdGVkX3N0cnVjdClnMRtBAIiCBAQCvs4RBKSjzpoErCB2IQQwxtWKNhoAjgQATQAvABAAA4EAQzEZIhJEMRhEiAB+IkMxGRREMRhEgBMVH3x1AAYACQAMAAExAAEyAAEzsCJDMRkURDEYRIASFR98dQACAAIABAAHAAExAAEysCJDMRkURDEYRDYaAYgAFoAEFR98dUxQsCJDMRlA/5YxGBREIkOKAQGL/1cCAIAHSGVsbG8sIExQSRUWVwYCTFCJKrxIKii/K7xIKym/JwS8SCcEKL8nBbxIJwUpvzEAgBRteV9sb2NhbHN0YXRlX3N0cnVjdChmMQCAG215X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdClmiQ==", "clear": "CoEBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuc3RydWN0cy5jb250cmFjdC5TdHJ1Y3RzLl9fYWxnb3B5X2VudHJ5cG9pbnRfd2l0aF9pbml0KCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDEKICAgIGJ5dGVjYmxvY2sgMHgwMDA0MDAwNzAwMDEzMTAwMDEzMiAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIgIm15X2JveF9zdHJ1Y3QiICJteV9uZXN0ZWRfYm94X3N0cnVjdCIgMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IgMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjcKICAgIC8vIHNlbGYubXlfc3RydWN0ID0gR2xvYmFsU3RhdGUoVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIHB1c2hieXRlcyAibXlfc3RydWN0IgogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjgKICAgIC8vIHNlbGYubXlfbmVzdGVkX3N0cnVjdCA9IEdsb2JhbFN0YXRlKAogICAgcHVzaGJ5dGVzICJteV9uZXN0ZWRfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjkKICAgIC8vIFJvb3RTdHJ1Y3QobmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI4LTMwCiAgICAvLyBzZWxmLm15X25lc3RlZF9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZSgKICAgIC8vICAgICBSb290U3RydWN0KG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKSkKICAgIC8vICkKICAgIGFwcF9nbG9iYWxfcHV0CgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOQogICAgcHVzaGJ5dGVzcyAweDAyYmVjZTExIDB4YTRhM2NlOWEgMHhhYzIwNzYyMSAweDMwYzZkNThhIC8vIG1ldGhvZCAiaGVsbG8oc3RyaW5nKXN0cmluZyIsIG1ldGhvZCAiZ2l2ZV9tZV9yb290X3N0cnVjdCgpKCgoc3RyaW5nLHN0cmluZykpKSIsIG1ldGhvZCAiZ2l2ZV9tZV9zdHJ1Y3Rfd2l0aF9uYW1lX3ZhcmlhdGlvbnMoKShzdHJpbmcsc3RyaW5nLHN0cmluZykiLCBtZXRob2QgIm9wdF9pbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5faGVsbG9fcm91dGVANSBtYWluX2dpdmVfbWVfcm9vdF9zdHJ1Y3Rfcm91dGVANiBtYWluX2dpdmVfbWVfc3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25zX3JvdXRlQDcgbWFpbl9vcHRfaW5fcm91dGVAOAoKbWFpbl9hZnRlcl9pZl9lbHNlQDExOgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjUKICAgIC8vIGNsYXNzIFN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHB1c2hpbnQgMCAvLyAwCiAgICByZXR1cm4KCm1haW5fb3B0X2luX3JvdXRlQDg6CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1MwogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJPcHRJbiJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgaW50Y18wIC8vIE9wdEluCiAgICA9PQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgT3B0SW4KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgY2FsbHN1YiBvcHRfaW4KICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fZ2l2ZV9tZV9zdHJ1Y3Rfd2l0aF9uYW1lX3ZhcmlhdGlvbnNfcm91dGVANzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQ3CiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDYwMDA5MDAwYzAwMDEzMTAwMDEzMjAwMDEzMwogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2dpdmVfbWVfcm9vdF9zdHJ1Y3Rfcm91dGVANjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQzCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9oZWxsb19yb3V0ZUA1OgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MzkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTozOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIGNhbGxzdWIgaGVsbG8KICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAOToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDExCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5zdHJ1Y3RzLmNvbnRyYWN0LlN0cnVjdHMuaGVsbG8obmFtZTogYnl0ZXMpIC0+IGJ5dGVzOgpoZWxsbzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjM5LTQwCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgLy8gZGVmIGhlbGxvKHNlbGYsIG5hbWU6IGFyYzQuU3RyaW5nKSAtPiBhcmM0LlN0cmluZzoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NDEKICAgIC8vIHJldHVybiAiSGVsbG8sICIgKyBuYW1lCiAgICBmcmFtZV9kaWcgLTEKICAgIGV4dHJhY3QgMiAwCiAgICBwdXNoYnl0ZXMgMHg0ODY1NmM2YzZmMmMyMAogICAgc3dhcAogICAgY29uY2F0CiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLnN0cnVjdHMuY29udHJhY3QuU3RydWN0cy5vcHRfaW4oKSAtPiB2b2lkOgpvcHRfaW46CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1NQogICAgLy8gc2VsZi5teV9ib3hfc3RydWN0LnZhbHVlID0gVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKQogICAgYnl0ZWNfMiAvLyAibXlfYm94X3N0cnVjdCIKICAgIGJveF9kZWwKICAgIHBvcAogICAgYnl0ZWNfMiAvLyAibXlfYm94X3N0cnVjdCIKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTYKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveF9zdHJ1Y3QudmFsdWUgPSBSb290U3RydWN0KAogICAgYnl0ZWNfMyAvLyAibXlfbmVzdGVkX2JveF9zdHJ1Y3QiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1Ni01OAogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU2CiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3hfc3RydWN0LnZhbHVlID0gUm9vdFN0cnVjdCgKICAgIGJ5dGVjXzMgLy8gIm15X25lc3RlZF9ib3hfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTYtNTgKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveF9zdHJ1Y3QudmFsdWUgPSBSb290U3RydWN0KAogICAgLy8gICAgIG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU5CiAgICAvLyBzZWxmLm15X2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBWZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICBieXRlYyA0IC8vIDB4NmQ3OTVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICBib3hfZGVsCiAgICBwb3AKICAgIGJ5dGVjIDQgLy8gMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjAKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgYnl0ZWMgNSAvLyAweDZkNzk1ZjZlNjU3Mzc0NjU2NDVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo2MC02MgogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYwCiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3htYXBfc3RydWN0W2FyYzQuVUludDY0KDEyMyldID0gUm9vdFN0cnVjdCgKICAgIGJ5dGVjIDUgLy8gMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjAtNjIKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgLy8gICAgIG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYzCiAgICAvLyBzZWxmLm15X2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKQogICAgdHhuIFNlbmRlcgogICAgcHVzaGJ5dGVzICJteV9sb2NhbHN0YXRlX3N0cnVjdCIKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYXBwX2xvY2FsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjQKICAgIC8vIHNlbGYubXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gUm9vdFN0cnVjdCgKICAgIHR4biBTZW5kZXIKICAgIHB1c2hieXRlcyAibXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjQtNjYKICAgIC8vIHNlbGYubXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gUm9vdFN0cnVjdCgKICAgIC8vICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KGNvbnRlbnQ9VmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIC8vICkKICAgIGJ5dGVjXzEgLy8gMHgwMDAyMDAwMjAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfbG9jYWxfcHV0CiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [221, 252, 282], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [209], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [311], "errorMessage": "can only call when creating"}, {"pc": [212, 224, 255, 285], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class Vector:
@@ -91,7 +42,6 @@ class StructWithNameVariations:
     secondVariation: str
     third_variation: str
 
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloArgs:
     """Dataclass for hello arguments"""
@@ -110,12 +60,12 @@ class _StructsOptIn:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.params.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StructsParams:
@@ -131,35 +81,35 @@ class StructsParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ))
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ))
 
     def clear_state(
         self,
@@ -180,12 +130,12 @@ class _StructsOptInTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }))
+        return self.app_client.create_transaction.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ))
 
 
 class StructsCreateTransactionParams:
@@ -201,35 +151,35 @@ class StructsCreateTransactionParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ))
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ))
 
     def clear_state(
         self,
@@ -251,14 +201,13 @@ class _StructsOptInSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "opt_in()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="opt_in()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
 
 class StructsSend:
@@ -275,43 +224,40 @@ class StructsSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def give_me_root_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[RootStruct]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_root_struct()(((string,string)))",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(RootStruct, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[RootStruct], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_root_struct()(((string,string)))",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[RootStruct], response)
 
     def give_me_struct_with_name_variations(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[StructWithNameVariations]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "give_me_struct_with_name_variations()(string,string,string)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(StructWithNameVariations, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[StructWithNameVariations], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="give_me_struct_with_name_variations()(string,string,string)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[StructWithNameVariations], response)
 
     def clear_state(
         self,
@@ -371,50 +317,28 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct,
-            "Struct_WithNameVariations": StructWithNameVariations
-        }
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def my_struct(self) -> Vector:
         """Get the current value of the my_struct key in global_state state"""
         value = self.app_client.state.global_state.get_value("my_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_struct(self) -> RootStruct:
         """Get the current value of the my_nested_struct key in global_state state"""
         value = self.app_client.state.global_state.get_value("my_nested_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
     @property
     def struct_with_name_variations(self) -> StructWithNameVariations:
         """Get the current value of the struct_with_name_variations key in global_state state"""
         value = self.app_client.state.global_state.get_value("struct_with_name_variations")
-        if isinstance(value, dict) and "Struct_WithNameVariations" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Struct_WithNameVariations"], value)  # type: ignore
         return typing.cast(StructWithNameVariations, value)
 
 class _LocalState:
@@ -422,41 +346,22 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct
-        }
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        if not result:
-            return typing.cast(LocalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(LocalStateValue, converted)
+        return typing.cast(LocalStateValue, result)
 
     @property
     def my_localstate_struct(self) -> Vector:
         """Get the current value of the my_localstate_struct key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("my_localstate_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_localstate_struct(self) -> RootStruct:
         """Get the current value of the my_nested_localstate_struct key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("my_nested_localstate_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
 class _BoxState:
@@ -464,41 +369,22 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Vector": Vector,
-            "RootStruct": RootStruct
-        }
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def my_box_struct(self) -> Vector:
         """Get the current value of the my_box_struct key in box state"""
         value = self.app_client.state.box.get_value("my_box_struct")
-        if isinstance(value, dict) and "Vector" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["Vector"], value)  # type: ignore
         return typing.cast(Vector, value)
 
     @property
     def my_nested_box_struct(self) -> RootStruct:
         """Get the current value of the my_nested_box_struct key in box state"""
         value = self.app_client.state.box.get_value("my_nested_box_struct")
-        if isinstance(value, dict) and "RootStruct" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["RootStruct"], value)  # type: ignore
         return typing.cast(RootStruct, value)
 
     @property
@@ -507,7 +393,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "my_boxmap_struct",
-            self._struct_classes.get("Vector")
         )
 
     @property
@@ -516,7 +401,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "my_nested_boxmap_struct",
-            self._struct_classes.get("RootStruct")
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -531,26 +415,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -669,7 +545,7 @@ class StructsClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -737,18 +613,7 @@ class StructsClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -792,7 +657,7 @@ class StructsFactory(algokit_utils.TypedAppFactoryProtocol[StructsBareCallCreate
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -900,8 +765,12 @@ class StructsFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def hello(
         self,
@@ -913,12 +782,11 @@ class StructsFactoryCreateParams:
         """Creates a new instance using the hello(string)string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "hello(string)string",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='hello(string)string',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -932,12 +800,11 @@ class StructsFactoryCreateParams:
         """Creates a new instance using the give_me_root_struct()(((string,string))) ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "give_me_root_struct()(((string,string)))",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='give_me_root_struct()(((string,string)))',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -951,12 +818,11 @@ class StructsFactoryCreateParams:
         """Creates a new instance using the give_me_struct_with_name_variations()(string,string,string) ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "give_me_struct_with_name_variations()(string,string,string)",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='give_me_struct_with_name_variations()(string,string,string)',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -970,12 +836,11 @@ class StructsFactoryCreateParams:
         """Creates a new instance using the opt_in()void ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "opt_in()void",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='opt_in()void',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -995,8 +860,12 @@ class StructsFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class StructsFactoryDeleteParams:
     """Parameters for 'delete' operations of Structs contract"""
@@ -1013,8 +882,12 @@ class StructsFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class StructsFactoryCreateTransaction:
@@ -1038,7 +911,10 @@ class StructsFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -1066,9 +942,12 @@ class StructsFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return StructsClient(result[0]), result[1]
 
@@ -1087,11 +966,6 @@ class _StructsOptInComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "opt_in()void", v
-            )
-        )
         return self.composer
 
 
@@ -1101,7 +975,6 @@ class StructsComposer:
     def __init__(self, client: "StructsClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def opt_in(self) -> "_StructsOptInComposer":
@@ -1118,11 +991,6 @@ class StructsComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
-            )
-        )
         return self
 
     def give_me_root_struct(
@@ -1133,11 +1001,6 @@ class StructsComposer:
             self.client.params.give_me_root_struct(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "give_me_root_struct()(((string,string)))", v
             )
         )
         return self
@@ -1152,11 +1015,6 @@ class StructsComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "give_me_struct_with_name_variations()(string,string,string)", v
-            )
-        )
         return self
 
     def clear_state(
@@ -1168,12 +1026,7 @@ class StructsComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -1195,7 +1048,7 @@ class StructsComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -1212,3 +1065,43 @@ class StructsComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_root_struct", "returns": {"type": "(((string,string)))", "struct": "RootStruct"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "give_me_struct_with_name_variations", "returns": {"type": "(string,string,string)", "struct": "Struct_WithNameVariations"}, "events": [], "readonly": false, "recommendations": {}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Structs", "state": {"keys": {"box": {"my_box_struct": {"key": "bXlfYm94X3N0cnVjdA==", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_box_struct": {"key": "bXlfbmVzdGVkX2JveF9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "RootStruct"}}, "global": {"my_struct": {"key": "bXlfc3RydWN0", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_struct": {"key": "bXlfbmVzdGVkX3N0cnVjdA==", "keyType": "AVMString", "valueType": "RootStruct"}, "struct_with_name_variations": {"key": "c3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25z", "keyType": "AVMString", "valueType": "Struct_WithNameVariations"}}, "local": {"my_localstate_struct": {"key": "bXlfbG9jYWxzdGF0ZV9zdHJ1Y3Q=", "keyType": "AVMString", "valueType": "Vector"}, "my_nested_localstate_struct": {"key": "bXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0", "keyType": "AVMString", "valueType": "RootStruct"}}}, "maps": {"box": {"my_boxmap_struct": {"keyType": "uint64", "valueType": "Vector", "prefix": "bXlfYm94bWFwX3N0cnVjdA=="}, "my_nested_boxmap_struct": {"keyType": "uint64", "valueType": "RootStruct", "prefix": "bXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3Q="}}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 0}, "local": {"bytes": 2, "ints": 0}}}, "structs": {"Vector": [{"name": "x", "type": "string"}, {"name": "y", "type": "string"}], "NestedStruct": [{"name": "content", "type": "Vector"}], "RootStruct": [{"name": "nested", "type": "NestedStruct"}], "Struct_WithNameVariations": [{"name": "first_VariatIon", "type": "string"}, {"name": "secondVariation", "type": "string"}, {"name": "third_variation", "type": "string"}]}, "byteCode": {"approval": "CiABASYGCgAEAAcAATEAATIOAAIAAgAEAAcAATEAATINbXlfYm94X3N0cnVjdBRteV9uZXN0ZWRfYm94X3N0cnVjdBhteV9ib3htYXBfc3RydWN0AAAAAAAAAHsfbXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3QAAAAAAAAAezEYQAAhgAlteV9zdHJ1Y3QoZ4AQbXlfbmVzdGVkX3N0cnVjdClnMRtBAIiCBAQCvs4RBKSjzpoErCB2IQQwxtWKNhoAjgQATQAvABAAA4EAQzEZIhJEMRhEiAB+IkMxGRREMRhEgBMVH3x1AAYACQAMAAExAAEyAAEzsCJDMRkURDEYRIASFR98dQACAAIABAAHAAExAAEysCJDMRkURDEYRDYaAYgAFoAEFR98dUxQsCJDMRlA/5YxGBREIkOKAQGL/1cCAIAHSGVsbG8sIExQSRUWVwYCTFCJKrxIKii/K7xIKym/JwS8SCcEKL8nBbxIJwUpvzEAgBRteV9sb2NhbHN0YXRlX3N0cnVjdChmMQCAG215X25lc3RlZF9sb2NhbHN0YXRlX3N0cnVjdClmiQ==", "clear": "CoEBQw=="}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuc3RydWN0cy5jb250cmFjdC5TdHJ1Y3RzLl9fYWxnb3B5X2VudHJ5cG9pbnRfd2l0aF9pbml0KCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDEKICAgIGJ5dGVjYmxvY2sgMHgwMDA0MDAwNzAwMDEzMTAwMDEzMiAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIgIm15X2JveF9zdHJ1Y3QiICJteV9uZXN0ZWRfYm94X3N0cnVjdCIgMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IgMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjcKICAgIC8vIHNlbGYubXlfc3RydWN0ID0gR2xvYmFsU3RhdGUoVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIHB1c2hieXRlcyAibXlfc3RydWN0IgogICAgYnl0ZWNfMCAvLyAweDAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjgKICAgIC8vIHNlbGYubXlfbmVzdGVkX3N0cnVjdCA9IEdsb2JhbFN0YXRlKAogICAgcHVzaGJ5dGVzICJteV9uZXN0ZWRfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjkKICAgIC8vIFJvb3RTdHJ1Y3QobmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI4LTMwCiAgICAvLyBzZWxmLm15X25lc3RlZF9zdHJ1Y3QgPSBHbG9iYWxTdGF0ZSgKICAgIC8vICAgICBSb290U3RydWN0KG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKSkKICAgIC8vICkKICAgIGFwcF9nbG9iYWxfcHV0CgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAOQogICAgcHVzaGJ5dGVzcyAweDAyYmVjZTExIDB4YTRhM2NlOWEgMHhhYzIwNzYyMSAweDMwYzZkNThhIC8vIG1ldGhvZCAiaGVsbG8oc3RyaW5nKXN0cmluZyIsIG1ldGhvZCAiZ2l2ZV9tZV9yb290X3N0cnVjdCgpKCgoc3RyaW5nLHN0cmluZykpKSIsIG1ldGhvZCAiZ2l2ZV9tZV9zdHJ1Y3Rfd2l0aF9uYW1lX3ZhcmlhdGlvbnMoKShzdHJpbmcsc3RyaW5nLHN0cmluZykiLCBtZXRob2QgIm9wdF9pbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5faGVsbG9fcm91dGVANSBtYWluX2dpdmVfbWVfcm9vdF9zdHJ1Y3Rfcm91dGVANiBtYWluX2dpdmVfbWVfc3RydWN0X3dpdGhfbmFtZV92YXJpYXRpb25zX3JvdXRlQDcgbWFpbl9vcHRfaW5fcm91dGVAOAoKbWFpbl9hZnRlcl9pZl9lbHNlQDExOgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MjUKICAgIC8vIGNsYXNzIFN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHB1c2hpbnQgMCAvLyAwCiAgICByZXR1cm4KCm1haW5fb3B0X2luX3JvdXRlQDg6CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1MwogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJPcHRJbiJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgaW50Y18wIC8vIE9wdEluCiAgICA9PQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgT3B0SW4KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgY2FsbHN1YiBvcHRfaW4KICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fZ2l2ZV9tZV9zdHJ1Y3Rfd2l0aF9uYW1lX3ZhcmlhdGlvbnNfcm91dGVANzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQ3CiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDYwMDA5MDAwYzAwMDEzMTAwMDEzMjAwMDEzMwogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2dpdmVfbWVfcm9vdF9zdHJ1Y3Rfcm91dGVANjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjQzCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9oZWxsb19yb3V0ZUA1OgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6MzkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTozOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKCkKICAgIGNhbGxzdWIgaGVsbG8KICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdAOToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBjbGFzcyBTdHJ1Y3RzKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDExCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBjcmVhdGluZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5zdHJ1Y3RzLmNvbnRyYWN0LlN0cnVjdHMuaGVsbG8obmFtZTogYnl0ZXMpIC0+IGJ5dGVzOgpoZWxsbzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjM5LTQwCiAgICAvLyBAYXJjNC5hYmltZXRob2QoKQogICAgLy8gZGVmIGhlbGxvKHNlbGYsIG5hbWU6IGFyYzQuU3RyaW5nKSAtPiBhcmM0LlN0cmluZzoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NDEKICAgIC8vIHJldHVybiAiSGVsbG8sICIgKyBuYW1lCiAgICBmcmFtZV9kaWcgLTEKICAgIGV4dHJhY3QgMiAwCiAgICBwdXNoYnl0ZXMgMHg0ODY1NmM2YzZmMmMyMAogICAgc3dhcAogICAgY29uY2F0CiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLnN0cnVjdHMuY29udHJhY3QuU3RydWN0cy5vcHRfaW4oKSAtPiB2b2lkOgpvcHRfaW46CiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1NQogICAgLy8gc2VsZi5teV9ib3hfc3RydWN0LnZhbHVlID0gVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKQogICAgYnl0ZWNfMiAvLyAibXlfYm94X3N0cnVjdCIKICAgIGJveF9kZWwKICAgIHBvcAogICAgYnl0ZWNfMiAvLyAibXlfYm94X3N0cnVjdCIKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTYKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveF9zdHJ1Y3QudmFsdWUgPSBSb290U3RydWN0KAogICAgYnl0ZWNfMyAvLyAibXlfbmVzdGVkX2JveF9zdHJ1Y3QiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo1Ni01OAogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94X3N0cnVjdC52YWx1ZSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU2CiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3hfc3RydWN0LnZhbHVlID0gUm9vdFN0cnVjdCgKICAgIGJ5dGVjXzMgLy8gIm15X25lc3RlZF9ib3hfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NTYtNTgKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveF9zdHJ1Y3QudmFsdWUgPSBSb290U3RydWN0KAogICAgLy8gICAgIG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjU5CiAgICAvLyBzZWxmLm15X2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBWZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpCiAgICBieXRlYyA0IC8vIDB4NmQ3OTVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICBib3hfZGVsCiAgICBwb3AKICAgIGJ5dGVjIDQgLy8gMHg2ZDc5NWY2MjZmNzg2ZDYxNzA1ZjczNzQ3Mjc1NjM3NDAwMDAwMDAwMDAwMDAwN2IKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYm94X3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjAKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgYnl0ZWMgNSAvLyAweDZkNzk1ZjZlNjU3Mzc0NjU2NDVmNjI2Zjc4NmQ2MTcwNWY3Mzc0NzI3NTYzNzQwMDAwMDAwMDAwMDAwMDdiCiAgICAvLyBzbWFydF9jb250cmFjdHMvc3RydWN0cy9jb250cmFjdC5weTo2MC02MgogICAgLy8gc2VsZi5teV9uZXN0ZWRfYm94bWFwX3N0cnVjdFthcmM0LlVJbnQ2NCgxMjMpXSA9IFJvb3RTdHJ1Y3QoCiAgICAvLyAgICAgbmVzdGVkPU5lc3RlZFN0cnVjdChjb250ZW50PVZlY3Rvcih4PWFyYzQuU3RyaW5nKCIxIiksIHk9YXJjNC5TdHJpbmcoIjIiKSkpCiAgICAvLyApCiAgICBib3hfZGVsCiAgICBwb3AKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYwCiAgICAvLyBzZWxmLm15X25lc3RlZF9ib3htYXBfc3RydWN0W2FyYzQuVUludDY0KDEyMyldID0gUm9vdFN0cnVjdCgKICAgIGJ5dGVjIDUgLy8gMHg2ZDc5NWY2ZTY1NzM3NDY1NjQ1ZjYyNmY3ODZkNjE3MDVmNzM3NDcyNzU2Mzc0MDAwMDAwMDAwMDAwMDA3YgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjAtNjIKICAgIC8vIHNlbGYubXlfbmVzdGVkX2JveG1hcF9zdHJ1Y3RbYXJjNC5VSW50NjQoMTIzKV0gPSBSb290U3RydWN0KAogICAgLy8gICAgIG5lc3RlZD1OZXN0ZWRTdHJ1Y3QoY29udGVudD1WZWN0b3IoeD1hcmM0LlN0cmluZygiMSIpLCB5PWFyYzQuU3RyaW5nKCIyIikpKQogICAgLy8gKQogICAgYnl0ZWNfMSAvLyAweDAwMDIwMDAyMDAwNDAwMDcwMDAxMzEwMDAxMzIKICAgIGJveF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9zdHJ1Y3RzL2NvbnRyYWN0LnB5OjYzCiAgICAvLyBzZWxmLm15X2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gVmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKQogICAgdHhuIFNlbmRlcgogICAgcHVzaGJ5dGVzICJteV9sb2NhbHN0YXRlX3N0cnVjdCIKICAgIGJ5dGVjXzAgLy8gMHgwMDA0MDAwNzAwMDEzMTAwMDEzMgogICAgYXBwX2xvY2FsX3B1dAogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjQKICAgIC8vIHNlbGYubXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gUm9vdFN0cnVjdCgKICAgIHR4biBTZW5kZXIKICAgIHB1c2hieXRlcyAibXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0IgogICAgLy8gc21hcnRfY29udHJhY3RzL3N0cnVjdHMvY29udHJhY3QucHk6NjQtNjYKICAgIC8vIHNlbGYubXlfbmVzdGVkX2xvY2Fsc3RhdGVfc3RydWN0W1R4bi5zZW5kZXJdID0gUm9vdFN0cnVjdCgKICAgIC8vICAgICBuZXN0ZWQ9TmVzdGVkU3RydWN0KGNvbnRlbnQ9VmVjdG9yKHg9YXJjNC5TdHJpbmcoIjEiKSwgeT1hcmM0LlN0cmluZygiMiIpKSkKICAgIC8vICkKICAgIGJ5dGVjXzEgLy8gMHgwMDAyMDAwMjAwMDQwMDA3MDAwMTMxMDAwMTMyCiAgICBhcHBfbG9jYWxfcHV0CiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [221, 252, 282], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [209], "errorMessage": "OnCompletion is not OptIn"}, {"pc": [311], "errorMessage": "can only call when creating"}, {"pc": [212, 224, 255, 285], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'Vector': Vector,
+    'NestedStruct': NestedStruct,
+    'RootStruct': RootStruct,
+    'Struct_WithNameVariations': StructWithNameVariations,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

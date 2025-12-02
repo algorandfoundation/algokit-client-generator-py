@@ -9,82 +9,21 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}}], "name": "ARC56Test", "state": {"keys": {"box": {"boxKey": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"globalKey": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"localKey": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"boxMap": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"globalMap": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"localMap": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "desc": "", "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "teal": 40}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "teal": 67}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 160}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 168}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
-class InputsAdd:
-    """Struct for InputsAdd"""
-    a: int
-    b: int
-
-@dataclasses.dataclass(frozen=True)
-class InputsSubtract:
-    """Struct for InputsSubtract"""
-    a: int
-    b: int
-
-@dataclasses.dataclass(frozen=True)
-class Inputs:
-    """Struct for Inputs"""
-    add: InputsAdd
-    subtract: InputsSubtract
+class FooUint16BarUint16:
+    """Struct for { foo: uint16; bar: uint16 }"""
+    foo: int
+    bar: int
 
 @dataclasses.dataclass(frozen=True)
 class Outputs:
@@ -93,11 +32,22 @@ class Outputs:
     difference: int
 
 @dataclasses.dataclass(frozen=True)
-class FooUint16BarUint16:
-    """Struct for { foo: uint16; bar: uint16 }"""
-    foo: int
-    bar: int
+class InputsAdd:
+    """Struct for Inputs_add"""
+    a: int
+    b: int
 
+@dataclasses.dataclass(frozen=True)
+class InputsSubtract:
+    """Struct for Inputs_subtract"""
+    a: int
+    b: int
+
+@dataclasses.dataclass(frozen=True)
+class Inputs:
+    """Struct for Inputs"""
+    add: InputsAdd
+    subtract: InputsSubtract
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class FooArgs:
@@ -117,12 +67,12 @@ class _Arc56TestOptIn:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }))
+        return self.app_client.params.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ))
 
 
 class Arc56TestParams:
@@ -138,13 +88,13 @@ class Arc56TestParams:
         args: tuple[Inputs] | FooArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -165,12 +115,12 @@ class _Arc56TestOptInTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }))
+        return self.app_client.create_transaction.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ))
 
 
 class Arc56TestCreateTransactionParams:
@@ -186,13 +136,13 @@ class Arc56TestCreateTransactionParams:
         args: tuple[Inputs] | FooArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -214,14 +164,13 @@ class _Arc56TestOptInSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
 
 class Arc56TestSend:
@@ -238,15 +187,14 @@ class Arc56TestSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Outputs]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(Outputs, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[Outputs], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[Outputs], response)
 
     def clear_state(
         self,
@@ -302,32 +250,16 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "{ foo: uint16; bar: uint16 }": FooUint16BarUint16
-        }
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def global_key(self) -> int:
         """Get the current value of the globalKey key in global_state state"""
         value = self.app_client.state.global_state.get_value("globalKey")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -336,7 +268,6 @@ class _GlobalState:
         return _MapState(
             self.app_client.state.global_state,
             "globalMap",
-            self._struct_classes.get("{ foo: uint16; bar: uint16 }")
         )
 
 class _LocalState:
@@ -344,30 +275,16 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        if not result:
-            return typing.cast(LocalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(LocalStateValue, converted)
+        return typing.cast(LocalStateValue, result)
 
     @property
     def local_key(self) -> int:
         """Get the current value of the localKey key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("localKey")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -376,7 +293,6 @@ class _LocalState:
         return _MapState(
             self.app_client.state.local_state(self.address),
             "localMap",
-            None
         )
 
 class _BoxState:
@@ -384,32 +300,16 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Outputs": Outputs
-        }
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def box_key(self) -> str:
         """Get the current value of the boxKey key in box state"""
         value = self.app_client.state.box.get_value("boxKey")
-        if isinstance(value, dict) and "string" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["string"], value)  # type: ignore
         return typing.cast(str, value)
 
     @property
@@ -418,7 +318,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "boxMap",
-            self._struct_classes.get("Outputs")
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -433,26 +332,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -571,7 +462,7 @@ class Arc56TestClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -633,18 +524,7 @@ class Arc56TestClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class _Arc56TestOptInComposer:
@@ -661,11 +541,6 @@ class _Arc56TestOptInComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "optInToApplication()void", v
-            )
-        )
         return self.composer
 
 
@@ -675,7 +550,6 @@ class Arc56TestComposer:
     def __init__(self, client: "Arc56TestClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def opt_in(self) -> "_Arc56TestOptInComposer":
@@ -692,11 +566,6 @@ class Arc56TestComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)", v
-            )
-        )
         return self
 
     def clear_state(
@@ -708,12 +577,7 @@ class Arc56TestComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -735,7 +599,7 @@ class Arc56TestComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -752,3 +616,44 @@ class Arc56TestComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}, "events": []}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}, "events": []}], "name": "ARC56Test", "state": {"keys": {"box": {"boxKey": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"globalKey": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"localKey": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"boxMap": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"globalMap": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"localMap": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "desc": "", "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "teal": 40}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "teal": 67}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 160}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 168}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    '{ foo: uint16; bar: uint16 }': FooUint16BarUint16,
+    'Outputs': Outputs,
+    'Inputs': Inputs,
+    'Inputs_add': InputsAdd,
+    'Inputs_subtract': InputsSubtract,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

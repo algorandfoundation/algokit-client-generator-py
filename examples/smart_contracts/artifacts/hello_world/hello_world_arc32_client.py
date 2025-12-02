@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "events": []}], "name": "HelloWorld", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIFRNUExfVVBEQVRBQkxFIFRNUExfREVMRVRBQkxFCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX2JhcmVfcm91dGluZ0A3CiAgICBwdXNoYnl0ZXNzIDB4MDJiZWNlMTEgMHhiZjljMWVkZiAvLyBtZXRob2QgImhlbGxvKHN0cmluZylzdHJpbmciLCBtZXRob2QgImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9oZWxsb19yb3V0ZUAzIG1haW5faGVsbG9fd29ybGRfY2hlY2tfcm91dGVANAoKbWFpbl9hZnRlcl9pZl9lbHNlQDEzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjYKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoRXhhbXBsZUFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX2hlbGxvX3dvcmxkX2NoZWNrX3JvdXRlQDQ6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgY2FsbHN1YiBoZWxsb193b3JsZF9jaGVjawogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9oZWxsb19yb3V0ZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGhlbGxvCiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2JhcmVfcm91dGluZ0A3OgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjYKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoRXhhbXBsZUFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBzd2l0Y2ggbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUA4IG1haW5fYWZ0ZXJfaWZfZWxzZUAxMyBtYWluX2FmdGVyX2lmX2Vsc2VAMTMgbWFpbl9hZnRlcl9pZl9lbHNlQDEzIG1haW5fdXBkYXRlQDkgbWFpbl9kZWxldGVAMTAKICAgIGIgbWFpbl9hZnRlcl9pZl9lbHNlQDEzCgptYWluX2RlbGV0ZUAxMDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjMwCiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJEZWxldGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIGRlbGV0ZQogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl91cGRhdGVAOToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjIzCiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJVcGRhdGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIHVwZGF0ZQogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUA4OgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuaGVsbG9fd29ybGQuY29udHJhY3QuSGVsbG9Xb3JsZC5oZWxsbyhuYW1lOiBieXRlcykgLT4gYnl0ZXM6CmhlbGxvOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjctOAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgaGVsbG8oc2VsZiwgbmFtZTogU3RyaW5nKSAtPiBTdHJpbmc6CiAgICBwcm90byAxIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo5CiAgICAvLyByZXR1cm4gIkhlbGxvLCAiICsgbmFtZQogICAgcHVzaGJ5dGVzICJIZWxsbywgIgogICAgZnJhbWVfZGlnIC0xCiAgICBjb25jYXQKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5oZWxsb193b3JsZC5jb250cmFjdC5IZWxsb1dvcmxkLmhlbGxvX3dvcmxkX2NoZWNrKG5hbWU6IGJ5dGVzKSAtPiB2b2lkOgpoZWxsb193b3JsZF9jaGVjazoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxMS0xMgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgaGVsbG9fd29ybGRfY2hlY2soc2VsZiwgbmFtZTogU3RyaW5nKSAtPiBOb25lOgogICAgcHJvdG8gMSAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTMKICAgIC8vIGFzc2VydCBuYW1lID09ICJXb3JsZCIKICAgIGZyYW1lX2RpZyAtMQogICAgcHVzaGJ5dGVzICJXb3JsZCIKICAgID09CiAgICBhc3NlcnQKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5iYXNlLmNvbnRyYWN0LkltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QudXBkYXRlKCkgLT4gdm9pZDoKdXBkYXRlOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MjUKICAgIC8vIGFzc2VydCBUZW1wbGF0ZVZhcltib29sXShVUERBVEFCTEVfVEVNUExBVEVfTkFNRSksICJDaGVjayBhcHAgaXMgdXBkYXRhYmxlIgogICAgaW50Y18xIC8vIFRNUExfVVBEQVRBQkxFCiAgICBhc3NlcnQgLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MjYKICAgIC8vIHNlbGYuYXV0aG9yaXplX2NyZWF0b3IoKQogICAgY2FsbHN1YiBhdXRob3JpemVfY3JlYXRvcgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmJhc2UuY29udHJhY3QuUGVybWFuZW5jZUNvbnRyb2xBUkM0Q29udHJhY3QuZGVsZXRlKCkgLT4gdm9pZDoKZGVsZXRlOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MzIKICAgIC8vIGFzc2VydCBUZW1wbGF0ZVZhcltib29sXShERUxFVEFCTEVfVEVNUExBVEVfTkFNRSksICJDaGVjayBhcHAgaXMgZGVsZXRhYmxlIgogICAgaW50Y18yIC8vIFRNUExfREVMRVRBQkxFCiAgICBhc3NlcnQgLy8gQ2hlY2sgYXBwIGlzIGRlbGV0YWJsZQogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MzMKICAgIC8vIHNlbGYuYXV0aG9yaXplX2NyZWF0b3IoKQogICAgY2FsbHN1YiBhdXRob3JpemVfY3JlYXRvcgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmJhc2UuY29udHJhY3QuQmFzZUFSQzRDb250cmFjdC5hdXRob3JpemVfY3JlYXRvcigpIC0+IHZvaWQ6CmF1dGhvcml6ZV9jcmVhdG9yOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTAKICAgIC8vIGFzc2VydCBUeG4uc2VuZGVyID09IEdsb2JhbC5jcmVhdG9yX2FkZHJlc3MsICJ1bmF1dGhvcml6ZWQiCiAgICB0eG4gU2VuZGVyCiAgICBnbG9iYWwgQ3JlYXRvckFkZHJlc3MKICAgID09CiAgICBhc3NlcnQgLy8gdW5hdXRob3JpemVkCiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloArgs:
@@ -124,26 +75,26 @@ class HelloWorldParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_world_check(
         self,
         args: tuple[str] | HelloWorldCheckArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -189,26 +140,26 @@ class HelloWorldCreateTransactionParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_world_check(
         self,
         args: tuple[str] | HelloWorldCheckArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -273,15 +224,14 @@ class HelloWorldSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def hello_world_check(
         self,
@@ -289,15 +239,14 @@ class HelloWorldSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -431,7 +380,7 @@ class HelloWorldClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -487,18 +436,7 @@ class HelloWorldClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -558,7 +496,7 @@ class HelloWorldFactory(algokit_utils.TypedAppFactoryProtocol[HelloWorldBareCall
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -666,8 +604,12 @@ class HelloWorldFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def hello(
         self,
@@ -679,12 +621,11 @@ class HelloWorldFactoryCreateParams:
         """Creates a new instance using the hello(string)string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "hello(string)string",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='hello(string)string',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -699,12 +640,11 @@ class HelloWorldFactoryCreateParams:
         """Creates a new instance using the hello_world_check(string)void ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "hello_world_check(string)void",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='hello_world_check(string)void',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -724,8 +664,12 @@ class HelloWorldFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class HelloWorldFactoryDeleteParams:
     """Parameters for 'delete' operations of HelloWorld contract"""
@@ -742,8 +686,12 @@ class HelloWorldFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class HelloWorldFactoryCreateTransaction:
@@ -767,7 +715,10 @@ class HelloWorldFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -795,9 +746,12 @@ class HelloWorldFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return HelloWorldClient(result[0]), result[1]
 
@@ -818,7 +772,6 @@ class HelloWorldComposer:
     def __init__(self, client: "HelloWorldClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def update(self) -> "_HelloWorldUpdateComposer":
@@ -839,11 +792,6 @@ class HelloWorldComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
-            )
-        )
         return self
 
     def hello_world_check(
@@ -857,11 +805,6 @@ class HelloWorldComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello_world_check(string)void", v
-            )
-        )
         return self
 
     def clear_state(
@@ -873,12 +816,7 @@ class HelloWorldComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -900,7 +838,7 @@ class HelloWorldComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -917,3 +855,39 @@ class HelloWorldComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "events": []}], "name": "HelloWorld", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIFRNUExfVVBEQVRBQkxFIFRNUExfREVMRVRBQkxFCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX2JhcmVfcm91dGluZ0A3CiAgICBwdXNoYnl0ZXNzIDB4MDJiZWNlMTEgMHhiZjljMWVkZiAvLyBtZXRob2QgImhlbGxvKHN0cmluZylzdHJpbmciLCBtZXRob2QgImhlbGxvX3dvcmxkX2NoZWNrKHN0cmluZyl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9oZWxsb19yb3V0ZUAzIG1haW5faGVsbG9fd29ybGRfY2hlY2tfcm91dGVANAoKbWFpbl9hZnRlcl9pZl9lbHNlQDEzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjYKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoRXhhbXBsZUFSQzRDb250cmFjdCk6CiAgICBwdXNoaW50IDAgLy8gMAogICAgcmV0dXJuCgptYWluX2hlbGxvX3dvcmxkX2NoZWNrX3JvdXRlQDQ6CiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgY2FsbHN1YiBoZWxsb193b3JsZF9jaGVjawogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9oZWxsb19yb3V0ZUAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgSGVsbG9Xb3JsZChFeGFtcGxlQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6NwogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGhlbGxvCiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2JhcmVfcm91dGluZ0A3OgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjYKICAgIC8vIGNsYXNzIEhlbGxvV29ybGQoRXhhbXBsZUFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBzd2l0Y2ggbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUA4IG1haW5fYWZ0ZXJfaWZfZWxzZUAxMyBtYWluX2FmdGVyX2lmX2Vsc2VAMTMgbWFpbl9hZnRlcl9pZl9lbHNlQDEzIG1haW5fdXBkYXRlQDkgbWFpbl9kZWxldGVAMTAKICAgIGIgbWFpbl9hZnRlcl9pZl9lbHNlQDEzCgptYWluX2RlbGV0ZUAxMDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjMwCiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJEZWxldGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIGRlbGV0ZQogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl91cGRhdGVAOToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjIzCiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJVcGRhdGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIHVwZGF0ZQogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUA4OgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuaGVsbG9fd29ybGQuY29udHJhY3QuSGVsbG9Xb3JsZC5oZWxsbyhuYW1lOiBieXRlcykgLT4gYnl0ZXM6CmhlbGxvOgogICAgLy8gc21hcnRfY29udHJhY3RzL2hlbGxvX3dvcmxkL2NvbnRyYWN0LnB5OjctOAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgaGVsbG8oc2VsZiwgbmFtZTogU3RyaW5nKSAtPiBTdHJpbmc6CiAgICBwcm90byAxIDEKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weTo5CiAgICAvLyByZXR1cm4gIkhlbGxvLCAiICsgbmFtZQogICAgcHVzaGJ5dGVzICJIZWxsbywgIgogICAgZnJhbWVfZGlnIC0xCiAgICBjb25jYXQKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5oZWxsb193b3JsZC5jb250cmFjdC5IZWxsb1dvcmxkLmhlbGxvX3dvcmxkX2NoZWNrKG5hbWU6IGJ5dGVzKSAtPiB2b2lkOgpoZWxsb193b3JsZF9jaGVjazoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9oZWxsb193b3JsZC9jb250cmFjdC5weToxMS0xMgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICAvLyBkZWYgaGVsbG9fd29ybGRfY2hlY2soc2VsZiwgbmFtZTogU3RyaW5nKSAtPiBOb25lOgogICAgcHJvdG8gMSAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvaGVsbG9fd29ybGQvY29udHJhY3QucHk6MTMKICAgIC8vIGFzc2VydCBuYW1lID09ICJXb3JsZCIKICAgIGZyYW1lX2RpZyAtMQogICAgcHVzaGJ5dGVzICJXb3JsZCIKICAgID09CiAgICBhc3NlcnQKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5iYXNlLmNvbnRyYWN0LkltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QudXBkYXRlKCkgLT4gdm9pZDoKdXBkYXRlOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MjUKICAgIC8vIGFzc2VydCBUZW1wbGF0ZVZhcltib29sXShVUERBVEFCTEVfVEVNUExBVEVfTkFNRSksICJDaGVjayBhcHAgaXMgdXBkYXRhYmxlIgogICAgaW50Y18xIC8vIFRNUExfVVBEQVRBQkxFCiAgICBhc3NlcnQgLy8gQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZQogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MjYKICAgIC8vIHNlbGYuYXV0aG9yaXplX2NyZWF0b3IoKQogICAgY2FsbHN1YiBhdXRob3JpemVfY3JlYXRvcgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmJhc2UuY29udHJhY3QuUGVybWFuZW5jZUNvbnRyb2xBUkM0Q29udHJhY3QuZGVsZXRlKCkgLT4gdm9pZDoKZGVsZXRlOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MzIKICAgIC8vIGFzc2VydCBUZW1wbGF0ZVZhcltib29sXShERUxFVEFCTEVfVEVNUExBVEVfTkFNRSksICJDaGVjayBhcHAgaXMgZGVsZXRhYmxlIgogICAgaW50Y18yIC8vIFRNUExfREVMRVRBQkxFCiAgICBhc3NlcnQgLy8gQ2hlY2sgYXBwIGlzIGRlbGV0YWJsZQogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MzMKICAgIC8vIHNlbGYuYXV0aG9yaXplX2NyZWF0b3IoKQogICAgY2FsbHN1YiBhdXRob3JpemVfY3JlYXRvcgogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmJhc2UuY29udHJhY3QuQmFzZUFSQzRDb250cmFjdC5hdXRob3JpemVfY3JlYXRvcigpIC0+IHZvaWQ6CmF1dGhvcml6ZV9jcmVhdG9yOgogICAgLy8gc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTAKICAgIC8vIGFzc2VydCBUeG4uc2VuZGVyID09IEdsb2JhbC5jcmVhdG9yX2FkZHJlc3MsICJ1bmF1dGhvcml6ZWQiCiAgICB0eG4gU2VuZGVyCiAgICBnbG9iYWwgQ3JlYXRvckFkZHJlc3MKICAgID09CiAgICBhc3NlcnQgLy8gdW5hdXRob3JpemVkCiAgICByZXRzdWIK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

@@ -9,64 +9,15 @@
 import dataclasses
 import typing
 # algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-import algokit_algosdk as algosdk
 from algokit_algosdk.source_map import SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner
 from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication"], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "signature"}], "name": "get_preconditions", "returns": {"type": "(uint64,uint64,uint64,uint64)", "struct": "VotingPreconditions"}, "events": [], "readonly": true}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "vote_id"}, {"type": "byte[]", "name": "snapshot_public_key"}, {"type": "string", "name": "metadata_ipfs_cid"}, {"type": "uint64", "name": "start_time"}, {"type": "uint64", "name": "end_time"}, {"type": "uint8[]", "name": "option_counts"}, {"type": "uint64", "name": "quorum"}, {"type": "string", "name": "nft_image_url"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}], "name": "bootstrap", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "close", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}, {"type": "byte[]", "name": "signature"}, {"type": "uint8[]", "name": "answer_ids"}], "name": "vote", "returns": {"type": "void"}, "events": []}], "name": "VotingRound", "state": {"keys": {"box": {}, "global": {"close_time": {"key": "Y2xvc2VfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the time the vote was closed"}, "end_time": {"key": "ZW5kX3RpbWU=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the ending time of voting_round"}, "is_bootstrapped": {"key": "aXNfYm9vdHN0cmFwcGVk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "Whether or not the contract has been bootstrapped with answers"}, "metadata_ipfs_cid": {"key": "bWV0YWRhdGFfaXBmc19jaWQ=", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS content ID of the voting_round metadata file"}, "nft_asset_id": {"key": "bmZ0X2Fzc2V0X2lk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The asset ID of a result NFT if one has been created"}, "nft_image_url": {"key": "bmZ0X2ltYWdlX3VybA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS URL of the default image to use as the media of the result NFT"}, "option_counts": {"key": "b3B0aW9uX2NvdW50cw==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The number of options for each question"}, "quorum": {"key": "cXVvcnVt", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters to reach quorum"}, "snapshot_public_key": {"key": "c25hcHNob3RfcHVibGljX2tleQ==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The public key of the Ed25519 compatible private key that was used to encrypt entries in the vote gating snapshot"}, "start_time": {"key": "c3RhcnRfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the starting time of voting_round"}, "total_options": {"key": "dG90YWxfb3B0aW9ucw==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The total number of options"}, "vote_id": {"key": "dm90ZV9pZA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The identifier of this voting_round round"}, "voter_count": {"key": "dm90ZXJfY291bnQ=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters who have voted"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 5, "ints": 8}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"VotingPreconditions": [{"name": "is_voting_open", "type": "uint64"}, {"name": "is_allowed_to_vote", "type": "uint64"}, {"name": "has_already_voted", "type": "uint64"}, {"name": "current_time", "type": "uint64"}]}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            # Leave transaction params/arguments intact so composer can extract them correctly
-            if value.__class__.__module__.startswith("algokit_utils.transactions"):
-                return value
-            if not isinstance(value, Transaction):
-                return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        if isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            # If the args object is a transaction argument, pass it through directly
-            if args.__class__.__module__.startswith("algokit_utils.transactions"):
-                method_args = [args]
-            else:
-                method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [convert_dataclass(arg) for arg in method_args] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class VotingPreconditions:
@@ -75,7 +26,6 @@ class VotingPreconditions:
     is_allowed_to_vote: int
     has_already_voted: int
     current_time: int
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GetPreconditionsArgs:
@@ -132,50 +82,50 @@ class VotingRoundParams:
         args: tuple[bytes | str] | GetPreconditionsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def bootstrap(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "bootstrap(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="bootstrap(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def close(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close()void",
+        ))
 
     def vote(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vote(pay,byte[],uint8[])void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vote(pay,byte[],uint8[])void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -197,50 +147,50 @@ class VotingRoundCreateTransactionParams:
         args: tuple[bytes | str] | GetPreconditionsArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def bootstrap(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument] | BootstrapArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "bootstrap(pay)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="bootstrap(pay)void",
+            args=_unpack_args(args),
+        ))
 
     def close(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close()void",
+        ))
 
     def vote(
         self,
         args: tuple[algokit_utils.AppMethodCallTransactionArgument, bytes | str, list[int]] | VoteArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vote(pay,byte[],uint8[])void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vote(pay,byte[],uint8[])void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -263,15 +213,14 @@ class VotingRoundSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[VotingPreconditions]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(VotingPreconditions, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[VotingPreconditions], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="get_preconditions(byte[])(uint64,uint64,uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[VotingPreconditions], response)
 
     def bootstrap(
         self,
@@ -279,29 +228,27 @@ class VotingRoundSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "bootstrap(pay)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="bootstrap(pay)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def close(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def vote(
         self,
@@ -309,15 +256,14 @@ class VotingRoundSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "vote(pay,byte[],uint8[])void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="vote(pay,byte[],uint8[])void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -364,126 +310,88 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def close_time(self) -> int:
         """Get the current value of the close_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("close_time")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def end_time(self) -> int:
         """Get the current value of the end_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("end_time")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def is_bootstrapped(self) -> int:
         """Get the current value of the is_bootstrapped key in global_state state"""
         value = self.app_client.state.global_state.get_value("is_bootstrapped")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def metadata_ipfs_cid(self) -> bytes:
         """Get the current value of the metadata_ipfs_cid key in global_state state"""
         value = self.app_client.state.global_state.get_value("metadata_ipfs_cid")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def nft_asset_id(self) -> int:
         """Get the current value of the nft_asset_id key in global_state state"""
         value = self.app_client.state.global_state.get_value("nft_asset_id")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def nft_image_url(self) -> bytes:
         """Get the current value of the nft_image_url key in global_state state"""
         value = self.app_client.state.global_state.get_value("nft_image_url")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def option_counts(self) -> bytes:
         """Get the current value of the option_counts key in global_state state"""
         value = self.app_client.state.global_state.get_value("option_counts")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def quorum(self) -> int:
         """Get the current value of the quorum key in global_state state"""
         value = self.app_client.state.global_state.get_value("quorum")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def snapshot_public_key(self) -> bytes:
         """Get the current value of the snapshot_public_key key in global_state state"""
         value = self.app_client.state.global_state.get_value("snapshot_public_key")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def start_time(self) -> int:
         """Get the current value of the start_time key in global_state state"""
         value = self.app_client.state.global_state.get_value("start_time")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def total_options(self) -> int:
         """Get the current value of the total_options key in global_state state"""
         value = self.app_client.state.global_state.get_value("total_options")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
     def vote_id(self) -> bytes:
         """Get the current value of the vote_id key in global_state state"""
         value = self.app_client.state.global_state.get_value("vote_id")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def voter_count(self) -> int:
         """Get the current value of the voter_count key in global_state state"""
         value = self.app_client.state.global_state.get_value("voter_count")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class VotingRoundClient:
@@ -601,7 +509,7 @@ class VotingRoundClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -675,18 +583,7 @@ class VotingRoundClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class VotingRoundComposer:
@@ -695,7 +592,6 @@ class VotingRoundComposer:
     def __init__(self, client: "VotingRoundClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def get_preconditions(
         self,
@@ -706,11 +602,6 @@ class VotingRoundComposer:
             self.client.params.get_preconditions(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "get_preconditions(byte[])(uint64,uint64,uint64,uint64)", v
             )
         )
         return self
@@ -726,11 +617,6 @@ class VotingRoundComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "bootstrap(pay)void", v
-            )
-        )
         return self
 
     def close(
@@ -741,11 +627,6 @@ class VotingRoundComposer:
             self.client.params.close(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "close()void", v
             )
         )
         return self
@@ -761,11 +642,6 @@ class VotingRoundComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "vote(pay,byte[],uint8[])void", v
-            )
-        )
         return self
 
     def clear_state(
@@ -777,12 +653,7 @@ class VotingRoundComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -804,7 +675,7 @@ class VotingRoundComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
+        skip_signatures: bool = False,
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
@@ -821,3 +692,40 @@ class VotingRoundComposer:
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAtomicTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication"], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[]", "name": "signature"}], "name": "get_preconditions", "returns": {"type": "(uint64,uint64,uint64,uint64)", "struct": "VotingPreconditions"}, "events": [], "readonly": true}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "vote_id"}, {"type": "byte[]", "name": "snapshot_public_key"}, {"type": "string", "name": "metadata_ipfs_cid"}, {"type": "uint64", "name": "start_time"}, {"type": "uint64", "name": "end_time"}, {"type": "uint8[]", "name": "option_counts"}, {"type": "uint64", "name": "quorum"}, {"type": "string", "name": "nft_image_url"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}], "name": "bootstrap", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "close", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "fund_min_bal_req"}, {"type": "byte[]", "name": "signature"}, {"type": "uint8[]", "name": "answer_ids"}], "name": "vote", "returns": {"type": "void"}, "events": []}], "name": "VotingRound", "state": {"keys": {"box": {}, "global": {"close_time": {"key": "Y2xvc2VfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the time the vote was closed"}, "end_time": {"key": "ZW5kX3RpbWU=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the ending time of voting_round"}, "is_bootstrapped": {"key": "aXNfYm9vdHN0cmFwcGVk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "Whether or not the contract has been bootstrapped with answers"}, "metadata_ipfs_cid": {"key": "bWV0YWRhdGFfaXBmc19jaWQ=", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS content ID of the voting_round metadata file"}, "nft_asset_id": {"key": "bmZ0X2Fzc2V0X2lk", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The asset ID of a result NFT if one has been created"}, "nft_image_url": {"key": "bmZ0X2ltYWdlX3VybA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The IPFS URL of the default image to use as the media of the result NFT"}, "option_counts": {"key": "b3B0aW9uX2NvdW50cw==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The number of options for each question"}, "quorum": {"key": "cXVvcnVt", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters to reach quorum"}, "snapshot_public_key": {"key": "c25hcHNob3RfcHVibGljX2tleQ==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The public key of the Ed25519 compatible private key that was used to encrypt entries in the vote gating snapshot"}, "start_time": {"key": "c3RhcnRfdGltZQ==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The unix timestamp of the starting time of voting_round"}, "total_options": {"key": "dG90YWxfb3B0aW9ucw==", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The total number of options"}, "vote_id": {"key": "dm90ZV9pZA==", "keyType": "AVMString", "valueType": "AVMBytes", "desc": "The identifier of this voting_round round"}, "voter_count": {"key": "dm90ZXJfY291bnQ=", "keyType": "AVMString", "valueType": "AVMUint64", "desc": "The minimum number of voters who have voted"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 5, "ints": 8}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"VotingPreconditions": [{"name": "is_voting_open", "type": "uint64"}, {"name": "is_allowed_to_vote", "type": "uint64"}, {"name": "has_already_voted", "type": "uint64"}, {"name": "current_time", "type": "uint64"}]}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'VotingPreconditions': VotingPreconditions,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)
