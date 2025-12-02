@@ -5,7 +5,8 @@ import random
 import uuid
 from dataclasses import dataclass
 
-import algokit_algosdk as algosdk
+import algokit_abi as abi
+import algokit_common
 import algokit_utils
 import algokit_utils.applications
 import algokit_utils.transactions
@@ -106,7 +107,7 @@ def random_voting_round_app(
     assert result.abi_return is None
 
     random_answer_ids = [random.randint(0, question_counts[i] - 1) for i in range(question_count)]
-    signing_key = SigningKey(private_key[: algosdk.constants.key_len_bytes])
+    signing_key = SigningKey(private_key[: algokit_common.PUBLIC_KEY_BYTE_LENGTH])
     signed = signing_key.sign(voter.public_key)
     signature = signed.signature
 
@@ -175,7 +176,7 @@ def test_global_state(random_voting_round_app: RandomVotingAppDeployment) -> Non
     assert state["nft_image_url"] == b"ipfs://cid"
     assert state["nft_asset_id"] == 0
     assert state["total_options"] == total_question_options
-    assert algosdk.abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
+    assert abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
 
 
 def test_works_with_separate_transactions(

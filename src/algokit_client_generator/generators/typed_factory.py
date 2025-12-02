@@ -74,12 +74,11 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
     params = params or algokit_utils.CommonAppCallCreateParams()
     return self.app_factory.params.{operation}(
-        algokit_utils.AppFactoryCreateMethodCallParams(
-            **{{
-            **dataclasses.asdict(params),
-            "method": "{method_sig}",
-            "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
-            }}
+        _extend(
+            algokit_utils.AppFactoryCreateMethodCallParams,
+            params,
+            method={method_sig!r},
+            args={"_unpack_args(args)" if args_type != "None" else "None"},
         ),
         {"compilation_params=compilation_params" if operation == "create" else ""}
     )
@@ -107,38 +106,24 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
         method_name, args_type, include_send_params=True, include_compilation_params=True
     )
 
+    client_class = f"{context.contract_name}Client"
+    result_class = f"algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]"
     yield from utils.indented(f"""
-    {method_params} -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]]:
+    {method_params} -> tuple[{client_class}, {result_class}]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         client, result = self.app_factory.send.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{{
-                **dataclasses.asdict(params),
-                "method": "{method.abi.method.get_signature()}",
-                "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
-                }}
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method={method.abi.method.signature!r},
+                args={"_unpack_args(args)" if args_type != "None" else "None"},
             ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
-        return_value = None if result.abi_return is None else typing.cast({return_type}, result.abi_return)
-
-        return {context.contract_name}Client(client), algokit_utils.AppFactoryCreateMethodCallResult[{return_type}](
-            **{{
-                **result.__dict__,
-                "app_id": result.app_id,
-                "abi_return": return_value,
-                "transaction": result.transaction,
-                "confirmation": result.confirmation,
-                "group_id": result.group_id,
-                "tx_ids": result.tx_ids,
-                "transactions": result.transactions,
-                "confirmations": result.confirmations,
-                "app_address": result.app_address,
-            }}
-        )
-""")  # noqa: E501
+        return {client_class}(client), typing.cast({result_class}, result)
+""")
 
 
 def _generate_operation_params_class(context: GeneratorContext, operation: str) -> DocumentParts:
@@ -163,8 +148,12 @@ class {class_name}:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
-            algokit_utils.{bare_params_class}(**dataclasses.asdict(params)),
-            {"compilation_params=compilation_params" if operation == "create" else ""})
+            _extend(
+                algokit_utils.{bare_params_class},
+                params,
+                {"compilation_params=compilation_params," if operation == "create" else ""}
+            )
+        )
 """)
 
     if operation == "create":
@@ -285,13 +274,11 @@ class {class_name}(
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params(
-            **{{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }}
+        return _extend(
+            algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 """)
 
@@ -375,7 +362,7 @@ def app_name(self) -> str:
     return self.app_factory.app_name
 
 @property
-def app_spec(self) -> algokit_utils.Arc56Contract:
+def app_spec(self) -> arc56.Arc56Contract:
     return self.app_factory.app_spec
 
 @property
@@ -543,7 +530,10 @@ class {context.contract_name}FactoryCreateTransactionCreate:
         \"\"\"Creates a new instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 """)
 
@@ -567,9 +557,12 @@ class {context.contract_name}FactorySendCreate:
         \"\"\"Creates a new instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return {context.contract_name}Client(result[0]), result[1]
 """)

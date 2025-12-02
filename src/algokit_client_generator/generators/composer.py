@@ -58,11 +58,6 @@ class {class_name}:
             {compilation_params}
         )
     )
-    self.composer._result_mappers.append(
-        lambda v: self.composer.client.decode_return_value(
-            "{method.abi.method.get_signature()}", v
-        )
-    )
     return self.composer
 """)
 
@@ -93,7 +88,6 @@ class {context.contract_name}Composer:
     def __init__(self, client: "{context.contract_name}Client"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 """)
     yield Part.IncIndent
 
@@ -132,11 +126,6 @@ def {operation}(self) -> "{class_name}":
             params=params,
         )
     )
-    self._result_mappers.append(
-        lambda v: self.client.decode_return_value(
-            "{method.abi.method.get_signature()}", v
-        )
-    )
     return self
 """)
 
@@ -152,12 +141,7 @@ def clear_state(
     params=params or algokit_utils.CommonAppCallParams()
     self._composer.add_app_call(
         self.client.params.clear_state(
-            algokit_utils.AppClientBareCallParams(
-                **{{
-                    **dataclasses.asdict(params),
-                    "args": args
-                }}
-            )
+            _extend(algokit_utils.AppClientBareCallParams, params, args=args)
         )
     )
     return self
@@ -179,7 +163,7 @@ def simulate(
     extra_opcode_budget: int | None = None,
     exec_trace_config: SimulateTraceConfig | None = None,
     simulation_round: int | None = None,
-    skip_signatures: bool | None = None,
+    skip_signatures: bool = False,
 ) -> algokit_utils.SendAtomicTransactionComposerResults:
     return self._composer.simulate(
         allow_more_logs=allow_more_logs,

@@ -1,12 +1,17 @@
 import copy
+import typing
 
-import algokit_utils
+import algokit_abi as abi
+from algokit_abi import arc56
 
 from algokit_client_generator import utils
-from algokit_client_generator.spec import ABIStruct, get_all_structs, get_contract_methods
+from algokit_client_generator.spec import get_contract_methods
+from algokit_client_generator.utils import Sanitizer
+
+AppSpecMode = typing.Literal["full", "minimal"]
 
 
-def _shrink_app_spec(app_spec: algokit_utils.Arc56Contract, mode: str) -> algokit_utils.Arc56Contract:
+def _shrink_app_spec(app_spec: arc56.Arc56Contract, mode: AppSpecMode) -> arc56.Arc56Contract:
     """Shrink the app spec by removing unnecessary data for minimal mode"""
     stripped_app_spec = copy.deepcopy(app_spec)
 
@@ -41,14 +46,14 @@ def _shrink_app_spec(app_spec: algokit_utils.Arc56Contract, mode: str) -> algoki
     return stripped_app_spec
 
 
-def _shrink_source_info(source_info: list[algokit_utils.SourceInfo]) -> list[algokit_utils.SourceInfo]:
+def _shrink_source_info(source_info: list[arc56.SourceInfo]) -> list[arc56.SourceInfo]:
     """Filter source info to keep only entries with error messages for runtime error mapping"""
     filtered_entries = []
 
     for entry in source_info:
         # Only keep entries that have error messages
         if entry.error_message:
-            minimal_entry = algokit_utils.SourceInfo(pc=entry.pc, error_message=entry.error_message)
+            minimal_entry = arc56.SourceInfo(pc=entry.pc, error_message=entry.error_message)
             # Keep minimal context for error mapping if available
             if entry.teal:
                 minimal_entry.teal = entry.teal
@@ -58,16 +63,18 @@ def _shrink_source_info(source_info: list[algokit_utils.SourceInfo]) -> list[alg
 
 
 class GeneratorContext:
-    def __init__(self, app_spec: algokit_utils.Arc56Contract, *, preserve_names: bool = False, mode: str = "full"):
+    def __init__(self, app_spec: arc56.Arc56Contract, *, preserve_names: bool = False, mode: AppSpecMode = "full"):
         self.mode = mode
-        self.app_spec = _shrink_app_spec(app_spec, mode)
-        self.structs: dict[str, ABIStruct] = {}
+        self.generated_structs = dict[str, str]()
         self.sanitizer = utils.get_sanitizer(preserve_names=preserve_names)
+        self.app_spec = _apply_app_spec_changes(app_spec, self.generated_structs, self.sanitizer, mode)
 
         # Reserved module-level symbols to avoid naming conflicts
         self.used_module_symbols = {
             "_APP_SPEC_JSON",  # Used in app_spec.py to store raw JSON
             "APP_SPEC",  # Used throughout as algokit_utils.Arc56Contract instance
+            "_STRUCT_NAME_TO_TYPE",  # used to configure abi.StructType decode types
+            "_get_struct_customization",
             "DeployCreate",  # Used in typed_factory.py for deployment types
             "Deploy",  # Used in typed_factory.py for deployment types
             "Composer",  # Used in composer.py for transaction composition
@@ -95,8 +102,22 @@ class GeneratorContext:
             self.used_module_symbols, utils.get_class_name(self.app_spec.name)
         )
 
-        self.structs = get_all_structs(self.app_spec, self.used_module_symbols, self.sanitizer)
-        self.methods = get_contract_methods(
-            self.app_spec, self.structs, self.used_module_symbols, self.used_client_symbols
-        )
+        self.methods = get_contract_methods(self.app_spec, self.used_module_symbols, self.used_client_symbols)
         self.disable_linting = True
+
+
+def _apply_app_spec_changes(
+    app_spec: arc56.Arc56Contract, generated_structs: dict[str, str], sanitizer: Sanitizer, mode: AppSpecMode
+) -> arc56.Arc56Contract:
+    app_spec = _shrink_app_spec(app_spec, mode)
+
+    # resolve structs to a type with the desired generated name
+    # during generation this is just a new dict type with the appropriate name
+    # in the generated code there will be another mapping to a generated type
+    def resolve_struct_type(s: abi.StructType) -> type:
+        struct_name = s.struct_name
+        generated_struct_name = sanitizer.make_safe_type_identifier(struct_name)
+        generated_structs[struct_name] = generated_struct_name
+        return typing.NewType(generated_struct_name, dict)  # type: ignore[return-value]
+
+    return app_spec.apply_decode_types(resolve_struct_type)

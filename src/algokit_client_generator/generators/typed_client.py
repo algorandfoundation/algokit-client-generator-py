@@ -1,16 +1,16 @@
 # /generators/typed_client.py
-
 from enum import Enum
 
-import algokit_algosdk as algosdk
+import algokit_abi as abi
+from algokit_abi import arc56
 
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.generators.helpers import get_abi_method_operations
-from algokit_client_generator.spec import ABIStruct, ContractMethod
+from algokit_client_generator.spec import ContractMethod
 
-APPL_TYPE_TXNS = [algosdk.abi.ABITransactionType.APPL, algosdk.abi.ABITransactionType.ANY]
+APPL_TYPE_TXNS = [arc56.TransactionType.APPL, arc56.TransactionType.ANY]
 
 
 class PropertyType(Enum):
@@ -67,7 +67,7 @@ def _generate_common_method_params(  # noqa: C901
         args_meta = []
         for arg in reversed(method.abi.args):
             # Make arg optional if it has default or is a transaction with appl to right
-            is_txn_type = algosdk.abi.is_abi_transaction_type(arg.abi_type)
+            is_txn_type = isinstance(arg.abi_type, arc56.TransactionType)
             is_appl_type = is_txn_type and arg.abi_type in APPL_TYPE_TXNS
             is_optional = arg.has_default or (has_appl_to_right and is_txn_type)
 
@@ -133,38 +133,29 @@ def _generate_method_body(
     include_args: bool = False,
 ) -> str:
     """Generate the common method body shared across different generator methods"""
-    body = "    method_args = _parse_abi_args(args)" if include_args else ""
-    body += "\n    params = params or algokit_utils.CommonAppCallParams()"
+    body = "    params = params or algokit_utils.CommonAppCallParams()"
     if operation == "update":
         body += "\n    compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()"
     method_sig = method.abi.method.get_signature() if method.abi else ""
 
     def alogkit_return_type(operation: str, method: ContractMethod) -> str:
-        return_type = f"{method.abi.python_type}" if method.abi else ""
+        return_type = method.abi.python_type if method.abi else ""
         if operation == "update":
             return_type = f"algokit_utils.SendAppUpdateTransactionResult[{return_type}]"
         else:
             return_type = f"algokit_utils.SendAppTransactionResult[{return_type}]"
         return return_type
 
-    def parse_struct_if_needed(method: ContractMethod) -> str:
-        if method.abi and method.abi.result_struct:
-            return (
-                f"dataclasses.replace(response, "
-                f"abi_return=_init_dataclass({method.abi.result_struct.struct_class_name}, "
-                f"typing.cast(dict, response.abi_return))) # type: ignore"
-            )
-        return "response"
-
-    call_params = f"""algokit_utils.AppClientMethodCallParams(**{{
-        **dataclasses.asdict(params),
-        "method": "{method_sig}",{
+    call_params = f"""_extend(
+        algokit_utils.AppClientMethodCallParams,
+        params,
+        method="{method_sig}",{
         '''
-        "args": method_args, '''
+        args=_unpack_args(args), '''
         if include_args
         else ""
     }
-    }})"""
+    )"""
     send_params = ", send_params=send_params" if property_type == PropertyType.SEND else ""
     compilation_params = ", compilation_params=compilation_params" if operation == "update" else ""
 
@@ -175,14 +166,14 @@ def _generate_method_body(
     else:
         response_code = f"""
     response = self.app_client.send.{operation}({call_params}{send_params}{compilation_params})
-    parsed_response = {parse_struct_if_needed(method)}
-    return typing.cast({alogkit_return_type(operation, method)}, parsed_response)
+    return typing.cast({alogkit_return_type(operation, method)}, response)
 """
         return f"{body}{response_code}"
 
 
 def generate_operation_class(
     context: GeneratorContext,
+    class_name: str,
     property_type: PropertyType,
     operation: str,
     methods: list[ContractMethod],
@@ -190,14 +181,6 @@ def generate_operation_class(
     """Generate a class for a specific operation (update, delete, etc)"""
     if not methods:
         return
-
-    # Generate the operation class with a unique name based on property_type
-    class_name = f"_{context.contract_name}{context.sanitizer.make_safe_type_identifier(operation)}"
-    if property_type == PropertyType.CREATE_TRANSACTION:
-        class_name += "Transaction"
-    elif property_type == PropertyType.SEND:
-        class_name += "Send"
-
     yield from utils.indented(f"""
 class {class_name}:
     def __init__(self, app_client: algokit_utils.AppClient):
@@ -257,7 +240,6 @@ def bare(
         yield from utils.indented(f"{method_params}\n{method_body}")
 
     yield Part.DecIndent
-    yield class_name
 
 
 def _generate_class_methods(
@@ -273,11 +255,14 @@ def _generate_class_methods(
     operation_class_names = {}
     for operation, methods in operations.items():
         if methods:
-            class_name_gen = generate_operation_class(context, property_type, operation, methods)
-            for part in class_name_gen:
-                if isinstance(part, str):
-                    operation_class_names[operation] = part
-                yield part
+            # Generate the operation class with a unique name based on property_type
+            operation_class_name = f"_{context.contract_name}{context.sanitizer.make_safe_type_identifier(operation)}"
+            if property_type == PropertyType.CREATE_TRANSACTION:
+                operation_class_name += "Transaction"
+            elif property_type == PropertyType.SEND:
+                operation_class_name += "Send"
+            operation_class_names[operation] = operation_class_name
+            yield from generate_operation_class(context, operation_class_name, property_type, operation, methods)
             yield Part.Gap2
 
     # Then generate the main class with properties
@@ -372,7 +357,7 @@ def generate_structs_for_args(context: GeneratorContext) -> DocumentParts:
 
         # Scan right to left to determine which args should be optional
         for arg in reversed(method.abi.args):
-            is_txn_type = algosdk.abi.is_abi_transaction_type(arg.abi_type)
+            is_txn_type = isinstance(arg.abi_type, arc56.TransactionType)
             is_appl_type = is_txn_type and arg.abi_type in APPL_TYPE_TXNS
 
             if is_txn_type and has_appl_to_right:
@@ -544,7 +529,7 @@ def app_name(self) -> str:
     return self.app_client.app_name
 
 @property
-def app_spec(self) -> algokit_utils.Arc56Contract:
+def app_spec(self) -> arc56.Arc56Contract:
     return self.app_client.app_spec
 
 @property
@@ -634,18 +619,7 @@ def decode_return_value(
     if return_value is None:
         return None
 
-    arc56_method = self.app_spec.get_arc56_method(method)
-    decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-
-    # If method returns a struct, convert the dict to appropriate dataclass
-    if (arc56_method and
-        arc56_method.returns and
-        arc56_method.returns.struct and
-        isinstance(decoded, dict)):
-        struct_class = globals().get(arc56_method.returns.struct)
-        if struct_class:
-            return struct_class(**typing.cast(dict, decoded))
-    return decoded
+    return return_value.value
 """
 
     # Yield all the overloads first
@@ -667,60 +641,36 @@ def new_group(self) -> "{context.contract_name}Composer":
 """)
 
 
-def generate_structs(context: GeneratorContext) -> DocumentParts:  # noqa: C901
+def generate_structs(context: GeneratorContext) -> DocumentParts:
     """Generate struct classes for ABI structs"""
-    # Track generated structs by their class name to avoid duplicates
-    generated_structs: set[str] = set()
+    structs_done = set[str]()
+    for struct in context.app_spec.structs.values():
+        yield from _generate_struct(context, structs_done, struct)
 
-    for method in context.methods.all_abi_methods:
-        if not method.abi:
-            continue
 
-        # Get all structs from method args and return type
-        all_structs = list(context.structs.values())
-        for struct in all_structs:
-            # First generate any nested struct classes
-            for field in struct.fields:
-                if field.is_nested:
-                    nested_struct = context.structs.get(field.python_type)
-                    if not nested_struct:
-                        raise ValueError(f"Nested struct {field.python_type} not found in context")
-                    # Only generate if we haven't seen this nested struct before
-                    if nested_struct.struct_class_name not in generated_structs:
-                        yield Part.Gap1
-                        generated_structs.add(nested_struct.struct_class_name)
-                        yield utils.indented(f"""
+def _generate_struct(context: GeneratorContext, structs_done: set[str], struct: abi.StructType) -> DocumentParts:
+    spec_struct_name = struct.struct_name
+    if spec_struct_name in structs_done:
+        return
+    structs_done.add(spec_struct_name)
+    # ensure any other referenced structs have been generated before this struct
+    for field_type in struct.fields.values():
+        if isinstance(field_type, abi.StructType):
+            yield from _generate_struct(context, structs_done, field_type)
+    yield Part.Gap1
+    yield from utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
-class {nested_struct.struct_class_name}:
-    \"\"\"Struct for {nested_struct.abi_name}\"\"\"
+class {context.generated_structs[spec_struct_name]}:
+    \"\"\"Struct for {spec_struct_name}\"\"\"
 """)
-                        yield Part.IncIndent
-                        for nested_field in nested_struct.fields:
-                            yield f"{nested_field.name}: {nested_field.python_type}"
-                        yield Part.DecIndent
-                        yield Part.Gap1
-
-            # Then generate the main struct class if we haven't already
-            if struct.struct_class_name not in generated_structs:
-                yield Part.Gap1
-                generated_structs.add(struct.struct_class_name)
-                yield utils.indented(f"""
-@dataclasses.dataclass(frozen=True)
-class {struct.struct_class_name}:
-    \"\"\"Struct for {struct.abi_name}\"\"\"
-""")
-                yield Part.IncIndent
-                for field in struct.fields:
-                    if field.is_nested:
-                        yield f"{field.name}: {field.python_type}"
-                    else:
-                        yield f"{field.name}: {field.python_type}"
-                yield Part.DecIndent
+    yield Part.IncIndent
+    for field_name, field_type in struct.fields.items():
+        yield f"{field_name}: {utils.abi_type_to_python(field_type)}"
+    yield Part.DecIndent
+    yield Part.Gap1
 
 
-def _generate_state_typeddict(
-    state_type: str, keys: dict, class_name: str, structs: dict[str, "ABIStruct"]
-) -> Iterator[DocumentParts]:
+def _generate_state_typeddict(state_type: str, keys: dict, class_name: str) -> DocumentParts:
     """Generate a TypedDict for a specific state type"""
     if not keys:
         return
@@ -731,7 +681,7 @@ class {class_name}(typing.TypedDict):
 """)
     yield Part.IncIndent
     for key_name, key_info in keys.items():
-        python_type = utils.map_abi_type_to_python(key_info.value_type, structs=structs)
+        python_type = utils.map_arc56_type_to_python(key_info.value_type)
         yield f"{key_name}: {python_type}"
     yield Part.DecIndent
 
@@ -742,30 +692,10 @@ def _generate_state_class(  # noqa: PLR0913
     class_name: str,
     keys: dict,
     maps: dict,
-    value_type_name: str | None = None,
+    value_type_name: str,
     extra_params: str = "",
 ) -> DocumentParts:
     """Generate a state access class with typed methods"""
-
-    # Pre-generate the struct mapping for this state type
-    struct_mapping = {}
-
-    # Check keys for structs
-    for key_info in keys.values():
-        if key_info.value_type in context.structs:
-            struct_mapping[key_info.value_type] = context.structs[key_info.value_type].struct_class_name
-
-    # Check maps for structs
-    for map_info in maps.values():
-        if map_info.value_type in context.structs:
-            struct_mapping[map_info.value_type] = context.structs[map_info.value_type].struct_class_name
-
-    # Generate the struct mapping as a class variable
-    struct_mapping_str = (
-        "{\n            " + ",\n            ".join(f'"{k}": {v}' for k, v in struct_mapping.items()) + "\n        }"
-        if struct_mapping
-        else "{}"
-    )
 
     yield from utils.indented(f"""
 class {class_name}:
@@ -773,29 +703,17 @@ class {class_name}:
         self.app_client = app_client
         {"self.address = address" if extra_params else ""}
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {struct_mapping_str}
 
-    def get_all(self) -> {value_type_name or "dict[str, typing.Any]"}:
+    def get_all(self) -> {value_type_name}:
         \"\"\"Get all current keyed values from {state_type} state\"\"\"
         result = self.app_client.state.{state_type}{"(self.address)" if extra_params else ""}.get_all()
-        if not result:
-            return {"typing.cast(" + value_type_name + ", {})" if value_type_name else "{}"}
-
-        converted = {{}}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.{state_type}.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return {"typing.cast(" + value_type_name + ", converted)" if value_type_name else "converted"}
+        return typing.cast({value_type_name}, result)
 """)
 
     # Generate methods for individual keys
     if keys:
         for key_name, key_info in keys.items():
-            python_type = utils.map_abi_type_to_python(key_info.value_type, utils.IOType.OUTPUT, context.structs)
+            python_type = utils.map_arc56_type_to_python(key_info.value_type, utils.IOType.OUTPUT)
             yield Part.Gap1
             yield Part.IncIndent
             yield (
@@ -803,8 +721,6 @@ class {class_name}:
     def {utils.get_method_name(key_name)}(self) -> {python_type}:
         \"\"\"Get the current value of the {key_name} key in {state_type} state\"\"\"
         value = self.app_client.state.{state_type}{"(self.address)" if extra_params else ""}.get_value("{key_name}")
-        if isinstance(value, dict) and "{key_info.value_type}" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["{key_info.value_type}"], value)  # type: ignore
         return typing.cast({python_type}, value)
 """
             )
@@ -813,9 +729,8 @@ class {class_name}:
     # Generate methods for maps
     if maps:
         for map_name, map_info in maps.items():
-            key_type = utils.map_abi_type_to_python(map_info.key_type, utils.IOType.INPUT, context.structs)
-            value_type = utils.map_abi_type_to_python(map_info.value_type, utils.IOType.OUTPUT, context.structs)
-            is_value_struct = map_info.value_type in context.structs
+            key_type = utils.map_arc56_type_to_python(map_info.key_type, utils.IOType.INPUT)
+            value_type = utils.map_arc56_type_to_python(map_info.value_type, utils.IOType.OUTPUT)
             yield Part.Gap1
             yield Part.IncIndent
             yield from utils.indented(f"""
@@ -825,7 +740,6 @@ def {utils.get_method_name(map_name)}(self) -> "_MapState[{key_type}, {value_typ
     return _MapState(
         self.app_client.state.{state_type}{"(self.address)" if extra_params else ""},
         "{map_name}",
-        {f'self._struct_classes.get("{map_info.value_type}")' if is_value_struct else "None"}
     )
 """)
             yield Part.DecIndent
@@ -895,7 +809,7 @@ def {state_type.split("_")[0]}{"_state" if state_type != "box" else ""}(
             class_name=class_name,
             keys=keys,
             maps=maps,
-            value_type_name=value_type if keys else None,
+            value_type_name=value_type if keys else "dict[str, typing.Any]",
             extra_params=extra_params,
         )
         yield Part.Gap1
@@ -915,26 +829,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     \"\"\"Generic class for accessing state maps with strongly typed keys and values\"\"\"
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                 struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         \"\"\"Get all current values in the map\"\"\"
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         \"\"\"Get a value from the map by key\"\"\"
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 """)
 

@@ -1,15 +1,12 @@
 import re
 from collections.abc import Iterable
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
-from algokit_algosdk import abi
+import algokit_abi as abi
+from algokit_abi import arc56
 
 from algokit_client_generator.document import DocumentParts, Part
-
-if TYPE_CHECKING:
-    from algokit_client_generator.spec import ABIStruct
-
 
 NEW_LINE = "\n"
 
@@ -161,31 +158,23 @@ def get_method_name(name: str, string_suffix: str = "") -> str:
     return base_name
 
 
-def get_struct_name(struct_name: str) -> str:
-    if not struct_name.startswith("{"):
-        return struct_name
-    sanitizer = get_sanitizer(preserve_names=False)
-    cleaned = struct_name.replace("{", "").replace("}", "").strip()
-    return sanitizer.make_safe_type_identifier(cleaned)
-
-
 def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -> str:  # noqa: PLR0911, C901, PLR0912  # type: ignore[PLR0911]
     match abi_type:
         case abi.UintType():
             return "int"
-        case abi.ArrayDynamicType() as array:
-            child = array.child_type
+        case abi.DynamicArrayType() as array:
+            child = array.element
             if isinstance(child, abi.ByteType):
                 return "bytes | str" if io_type == IOType.INPUT else "bytes"
             return f"list[{abi_type_to_python(child, io_type)}]"
-        case abi.ArrayStaticType() as array:
-            child = array.child_type
+        case abi.StaticArrayType() as array:
+            child = array.element
             if isinstance(child, abi.ByteType):
                 if io_type == IOType.INPUT:
-                    return f"bytes | str | tuple[{', '.join('int' for _ in range(array.static_length))}]"
+                    return f"bytes | str | tuple[{', '.join('int' for _ in range(array.size))}]"
                 return "bytes"
             inner_type = abi_type_to_python(child, io_type)
-            return f"tuple[{', '.join(inner_type for _ in range(array.static_length))}]"
+            return f"tuple[{', '.join(inner_type for _ in range(array.size))}]"
         case abi.AddressType():
             return "str"
         case abi.BoolType():
@@ -193,43 +182,38 @@ def abi_type_to_python(abi_type: abi.ABIType, io_type: IOType = IOType.OUTPUT) -
         case abi.UfixedType():
             return "decimal.Decimal"
         case abi.TupleType() as tuple_type:
-            return f"tuple[{', '.join(abi_type_to_python(t, io_type) for t in tuple_type.child_types)}]"
+            return f"tuple[{', '.join(abi_type_to_python(t, io_type) for t in tuple_type.elements)}]"
         case abi.ByteType():
             return "int"
         case abi.StringType():
             return "str"
+        case abi.StructType():
+            return abi_type.decode_type.__name__
         case _:
             return "typing.Any"
 
 
-def map_abi_type_to_python(  # noqa: C901, PLR0911
-    abi_type_str: str, io_type: IOType = IOType.OUTPUT, structs: dict[str, "ABIStruct"] | None = None
+def map_arc56_type_to_python(  # noqa: PLR0911
+    arc56_type: arc56.AVMType | abi.ABIType | arc56.ReferenceType | arc56.TransactionType | arc56.VoidType,
+    io_type: IOType = IOType.OUTPUT,
 ) -> str:
-    match abi_type_str:
-        case _ if structs and abi_type_str in structs:
-            return structs[abi_type_str].struct_class_name
-        case "void":
+    match arc56_type:
+        case arc56.Void:
             return "None"
-        case "AVMBytes":
+        case arc56.AVMType.BYTES:
             return "bytes"
-        case "AVMUint64":
+        case arc56.AVMType.UINT64:
             return "int"
-        case "AVMString":
+        case arc56.AVMType.STRING:
             return "str"
-        case "tuple":
-            return "tuple"
-        case abi.ABIReferenceType.ASSET | abi.ABIReferenceType.APPLICATION:
+        case arc56.ReferenceType.ASSET | arc56.ReferenceType.APPLICATION:
             return "int"
-        case abi.ABIReferenceType.ACCOUNT:
+        case arc56.ReferenceType.ACCOUNT:
             return "str | bytes"
-        case _ if abi.is_abi_transaction_type(abi_type_str):
+        case arc56.TransactionType():
             return "algokit_utils.AppMethodCallTransactionArgument"
         case _:
-            try:
-                abi_type = abi.ABIType.from_string(abi_type_str)
-                return abi_type_to_python(abi_type, io_type)
-            except Exception as e:
-                raise ValueError(f"Unknown ABI type: {abi_type_str}") from e
+            return abi_type_to_python(arc56_type, io_type)
 
 
 def get_unique_symbol_by_incrementing(
