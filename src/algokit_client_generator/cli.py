@@ -3,6 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
+from algokit_client_generator.context import AppSpecMode
 from algokit_client_generator.writer import generate_client
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
-def walk_dir(path: Path, output: Path, *, preserve_names: bool = False, mode: str = "full") -> None:
+def walk_dir(path: Path, output: Path, *, preserve_names: bool = False, mode: AppSpecMode = "full") -> None:
     for child in path.iterdir():
         if child.is_dir():
             walk_dir(child, output, preserve_names=preserve_names, mode=mode)
