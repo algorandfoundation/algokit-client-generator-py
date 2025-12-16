@@ -3,9 +3,8 @@ import typing
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 
-import algokit_abi as abi
-import algokit_utils.applications.app_client
-from algokit_abi import arc56
+import algokit_utils
+from algokit_abi import abi, arc56
 
 from algokit_client_generator import utils
 
@@ -174,7 +173,7 @@ def get_contract_methods(
 def load_from_json(path: Path) -> arc56.Arc56Contract:
     try:
         raw_json = path.read_text()
-        return algokit_utils.applications.app_client.AppClient.normalise_app_spec(raw_json)
+        return algokit_utils.AppClient.normalise_app_spec(raw_json)
     except Exception as ex:
         raise ValueError("Invalid application.json") from ex
 

@@ -7,15 +7,15 @@ from examples.smart_contracts.artifacts.minimal.minimal_arc32_client import Mini
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def minimal_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> MinimalFactory:
-    return algorand.client.get_typed_app_factory(MinimalFactory, default_sender=default_deployer.address)
+def minimal_factory(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> MinimalFactory:
+    return algorand.client.get_typed_app_factory(MinimalFactory, default_sender=default_deployer.addr)
 
 
 def test_delete(minimal_factory: MinimalFactory) -> None:

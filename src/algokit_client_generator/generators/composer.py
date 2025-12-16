@@ -164,7 +164,7 @@ def simulate(
     exec_trace_config: SimulateTraceConfig | None = None,
     simulation_round: int | None = None,
     skip_signatures: bool = False,
-) -> algokit_utils.SendAtomicTransactionComposerResults:
+) -> algokit_utils.SendTransactionComposerResults:
     return self._composer.simulate(
         allow_more_logs=allow_more_logs,
         allow_empty_signatures=allow_empty_signatures,
@@ -178,7 +178,7 @@ def simulate(
 def send(
     self,
     send_params: algokit_utils.SendParams | None = None
-) -> algokit_utils.SendAtomicTransactionComposerResults:
+) -> algokit_utils.SendTransactionComposerResults:
     return self._composer.send(send_params)
 """)
     yield Part.DecIndent
