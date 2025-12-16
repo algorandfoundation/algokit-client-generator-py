@@ -12,7 +12,7 @@ import typing
 from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
-from algokit_algosdk.source_map import SourceMap
+from algokit_common.source_map import ProgramSourceMap as SourceMap
 from algokit_transact.models.common import OnApplicationComplete
 from algokit_transact.models.transaction import Transaction
 from algokit_utils.protocols.signer import TransactionSigner

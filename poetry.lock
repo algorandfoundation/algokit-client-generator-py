@@ -2,13 +2,15 @@
 
 [[package]]
 name = "algokit-utils"
-version = "4.2.2"
+version = "5.0.0a2"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
-python-versions = ">=3.10,<4"
+python-versions = "<4,>=3.10"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "algokit_utils-5.0.0a2-py3-none-any.whl", hash = "sha256:771f4256d26828c27ebce8f00eea18e953d3ef1ffe9c2d3e229f48079c12b129"},
+    {file = "algokit_utils-5.0.0a2.tar.gz", hash = "sha256:25f232f655d9d9467976845aa8adb6d0ff62e149f4cd0d92e3e6401a1a138c75"},
+]
 
 [package.dependencies]
 httpx = ">=0.23.1,<=0.28.1"
@@ -17,12 +19,6 @@ msgpack-types = ">=0.2.0,<=0.5.0"
 pycryptodomex = ">=3.19,<4"
 pynacl = ">=1.4.0,<2"
 typing-extensions = ">=4.6.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/algorandfoundation/algokit-utils-py.git"
-reference = "decoupling-abi-struct"
-resolved_reference = "2ddd1a65b66e55d1fdbd4bfa2f6d6d3afc24bac0"
 
 [[package]]
 name = "algorand-python"
@@ -2199,21 +2195,21 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "2.5.0"
+version = "2.6.2"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"},
-    {file = "urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"},
+    {file = "urllib3-2.6.2-py3-none-any.whl", hash = "sha256:ec21cddfe7724fc7cb4ba4bea7aa8e2ef36f607a4bab81aa6ce42a13dc3f03dd"},
+    {file = "urllib3-2.6.2.tar.gz", hash = "sha256:016f9c98bb7e98085cb2b4b17b87d2c702975664e4f060c6532e64d1c1a5e797"},
 ]
 
 [package.extras]
-brotli = ["brotli (>=1.0.9) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=0.8.0) ; platform_python_implementation != \"CPython\""]
+brotli = ["brotli (>=1.2.0) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=1.2.0.0) ; platform_python_implementation != \"CPython\""]
 h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
-zstd = ["zstandard (>=0.18.0)"]
+zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 
 [[package]]
 name = "virtualenv"
@@ -2274,4 +2270,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "6f2a1ac5a5d75ce7955cf3983df54c16aa065671c98d474b4fed8e4e0cfce713"
+content-hash = "2805e90d3e7ab3450fabcd93d06471993b64077c5a761c00d9baa81979651543"

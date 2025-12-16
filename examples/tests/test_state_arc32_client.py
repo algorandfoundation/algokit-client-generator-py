@@ -22,15 +22,15 @@ from examples.smart_contracts.artifacts.state.state_arc32_client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def state_factory_arc32(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> StateFactory:
-    return algorand.client.get_typed_app_factory(StateFactory, default_sender=default_deployer.address)
+def state_factory_arc32(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> StateFactory:
+    return algorand.client.get_typed_app_factory(StateFactory, default_sender=default_deployer.addr)
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def deployed_state_app_client(state_factory_arc32: StateFactory) -> StateClient:
 
 
 def test_exposes_state_correctly(
-    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.AddressWithSigners
 ) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
@@ -62,7 +62,7 @@ def test_exposes_state_correctly(
 
     client.send.opt_in.opt_in()
     client.send.set_local(args=SetLocalArgs(int1=1, int2=2, bytes1="asdf", bytes2=b"\x01\x02\x03\x04"))
-    local_state = client.state.local_state(default_deployer.address).get_all()
+    local_state = client.state.local_state(default_deployer.addr).get_all()
     assert local_state["local_int1"] == 1
     assert local_state["local_int2"] == 2
     assert local_state["local_bytes1"] == b"asdf"
@@ -70,7 +70,7 @@ def test_exposes_state_correctly(
 
     # NOTE: Accessors are normalized to snake case, raw keys in the loaded app spec aren't
     client.state.global_state.bytes_not_in_snake_case
-    client.state.local_state(default_deployer.address).local_bytes_not_in_snake_case
+    client.state.local_state(default_deployer.addr).local_bytes_not_in_snake_case
     # NOTE: Arc 32 loses the info on box states during arc56 conversion hence no explicit box accessor
     # gets generated
 
@@ -87,7 +87,7 @@ def test_readonly_methods_dont_consume_algos(state_factory_arc32: StateFactory) 
 
     result = client.send.call_abi(
         args=CallAbiArgs(value="oh hi"),
-        params=CommonAppCallParams(sender=low_funds_account.address),
+        params=CommonAppCallParams(sender=low_funds_account.addr),
     )
     assert result.abi_return == "Hello, oh hi"
 
@@ -95,7 +95,7 @@ def test_readonly_methods_dont_consume_algos(state_factory_arc32: StateFactory) 
     # previous call did not consume algos
     result2 = client.send.call_abi(
         args=CallAbiArgs(value="oh hi 2"),
-        params=CommonAppCallParams(sender=low_funds_account.address),
+        params=CommonAppCallParams(sender=low_funds_account.addr),
     )
     assert result2.abi_return == "Hello, oh hi 2"
 
@@ -145,7 +145,7 @@ def test_arguments_with_defaults(state_factory_arc32: StateFactory) -> None:
 
 
 def test_methods_can_be_composed(
-    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.AddressWithSigners
 ) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
@@ -154,7 +154,7 @@ def test_methods_can_be_composed(
         args=SetLocalArgs(bytes1="default value", int2=0, int1=0, bytes2=b"\x01\x02\x03\x04")
     ).send()
 
-    local_state = client.state.local_state(default_deployer.address).get_all()
+    local_state = client.state.local_state(default_deployer.addr).get_all()
     assert local_state["local_bytes1"] == b"default value"
     assert local_state["local_bytes2"] == b"\x01\x02\x03\x04"
     assert local_state["local_int1"] == 0
@@ -162,11 +162,11 @@ def test_methods_can_be_composed(
 
 
 def test_call_with_references(
-    state_factory_arc32: StateFactory, default_deployer: algokit_utils.SigningAccount
+    state_factory_arc32: StateFactory, default_deployer: algokit_utils.AddressWithSigners
 ) -> None:
     client, _ = state_factory_arc32.deploy(
         compilation_params={"deploy_time_params": {"VALUE": 1}},
     )
     client.send.call_with_references(
-        args=CallWithReferencesArgs(asset=1234, account=default_deployer.address, application=client.app_id)
+        args=CallWithReferencesArgs(asset=1234, account=default_deployer.addr, application=client.app_id)
     )

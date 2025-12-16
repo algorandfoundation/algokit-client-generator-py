@@ -1,8 +1,7 @@
 # /generators/typed_client.py
 from enum import Enum
 
-import algokit_abi as abi
-from algokit_abi import arc56
+from algokit_abi import abi, arc56
 
 from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext

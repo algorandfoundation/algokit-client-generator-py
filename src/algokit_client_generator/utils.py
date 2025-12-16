@@ -3,8 +3,7 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Protocol
 
-import algokit_abi as abi
-from algokit_abi import arc56
+from algokit_abi import abi, arc56
 
 from algokit_client_generator.document import DocumentParts, Part
 

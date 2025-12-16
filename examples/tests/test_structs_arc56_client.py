@@ -9,15 +9,15 @@ from examples.smart_contracts.artifacts.structs.structs_arc56_client import Stru
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def my_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> StructsFactory:
-    return algorand.client.get_typed_app_factory(StructsFactory, default_sender=default_deployer.address)
+def my_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> StructsFactory:
+    return algorand.client.get_typed_app_factory(StructsFactory, default_sender=default_deployer.addr)
 
 
 def test_root_struct_from_response_is_dataclass(my_test_factory: StructsFactory) -> None:
@@ -41,7 +41,7 @@ def test_nested_structs_from_response_are_dataclasses(my_test_factory: StructsFa
 
 
 def test_nested_structs_from_state_are_dataclasses(
-    my_test_factory: StructsFactory, default_deployer: algokit_utils.SigningAccount
+    my_test_factory: StructsFactory, default_deployer: algokit_utils.AddressWithSigners
 ) -> None:
     client, _ = my_test_factory.deploy()
     struct = client.state.global_state.get_all()
@@ -56,14 +56,14 @@ def test_nested_structs_from_state_are_dataclasses(
     client.algorand.account.ensure_funded_from_environment(client.app_address, AlgoAmount.from_algo(10))
 
     client.send.opt_in.opt_in()
-    all_local_state = client.state.local_state(default_deployer.address).get_all()
-    local_state = client.state.local_state(default_deployer.address).my_localstate_struct
+    all_local_state = client.state.local_state(default_deployer.addr).get_all()
+    local_state = client.state.local_state(default_deployer.addr).my_localstate_struct
 
     assert is_dataclass(local_state)
     assert local_state.x == all_local_state["my_localstate_struct"].x == "1"
     assert local_state.y == all_local_state["my_localstate_struct"].y == "2"
 
-    nested_local_state = client.state.local_state(default_deployer.address).my_nested_localstate_struct
+    nested_local_state = client.state.local_state(default_deployer.addr).my_nested_localstate_struct
     assert is_dataclass(nested_local_state)
     assert is_dataclass(nested_local_state.nested)
     assert is_dataclass(nested_local_state.nested.content)
