@@ -115,9 +115,9 @@ def random_voting_round_app(
     voting_factory = algorand.client.get_typed_app_factory(VotingRoundFactory, default_sender=voter.addr)
 
     algod = algorand.client.algod
-    status = algod.get_status()
+    status = algod.status()
     last_round = status.last_round
-    block = algod.get_block(last_round)
+    block = algod.block(last_round)
     current_time = block.block.header.timestamp or 0
 
     quorum = random.randint(1, 1000)
