@@ -118,6 +118,21 @@ suppress-none-returning = true
 [tool.poe.tasks]
 update-approvals = "poetry run python -m scripts.update_approvals"
 
+[tool.poe.tasks.release-preview]
+sequence = [
+  { cmd = "semantic-release print-version --current" },
+  { cmd = "semantic-release print-version --prerelease" },
+]
+help = "Preview current and next prerelease version"
+
+[tool.poe.tasks.release-dry-run-alpha]
+shell = "semantic-release -v DEBUG --noop --prerelease --define=prerelease_tag=alpha publish"
+help = "Dry-run alpha release (no changes made)"
+
+[tool.poe.tasks.release-dry-run-beta]
+shell = "semantic-release -v DEBUG --noop --prerelease --define=prerelease_tag=beta publish"
+help = "Dry-run beta release (no changes made)"
+
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
 
