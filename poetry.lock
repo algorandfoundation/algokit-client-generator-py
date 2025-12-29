@@ -2,14 +2,14 @@
 
 [[package]]
 name = "algokit-utils"
-version = "5.0.0a4"
+version = "5.0.0a11"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
 python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "algokit_utils-5.0.0a4-py3-none-any.whl", hash = "sha256:4898e757a61f2d0b91068f453816e5e119519c13415af5ad1a0faec340c0084d"},
-    {file = "algokit_utils-5.0.0a4.tar.gz", hash = "sha256:92f0aeb9d8627dde7ca6e1257817ffd311bfb1c10e169a54865b8f0d7c9eeee0"},
+    {file = "algokit_utils-5.0.0a11-py3-none-any.whl", hash = "sha256:8f3008bb6fc2d8853f9f9a46d01726b7882ff522210f7bb4272baac3649c92d6"},
+    {file = "algokit_utils-5.0.0a11.tar.gz", hash = "sha256:f833f3eab7a4b264421818d64babda16d46ecde3a86b70f1bf46b06954307382"},
 ]
 
 [package.dependencies]
@@ -2265,4 +2265,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "be80ba592212a8ca148db1e568c3ecf689339aaf65c7b7912c9789bd3dfa9c50"
+content-hash = "a5f4d262c1469efec0fd9e29117b00d27d1f5cc6c562439043bbb10d0f8815d8"

@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-algokit-utils = "^5.0.0a4"
+algokit-utils = "^5.0.0a11"
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.8.6,<0.13.0"
