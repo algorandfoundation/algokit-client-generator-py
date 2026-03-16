@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-algokit-utils = "^5.0.0a11"
+algokit-utils = "^5.0.0a20"
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.8.6,<0.13.0"
@@ -20,8 +20,8 @@ python-semantic-release = "^7.33.4"
 pre-commit = ">=3.3.2,<5.0.0"
 poethepoet = ">=0.20,<0.37"
 pytest-xdist = "^3.5.0"
-puyapy = { version = "^4.1.1", python = "^3.12" }
-algorand-python = { version = "^2.4.1", python = "^3.12" }
+puyapy = { version = "^5.7.0", python = "^3.12" }
+algorand-python = { version = "^3.4.0", python = "^3.12" }
 setuptools = ">=75.8,<81.0"
 pytest-sugar = "^1.0.0"
 
