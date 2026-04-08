@@ -54,12 +54,12 @@ class CallAbiTxnArgs:
 class CallWithReferencesArgs:
     """Dataclass for call_with_references arguments"""
     asset: int
-    account: str | bytes
+    account: str
     application: int
 
     @property
     def abi_method_signature(self) -> str:
-        return "call_with_references(asset,account,application)uint64"
+        return "call_with_references(uint64,address,uint64)uint64"
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class DefaultValueArgs:
@@ -240,14 +240,14 @@ class StateParams:
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(_extend(
             algokit_utils.AppClientMethodCallParams,
             params,
-            method="call_with_references(asset,account,application)uint64",
+            method="call_with_references(uint64,address,uint64)uint64",
             args=_unpack_args(args),
         ))
 
@@ -442,14 +442,14 @@ class StateCreateTransactionParams:
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(_extend(
             algokit_utils.AppClientMethodCallParams,
             params,
-            method="call_with_references(asset,account,application)uint64",
+            method="call_with_references(uint64,address,uint64)uint64",
             args=_unpack_args(args),
         ))
 
@@ -652,7 +652,7 @@ class StateSend:
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[int]:
@@ -660,7 +660,7 @@ class StateSend:
         response = self.app_client.send.call(_extend(
             algokit_utils.AppClientMethodCallParams,
             params,
-            method="call_with_references(asset,account,application)uint64",
+            method="call_with_references(uint64,address,uint64)uint64",
             args=_unpack_args(args),
         ), send_params=send_params)
         return typing.cast(algokit_utils.SendAppTransactionResult[int], response)
@@ -1099,7 +1099,7 @@ class StateClient:
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["call_with_references(asset,account,application)uint64"],
+        method: typing.Literal["call_with_references(uint64,address,uint64)uint64"],
         return_value: algokit_utils.ABIReturn | None
     ) -> int | None: ...
     @typing.overload
@@ -1267,7 +1267,7 @@ class StateComposer:
 
     def call_with_references(
         self,
-        args: tuple[int, str | bytes, int] | CallWithReferencesArgs,
+        args: tuple[int, str, int] | CallWithReferencesArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> "StateComposer":
         self._composer.add_app_call_method_call(
@@ -1470,7 +1470,7 @@ def _unpack_args(args: object | tuple | None) -> tuple | None:
     else:
         raise TypeError("unsupported argument type")
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "input"}], "name": "create_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "update_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "delete_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "error", "returns": {"type": "void"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "value"}], "name": "call_abi", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "txn"}, {"type": "string", "name": "value"}], "name": "call_abi_txn", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "asset", "name": "asset"}, {"type": "account", "name": "account"}, {"type": "application", "name": "application"}], "name": "call_with_references", "returns": {"type": "uint64"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "ZGVmYXVsdCB2YWx1ZQ==", "source": "literal", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "AAAAAAAAAHs=", "source": "literal", "type": "uint64"}, "name": "arg_with_default"}], "name": "default_value_int", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "ZGVmYXVsdCB2YWx1ZQ==", "source": "literal", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_abi", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "aW50MQ==", "source": "global"}, "name": "arg_with_default"}], "name": "default_value_from_global_state", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "bG9jYWxfYnl0ZXMx", "source": "local"}, "name": "arg_with_default"}], "name": "default_value_from_local_state", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(string,uint64)", "name": "name_age", "struct": "Input"}], "name": "structs", "returns": {"type": "(string,uint64)", "struct": "Output"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_global", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_local", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[4]", "name": "name"}, {"type": "string", "name": "value"}], "name": "set_box", "returns": {"type": "void"}, "events": []}], "name": "State", "state": {"keys": {"box": {}, "global": {"bytes1": {"key": "Ynl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytes2": {"key": "Ynl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytesNotInSnakeCase": {"key": "Ynl0ZXNOb3RJblNuYWtlQ2FzZQ==", "keyType": "AVMString", "valueType": "AVMBytes"}, "int1": {"key": "aW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "int2": {"key": "aW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}, "value": {"key": "dmFsdWU=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {"localBytesNotInSnakeCase": {"key": "bG9jYWxCeXRlc05vdEluU25ha2VDYXNl", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes1": {"key": "bG9jYWxfYnl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes2": {"key": "bG9jYWxfYnl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_int1": {"key": "bG9jYWxfaW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "local_int2": {"key": "bG9jYWxfaW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 3}, "local": {"bytes": 3, "ints": 2}}}, "structs": {"Input": [{"name": "name", "type": "string"}, {"name": "age", "type": "uint64"}], "Output": [{"name": "message", "type": "string"}, {"name": "result", "type": "uint64"}]}}"""
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "input"}], "name": "create_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "update_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [{"type": "string", "name": "input"}], "name": "delete_abi", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "opt_in", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "error", "returns": {"type": "void"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "value"}], "name": "call_abi", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "pay", "name": "txn"}, {"type": "string", "name": "value"}], "name": "call_abi_txn", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "asset"}, {"type": "address", "name": "account"}, {"type": "uint64", "name": "application"}], "name": "call_with_references", "returns": {"type": "uint64"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "ZGVmYXVsdCB2YWx1ZQ==", "source": "literal", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "AAAAAAAAAHs=", "source": "literal", "type": "uint64"}, "name": "arg_with_default"}], "name": "default_value_int", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "ZGVmYXVsdCB2YWx1ZQ==", "source": "literal", "type": "AVMString"}, "name": "arg_with_default"}], "name": "default_value_from_abi", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "defaultValue": {"data": "aW50MQ==", "source": "global"}, "name": "arg_with_default"}], "name": "default_value_from_global_state", "returns": {"type": "uint64"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "defaultValue": {"data": "bG9jYWxfYnl0ZXMx", "source": "local"}, "name": "arg_with_default"}], "name": "default_value_from_local_state", "returns": {"type": "string"}, "events": [], "readonly": true}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "(string,uint64)", "name": "name_age", "struct": "Input"}], "name": "structs", "returns": {"type": "(string,uint64)", "struct": "Output"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_global", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "uint64", "name": "int1"}, {"type": "uint64", "name": "int2"}, {"type": "string", "name": "bytes1"}, {"type": "byte[4]", "name": "bytes2"}], "name": "set_local", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "byte[4]", "name": "name"}, {"type": "string", "name": "value"}], "name": "set_box", "returns": {"type": "void"}, "events": []}], "name": "State", "state": {"keys": {"box": {}, "global": {"bytes1": {"key": "Ynl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytes2": {"key": "Ynl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "bytesNotInSnakeCase": {"key": "Ynl0ZXNOb3RJblNuYWtlQ2FzZQ==", "keyType": "AVMString", "valueType": "AVMBytes"}, "int1": {"key": "aW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "int2": {"key": "aW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}, "value": {"key": "dmFsdWU=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {"localBytesNotInSnakeCase": {"key": "bG9jYWxCeXRlc05vdEluU25ha2VDYXNl", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes1": {"key": "bG9jYWxfYnl0ZXMx", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_bytes2": {"key": "bG9jYWxfYnl0ZXMy", "keyType": "AVMString", "valueType": "AVMBytes"}, "local_int1": {"key": "bG9jYWxfaW50MQ==", "keyType": "AVMString", "valueType": "AVMUint64"}, "local_int2": {"key": "bG9jYWxfaW50Mg==", "keyType": "AVMString", "valueType": "AVMUint64"}}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 3, "ints": 3}, "local": {"bytes": 3, "ints": 2}}}, "structs": {"Input": [{"name": "name", "type": "string"}, {"name": "age", "type": "uint64"}], "Output": [{"name": "message", "type": "string"}, {"name": "result", "type": "uint64"}]}}"""
 
 _STRUCT_NAME_TO_TYPE: dict[str, type] = {
     'Input': Input,
