@@ -15,27 +15,29 @@ from examples.smart_contracts.artifacts.nested.nested_arc56_client import (
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def nested_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> NestedFactory:
-    return algorand.client.get_typed_app_factory(NestedFactory, default_sender=default_deployer.address)
+def nested_factory(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> NestedFactory:
+    return algorand.client.get_typed_app_factory(
+        NestedFactory, default_sender=default_deployer.addr, default_signer=default_deployer.signer
+    )
 
 
 def test_nested_method_call_with_obj_args_without_pay_txn(
     nested_factory: NestedFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
         PaymentParams(
-            sender=default_deployer.address,
-            receiver=default_deployer.address,
+            sender=default_deployer.addr,
+            receiver=default_deployer.addr,
             amount=AlgoAmount.from_algo(0),
         )
     )
@@ -48,13 +50,13 @@ def test_nested_method_call_with_obj_args_without_pay_txn(
 def test_nested_method_call_with_tuple_args_without_pay_txn(
     nested_factory: NestedFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
         PaymentParams(
-            sender=default_deployer.address,
-            receiver=default_deployer.address,
+            sender=default_deployer.addr,
+            receiver=default_deployer.addr,
             amount=AlgoAmount.from_algo(0),
         )
     )
@@ -67,13 +69,13 @@ def test_nested_method_call_with_tuple_args_without_pay_txn(
 def test_nested_method_call_with_obj_args_with_pay_txn(
     nested_factory: NestedFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
         PaymentParams(
-            sender=default_deployer.address,
-            receiver=default_deployer.address,
+            sender=default_deployer.addr,
+            receiver=default_deployer.addr,
             amount=AlgoAmount.from_algo(0),
         )
     )
@@ -88,13 +90,13 @@ def test_nested_method_call_with_obj_args_with_pay_txn(
 def test_nested_method_call_with_tuple_args_with_pay_txn(
     nested_factory: NestedFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, _ = nested_factory.deploy()
     pay_txn = algorand.create_transaction.payment(
         PaymentParams(
-            sender=default_deployer.address,
-            receiver=default_deployer.address,
+            sender=default_deployer.addr,
+            receiver=default_deployer.addr,
             amount=AlgoAmount.from_algo(0),
         )
     )

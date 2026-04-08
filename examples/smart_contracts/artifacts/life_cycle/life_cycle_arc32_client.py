@@ -8,61 +8,16 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}], "name": "create", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["CloseOut"], "create": []}, "args": [], "name": "close_out_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [], "name": "delete_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [], "name": "update_test", "returns": {"type": "string"}, "events": []}], "name": "LifeCycle", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMubGlmZV9jeWNsZS5jb250cmFjdC5MaWZlQ3ljbGUuX19hbGdvcHlfZW50cnlwb2ludF93aXRoX2luaXQoKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMSAwIDEwIFRNUExfVVBEQVRBQkxFCiAgICBieXRlY2Jsb2NrICJncmVldGluZyIgInRpbWVzIiAiIiAweDE1MWY3Yzc1CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToxMQogICAgLy8gc2VsZi5ncmVldGluZyA9IFN0cmluZygiSGVsbG8iKQogICAgYnl0ZWNfMCAvLyAiZ3JlZXRpbmciCiAgICBwdXNoYnl0ZXMgIkhlbGxvIgogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjEyCiAgICAvLyBzZWxmLnRpbWVzID0gVUludDY0KDEpCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGludGNfMCAvLyAxCiAgICBhcHBfZ2xvYmFsX3B1dAoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo2CiAgICAvLyBjbGFzcyBMaWZlQ3ljbGUoSW1tdXRhYmlsaXR5Q29udHJvbEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAMTIKICAgIHB1c2hieXRlc3MgMHg5N2YxZmMxMSAweDYwMTkzMjY0IDB4MDJiZWNlMTEgMHhhYjA2YzFhOCAweGEwMjZmOGRkIDB4MWIzYmYyMDMgMHg1M2U2YjhjNyAvLyBtZXRob2QgImNyZWF0ZShzdHJpbmcpc3RyaW5nIiwgbWV0aG9kICJjcmVhdGUoc3RyaW5nLHVpbnQzMil2b2lkIiwgbWV0aG9kICJoZWxsbyhzdHJpbmcpc3RyaW5nIiwgbWV0aG9kICJoZWxsbygpc3RyaW5nIiwgbWV0aG9kICJjbG9zZV9vdXRfdGVzdCgpc3RyaW5nIiwgbWV0aG9kICJkZWxldGVfdGVzdCgpc3RyaW5nIiwgbWV0aG9kICJ1cGRhdGVfdGVzdCgpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9jcmVhdGVfcm91dGVANSBtYWluX2NyZWF0ZV9yb3V0ZUA2IG1haW5faGVsbG9fcm91dGVANyBtYWluX2hlbGxvX3JvdXRlQDggbWFpbl9jbG9zZV9vdXRfdGVzdF9yb3V0ZUA5IG1haW5fZGVsZXRlX3Rlc3Rfcm91dGVAMTAgbWFpbl91cGRhdGVfdGVzdF9yb3V0ZUAxMQoKbWFpbl9hZnRlcl9pZl9lbHNlQDE1OgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgTGlmZUN5Y2xlKEltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QpOgogICAgaW50Y18xIC8vIDAKICAgIHJldHVybgoKbWFpbl91cGRhdGVfdGVzdF9yb3V0ZUAxMToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjUzCiAgICAvLyBAYXJjNC5hYmltZXRob2QoYWxsb3dfYWN0aW9ucz1bIlVwZGF0ZUFwcGxpY2F0aW9uIl0pCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBwdXNoaW50IDQgLy8gVXBkYXRlQXBwbGljYXRpb24KICAgID09CiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBVcGRhdGVBcHBsaWNhdGlvbgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMGI3NTcwNjQ2MTc0NjU1Zjc0NjU3Mzc0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fZGVsZXRlX3Rlc3Rfcm91dGVAMTA6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo0OQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJEZWxldGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgcHVzaGludCA1IC8vIERlbGV0ZUFwcGxpY2F0aW9uCiAgICA9PQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgRGVsZXRlQXBwbGljYXRpb24KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDBiNjQ2NTZjNjU3NDY1NWY3NDY1NzM3NAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2Nsb3NlX291dF90ZXN0X3JvdXRlQDk6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo0NQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJDbG9zZU91dCJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgcHVzaGludCAyIC8vIENsb3NlT3V0CiAgICA9PQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgQ2xvc2VPdXQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDBlNjM2YzZmNzM2NTVmNmY3NTc0NWY3NDY1NzM3NAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2hlbGxvX3JvdXRlQDg6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozNwogICAgLy8gQGFyYzQuYWJpbWV0aG9kKG5hbWU9ImhlbGxvIikKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIG5vdCBjcmVhdGluZwogICAgY2FsbHN1YiBoZWxsb19ub19hcmcKICAgIGR1cAogICAgbGVuCiAgICBpdG9iCiAgICBleHRyYWN0IDYgMgogICAgc3dhcAogICAgY29uY2F0CiAgICBieXRlY18zIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2hlbGxvX3JvdXRlQDc6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjYKICAgIC8vIGNsYXNzIExpZmVDeWNsZShJbW11dGFiaWxpdHlDb250cm9sQVJDNENvbnRyYWN0KToKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGV4dHJhY3QgMiAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBjYWxsc3ViIGhlbGxvCiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9jcmVhdGVfcm91dGVANjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjI0CiAgICAvLyBAYXJjNC5hYmltZXRob2QobmFtZT0iY3JlYXRlIiwgY3JlYXRlPSJyZXF1aXJlIikKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo2CiAgICAvLyBjbGFzcyBMaWZlQ3ljbGUoSW1tdXRhYmlsaXR5Q29udHJvbEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBleHRyYWN0IDIgMAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MjQKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChuYW1lPSJjcmVhdGUiLCBjcmVhdGU9InJlcXVpcmUiKQogICAgY2FsbHN1YiBjcmVhdGVfMmFyZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9jcmVhdGVfcm91dGVANToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjE4CiAgICAvLyBAYXJjNC5hYmltZXRob2QobmFtZT0iY3JlYXRlIiwgY3JlYXRlPSJyZXF1aXJlIikKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydCAvLyBPbkNvbXBsZXRpb24gaXMgbm90IE5vT3AKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo2CiAgICAvLyBjbGFzcyBMaWZlQ3ljbGUoSW1tdXRhYmlsaXR5Q29udHJvbEFSQzRDb250cmFjdCk6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBleHRyYWN0IDIgMAogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MTgKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChuYW1lPSJjcmVhdGUiLCBjcmVhdGU9InJlcXVpcmUiKQogICAgY2FsbHN1YiBjcmVhdGVfMWFyZwogICAgZHVwCiAgICBsZW4KICAgIGl0b2IKICAgIGV4dHJhY3QgNiAyCiAgICBzd2FwCiAgICBjb25jYXQKICAgIGJ5dGVjXzMgLy8gMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fYmFyZV9yb3V0aW5nQDEyOgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgTGlmZUN5Y2xlKEltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgc3dpdGNoIG1haW5fY3JlYXRlQDEzIG1haW5fY3JlYXRlQDEzIG1haW5fYWZ0ZXJfaWZfZWxzZUAxNSBtYWluX2FmdGVyX2lmX2Vsc2VAMTUgbWFpbl91cGRhdGVAMTQKICAgIGIgbWFpbl9hZnRlcl9pZl9lbHNlQDE1CgptYWluX3VwZGF0ZUAxNDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjIzCiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJVcGRhdGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBjYWxsc3ViIHVwZGF0ZQogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9jcmVhdGVAMTM6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToxNAogICAgLy8gQGFyYzQuYmFyZW1ldGhvZChjcmVhdGU9InJlcXVpcmUiLCBhbGxvd19hY3Rpb25zPVsiTm9PcCIsICJPcHRJbiJdKQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gY3JlYXRpbmcKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMubGlmZV9jeWNsZS5jb250cmFjdC5MaWZlQ3ljbGUuY3JlYXRlXzFhcmcoZ3JlZXRpbmc6IGJ5dGVzKSAtPiBieXRlczoKY3JlYXRlXzFhcmc6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToxOC0xOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKG5hbWU9ImNyZWF0ZSIsIGNyZWF0ZT0icmVxdWlyZSIpCiAgICAvLyBkZWYgY3JlYXRlXzFhcmcoc2VsZiwgZ3JlZXRpbmc6IFN0cmluZykgLT4gU3RyaW5nOgogICAgcHJvdG8gMSAxCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyMAogICAgLy8gc2VsZi5ncmVldGluZyA9IGdyZWV0aW5nCiAgICBieXRlY18wIC8vICJncmVldGluZyIKICAgIGZyYW1lX2RpZyAtMQogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjIyCiAgICAvLyByZXR1cm4gZ3JlZXRpbmcgKyBTdHJpbmcoIl8iKSArIHNlbGYuaXRvYShzZWxmLnRpbWVzKQogICAgZnJhbWVfZGlnIC0xCiAgICBwdXNoYnl0ZXMgIl8iCiAgICBjb25jYXQKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50aW1lcyBleGlzdHMKICAgIGNhbGxzdWIgaXRvYQogICAgY29uY2F0CiAgICByZXRzdWIKCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMubGlmZV9jeWNsZS5jb250cmFjdC5MaWZlQ3ljbGUuY3JlYXRlXzJhcmcoZ3JlZXRpbmc6IGJ5dGVzLCB0aW1lczogYnl0ZXMpIC0+IHZvaWQ6CmNyZWF0ZV8yYXJnOgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MjQtMjUKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChuYW1lPSJjcmVhdGUiLCBjcmVhdGU9InJlcXVpcmUiKQogICAgLy8gZGVmIGNyZWF0ZV8yYXJnKHNlbGYsIGdyZWV0aW5nOiBTdHJpbmcsIHRpbWVzOiBhcmM0LlVJbnQzMikgLT4gTm9uZToKICAgIHByb3RvIDIgMAogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MjYKICAgIC8vIHNlbGYuZ3JlZXRpbmcgPSBncmVldGluZwogICAgYnl0ZWNfMCAvLyAiZ3JlZXRpbmciCiAgICBmcmFtZV9kaWcgLTIKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyNwogICAgLy8gc2VsZi50aW1lcyA9IHRpbWVzLm5hdGl2ZQogICAgZnJhbWVfZGlnIC0xCiAgICBidG9pCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIHN3YXAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICByZXRzdWIKCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMubGlmZV9jeWNsZS5jb250cmFjdC5MaWZlQ3ljbGUuaGVsbG8obmFtZTogYnl0ZXMpIC0+IGJ5dGVzOgpoZWxsbzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjI5LTMwCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIC8vIGRlZiBoZWxsbyhzZWxmLCBuYW1lOiBTdHJpbmcpIC0+IFN0cmluZzoKICAgIHByb3RvIDEgMQogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzEKICAgIC8vIHJlc3VsdCA9IFN0cmluZygiIikKICAgIGJ5dGVjXzIgLy8gIiIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjMyCiAgICAvLyBmb3IgaSBpbiB1cmFuZ2Uoc2VsZi50aW1lcyk6ICAjIG5vcWE6IEIwMDcKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50aW1lcyBleGlzdHMKICAgIGludGNfMSAvLyAwCgpoZWxsb19mb3JfaGVhZGVyQDE6CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozMgogICAgLy8gZm9yIGkgaW4gdXJhbmdlKHNlbGYudGltZXMpOiAgIyBub3FhOiBCMDA3CiAgICBmcmFtZV9kaWcgMgogICAgZnJhbWVfZGlnIDEKICAgIDwKICAgIGJ6IGhlbGxvX2FmdGVyX2ZvckA0CiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozMwogICAgLy8gcmVzdWx0ICs9IHNlbGYuZ3JlZXRpbmcgKyBTdHJpbmcoIiwgIikgKyBuYW1lICsgU3RyaW5nKCJcbiIpCiAgICBpbnRjXzEgLy8gMAogICAgYnl0ZWNfMCAvLyAiZ3JlZXRpbmciCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIHNlbGYuZ3JlZXRpbmcgZXhpc3RzCiAgICBwdXNoYnl0ZXMgIiwgIgogICAgY29uY2F0CiAgICBmcmFtZV9kaWcgLTEKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzICJcbiIKICAgIGNvbmNhdAogICAgZnJhbWVfZGlnIDAKICAgIHN3YXAKICAgIGNvbmNhdAogICAgZnJhbWVfYnVyeSAwCiAgICAvLyBzbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozMgogICAgLy8gZm9yIGkgaW4gdXJhbmdlKHNlbGYudGltZXMpOiAgIyBub3FhOiBCMDA3CiAgICBmcmFtZV9kaWcgMgogICAgaW50Y18wIC8vIDEKICAgICsKICAgIGZyYW1lX2J1cnkgMgogICAgYiBoZWxsb19mb3JfaGVhZGVyQDEKCmhlbGxvX2FmdGVyX2ZvckA0OgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzUKICAgIC8vIHJldHVybiByZXN1bHQKICAgIHJldHN1YgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5saWZlX2N5Y2xlLmNvbnRyYWN0LkxpZmVDeWNsZS5oZWxsb19ub19hcmcoKSAtPiBieXRlczoKaGVsbG9fbm9fYXJnOgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzctMzgKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChuYW1lPSJoZWxsbyIpCiAgICAvLyBkZWYgaGVsbG9fbm9fYXJnKHNlbGYpIC0+IFN0cmluZzoKICAgIHByb3RvIDAgMQogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzkKICAgIC8vIHJlc3VsdCA9IFN0cmluZygiIikKICAgIGJ5dGVjXzIgLy8gIiIKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQwCiAgICAvLyBmb3IgaSBpbiB1cmFuZ2Uoc2VsZi50aW1lcyk6ICAjIG5vcWE6IEIwMDcKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50aW1lcyBleGlzdHMKICAgIGludGNfMSAvLyAwCgpoZWxsb19ub19hcmdfZm9yX2hlYWRlckAxOgogICAgLy8gc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NDAKICAgIC8vIGZvciBpIGluIHVyYW5nZShzZWxmLnRpbWVzKTogICMgbm9xYTogQjAwNwogICAgZnJhbWVfZGlnIDIKICAgIGZyYW1lX2RpZyAxCiAgICA8CiAgICBieiBoZWxsb19ub19hcmdfYWZ0ZXJfZm9yQDQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQxCiAgICAvLyByZXN1bHQgKz0gc2VsZi5ncmVldGluZyArIFN0cmluZygiLCBteXN0ZXJ5IHBlcnNvblxuIikKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18wIC8vICJncmVldGluZyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5ncmVldGluZyBleGlzdHMKICAgIHB1c2hieXRlcyAiLCBteXN0ZXJ5IHBlcnNvblxuIgogICAgY29uY2F0CiAgICBmcmFtZV9kaWcgMAogICAgc3dhcAogICAgY29uY2F0CiAgICBmcmFtZV9idXJ5IDAKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQwCiAgICAvLyBmb3IgaSBpbiB1cmFuZ2Uoc2VsZi50aW1lcyk6ICAjIG5vcWE6IEIwMDcKICAgIGZyYW1lX2RpZyAyCiAgICBpbnRjXzAgLy8gMQogICAgKwogICAgZnJhbWVfYnVyeSAyCiAgICBiIGhlbGxvX25vX2FyZ19mb3JfaGVhZGVyQDEKCmhlbGxvX25vX2FyZ19hZnRlcl9mb3JANDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQzCiAgICAvLyByZXR1cm4gcmVzdWx0CiAgICByZXRzdWIKCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMuYmFzZS5jb250cmFjdC5JbW11dGFiaWxpdHlDb250cm9sQVJDNENvbnRyYWN0LnVwZGF0ZSgpIC0+IHZvaWQ6CnVwZGF0ZToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBhc3NlcnQgVGVtcGxhdGVWYXJbYm9vbF0oVVBEQVRBQkxFX1RFTVBMQVRFX05BTUUpLCAiQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZSIKICAgIGludGNfMyAvLyBUTVBMX1VQREFUQUJMRQogICAgYXNzZXJ0IC8vIENoZWNrIGFwcCBpcyB1cGRhdGFibGUKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjEwCiAgICAvLyBhc3NlcnQgVHhuLnNlbmRlciA9PSBHbG9iYWwuY3JlYXRvcl9hZGRyZXNzLCAidW5hdXRob3JpemVkIgogICAgdHhuIFNlbmRlcgogICAgZ2xvYmFsIENyZWF0b3JBZGRyZXNzCiAgICA9PQogICAgYXNzZXJ0IC8vIHVuYXV0aG9yaXplZAogICAgcmV0c3ViCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmJhc2UuY29udHJhY3QuQmFzZUFSQzRDb250cmFjdC5pdG9hKGk6IHVpbnQ2NCkgLT4gYnl0ZXM6Cml0b2E6CiAgICAvLyBzbWFydF9jb250cmFjdHMvYmFzZS9jb250cmFjdC5weToxMi0xMwogICAgLy8gQHN1YnJvdXRpbmUKICAgIC8vIGRlZiBpdG9hKHNlbGYsIGk6IFVJbnQ2NCkgLT4gU3RyaW5nOgogICAgcHJvdG8gMSAxCiAgICBieXRlY18yIC8vICIiCiAgICAvLyBzbWFydF9jb250cmFjdHMvYmFzZS9jb250cmFjdC5weToxNAogICAgLy8gaWYgaSA9PSBVSW50NjQoMCk6CiAgICBmcmFtZV9kaWcgLTEKICAgIGJueiBpdG9hX2Vsc2VfYm9keUAyCiAgICAvLyBzbWFydF9jb250cmFjdHMvYmFzZS9jb250cmFjdC5weToxNQogICAgLy8gcmV0dXJuIFN0cmluZygiMCIpCiAgICBwdXNoYnl0ZXMgIjAiCiAgICBzd2FwCiAgICByZXRzdWIKCml0b2FfZWxzZV9ib2R5QDI6CiAgICAvLyBzbWFydF9jb250cmFjdHMvYmFzZS9jb250cmFjdC5weToxNwogICAgLy8gcmV0dXJuIChzZWxmLml0b2EoaSAvLyBVSW50NjQoMTApKSBpZiAoaSAvLyBVSW50NjQoMTApKSA+IFVJbnQ2NCgwKSBlbHNlIFN0cmluZygiIikpICsgU3RyaW5nLmZyb21fYnl0ZXMoCiAgICBmcmFtZV9kaWcgLTEKICAgIGludGNfMiAvLyAxMAogICAgLwogICAgZHVwCiAgICBmcmFtZV9idXJ5IDAKICAgIGJ6IGl0b2FfdGVybmFyeV9mYWxzZUA0CiAgICBmcmFtZV9kaWcgMAogICAgY2FsbHN1YiBpdG9hCgppdG9hX3Rlcm5hcnlfbWVyZ2VANToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjE4CiAgICAvLyBTdHJpbmcoIjAxMjM0NTY3ODkiKS5ieXRlc1tpICUgVUludDY0KDEwKV0KICAgIGZyYW1lX2RpZyAtMQogICAgaW50Y18yIC8vIDEwCiAgICAlCiAgICBwdXNoYnl0ZXMgIjAxMjM0NTY3ODkiCiAgICBzd2FwCiAgICBpbnRjXzAgLy8gMQogICAgZXh0cmFjdDMKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjE3LTE5CiAgICAvLyByZXR1cm4gKHNlbGYuaXRvYShpIC8vIFVJbnQ2NCgxMCkpIGlmIChpIC8vIFVJbnQ2NCgxMCkpID4gVUludDY0KDApIGVsc2UgU3RyaW5nKCIiKSkgKyBTdHJpbmcuZnJvbV9ieXRlcygKICAgIC8vICAgICBTdHJpbmcoIjAxMjM0NTY3ODkiKS5ieXRlc1tpICUgVUludDY0KDEwKV0KICAgIC8vICkKICAgIGNvbmNhdAogICAgc3dhcAogICAgcmV0c3ViCgppdG9hX3Rlcm5hcnlfZmFsc2VANDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjE3CiAgICAvLyByZXR1cm4gKHNlbGYuaXRvYShpIC8vIFVJbnQ2NCgxMCkpIGlmIChpIC8vIFVJbnQ2NCgxMCkpID4gVUludDY0KDApIGVsc2UgU3RyaW5nKCIiKSkgKyBTdHJpbmcuZnJvbV9ieXRlcygKICAgIGJ5dGVjXzIgLy8gIiIKICAgIGIgaXRvYV90ZXJuYXJ5X21lcmdlQDUK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloStringStringArgs:
@@ -107,13 +62,13 @@ class _LifeCycleUpdate:
         params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppUpdateMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
-        return self.app_client.params.update(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "update_test()string",
-        }))
+        return self.app_client.params.update(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="update_test()string",
+        ))
 
 
 class _LifeCycleDelete:
@@ -124,12 +79,12 @@ class _LifeCycleDelete:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppDeleteMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.delete(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "delete_test()string",
-        }))
+        return self.app_client.params.delete(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="delete_test()string",
+        ))
 
 
 class _LifeCycleCloseOut:
@@ -140,12 +95,12 @@ class _LifeCycleCloseOut:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }))
+        return self.app_client.params.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ))
 
 
 class LifeCycleParams:
@@ -169,50 +124,50 @@ class LifeCycleParams:
         args: tuple[str] | HelloStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ))
 
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string)string",
+            args=_unpack_args(args),
+        ))
 
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string,uint32)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string,uint32)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -237,13 +192,13 @@ class _LifeCycleUpdateTransaction:
         params: algokit_utils.CommonAppCallParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
-        return self.app_client.create_transaction.update(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "update_test()string",
-        }))
+        return self.app_client.create_transaction.update(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="update_test()string",
+        ))
 
 
 class _LifeCycleDeleteTransaction:
@@ -254,12 +209,12 @@ class _LifeCycleDeleteTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.delete(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "delete_test()string",
-        }))
+        return self.app_client.create_transaction.delete(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="delete_test()string",
+        ))
 
 
 class _LifeCycleCloseOutTransaction:
@@ -270,12 +225,12 @@ class _LifeCycleCloseOutTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }))
+        return self.app_client.create_transaction.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ))
 
 
 class LifeCycleCreateTransactionParams:
@@ -299,50 +254,50 @@ class LifeCycleCreateTransactionParams:
         args: tuple[str] | HelloStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ))
 
     def create_string_string(
         self,
         args: tuple[str] | CreateStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string)string",
+            args=_unpack_args(args),
+        ))
 
     def create_string_uint32_void(
         self,
         args: tuple[str, int] | CreateStringUint32VoidArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string,uint32)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string,uint32)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -377,15 +332,14 @@ class _LifeCycleUpdateSend:
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
         compilation_params = compilation_params or algokit_utils.AppClientCompilationParams()
-        response = self.app_client.send.update(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "update_test()string",
-        }), send_params=send_params, compilation_params=compilation_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppUpdateTransactionResult[str], parsed_response)
+        response = self.app_client.send.update(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="update_test()string",
+        ), send_params=send_params, compilation_params=compilation_params)
+        return typing.cast(algokit_utils.SendAppUpdateTransactionResult[str], response)
 
 
 class _LifeCycleDeleteSend:
@@ -397,14 +351,13 @@ class _LifeCycleDeleteSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.delete(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "delete_test()string",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.delete(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="delete_test()string",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
 
 class _LifeCycleCloseOutSend:
@@ -416,14 +369,13 @@ class _LifeCycleCloseOutSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
 
 class LifeCycleSend:
@@ -448,29 +400,27 @@ class LifeCycleSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def create_string_string(
         self,
@@ -478,15 +428,14 @@ class LifeCycleSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def create_string_uint32_void(
         self,
@@ -494,15 +443,14 @@ class LifeCycleSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "create(string,uint32)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="create(string,uint32)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -538,38 +486,22 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def greeting(self) -> bytes:
         """Get the current value of the greeting key in global_state state"""
         value = self.app_client.state.global_state.get_value("greeting")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def times(self) -> int:
         """Get the current value of the times key in global_state state"""
         value = self.app_client.state.global_state.get_value("times")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class LifeCycleClient:
@@ -687,7 +619,7 @@ class LifeCycleClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -773,18 +705,7 @@ class LifeCycleClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -795,23 +716,21 @@ class LifeCycleMethodCallCreateParams(
     ]
 ):
     """Parameters for creating LifeCycle contract using ABI"""
-    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.NoOp] | None = None
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCallCreateParams(
-            **{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }
+        return _extend(
+            algokit_utils.AppClientMethodCallCreateParams,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 
 @dataclasses.dataclass(frozen=True)
 class LifeCycleBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for creating LifeCycle contract with bare calls"""
-    on_complete: typing.Literal[OnComplete.NoOpOC, OnComplete.OptInOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.NoOp, OnApplicationComplete.OptIn] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
@@ -824,23 +743,21 @@ class LifeCycleMethodCallUpdateParams(
     ]
 ):
     """Parameters for calling LifeCycle contract using ABI"""
-    on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.UpdateApplication] | None = None
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallParams:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCallParams(
-            **{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }
+        return _extend(
+            algokit_utils.AppClientMethodCallParams,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 
 @dataclasses.dataclass(frozen=True)
 class LifeCycleBareCallUpdateParams(algokit_utils.AppClientBareCallParams):
     """Parameters for calling LifeCycle contract with bare calls"""
-    on_complete: typing.Literal[OnComplete.UpdateApplicationOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.UpdateApplication] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallParams:
         return algokit_utils.AppClientBareCallParams(**self.__dict__)
@@ -853,17 +770,15 @@ class LifeCycleMethodCallDeleteParams(
     ]
 ):
     """Parameters for calling LifeCycle contract using ABI"""
-    on_complete: typing.Literal[OnComplete.DeleteApplicationOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.DeleteApplication] | None = None
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallParams:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCallParams(
-            **{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }
+        return _extend(
+            algokit_utils.AppClientMethodCallParams,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 
 class LifeCycleFactory(algokit_utils.TypedAppFactoryProtocol[LifeCycleMethodCallCreateParams | LifeCycleBareCallCreateParams, LifeCycleMethodCallUpdateParams | LifeCycleBareCallUpdateParams, LifeCycleMethodCallDeleteParams]):
@@ -899,7 +814,7 @@ class LifeCycleFactory(algokit_utils.TypedAppFactoryProtocol[LifeCycleMethodCall
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -1007,8 +922,12 @@ class LifeCycleFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def hello_string_string(
         self,
@@ -1020,12 +939,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the hello(string)string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "hello(string)string",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='hello(string)string',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -1039,12 +957,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the hello()string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "hello()string",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='hello()string',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -1059,12 +976,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the create(string)string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "create(string)string",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='create(string)string',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -1079,12 +995,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the create(string,uint32)void ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "create(string,uint32)void",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='create(string,uint32)void',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -1098,12 +1013,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the update_test()string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "update_test()string",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='update_test()string',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -1117,12 +1031,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the delete_test()string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "delete_test()string",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='delete_test()string',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -1136,12 +1049,11 @@ class LifeCycleFactoryCreateParams:
         """Creates a new instance using the close_out_test()string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "close_out_test()string",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='close_out_test()string',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -1161,8 +1073,12 @@ class LifeCycleFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class LifeCycleFactoryDeleteParams:
     """Parameters for 'delete' operations of LifeCycle contract"""
@@ -1179,8 +1095,12 @@ class LifeCycleFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class LifeCycleFactoryCreateTransaction:
@@ -1204,7 +1124,10 @@ class LifeCycleFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -1232,9 +1155,12 @@ class LifeCycleFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return LifeCycleClient(result[0]), result[1]
 
@@ -1249,32 +1175,16 @@ class LifeCycleFactorySendCreate:
             """Creates and sends a transaction using the create(string)string ABI method"""
             params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
-                algokit_utils.AppFactoryCreateMethodCallParams(
-                    **{
-                    **dataclasses.asdict(params),
-                    "method": "create(string)string",
-                    "args": _parse_abi_args(args),
-                    }
+                _extend(
+                    algokit_utils.AppFactoryCreateMethodCallParams,
+                    params,
+                    method='create(string)string',
+                    args=_unpack_args(args),
                 ),
                 send_params=send_params,
-                compilation_params=compilation_params
+                compilation_params=compilation_params,
             )
-            return_value = None if result.abi_return is None else typing.cast(str, result.abi_return)
-    
-            return LifeCycleClient(client), algokit_utils.AppFactoryCreateMethodCallResult[str](
-                **{
-                    **result.__dict__,
-                    "app_id": result.app_id,
-                    "abi_return": return_value,
-                    "transaction": result.transaction,
-                    "confirmation": result.confirmation,
-                    "group_id": result.group_id,
-                    "tx_ids": result.tx_ids,
-                    "transactions": result.transactions,
-                    "confirmations": result.confirmations,
-                    "app_address": result.app_address,
-                }
-            )
+            return LifeCycleClient(client), typing.cast(algokit_utils.AppFactoryCreateMethodCallResult[str], result)
 
     def create_string_uint32_void(
         self,
@@ -1287,32 +1197,16 @@ class LifeCycleFactorySendCreate:
             """Creates and sends a transaction using the create(string,uint32)void ABI method"""
             params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
-                algokit_utils.AppFactoryCreateMethodCallParams(
-                    **{
-                    **dataclasses.asdict(params),
-                    "method": "create(string,uint32)void",
-                    "args": _parse_abi_args(args),
-                    }
+                _extend(
+                    algokit_utils.AppFactoryCreateMethodCallParams,
+                    params,
+                    method='create(string,uint32)void',
+                    args=_unpack_args(args),
                 ),
                 send_params=send_params,
-                compilation_params=compilation_params
+                compilation_params=compilation_params,
             )
-            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
-    
-            return LifeCycleClient(client), algokit_utils.AppFactoryCreateMethodCallResult[None](
-                **{
-                    **result.__dict__,
-                    "app_id": result.app_id,
-                    "abi_return": return_value,
-                    "transaction": result.transaction,
-                    "confirmation": result.confirmation,
-                    "group_id": result.group_id,
-                    "tx_ids": result.tx_ids,
-                    "transactions": result.transactions,
-                    "confirmations": result.confirmations,
-                    "app_address": result.app_address,
-                }
-            )
+            return LifeCycleClient(client), typing.cast(algokit_utils.AppFactoryCreateMethodCallResult[None], result)
 
 
 class _LifeCycleUpdateComposer:
@@ -1328,11 +1222,6 @@ class _LifeCycleUpdateComposer:
                 
                 params=params,
                 compilation_params=compilation_params
-            )
-        )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "update_test()string", v
             )
         )
         return self.composer
@@ -1352,11 +1241,6 @@ class _LifeCycleDeleteComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "delete_test()string", v
-            )
-        )
         return self.composer
 
 
@@ -1374,11 +1258,6 @@ class _LifeCycleCloseOutComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "close_out_test()string", v
-            )
-        )
         return self.composer
 
 
@@ -1388,7 +1267,6 @@ class LifeCycleComposer:
     def __init__(self, client: "LifeCycleClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def update(self) -> "_LifeCycleUpdateComposer":
@@ -1413,11 +1291,6 @@ class LifeCycleComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
-            )
-        )
         return self
 
     def hello_string(
@@ -1428,11 +1301,6 @@ class LifeCycleComposer:
             self.client.params.hello_string(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello()string", v
             )
         )
         return self
@@ -1448,11 +1316,6 @@ class LifeCycleComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "create(string)string", v
-            )
-        )
         return self
 
     def create_string_uint32_void(
@@ -1466,11 +1329,6 @@ class LifeCycleComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "create(string,uint32)void", v
-            )
-        )
         return self
 
     def clear_state(
@@ -1482,12 +1340,7 @@ class LifeCycleComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -1509,8 +1362,8 @@ class LifeCycleComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+        skip_signatures: bool = False,
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -1524,5 +1377,41 @@ class LifeCycleComposer:
     def send(
         self,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}], "name": "create", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["CloseOut"], "create": []}, "args": [], "name": "close_out_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [], "name": "delete_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [], "name": "update_test", "returns": {"type": "string"}, "events": []}], "name": "LifeCycle", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIDAgMiA0IFRNUExfVVBEQVRBQkxFCiAgICBieXRlY2Jsb2NrICJncmVldGluZyIgInRpbWVzIiAiIiAweDE1MWY3Yzc1CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToxMQogICAgLy8gc2VsZi5ncmVldGluZyA9IFN0cmluZygiSGVsbG8iKQogICAgYnl0ZWNfMCAvLyAiZ3JlZXRpbmciCiAgICBwdXNoYnl0ZXMgIkhlbGxvIgogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjEyCiAgICAvLyBzZWxmLnRpbWVzID0gVUludDY0KDEpCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGludGNfMCAvLyAxCiAgICBhcHBfZ2xvYmFsX3B1dAoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo2CiAgICAvLyBjbGFzcyBMaWZlQ3ljbGUoSW1tdXRhYmlsaXR5Q29udHJvbEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9iYXJlX3JvdXRpbmdAMTgKICAgIHB1c2hieXRlc3MgMHhhMDI2ZjhkZCAweDFiM2JmMjAzIDB4NTNlNmI4YzcgLy8gbWV0aG9kICJjbG9zZV9vdXRfdGVzdCgpc3RyaW5nIiwgbWV0aG9kICJkZWxldGVfdGVzdCgpc3RyaW5nIiwgbWV0aG9kICJ1cGRhdGVfdGVzdCgpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9jbG9zZV9vdXRfdGVzdF9yb3V0ZUA1IG1haW5fZGVsZXRlX3Rlc3Rfcm91dGVANiBtYWluX3VwZGF0ZV90ZXN0X3JvdXRlQDcKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJ6IG1haW5fY3JlYXRlX05vT3BAMTMKICAgIHB1c2hieXRlc3MgMHgwMmJlY2UxMSAweGFiMDZjMWE4IC8vIG1ldGhvZCAiaGVsbG8oc3RyaW5nKXN0cmluZyIsIG1ldGhvZCAiaGVsbG8oKXN0cmluZyIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIGhlbGxvIGhlbGxvX25vX2FyZwoKbWFpbl9hZnRlcl9pZl9lbHNlQDIyOgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgTGlmZUN5Y2xlKEltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QpOgogICAgZXJyCgptYWluX2NyZWF0ZV9Ob09wQDEzOgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgTGlmZUN5Y2xlKEltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QpOgogICAgcHVzaGJ5dGVzcyAweDk3ZjFmYzExIDB4NjAxOTMyNjQgLy8gbWV0aG9kICJjcmVhdGUoc3RyaW5nKXN0cmluZyIsIG1ldGhvZCAiY3JlYXRlKHN0cmluZyx1aW50MzIpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIGNyZWF0ZV8xYXJnIGNyZWF0ZV8yYXJnCiAgICBlcnIKCm1haW5fdXBkYXRlX3Rlc3Rfcm91dGVANzoKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjUzCiAgICAvLyBAYXJjNC5hYmltZXRob2QoYWxsb3dfYWN0aW9ucz1bIlVwZGF0ZUFwcGxpY2F0aW9uIl0pCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBpbnRjXzMgLy8gVXBkYXRlQXBwbGljYXRpb24KICAgID09CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDBiNzU3MDY0NjE3NDY1NWY3NDY1NzM3NAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2RlbGV0ZV90ZXN0X3JvdXRlQDY6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo0OQogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGFsbG93X2FjdGlvbnM9WyJEZWxldGVBcHBsaWNhdGlvbiJdKQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgcHVzaGludCA1IC8vIERlbGV0ZUFwcGxpY2F0aW9uCiAgICA9PQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICYmCiAgICBhc3NlcnQKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwYjY0NjU2YzY1NzQ2NTVmNzQ2NTczNzQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9jbG9zZV9vdXRfdGVzdF9yb3V0ZUA1OgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NDUKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChhbGxvd19hY3Rpb25zPVsiQ2xvc2VPdXQiXSkKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGludGNfMiAvLyBDbG9zZU91dAogICAgPT0KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0CiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMGU2MzZjNmY3MzY1NWY2Zjc1NzQ1Zjc0NjU3Mzc0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fYmFyZV9yb3V0aW5nQDE4OgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NgogICAgLy8gY2xhc3MgTGlmZUN5Y2xlKEltbXV0YWJpbGl0eUNvbnRyb2xBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgc3dpdGNoIG1haW5fY3JlYXRlQDE5IG1haW5fY3JlYXRlQDE5IG1haW5fYWZ0ZXJfaWZfZWxzZUAyMiBtYWluX2FmdGVyX2lmX2Vsc2VAMjIgbWFpbl91cGRhdGVAMjAKICAgIGVycgoKbWFpbl91cGRhdGVAMjA6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvYmFzZS9jb250cmFjdC5weToyMwogICAgLy8gQGFyYzQuYmFyZW1ldGhvZChhbGxvd19hY3Rpb25zPVsiVXBkYXRlQXBwbGljYXRpb24iXSkKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjI1CiAgICAvLyBhc3NlcnQgVGVtcGxhdGVWYXJbYm9vbF0oVVBEQVRBQkxFX1RFTVBMQVRFX05BTUUpLCAiQ2hlY2sgYXBwIGlzIHVwZGF0YWJsZSIKICAgIGludGMgNCAvLyBUTVBMX1VQREFUQUJMRQogICAgYXNzZXJ0IC8vIENoZWNrIGFwcCBpcyB1cGRhdGFibGUKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjEwCiAgICAvLyBhc3NlcnQgVHhuLnNlbmRlciA9PSBHbG9iYWwuY3JlYXRvcl9hZGRyZXNzLCAidW5hdXRob3JpemVkIgogICAgdHhuIFNlbmRlcgogICAgZ2xvYmFsIENyZWF0b3JBZGRyZXNzCiAgICA9PQogICAgYXNzZXJ0IC8vIHVuYXV0aG9yaXplZAogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MjMKICAgIC8vIEBhcmM0LmJhcmVtZXRob2QoYWxsb3dfYWN0aW9ucz1bIlVwZGF0ZUFwcGxpY2F0aW9uIl0pCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2NyZWF0ZUAxOToKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjE0CiAgICAvLyBAYXJjNC5iYXJlbWV0aG9kKGNyZWF0ZT0icmVxdWlyZSIsIGFsbG93X2FjdGlvbnM9WyJOb09wIiwgIk9wdEluIl0pCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgIQogICAgcmV0dXJuCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmxpZmVfY3ljbGUuY29udHJhY3QuTGlmZUN5Y2xlLmNyZWF0ZV8xYXJnW3JvdXRpbmddKCkgLT4gdm9pZDoKY3JlYXRlXzFhcmc6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToxOAogICAgLy8gQGFyYzQuYWJpbWV0aG9kKG5hbWU9ImNyZWF0ZSIsIGNyZWF0ZT0icmVxdWlyZSIpCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMSAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMgogICAgKwogICAgZGlnIDEKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICBleHRyYWN0IDIgMAogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MjAKICAgIC8vIHNlbGYuZ3JlZXRpbmcgPSBncmVldGluZwogICAgYnl0ZWNfMCAvLyAiZ3JlZXRpbmciCiAgICBkaWcgMQogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjIyCiAgICAvLyByZXR1cm4gZ3JlZXRpbmcgKyBTdHJpbmcoIl8iKSArIHNlbGYuaXRvYShzZWxmLnRpbWVzKQogICAgcHVzaGJ5dGVzICJfIgogICAgY29uY2F0CiAgICBpbnRjXzEgLy8gMAogICAgYnl0ZWNfMSAvLyAidGltZXMiCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIHNlbGYudGltZXMgZXhpc3RzCiAgICBjYWxsc3ViIGl0b2EKICAgIGNvbmNhdAogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MTgKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChuYW1lPSJjcmVhdGUiLCBjcmVhdGU9InJlcXVpcmUiKQogICAgZHVwCiAgICBsZW4KICAgIGl0b2IKICAgIGV4dHJhY3QgNiAyCiAgICBzd2FwCiAgICBjb25jYXQKICAgIGJ5dGVjXzMgLy8gMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCgovLyBleGFtcGxlcy5zbWFydF9jb250cmFjdHMubGlmZV9jeWNsZS5jb250cmFjdC5MaWZlQ3ljbGUuY3JlYXRlXzJhcmdbcm91dGluZ10oKSAtPiB2b2lkOgpjcmVhdGVfMmFyZzoKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjI0CiAgICAvLyBAYXJjNC5hYmltZXRob2QobmFtZT0iY3JlYXRlIiwgY3JlYXRlPSJyZXF1aXJlIikKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgaW50Y18xIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMiAvLyAyCiAgICArCiAgICBkaWcgMQogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIGV4dHJhY3QgMiAwCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBkdXAKICAgIGxlbgogICAgaW50Y18zIC8vIDQKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQudWludDMyCiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyNgogICAgLy8gc2VsZi5ncmVldGluZyA9IGdyZWV0aW5nCiAgICBieXRlY18wIC8vICJncmVldGluZyIKICAgIHVuY292ZXIgMgogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjI3CiAgICAvLyBzZWxmLnRpbWVzID0gdGltZXMubmF0aXZlCiAgICBidG9pCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIHN3YXAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kKG5hbWU9ImNyZWF0ZSIsIGNyZWF0ZT0icmVxdWlyZSIpCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgoKLy8gZXhhbXBsZXMuc21hcnRfY29udHJhY3RzLmxpZmVfY3ljbGUuY29udHJhY3QuTGlmZUN5Y2xlLmhlbGxvW3JvdXRpbmddKCkgLT4gdm9pZDoKaGVsbG86CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weToyOQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMSAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMgogICAgKwogICAgZGlnIDEKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICBleHRyYWN0IDIgMAogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzEKICAgIC8vIHJlc3VsdCA9IFN0cmluZygiIikKICAgIGJ5dGVjXzIgLy8gIiIKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjMyCiAgICAvLyBmb3IgaSBpbiB1cmFuZ2Uoc2VsZi50aW1lcyk6ICAjIG5vcWE6IEIwMDcKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18xIC8vICJ0aW1lcyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50aW1lcyBleGlzdHMKICAgIGludGNfMSAvLyAwCgpoZWxsb19mb3JfaGVhZGVyQDI6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozMgogICAgLy8gZm9yIGkgaW4gdXJhbmdlKHNlbGYudGltZXMpOiAgIyBub3FhOiBCMDA3CiAgICBkdXAKICAgIGRpZyAyCiAgICA8CiAgICBieiBoZWxsb19hZnRlcl9mb3JANQogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6MzMKICAgIC8vIHJlc3VsdCArPSBzZWxmLmdyZWV0aW5nICsgU3RyaW5nKCIsICIpICsgbmFtZSArIFN0cmluZygiXG4iKQogICAgaW50Y18xIC8vIDAKICAgIGJ5dGVjXzAgLy8gImdyZWV0aW5nIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmdyZWV0aW5nIGV4aXN0cwogICAgcHVzaGJ5dGVzICIsICIKICAgIGNvbmNhdAogICAgZGlnIDQKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzICJcbiIKICAgIGNvbmNhdAogICAgZGlnIDMKICAgIHN3YXAKICAgIGNvbmNhdAogICAgYnVyeSAzCiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozMgogICAgLy8gZm9yIGkgaW4gdXJhbmdlKHNlbGYudGltZXMpOiAgIyBub3FhOiBCMDA3CiAgICBkdXAKICAgIGludGNfMCAvLyAxCiAgICArCiAgICBidXJ5IDEKICAgIGIgaGVsbG9fZm9yX2hlYWRlckAyCgpoZWxsb19hZnRlcl9mb3JANToKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjI5CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGRpZyAyCiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5saWZlX2N5Y2xlLmNvbnRyYWN0LkxpZmVDeWNsZS5oZWxsb19ub19hcmdbcm91dGluZ10oKSAtPiB2b2lkOgpoZWxsb19ub19hcmc6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozOQogICAgLy8gcmVzdWx0ID0gU3RyaW5nKCIiKQogICAgYnl0ZWNfMiAvLyAiIgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2xpZmVfY3ljbGUvY29udHJhY3QucHk6NDAKICAgIC8vIGZvciBpIGluIHVyYW5nZShzZWxmLnRpbWVzKTogICMgbm9xYTogQjAwNwogICAgaW50Y18xIC8vIDAKICAgIGJ5dGVjXzEgLy8gInRpbWVzIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLnRpbWVzIGV4aXN0cwogICAgaW50Y18xIC8vIDAKCmhlbGxvX25vX2FyZ19mb3JfaGVhZGVyQDI6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTo0MAogICAgLy8gZm9yIGkgaW4gdXJhbmdlKHNlbGYudGltZXMpOiAgIyBub3FhOiBCMDA3CiAgICBkdXAKICAgIGRpZyAyCiAgICA8CiAgICBieiBoZWxsb19ub19hcmdfYWZ0ZXJfZm9yQDUKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQxCiAgICAvLyByZXN1bHQgKz0gc2VsZi5ncmVldGluZyArIFN0cmluZygiLCBteXN0ZXJ5IHBlcnNvblxuIikKICAgIGludGNfMSAvLyAwCiAgICBieXRlY18wIC8vICJncmVldGluZyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5ncmVldGluZyBleGlzdHMKICAgIHB1c2hieXRlcyAiLCBteXN0ZXJ5IHBlcnNvblxuIgogICAgY29uY2F0CiAgICBkaWcgMwogICAgc3dhcAogICAgY29uY2F0CiAgICBidXJ5IDMKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9saWZlX2N5Y2xlL2NvbnRyYWN0LnB5OjQwCiAgICAvLyBmb3IgaSBpbiB1cmFuZ2Uoc2VsZi50aW1lcyk6ICAjIG5vcWE6IEIwMDcKICAgIGR1cAogICAgaW50Y18wIC8vIDEKICAgICsKICAgIGJ1cnkgMQogICAgYiBoZWxsb19ub19hcmdfZm9yX2hlYWRlckAyCgpoZWxsb19ub19hcmdfYWZ0ZXJfZm9yQDU6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvbGlmZV9jeWNsZS9jb250cmFjdC5weTozNwogICAgLy8gQGFyYzQuYWJpbWV0aG9kKG5hbWU9ImhlbGxvIikKICAgIGRpZyAyCiAgICBkdXAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgYnl0ZWNfMyAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKCi8vIGV4YW1wbGVzLnNtYXJ0X2NvbnRyYWN0cy5iYXNlLmNvbnRyYWN0LkJhc2VBUkM0Q29udHJhY3QuaXRvYShpOiB1aW50NjQpIC0+IGJ5dGVzOgppdG9hOgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTItMTMKICAgIC8vIEBzdWJyb3V0aW5lCiAgICAvLyBkZWYgaXRvYShzZWxmLCBpOiBVSW50NjQpIC0+IFN0cmluZzoKICAgIHByb3RvIDEgMQogICAgYnl0ZWNfMiAvLyAiIgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTQKICAgIC8vIGlmIGkgPT0gVUludDY0KDApOgogICAgZnJhbWVfZGlnIC0xCiAgICBibnogaXRvYV9lbHNlX2JvZHlAMgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTUKICAgIC8vIHJldHVybiBTdHJpbmcoIjAiKQogICAgcHVzaGJ5dGVzICIwIgogICAgc3dhcAogICAgcmV0c3ViCgppdG9hX2Vsc2VfYm9keUAyOgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTcKICAgIC8vIHJldHVybiAoc2VsZi5pdG9hKGkgLy8gVUludDY0KDEwKSkgaWYgKGkgLy8gVUludDY0KDEwKSkgPiBVSW50NjQoMCkgZWxzZSBTdHJpbmcoIiIpKSArIFN0cmluZy5mcm9tX2J5dGVzKAogICAgZnJhbWVfZGlnIC0xCiAgICBwdXNoaW50IDEwCiAgICAvCiAgICBkdXAKICAgIGZyYW1lX2J1cnkgMAogICAgYnogaXRvYV90ZXJuYXJ5X2ZhbHNlQDQKICAgIGZyYW1lX2RpZyAwCiAgICBjYWxsc3ViIGl0b2EKCml0b2FfdGVybmFyeV9tZXJnZUA1OgogICAgLy8gZXhhbXBsZXMvc21hcnRfY29udHJhY3RzL2Jhc2UvY29udHJhY3QucHk6MTgKICAgIC8vIFN0cmluZygiMDEyMzQ1Njc4OSIpLmJ5dGVzW2kgJSBVSW50NjQoMTApXQogICAgZnJhbWVfZGlnIC0xCiAgICBwdXNoaW50IDEwCiAgICAlCiAgICBwdXNoYnl0ZXMgIjAxMjM0NTY3ODkiCiAgICBzd2FwCiAgICBpbnRjXzAgLy8gMQogICAgZXh0cmFjdDMKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjE3LTE5CiAgICAvLyByZXR1cm4gKHNlbGYuaXRvYShpIC8vIFVJbnQ2NCgxMCkpIGlmIChpIC8vIFVJbnQ2NCgxMCkpID4gVUludDY0KDApIGVsc2UgU3RyaW5nKCIiKSkgKyBTdHJpbmcuZnJvbV9ieXRlcygKICAgIC8vICAgICBTdHJpbmcoIjAxMjM0NTY3ODkiKS5ieXRlc1tpICUgVUludDY0KDEwKV0KICAgIC8vICkKICAgIGNvbmNhdAogICAgc3dhcAogICAgcmV0c3ViCgppdG9hX3Rlcm5hcnlfZmFsc2VANDoKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9iYXNlL2NvbnRyYWN0LnB5OjE3CiAgICAvLyByZXR1cm4gKHNlbGYuaXRvYShpIC8vIFVJbnQ2NCgxMCkpIGlmIChpIC8vIFVJbnQ2NCgxMCkpID4gVUludDY0KDApIGVsc2UgU3RyaW5nKCIiKSkgKyBTdHJpbmcuZnJvbV9ieXRlcygKICAgIGJ5dGVjXzIgLy8gIiIKICAgIGIgaXRvYV90ZXJuYXJ5X21lcmdlQDUK", "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

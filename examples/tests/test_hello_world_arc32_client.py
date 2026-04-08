@@ -13,15 +13,17 @@ from examples.smart_contracts.artifacts.hello_world.hello_world_arc32_client imp
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def helloworld_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> HelloWorldFactory:
-    return algorand.client.get_typed_app_factory(HelloWorldFactory, default_sender=default_deployer.address)
+def helloworld_factory(
+    algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners
+) -> HelloWorldFactory:
+    return algorand.client.get_typed_app_factory(HelloWorldFactory, default_sender=default_deployer.addr)
 
 
 def test_calls_hello(helloworld_factory: HelloWorldFactory) -> None:
@@ -49,7 +51,7 @@ def test_calls_hello(helloworld_factory: HelloWorldFactory) -> None:
 def test_composer_with_manual_transaction(
     helloworld_factory: HelloWorldFactory,
     algorand: AlgorandClient,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, _ = helloworld_factory.deploy()
 
@@ -59,13 +61,13 @@ def test_composer_with_manual_transaction(
     # Get client from creator and name
     client2 = algorand.client.get_typed_app_client_by_creator_and_name(
         HelloWorldClient,
-        creator_address=default_deployer.address,
+        creator_address=default_deployer.addr,
         app_name=client.app_name,
     )
 
     transactions2 = client2.create_transaction.hello(
         args=HelloArgs(name="Bananas"),
-        params=CommonAppCallParams(sender=default_deployer.address),
+        params=CommonAppCallParams(sender=default_deployer.addr),
     )
 
     # Test composition with manual transactions
@@ -91,7 +93,9 @@ def test_simulate_hello(helloworld_factory: HelloWorldFactory) -> None:
 
     assert response.returns[0].value == "Hello, mate"
     assert response.simulate_response
-    assert response.simulate_response["txn-groups"][0]["app-budget-consumed"] < 50
+    budget = response.simulate_response.txn_groups[0].app_budget_consumed
+    assert budget is not None
+    assert budget < 50
 
 
 def test_can_be_cloned(helloworld_factory: HelloWorldFactory) -> None:

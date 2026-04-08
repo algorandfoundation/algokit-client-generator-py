@@ -1,75 +1,35 @@
-from algokit_client_generator import utils
 from algokit_client_generator.context import GeneratorContext
 from algokit_client_generator.document import DocumentParts, Part
 from algokit_client_generator.spec import ContractMethod
 
 
-def generate_abi_args_parser(indent_size: int = 4) -> DocumentParts:
-    """Generate the shared ABI args parsing method that will be used across generated clients
-
-    Args:
-        indent_level: Number of indentation levels to apply (default: 1 for class-level method)
-    """
-    yield utils.indented(
-        """
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    \"\"\"Helper to parse ABI args into the format expected by underlying client\"\"\"
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-""",
-        indent_size=indent_size,
-    )
-
-
-def generate_dataclass_initializer(context: GeneratorContext) -> DocumentParts:
-    yield utils.indented(
-        """
-def _init_dataclass(cls: type, data: dict) -> object:
-    \"\"\"
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    \"\"\"
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
-    """
-    )
-
-
 def generate_helpers(context: GeneratorContext) -> DocumentParts:
-    yield Part.Gap1
-    yield generate_abi_args_parser()
-    yield Part.Gap1
-    yield generate_dataclass_initializer(context)
-    yield Part.Gap1
+    yield '''
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+'''
+    yield Part.Gap2
+    yield """
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+"""
 
 
 def get_abi_method_operations(context: GeneratorContext) -> dict[str, list[ContractMethod]]:

@@ -8,61 +8,16 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "events": []}], "name": "HelloWorld", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloArgs:
@@ -92,26 +47,26 @@ class HelloWorldParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_world_check(
         self,
         args: tuple[str] | HelloWorldCheckArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -133,26 +88,26 @@ class HelloWorldCreateTransactionParams:
         args: tuple[str] | HelloArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_world_check(
         self,
         args: tuple[str] | HelloWorldCheckArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ))
 
     def clear_state(
         self,
@@ -175,15 +130,14 @@ class HelloWorldSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def hello_world_check(
         self,
@@ -191,15 +145,14 @@ class HelloWorldSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello_world_check(string)void",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello_world_check(string)void",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -333,7 +286,7 @@ class HelloWorldClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -389,18 +342,7 @@ class HelloWorldClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class HelloWorldComposer:
@@ -409,7 +351,6 @@ class HelloWorldComposer:
     def __init__(self, client: "HelloWorldClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def hello(
         self,
@@ -420,11 +361,6 @@ class HelloWorldComposer:
             self.client.params.hello(
                 args=args,
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
             )
         )
         return self
@@ -440,11 +376,6 @@ class HelloWorldComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello_world_check(string)void", v
-            )
-        )
         return self
 
     def clear_state(
@@ -456,12 +387,7 @@ class HelloWorldComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -483,8 +409,8 @@ class HelloWorldComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+        skip_signatures: bool = False,
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -498,5 +424,41 @@ class HelloWorldComposer:
     def send(
         self,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["DeleteApplication", "UpdateApplication"], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello_world_check", "returns": {"type": "void"}, "events": []}], "name": "HelloWorld", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

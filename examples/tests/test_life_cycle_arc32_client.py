@@ -1,6 +1,6 @@
 import algokit_utils
-import algosdk
 import pytest
+from algokit_transact import OnApplicationComplete
 from algokit_utils import AlgorandClient, CommonAppCallCreateParams, OperationPerformed
 from algokit_utils.models import AlgoAmount
 
@@ -14,20 +14,21 @@ from examples.smart_contracts.artifacts.life_cycle.life_cycle_arc32_client impor
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def lifecycle_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> LifeCycleFactory:
-    return algorand.client.get_typed_app_factory(LifeCycleFactory, default_sender=default_deployer.address)
+def lifecycle_factory(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> LifeCycleFactory:
+    return algorand.client.get_typed_app_factory(LifeCycleFactory, default_sender=default_deployer.addr)
 
 
 def test_create_bare(lifecycle_factory: LifeCycleFactory) -> None:
     client, create_result = lifecycle_factory.send.create.bare(compilation_params={"updatable": True})
-    assert create_result.transaction.application_call.on_complete == algosdk.transaction.OnComplete.NoOpOC
+    assert create_result.transaction.application_call
+    assert create_result.transaction.application_call.on_complete == OnApplicationComplete.NoOp
 
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="Bare"))
     assert response.abi_return == "Hello, Bare\n"
@@ -35,10 +36,11 @@ def test_create_bare(lifecycle_factory: LifeCycleFactory) -> None:
 
 def test_create_bare_optin(lifecycle_factory: LifeCycleFactory) -> None:
     client, create_result = lifecycle_factory.send.create.bare(
-        params=CommonAppCallCreateParams(on_complete=algosdk.transaction.OnComplete.OptInOC),
+        params=CommonAppCallCreateParams(on_complete=OnApplicationComplete.OptIn),
         compilation_params={"updatable": True},
     )
-    assert create_result.transaction.application_call.on_complete == algosdk.transaction.OnComplete.OptInOC
+    assert create_result.transaction.application_call
+    assert create_result.transaction.application_call.on_complete == OnApplicationComplete.OptIn
 
     response = client.send.hello_string_string(args=HelloStringStringArgs(name="Bare"))
     assert response.abi_return == "Hello, Bare\n"

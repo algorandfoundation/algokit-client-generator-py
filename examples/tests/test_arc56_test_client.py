@@ -19,15 +19,17 @@ from examples.smart_contracts.artifacts.arc56_test.arc56_test_arc56_client impor
 
 
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def arc56_test_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> Arc56TestFactory:
-    return algorand.client.get_typed_app_factory(Arc56TestFactory, default_sender=default_deployer.address)
+def arc56_test_factory(
+    algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners
+) -> Arc56TestFactory:
+    return algorand.client.get_typed_app_factory(Arc56TestFactory, default_sender=default_deployer.addr)
 
 
 @pytest.fixture
@@ -46,7 +48,7 @@ def arc56_test_client(state_factory: Arc56TestFactory) -> Arc56TestClient:
 def test_arc56_demo(
     algorand: AlgorandClient,
     arc56_test_factory: Arc56TestFactory,
-    default_deployer: algokit_utils.SigningAccount,
+    default_deployer: algokit_utils.AddressWithSigners,
 ) -> None:
     client, result = arc56_test_factory.send.create.create_application(
         compilation_params={"deploy_time_params": {"someNumber": 1337}}
@@ -63,7 +65,7 @@ def test_arc56_demo(
     algorand.account.ensure_funded_from_environment(bob, AlgoAmount.from_micro_algo(10_000_000))
     bob_outputs = client.send.foo(
         args=FooArgs(inputs=Inputs(add=InputsAdd(a=1, b=2), subtract=InputsSubtract(a=10, b=5))),
-        params=CommonAppCallParams(sender=bob.address),
+        params=CommonAppCallParams(sender=bob.addr),
     )
     assert bob_outputs.abi_return
     assert bob_outputs.abi_return.sum == 3
@@ -124,8 +126,8 @@ def test_arc56_demo(
 
     client.app_client.fund_app_account(FundAppAccountParams(amount=AlgoAmount.from_micro_algo(1_000_000)))
     client.send.opt_in.opt_in_to_application()
-    assert client.state.local_state(default_deployer.address).local_key == 1337
-    assert client.state.local_state(default_deployer.address).local_map.get_value(b"foo") == "bar"
+    assert client.state.local_state(default_deployer.addr).local_key == 1337
+    assert client.state.local_state(default_deployer.addr).local_map.get_value(b"foo") == "bar"
     client.state.box.box_map.get_value
     assert client.state.box.box_key == "baz"
     assert client.state.box.box_map.get_value(

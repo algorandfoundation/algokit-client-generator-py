@@ -24,16 +24,16 @@ class GenerationSettings:
 
 
 def generate(context: GeneratorContext) -> DocumentParts:
-    yield generate_header_comments(context)
-    yield generate_imports(context)
-    yield Part.Gap1
-    yield generate_app_spec(context)
-    yield Part.Gap1
-    yield generate_helpers(context)
+    yield from generate_header_comments(context)
+    yield from generate_imports(context)
     yield Part.Gap2
-    yield generate_typed_client(context)
+    yield from generate_typed_client(context)
     if context.mode == "full":
         yield Part.Gap2
-        yield generate_typed_factory(context)
+        yield from generate_typed_factory(context)
     yield Part.Gap2
-    yield generate_composer(context)
+    yield from generate_composer(context)
+    yield Part.Gap1
+    yield from generate_helpers(context)
+    # perform app spec and type mapping after every thing is declared
+    yield from generate_app_spec(context)

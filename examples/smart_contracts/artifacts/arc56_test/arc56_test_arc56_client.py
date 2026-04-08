@@ -8,79 +8,22 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}}], "name": "ARC56Test", "state": {"keys": {"box": {"boxKey": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"globalKey": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"localKey": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"boxMap": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"globalMap": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"localMap": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "desc": "", "scratchVariables": {"someNumber": {"slot": 200, "type": "uint64"}}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludGNibG9jayAxIFRNUExfc29tZU51bWJlcgpieXRlY2Jsb2NrIDB4NjI2Zjc4NGI2NTc5CgovLyBUaGlzIFRFQUwgd2FzIGdlbmVyYXRlZCBieSBURUFMU2NyaXB0IHYwLjEwNS4zCi8vIGh0dHBzOi8vZ2l0aHViLmNvbS9hbGdvcmFuZGZvdW5kYXRpb24vVEVBTFNjcmlwdAoKLy8gVGhpcyBjb250cmFjdCBpcyBjb21wbGlhbnQgd2l0aCBhbmQvb3IgaW1wbGVtZW50cyB0aGUgZm9sbG93aW5nIEFSQ3M6IFsgQVJDNCBdCgovLyBUaGUgZm9sbG93aW5nIHRlbiBsaW5lcyBvZiBURUFMIGhhbmRsZSBpbml0aWFsIHByb2dyYW0gZmxvdwovLyBUaGlzIHBhdHRlcm4gaXMgdXNlZCB0byBtYWtlIGl0IGVhc3kgZm9yIGFueW9uZSB0byBwYXJzZSB0aGUgc3RhcnQgb2YgdGhlIHByb2dyYW0gYW5kIGRldGVybWluZSBpZiBhIHNwZWNpZmljIGFjdGlvbiBpcyBhbGxvd2VkCi8vIEhlcmUsIGFjdGlvbiByZWZlcnMgdG8gdGhlIE9uQ29tcGxldGUgaW4gY29tYmluYXRpb24gd2l0aCB3aGV0aGVyIHRoZSBhcHAgaXMgYmVpbmcgY3JlYXRlZCBvciBjYWxsZWQKLy8gRXZlcnkgcG9zc2libGUgYWN0aW9uIGZvciB0aGlzIGNvbnRyYWN0IGlzIHJlcHJlc2VudGVkIGluIHRoZSBzd2l0Y2ggc3RhdGVtZW50Ci8vIElmIHRoZSBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoZSBjb250cmFjdCwgaXRzIHJlc3BlY3RpdmUgYnJhbmNoIHdpbGwgYmUgIipOT1RfSU1QTEVNRU5URUQiIHdoaWNoIGp1c3QgY29udGFpbnMgImVyciIKdHhuIEFwcGxpY2F0aW9uSUQKIQpwdXNoaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoICpjYWxsX05vT3AgKmNhbGxfT3B0SW4gKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqY3JlYXRlX05vT3AgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVECgoqTk9UX0lNUExFTUVOVEVEOgoJLy8gVGhlIHJlcXVlc3RlZCBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoaXMgY29udHJhY3QuIEFyZSB5b3UgdXNpbmcgdGhlIGNvcnJlY3QgT25Db21wbGV0ZT8gRGlkIHlvdSBzZXQgeW91ciBhcHAgSUQ/CgllcnIKCi8vIGZvbygoKHVpbnQ2NCx1aW50NjQpLCh1aW50NjQsdWludDY0KSkpKHVpbnQ2NCx1aW50NjQpCiphYmlfcm91dGVfZm9vOgoJLy8gVGhlIEFCSSByZXR1cm4gcHJlZml4CglwdXNoYnl0ZXMgMHgxNTFmN2M3NQoKCS8vIGlucHV0czogKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAxCglkdXAKCWxlbgoJcHVzaGludCAzMgoJPT0KCgkvLyBhcmd1bWVudCAwIChpbnB1dHMpIGZvciBmb28gbXVzdCBiZSBhICgodWludDY0LHVpbnQ2NCksKHVpbnQ2NCx1aW50NjQpKQoJYXNzZXJ0CgoJLy8gZXhlY3V0ZSBmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KQoJY2FsbHN1YiBmb28KCWNvbmNhdAoJbG9nCglpbnRjIDAgLy8gMQoJcmV0dXJuCgovLyBmb28oaW5wdXRzOiBJbnB1dHMpOiBPdXRwdXRzCmZvbzoKCXByb3RvIDEgMQoKCS8vICppZjBfY29uZGl0aW9uCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czozMAoJLy8gaW5wdXRzLnN1YnRyYWN0LmEgPCBpbnB1dHMuc3VidHJhY3QuYgoJZnJhbWVfZGlnIC0xIC8vIGlucHV0czogSW5wdXRzCglleHRyYWN0IDE2IDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAyNCA4CglidG9pCgk8CglieiAqaWYwX2VuZAoKCS8vICppZjBfY29uc2VxdWVudAoJLy8gc3VidHJhY3QuYSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiBzdWJ0cmFjdC5iCgllcnIKCippZjBfZW5kOgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzIKCS8vIHRoaXMuZ2xvYmFsS2V5LnZhbHVlID0gdGhpcy5zb21lTnVtYmVyCglwdXNoYnl0ZXMgMHg2NzZjNmY2MjYxNmM0YjY1NzkgLy8gImdsb2JhbEtleSIKCWludGMgMSAvLyBUTVBMX3NvbWVOdW1iZXIKCWFwcF9nbG9iYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzMKCS8vIHRoaXMuZ2xvYmFsTWFwKCdmb28nKS52YWx1ZSA9IHsgZm9vOiAxMywgYmFyOiAzNyB9CglwdXNoYnl0ZXMgMHg3MDAwMDM2NjZmNmYKCXB1c2hieXRlcyAweDAwMGQwMDI1CglhcHBfZ2xvYmFsX3B1dAoKCS8vIGV4YW1wbGVzL2FyYzU2X3Rlc3QvYXJjNTZfdGVzdC5hbGdvLnRzOjM1CgkvLyByZXR1cm4gewoJLy8gICAgICAgc3VtOiBpbnB1dHMuYWRkLmEgKyBpbnB1dHMuYWRkLmIsCgkvLyAgICAgICBkaWZmZXJlbmNlOiBpbnB1dHMuc3VidHJhY3QuYSAtIGlucHV0cy5zdWJ0cmFjdC5iLAoJLy8gICAgIH0KCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAwIDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCA4IDgKCWJ0b2kKCSsKCWl0b2IKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAxNiA4CglidG9pCglmcmFtZV9kaWcgLTEgLy8gaW5wdXRzOiBJbnB1dHMKCWV4dHJhY3QgMjQgOAoJYnRvaQoJLQoJaXRvYgoJY29uY2F0CglyZXRzdWIKCi8vIG9wdEluVG9BcHBsaWNhdGlvbigpdm9pZAoqYWJpX3JvdXRlX29wdEluVG9BcHBsaWNhdGlvbjoKCS8vIGV4ZWN1dGUgb3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkCgljYWxsc3ViIG9wdEluVG9BcHBsaWNhdGlvbgoJaW50YyAwIC8vIDEKCXJldHVybgoKLy8gb3B0SW5Ub0FwcGxpY2F0aW9uKCk6IHZvaWQKb3B0SW5Ub0FwcGxpY2F0aW9uOgoJcHJvdG8gMCAwCgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDIKCS8vIHRoaXMubG9jYWxLZXkodGhpcy50eG4uc2VuZGVyKS52YWx1ZSA9IHRoaXMuc29tZU51bWJlcgoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzRiNjU3OSAvLyAibG9jYWxLZXkiCglpbnRjIDEgLy8gVE1QTF9zb21lTnVtYmVyCglhcHBfbG9jYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDMKCS8vIHRoaXMubG9jYWxNYXAodGhpcy50eG4uc2VuZGVyLCAnZm9vJykudmFsdWUgPSAnYmFyJwoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NzA2NjZmNmYKCXB1c2hieXRlcyAweDAwMDM2MjYxNzIKCWFwcF9sb2NhbF9wdXQKCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czo0NAoJLy8gdGhpcy5ib3hLZXkudmFsdWUgPSAnYmF6JwoJYnl0ZWMgMCAvLyAgImJveEtleSIKCWR1cAoJYm94X2RlbAoJcG9wCglwdXNoYnl0ZXMgMHgwMDAzNjI2MTdhCglib3hfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDUKCS8vIHRoaXMuYm94TWFwKHsgYWRkOiB7IGE6IDEsIGI6IDIgfSwgc3VidHJhY3Q6IHsgYTogNCwgYjogMyB9IH0pLnZhbHVlID0gewoJLy8gICAgICAgc3VtOiAzLAoJLy8gICAgICAgZGlmZmVyZW5jZTogMSwKCS8vICAgICB9CglwdXNoYnl0ZXMgMHg3MDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyMDAwMDAwMDAwMDAwMDAwNDAwMDAwMDAwMDAwMDAwMDMKCXB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDAwMDAxCglib3hfcHV0CglyZXRzdWIKCiphYmlfcm91dGVfY3JlYXRlQXBwbGljYXRpb246CglpbnRjIDAgLy8gMQoJcmV0dXJuCgoqY3JlYXRlX05vT3A6CglwdXNoYnl0ZXMgMHhiODQ0N2IzNiAvLyBtZXRob2QgImNyZWF0ZUFwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9jcmVhdGVBcHBsaWNhdGlvbgoKCS8vIHRoaXMgY29udHJhY3QgZG9lcyBub3QgaW1wbGVtZW50IHRoZSBnaXZlbiBBQkkgbWV0aG9kIGZvciBjcmVhdGUgTm9PcAoJZXJyCgoqY2FsbF9Ob09wOgoJcHVzaGJ5dGVzIDB4Mzk2ZDU1MGUgLy8gbWV0aG9kICJmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KSIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoICphYmlfcm91dGVfZm9vCgoJLy8gdGhpcyBjb250cmFjdCBkb2VzIG5vdCBpbXBsZW1lbnQgdGhlIGdpdmVuIEFCSSBtZXRob2QgZm9yIGNhbGwgTm9PcAoJZXJyCgoqY2FsbF9PcHRJbjoKCXB1c2hieXRlcyAweDAxYTNhM2ZmIC8vIG1ldGhvZCAib3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9vcHRJblRvQXBwbGljYXRpb24KCgkvLyB0aGlzIGNvbnRyYWN0IGRvZXMgbm90IGltcGxlbWVudCB0aGUgZ2l2ZW4gQUJJIG1ldGhvZCBmb3IgY2FsbCBPcHRJbgoJZXJy", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEw"}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "teal": 40}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "teal": 67}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 160}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 168}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {"someNumber": {"type": "uint64"}}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
-class InputsAdd:
-    """Struct for InputsAdd"""
-    a: int
-    b: int
-
-@dataclasses.dataclass(frozen=True)
-class InputsSubtract:
-    """Struct for InputsSubtract"""
-    a: int
-    b: int
-
-@dataclasses.dataclass(frozen=True)
-class Inputs:
-    """Struct for Inputs"""
-    add: InputsAdd
-    subtract: InputsSubtract
+class FooUint16BarUint16:
+    """Struct for { foo: uint16; bar: uint16 }"""
+    foo: int
+    bar: int
 
 @dataclasses.dataclass(frozen=True)
 class Outputs:
@@ -89,11 +32,22 @@ class Outputs:
     difference: int
 
 @dataclasses.dataclass(frozen=True)
-class FooUint16BarUint16:
-    """Struct for { foo: uint16; bar: uint16 }"""
-    foo: int
-    bar: int
+class InputsAdd:
+    """Struct for Inputs_add"""
+    a: int
+    b: int
 
+@dataclasses.dataclass(frozen=True)
+class InputsSubtract:
+    """Struct for Inputs_subtract"""
+    a: int
+    b: int
+
+@dataclasses.dataclass(frozen=True)
+class Inputs:
+    """Struct for Inputs"""
+    add: InputsAdd
+    subtract: InputsSubtract
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class FooArgs:
@@ -113,12 +67,12 @@ class _Arc56TestOptIn:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }))
+        return self.app_client.params.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ))
 
 
 class Arc56TestParams:
@@ -134,24 +88,24 @@ class Arc56TestParams:
         args: tuple[Inputs] | FooArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def create_application(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "createApplication()void",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="createApplication()void",
+        ))
 
     def clear_state(
         self,
@@ -172,12 +126,12 @@ class _Arc56TestOptInTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }))
+        return self.app_client.create_transaction.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ))
 
 
 class Arc56TestCreateTransactionParams:
@@ -193,24 +147,24 @@ class Arc56TestCreateTransactionParams:
         args: tuple[Inputs] | FooArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ))
 
     def create_application(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "createApplication()void",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="createApplication()void",
+        ))
 
     def clear_state(
         self,
@@ -232,14 +186,13 @@ class _Arc56TestOptInSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.opt_in(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "optInToApplication()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.opt_in(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="optInToApplication()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
 
 class Arc56TestSend:
@@ -256,29 +209,27 @@ class Arc56TestSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[Outputs]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(Outputs, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[Outputs], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[Outputs], response)
 
     def create_application(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[None]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "createApplication()void",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[None], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="createApplication()void",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[None], response)
 
     def clear_state(
         self,
@@ -334,32 +285,16 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "{ foo: uint16; bar: uint16 }": FooUint16BarUint16
-        }
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def global_key(self) -> int:
         """Get the current value of the globalKey key in global_state state"""
         value = self.app_client.state.global_state.get_value("globalKey")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -368,7 +303,6 @@ class _GlobalState:
         return _MapState(
             self.app_client.state.global_state,
             "globalMap",
-            self._struct_classes.get("{ foo: uint16; bar: uint16 }")
         )
 
 class _LocalState:
@@ -376,30 +310,16 @@ class _LocalState:
         self.app_client = app_client
         self.address = address
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> LocalStateValue:
         """Get all current keyed values from local_state state"""
         result = self.app_client.state.local_state(self.address).get_all()
-        if not result:
-            return typing.cast(LocalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.local_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(LocalStateValue, converted)
+        return typing.cast(LocalStateValue, result)
 
     @property
     def local_key(self) -> int:
         """Get the current value of the localKey key in local_state state"""
         value = self.app_client.state.local_state(self.address).get_value("localKey")
-        if isinstance(value, dict) and "uint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["uint64"], value)  # type: ignore
         return typing.cast(int, value)
 
     @property
@@ -408,7 +328,6 @@ class _LocalState:
         return _MapState(
             self.app_client.state.local_state(self.address),
             "localMap",
-            None
         )
 
 class _BoxState:
@@ -416,32 +335,16 @@ class _BoxState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {
-            "Outputs": Outputs
-        }
 
     def get_all(self) -> BoxStateValue:
         """Get all current keyed values from box state"""
         result = self.app_client.state.box.get_all()
-        if not result:
-            return typing.cast(BoxStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.box.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(BoxStateValue, converted)
+        return typing.cast(BoxStateValue, result)
 
     @property
     def box_key(self) -> str:
         """Get the current value of the boxKey key in box state"""
         value = self.app_client.state.box.get_value("boxKey")
-        if isinstance(value, dict) and "string" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["string"], value)  # type: ignore
         return typing.cast(str, value)
 
     @property
@@ -450,7 +353,6 @@ class _BoxState:
         return _MapState(
             self.app_client.state.box,
             "boxMap",
-            self._struct_classes.get("Outputs")
         )
 
 _KeyType = typing.TypeVar("_KeyType")
@@ -465,26 +367,18 @@ class _AppClientStateMethodsProtocol(typing.Protocol):
 class _MapState(typing.Generic[_KeyType, _ValueType]):
     """Generic class for accessing state maps with strongly typed keys and values"""
 
-    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str,
-                struct_class: typing.Type[_ValueType] | None = None):
+    def __init__(self, state_accessor: _AppClientStateMethodsProtocol, map_name: str) -> None:
         self._state_accessor = state_accessor
         self._map_name = map_name
-        self._struct_class = struct_class
 
     def get_map(self) -> dict[_KeyType, _ValueType]:
         """Get all current values in the map"""
         result = self._state_accessor.get_map(self._map_name)
-        if self._struct_class and result:
-            return {k: _init_dataclass(self._struct_class, v) if isinstance(v, dict) else v
-                    for k, v in result.items()}  # type: ignore
         return typing.cast(dict[_KeyType, _ValueType], result or {})
 
     def get_value(self, key: _KeyType) -> _ValueType | None:
         """Get a value from the map by key"""
-        key_value = dataclasses.asdict(key) if dataclasses.is_dataclass(key) else key  # type: ignore
-        value = self._state_accessor.get_map_value(self._map_name, key_value)
-        if value is not None and self._struct_class and isinstance(value, dict):
-            return _init_dataclass(self._struct_class, value)  # type: ignore
+        value = self._state_accessor.get_map_value(self._map_name, key)
         return typing.cast(_ValueType | None, value)
 
 
@@ -603,7 +497,7 @@ class Arc56TestClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -665,18 +559,7 @@ class Arc56TestClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
@@ -687,17 +570,15 @@ class Arc56TestMethodCallCreateParams(
     ]
 ):
     """Parameters for creating Arc56Test contract using ABI"""
-    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.NoOp] | None = None
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCallCreateParams:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCallCreateParams(
-            **{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }
+        return _extend(
+            algokit_utils.AppClientMethodCallCreateParams,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 
 class Arc56TestFactory(algokit_utils.TypedAppFactoryProtocol[Arc56TestMethodCallCreateParams, None, None]):
@@ -733,7 +614,7 @@ class Arc56TestFactory(algokit_utils.TypedAppFactoryProtocol[Arc56TestMethodCall
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -841,8 +722,12 @@ class Arc56TestFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def foo(
         self,
@@ -854,12 +739,11 @@ class Arc56TestFactoryCreateParams:
         """Creates a new instance using the foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64) ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)",
-                "args": _parse_abi_args(args),
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)',
+                args=_unpack_args(args),
             ),
             compilation_params=compilation_params
         )
@@ -873,12 +757,11 @@ class Arc56TestFactoryCreateParams:
         """Creates a new instance using the createApplication()void ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "createApplication()void",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='createApplication()void',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -892,12 +775,11 @@ class Arc56TestFactoryCreateParams:
         """Creates a new instance using the optInToApplication()void ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "optInToApplication()void",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='optInToApplication()void',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -917,8 +799,12 @@ class Arc56TestFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class Arc56TestFactoryDeleteParams:
     """Parameters for 'delete' operations of Arc56Test contract"""
@@ -935,8 +821,12 @@ class Arc56TestFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class Arc56TestFactoryCreateTransaction:
@@ -960,7 +850,10 @@ class Arc56TestFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -988,9 +881,12 @@ class Arc56TestFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return Arc56TestClient(result[0]), result[1]
 
@@ -1004,32 +900,16 @@ class Arc56TestFactorySendCreate:
             """Creates and sends a transaction using the createApplication()void ABI method"""
             params = params or algokit_utils.CommonAppCallCreateParams()
             client, result = self.app_factory.send.create(
-                algokit_utils.AppFactoryCreateMethodCallParams(
-                    **{
-                    **dataclasses.asdict(params),
-                    "method": "createApplication()void",
-                    "args": None,
-                    }
+                _extend(
+                    algokit_utils.AppFactoryCreateMethodCallParams,
+                    params,
+                    method='createApplication()void',
+                    args=None,
                 ),
                 send_params=send_params,
-                compilation_params=compilation_params
+                compilation_params=compilation_params,
             )
-            return_value = None if result.abi_return is None else typing.cast(None, result.abi_return)
-    
-            return Arc56TestClient(client), algokit_utils.AppFactoryCreateMethodCallResult[None](
-                **{
-                    **result.__dict__,
-                    "app_id": result.app_id,
-                    "abi_return": return_value,
-                    "transaction": result.transaction,
-                    "confirmation": result.confirmation,
-                    "group_id": result.group_id,
-                    "tx_ids": result.tx_ids,
-                    "transactions": result.transactions,
-                    "confirmations": result.confirmations,
-                    "app_address": result.app_address,
-                }
-            )
+            return Arc56TestClient(client), typing.cast(algokit_utils.AppFactoryCreateMethodCallResult[None], result)
 
 
 class _Arc56TestOptInComposer:
@@ -1046,11 +926,6 @@ class _Arc56TestOptInComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "optInToApplication()void", v
-            )
-        )
         return self.composer
 
 
@@ -1060,7 +935,6 @@ class Arc56TestComposer:
     def __init__(self, client: "Arc56TestClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def opt_in(self) -> "_Arc56TestOptInComposer":
@@ -1077,11 +951,6 @@ class Arc56TestComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "foo(((uint64,uint64),(uint64,uint64)))(uint64,uint64)", v
-            )
-        )
         return self
 
     def create_application(
@@ -1092,11 +961,6 @@ class Arc56TestComposer:
             self.client.params.create_application(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "createApplication()void", v
             )
         )
         return self
@@ -1110,12 +974,7 @@ class Arc56TestComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -1137,8 +996,8 @@ class Arc56TestComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+        skip_signatures: bool = False,
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -1152,5 +1011,46 @@ class Arc56TestComposer:
     def send(
         self,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [4, 56], "bareActions": {"call": [], "create": []}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "((uint64,uint64),(uint64,uint64))", "name": "inputs", "struct": "Inputs"}], "name": "foo", "returns": {"type": "(uint64,uint64)", "struct": "Outputs"}, "events": []}, {"actions": {"call": ["OptIn"], "create": []}, "args": [], "name": "optInToApplication", "returns": {"type": "void"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [], "name": "createApplication", "returns": {"type": "void"}, "events": []}], "name": "ARC56Test", "state": {"keys": {"box": {"boxKey": {"key": "Ym94S2V5", "keyType": "AVMBytes", "valueType": "string"}}, "global": {"globalKey": {"key": "Z2xvYmFsS2V5", "keyType": "AVMBytes", "valueType": "uint64"}}, "local": {"localKey": {"key": "bG9jYWxLZXk=", "keyType": "AVMBytes", "valueType": "uint64"}}}, "maps": {"box": {"boxMap": {"keyType": "Inputs", "valueType": "Outputs", "prefix": "cA=="}}, "global": {"globalMap": {"keyType": "string", "valueType": "{ foo: uint16; bar: uint16 }", "prefix": "cA=="}}, "local": {"localMap": {"keyType": "AVMBytes", "valueType": "string", "prefix": "cA=="}}}, "schema": {"global": {"bytes": 37, "ints": 1}, "local": {"bytes": 13, "ints": 1}}}, "structs": {"{ foo: uint16; bar: uint16 }": [{"name": "foo", "type": "uint16"}, {"name": "bar", "type": "uint16"}], "Outputs": [{"name": "sum", "type": "uint64"}, {"name": "difference", "type": "uint64"}], "Inputs": [{"name": "add", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, {"name": "subtract", "type": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}]}, "desc": "", "scratchVariables": {"someNumber": {"slot": 200, "type": "uint64"}}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludGNibG9jayAxIFRNUExfc29tZU51bWJlcgpieXRlY2Jsb2NrIDB4NjI2Zjc4NGI2NTc5CgovLyBUaGlzIFRFQUwgd2FzIGdlbmVyYXRlZCBieSBURUFMU2NyaXB0IHYwLjEwNS4zCi8vIGh0dHBzOi8vZ2l0aHViLmNvbS9hbGdvcmFuZGZvdW5kYXRpb24vVEVBTFNjcmlwdAoKLy8gVGhpcyBjb250cmFjdCBpcyBjb21wbGlhbnQgd2l0aCBhbmQvb3IgaW1wbGVtZW50cyB0aGUgZm9sbG93aW5nIEFSQ3M6IFsgQVJDNCBdCgovLyBUaGUgZm9sbG93aW5nIHRlbiBsaW5lcyBvZiBURUFMIGhhbmRsZSBpbml0aWFsIHByb2dyYW0gZmxvdwovLyBUaGlzIHBhdHRlcm4gaXMgdXNlZCB0byBtYWtlIGl0IGVhc3kgZm9yIGFueW9uZSB0byBwYXJzZSB0aGUgc3RhcnQgb2YgdGhlIHByb2dyYW0gYW5kIGRldGVybWluZSBpZiBhIHNwZWNpZmljIGFjdGlvbiBpcyBhbGxvd2VkCi8vIEhlcmUsIGFjdGlvbiByZWZlcnMgdG8gdGhlIE9uQ29tcGxldGUgaW4gY29tYmluYXRpb24gd2l0aCB3aGV0aGVyIHRoZSBhcHAgaXMgYmVpbmcgY3JlYXRlZCBvciBjYWxsZWQKLy8gRXZlcnkgcG9zc2libGUgYWN0aW9uIGZvciB0aGlzIGNvbnRyYWN0IGlzIHJlcHJlc2VudGVkIGluIHRoZSBzd2l0Y2ggc3RhdGVtZW50Ci8vIElmIHRoZSBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoZSBjb250cmFjdCwgaXRzIHJlc3BlY3RpdmUgYnJhbmNoIHdpbGwgYmUgIipOT1RfSU1QTEVNRU5URUQiIHdoaWNoIGp1c3QgY29udGFpbnMgImVyciIKdHhuIEFwcGxpY2F0aW9uSUQKIQpwdXNoaW50IDYKKgp0eG4gT25Db21wbGV0aW9uCisKc3dpdGNoICpjYWxsX05vT3AgKmNhbGxfT3B0SW4gKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqY3JlYXRlX05vT3AgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVEICpOT1RfSU1QTEVNRU5URUQgKk5PVF9JTVBMRU1FTlRFRCAqTk9UX0lNUExFTUVOVEVECgoqTk9UX0lNUExFTUVOVEVEOgoJLy8gVGhlIHJlcXVlc3RlZCBhY3Rpb24gaXMgbm90IGltcGxlbWVudGVkIGluIHRoaXMgY29udHJhY3QuIEFyZSB5b3UgdXNpbmcgdGhlIGNvcnJlY3QgT25Db21wbGV0ZT8gRGlkIHlvdSBzZXQgeW91ciBhcHAgSUQ/CgllcnIKCi8vIGZvbygoKHVpbnQ2NCx1aW50NjQpLCh1aW50NjQsdWludDY0KSkpKHVpbnQ2NCx1aW50NjQpCiphYmlfcm91dGVfZm9vOgoJLy8gVGhlIEFCSSByZXR1cm4gcHJlZml4CglwdXNoYnl0ZXMgMHgxNTFmN2M3NQoKCS8vIGlucHV0czogKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpCgl0eG5hIEFwcGxpY2F0aW9uQXJncyAxCglkdXAKCWxlbgoJcHVzaGludCAzMgoJPT0KCgkvLyBhcmd1bWVudCAwIChpbnB1dHMpIGZvciBmb28gbXVzdCBiZSBhICgodWludDY0LHVpbnQ2NCksKHVpbnQ2NCx1aW50NjQpKQoJYXNzZXJ0CgoJLy8gZXhlY3V0ZSBmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KQoJY2FsbHN1YiBmb28KCWNvbmNhdAoJbG9nCglpbnRjIDAgLy8gMQoJcmV0dXJuCgovLyBmb28oaW5wdXRzOiBJbnB1dHMpOiBPdXRwdXRzCmZvbzoKCXByb3RvIDEgMQoKCS8vICppZjBfY29uZGl0aW9uCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czozMAoJLy8gaW5wdXRzLnN1YnRyYWN0LmEgPCBpbnB1dHMuc3VidHJhY3QuYgoJZnJhbWVfZGlnIC0xIC8vIGlucHV0czogSW5wdXRzCglleHRyYWN0IDE2IDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAyNCA4CglidG9pCgk8CglieiAqaWYwX2VuZAoKCS8vICppZjBfY29uc2VxdWVudAoJLy8gc3VidHJhY3QuYSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiBzdWJ0cmFjdC5iCgllcnIKCippZjBfZW5kOgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzIKCS8vIHRoaXMuZ2xvYmFsS2V5LnZhbHVlID0gdGhpcy5zb21lTnVtYmVyCglwdXNoYnl0ZXMgMHg2NzZjNmY2MjYxNmM0YjY1NzkgLy8gImdsb2JhbEtleSIKCWludGMgMSAvLyBUTVBMX3NvbWVOdW1iZXIKCWFwcF9nbG9iYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6MzMKCS8vIHRoaXMuZ2xvYmFsTWFwKCdmb28nKS52YWx1ZSA9IHsgZm9vOiAxMywgYmFyOiAzNyB9CglwdXNoYnl0ZXMgMHg3MDAwMDM2NjZmNmYKCXB1c2hieXRlcyAweDAwMGQwMDI1CglhcHBfZ2xvYmFsX3B1dAoKCS8vIGV4YW1wbGVzL2FyYzU2X3Rlc3QvYXJjNTZfdGVzdC5hbGdvLnRzOjM1CgkvLyByZXR1cm4gewoJLy8gICAgICAgc3VtOiBpbnB1dHMuYWRkLmEgKyBpbnB1dHMuYWRkLmIsCgkvLyAgICAgICBkaWZmZXJlbmNlOiBpbnB1dHMuc3VidHJhY3QuYSAtIGlucHV0cy5zdWJ0cmFjdC5iLAoJLy8gICAgIH0KCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAwIDgKCWJ0b2kKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCA4IDgKCWJ0b2kKCSsKCWl0b2IKCWZyYW1lX2RpZyAtMSAvLyBpbnB1dHM6IElucHV0cwoJZXh0cmFjdCAxNiA4CglidG9pCglmcmFtZV9kaWcgLTEgLy8gaW5wdXRzOiBJbnB1dHMKCWV4dHJhY3QgMjQgOAoJYnRvaQoJLQoJaXRvYgoJY29uY2F0CglyZXRzdWIKCi8vIG9wdEluVG9BcHBsaWNhdGlvbigpdm9pZAoqYWJpX3JvdXRlX29wdEluVG9BcHBsaWNhdGlvbjoKCS8vIGV4ZWN1dGUgb3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkCgljYWxsc3ViIG9wdEluVG9BcHBsaWNhdGlvbgoJaW50YyAwIC8vIDEKCXJldHVybgoKLy8gb3B0SW5Ub0FwcGxpY2F0aW9uKCk6IHZvaWQKb3B0SW5Ub0FwcGxpY2F0aW9uOgoJcHJvdG8gMCAwCgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDIKCS8vIHRoaXMubG9jYWxLZXkodGhpcy50eG4uc2VuZGVyKS52YWx1ZSA9IHRoaXMuc29tZU51bWJlcgoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NmM2ZjYzNjE2YzRiNjU3OSAvLyAibG9jYWxLZXkiCglpbnRjIDEgLy8gVE1QTF9zb21lTnVtYmVyCglhcHBfbG9jYWxfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDMKCS8vIHRoaXMubG9jYWxNYXAodGhpcy50eG4uc2VuZGVyLCAnZm9vJykudmFsdWUgPSAnYmFyJwoJdHhuIFNlbmRlcgoJcHVzaGJ5dGVzIDB4NzA2NjZmNmYKCXB1c2hieXRlcyAweDAwMDM2MjYxNzIKCWFwcF9sb2NhbF9wdXQKCgkvLyBleGFtcGxlcy9hcmM1Nl90ZXN0L2FyYzU2X3Rlc3QuYWxnby50czo0NAoJLy8gdGhpcy5ib3hLZXkudmFsdWUgPSAnYmF6JwoJYnl0ZWMgMCAvLyAgImJveEtleSIKCWR1cAoJYm94X2RlbAoJcG9wCglwdXNoYnl0ZXMgMHgwMDAzNjI2MTdhCglib3hfcHV0CgoJLy8gZXhhbXBsZXMvYXJjNTZfdGVzdC9hcmM1Nl90ZXN0LmFsZ28udHM6NDUKCS8vIHRoaXMuYm94TWFwKHsgYWRkOiB7IGE6IDEsIGI6IDIgfSwgc3VidHJhY3Q6IHsgYTogNCwgYjogMyB9IH0pLnZhbHVlID0gewoJLy8gICAgICAgc3VtOiAzLAoJLy8gICAgICAgZGlmZmVyZW5jZTogMSwKCS8vICAgICB9CglwdXNoYnl0ZXMgMHg3MDAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyMDAwMDAwMDAwMDAwMDAwNDAwMDAwMDAwMDAwMDAwMDMKCXB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDAwMDAxCglib3hfcHV0CglyZXRzdWIKCiphYmlfcm91dGVfY3JlYXRlQXBwbGljYXRpb246CglpbnRjIDAgLy8gMQoJcmV0dXJuCgoqY3JlYXRlX05vT3A6CglwdXNoYnl0ZXMgMHhiODQ0N2IzNiAvLyBtZXRob2QgImNyZWF0ZUFwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9jcmVhdGVBcHBsaWNhdGlvbgoKCS8vIHRoaXMgY29udHJhY3QgZG9lcyBub3QgaW1wbGVtZW50IHRoZSBnaXZlbiBBQkkgbWV0aG9kIGZvciBjcmVhdGUgTm9PcAoJZXJyCgoqY2FsbF9Ob09wOgoJcHVzaGJ5dGVzIDB4Mzk2ZDU1MGUgLy8gbWV0aG9kICJmb28oKCh1aW50NjQsdWludDY0KSwodWludDY0LHVpbnQ2NCkpKSh1aW50NjQsdWludDY0KSIKCXR4bmEgQXBwbGljYXRpb25BcmdzIDAKCW1hdGNoICphYmlfcm91dGVfZm9vCgoJLy8gdGhpcyBjb250cmFjdCBkb2VzIG5vdCBpbXBsZW1lbnQgdGhlIGdpdmVuIEFCSSBtZXRob2QgZm9yIGNhbGwgTm9PcAoJZXJyCgoqY2FsbF9PcHRJbjoKCXB1c2hieXRlcyAweDAxYTNhM2ZmIC8vIG1ldGhvZCAib3B0SW5Ub0FwcGxpY2F0aW9uKCl2b2lkIgoJdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAoJbWF0Y2ggKmFiaV9yb3V0ZV9vcHRJblRvQXBwbGljYXRpb24KCgkvLyB0aGlzIGNvbnRyYWN0IGRvZXMgbm90IGltcGxlbWVudCB0aGUgZ2l2ZW4gQUJJIG1ldGhvZCBmb3IgY2FsbCBPcHRJbgoJZXJy", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEw"}, "sourceInfo": {"approval": {"pcOffsetMethod": "cblocks", "sourceInfo": [{"pc": [36], "errorMessage": "The requested action is not implemented in this contract. Are you using the correct OnComplete? Did you set your app ID?", "teal": 25}, {"pc": [51], "errorMessage": "argument 0 (inputs) for foo must be a ((uint64,uint64),(uint64,uint64))", "teal": 40}, {"pc": [78], "errorMessage": "subtract.a must be greater than subtract.b", "teal": 67}, {"pc": [257], "errorMessage": "this contract does not implement the given ABI method for create NoOp", "teal": 160}, {"pc": [271], "errorMessage": "this contract does not implement the given ABI method for call NoOp", "teal": 168}, {"pc": [285], "errorMessage": "this contract does not implement the given ABI method for call OptIn", "teal": 176}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {"someNumber": {"type": "uint64"}}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    '{ foo: uint16; bar: uint16 }': FooUint16BarUint16,
+    'Outputs': Outputs,
+    'Inputs': Inputs,
+    'Inputs_add': InputsAdd,
+    'Inputs_subtract': InputsSubtract,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

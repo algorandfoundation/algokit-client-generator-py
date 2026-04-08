@@ -8,68 +8,22 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_a_that_uses_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_b_that_uses_same_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}], "name": "DuplicateStructs", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"SomeStruct": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, "desc": "\n    Used for snapshot testing to ensure no duplicate struct definitions in typed clients.\n    ", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToxMgogICAgLy8gY2xhc3MgRHVwbGljYXRlU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDcKICAgIHB1c2hieXRlc3MgMHg5ZjcyYWMwZiAweGE4NjE4NDQ5IC8vIG1ldGhvZCAibWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdCgpKHVpbnQ2NCx1aW50NjQpIiwgbWV0aG9kICJtZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3QoKSh1aW50NjQsdWludDY0KSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbWV0aG9kX2FfdGhhdF91c2VzX3N0cnVjdF9yb3V0ZUAzIG1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDQKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToxMgogICAgLy8gY2xhc3MgRHVwbGljYXRlU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgcHVzaGludCAwIC8vIDAKICAgIHJldHVybgoKbWFpbl9tZXRob2RfYl90aGF0X3VzZXNfc2FtZV9zdHJ1Y3Rfcm91dGVANDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwMDAwMDAwMDAwMDAwMzAwMDAwMDAwMDAwMDAwMDQKICAgIGxvZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9tZXRob2RfYV90aGF0X3VzZXNfc3RydWN0X3JvdXRlQDM6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MTcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0IC8vIE9uQ29tcGxldGlvbiBpcyBub3QgTm9PcAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGFzc2VydCAvLyBjYW4gb25seSBjYWxsIHdoZW4gbm90IGNyZWF0aW5nCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMDAwMDAwMDAwMDAwMDEwMDAwMDAwMDAwMDAwMDAyCiAgICBsb2cKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4KCm1haW5fYmFyZV9yb3V0aW5nQDc6CiAgICAvLyBzbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MTIKICAgIC8vIGNsYXNzIER1cGxpY2F0ZVN0cnVjdHMoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True)
 class SomeStruct:
     """Struct for SomeStruct"""
     a: int
     b: int
-
 
 class DuplicateStructsParams:
     def __init__(self, app_client: algokit_utils.AppClient):
@@ -79,23 +33,23 @@ class DuplicateStructsParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_a_that_uses_struct()(uint64,uint64)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_a_that_uses_struct()(uint64,uint64)",
+        ))
 
     def method_b_that_uses_same_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_b_that_uses_same_struct()(uint64,uint64)",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_b_that_uses_same_struct()(uint64,uint64)",
+        ))
 
     def clear_state(
         self,
@@ -116,23 +70,23 @@ class DuplicateStructsCreateTransactionParams:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_a_that_uses_struct()(uint64,uint64)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_a_that_uses_struct()(uint64,uint64)",
+        ))
 
     def method_b_that_uses_same_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_b_that_uses_same_struct()(uint64,uint64)",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_b_that_uses_same_struct()(uint64,uint64)",
+        ))
 
     def clear_state(
         self,
@@ -154,28 +108,26 @@ class DuplicateStructsSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[SomeStruct]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_a_that_uses_struct()(uint64,uint64)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(SomeStruct, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[SomeStruct], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_a_that_uses_struct()(uint64,uint64)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[SomeStruct], response)
 
     def method_b_that_uses_same_struct(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[SomeStruct]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "method_b_that_uses_same_struct()(uint64,uint64)",
-        }), send_params=send_params)
-        parsed_response = dataclasses.replace(response, abi_return=_init_dataclass(SomeStruct, typing.cast(dict, response.abi_return))) # type: ignore
-        return typing.cast(algokit_utils.SendAppTransactionResult[SomeStruct], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="method_b_that_uses_same_struct()(uint64,uint64)",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[SomeStruct], response)
 
     def clear_state(
         self,
@@ -309,7 +261,7 @@ class DuplicateStructsClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -365,24 +317,13 @@ class DuplicateStructsClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 @dataclasses.dataclass(frozen=True)
 class DuplicateStructsBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
     """Parameters for creating DuplicateStructs contract with bare calls"""
-    on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
+    on_complete: typing.Literal[OnApplicationComplete.NoOp] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
@@ -420,7 +361,7 @@ class DuplicateStructsFactory(algokit_utils.TypedAppFactoryProtocol[DuplicateStr
         return self.app_factory.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_factory.app_spec
     
     @property
@@ -528,8 +469,12 @@ class DuplicateStructsFactoryCreateParams:
         """Creates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
-            compilation_params=compilation_params)
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+                compilation_params=compilation_params,
+            )
+        )
 
     def method_a_that_uses_struct(
         self,
@@ -540,12 +485,11 @@ class DuplicateStructsFactoryCreateParams:
         """Creates a new instance using the method_a_that_uses_struct()(uint64,uint64) ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "method_a_that_uses_struct()(uint64,uint64)",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='method_a_that_uses_struct()(uint64,uint64)',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -559,12 +503,11 @@ class DuplicateStructsFactoryCreateParams:
         """Creates a new instance using the method_b_that_uses_same_struct()(uint64,uint64) ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{
-                **dataclasses.asdict(params),
-                "method": "method_b_that_uses_same_struct()(uint64,uint64)",
-                "args": None,
-                }
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method='method_b_that_uses_same_struct()(uint64,uint64)',
+                args=None,
             ),
             compilation_params=compilation_params
         )
@@ -584,8 +527,12 @@ class DuplicateStructsFactoryUpdateParams:
         """Updates an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_update(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 class DuplicateStructsFactoryDeleteParams:
     """Parameters for 'delete' operations of DuplicateStructs contract"""
@@ -602,8 +549,12 @@ class DuplicateStructsFactoryDeleteParams:
         """Deletes an instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.deploy_delete(
-            algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppClientBareCallParams,
+                params,
+                
             )
+        )
 
 
 class DuplicateStructsFactoryCreateTransaction:
@@ -627,7 +578,10 @@ class DuplicateStructsFactoryCreateTransactionCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 
 
@@ -655,9 +609,12 @@ class DuplicateStructsFactorySendCreate:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return DuplicateStructsClient(result[0]), result[1]
 
@@ -668,7 +625,6 @@ class DuplicateStructsComposer:
     def __init__(self, client: "DuplicateStructsClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     def method_a_that_uses_struct(
         self,
@@ -678,11 +634,6 @@ class DuplicateStructsComposer:
             self.client.params.method_a_that_uses_struct(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "method_a_that_uses_struct()(uint64,uint64)", v
             )
         )
         return self
@@ -697,11 +648,6 @@ class DuplicateStructsComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "method_b_that_uses_same_struct()(uint64,uint64)", v
-            )
-        )
         return self
 
     def clear_state(
@@ -713,12 +659,7 @@ class DuplicateStructsComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -740,8 +681,8 @@ class DuplicateStructsComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+        skip_signatures: bool = False,
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -755,5 +696,42 @@ class DuplicateStructsComposer:
     def send(
         self,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_a_that_uses_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "method_b_that_uses_same_struct", "returns": {"type": "(uint64,uint64)", "struct": "SomeStruct"}, "events": []}], "name": "DuplicateStructs", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {"SomeStruct": [{"name": "a", "type": "uint64"}, {"name": "b", "type": "uint64"}]}, "desc": "\n    Used for snapshot testing to ensure no duplicate struct definitions in typed clients.\n    ", "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIC8vIGV4YW1wbGVzL3NtYXJ0X2NvbnRyYWN0cy9kdXBsaWNhdGVfc3RydWN0cy9jb250cmFjdC5weToxMgogICAgLy8gY2xhc3MgRHVwbGljYXRlU3RydWN0cyhBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fX19hbGdvcHlfZGVmYXVsdF9jcmVhdGVAOQogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0CiAgICBwdXNoYnl0ZXNzIDB4OWY3MmFjMGYgMHhhODYxODQ0OSAvLyBtZXRob2QgIm1ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3QoKSh1aW50NjQsdWludDY0KSIsIG1ldGhvZCAibWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0KCkodWludDY0LHVpbnQ2NCkiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX21ldGhvZF9hX3RoYXRfdXNlc19zdHJ1Y3Rfcm91dGVANCBtYWluX21ldGhvZF9iX3RoYXRfdXNlc19zYW1lX3N0cnVjdF9yb3V0ZUA1CiAgICBlcnIKCm1haW5fbWV0aG9kX2JfdGhhdF91c2VzX3NhbWVfc3RydWN0X3JvdXRlQDU6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MjQKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDAwMDAwMDAwMDAwMDAzMDAwMDAwMDAwMDAwMDAwNAogICAgbG9nCiAgICBwdXNoaW50IDEKICAgIHJldHVybgoKbWFpbl9tZXRob2RfYV90aGF0X3VzZXNfc3RydWN0X3JvdXRlQDQ6CiAgICAvLyBleGFtcGxlcy9zbWFydF9jb250cmFjdHMvZHVwbGljYXRlX3N0cnVjdHMvY29udHJhY3QucHk6MTcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDAwMDAwMDAwMDAwMDAxMDAwMDAwMDAwMDAwMDAwMgogICAgbG9nCiAgICBwdXNoaW50IDEKICAgIHJldHVybgoKbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUA5OgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgICYmCiAgICByZXR1cm4K", "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+    'SomeStruct': SomeStruct,
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

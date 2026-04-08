@@ -4,18 +4,17 @@ from algokit_client_generator.document import DocumentParts
 
 
 def generate_imports(context: GeneratorContext) -> DocumentParts:
-    yield utils.lines("""
+    yield from utils.lines("""
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 """)

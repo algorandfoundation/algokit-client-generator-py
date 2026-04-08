@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from algokit_client_generator.context import GeneratorContext
+from algokit_client_generator.context import AppSpecMode, GeneratorContext
 from algokit_client_generator.document import DocumentParts, RenderContext, convert_part
 from algokit_client_generator.generator import generate
 from algokit_client_generator.spec import load_from_json
@@ -9,7 +9,9 @@ from algokit_client_generator.spec import load_from_json
 logger = logging.getLogger(__name__)
 
 
-def generate_client(input_path: Path, output_path: Path, *, preserve_names: bool = False, mode: str = "full") -> None:
+def generate_client(
+    input_path: Path, output_path: Path, *, preserve_names: bool = False, mode: AppSpecMode = "full"
+) -> None:
     """Given a path to an ARC-32 application.json, output a typed python client
 
     :param Path input_path: Path to an ARC-32 application.json

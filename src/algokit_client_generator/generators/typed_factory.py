@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Literal
 
@@ -61,7 +60,7 @@ def {method_name}(
 def _generate_abi_method(context: GeneratorContext, method: ContractMethod, operation: str) -> DocumentParts:
     """Generate an ABI method with proper indentation"""
     if not method.abi:
-        return ""
+        return
 
     args_type = _generate_method_args_type(context, method)
     method_params = _generate_method_params(
@@ -70,17 +69,16 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
     method_sig = method.abi.method.get_signature()
 
     yield Part.IncIndent
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 {method_params} -> algokit_utils.App{operation.title()}{"MethodCall" if method.abi else ""}Params:
     \"\"\"Creates a new instance using the {method_sig} ABI method\"\"\"
     params = params or algokit_utils.CommonAppCallCreateParams()
     return self.app_factory.params.{operation}(
-        algokit_utils.AppFactoryCreateMethodCallParams(
-            **{{
-            **dataclasses.asdict(params),
-            "method": "{method_sig}",
-            "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
-            }}
+        _extend(
+            algokit_utils.AppFactoryCreateMethodCallParams,
+            params,
+            method={method_sig!r},
+            args={"_unpack_args(args)" if args_type != "None" else "None"},
         ),
         {"compilation_params=compilation_params" if operation == "create" else ""}
     )
@@ -88,7 +86,7 @@ def _generate_abi_method(context: GeneratorContext, method: ContractMethod, oper
     yield Part.DecIndent
 
 
-def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext) -> Iterator[DocumentParts]:
+def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext) -> DocumentParts:
     """Generate an ABI send method"""
     if not method.abi:
         return
@@ -108,47 +106,33 @@ def _generate_abi_send_method(method: ContractMethod, context: GeneratorContext)
         method_name, args_type, include_send_params=True, include_compilation_params=True
     )
 
-    yield utils.indented(f"""
-    {method_params} -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]]:
+    client_class = f"{context.contract_name}Client"
+    result_class = f"algokit_utils.AppFactoryCreateMethodCallResult[{return_type}]"
+    yield from utils.indented(f"""
+    {method_params} -> tuple[{client_class}, {result_class}]:
         \"\"\"Creates and sends a transaction using the {method.abi.method.get_signature()} ABI method\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         client, result = self.app_factory.send.create(
-            algokit_utils.AppFactoryCreateMethodCallParams(
-                **{{
-                **dataclasses.asdict(params),
-                "method": "{method.abi.method.get_signature()}",
-                "args": {"_parse_abi_args(args)" if args_type != "None" else "None"},
-                }}
+            _extend(
+                algokit_utils.AppFactoryCreateMethodCallParams,
+                params,
+                method={method.abi.method.signature!r},
+                args={"_unpack_args(args)" if args_type != "None" else "None"},
             ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
-        return_value = None if result.abi_return is None else typing.cast({return_type}, result.abi_return)
-
-        return {context.contract_name}Client(client), algokit_utils.AppFactoryCreateMethodCallResult[{return_type}](
-            **{{
-                **result.__dict__,
-                "app_id": result.app_id,
-                "abi_return": return_value,
-                "transaction": result.transaction,
-                "confirmation": result.confirmation,
-                "group_id": result.group_id,
-                "tx_ids": result.tx_ids,
-                "transactions": result.transactions,
-                "confirmations": result.confirmations,
-                "app_address": result.app_address,
-            }}
-        )
-""")  # noqa: E501
+        return {client_class}(client), typing.cast({result_class}, result)
+""")
 
 
-def _generate_operation_params_class(context: GeneratorContext, operation: str) -> Iterator[DocumentParts]:
+def _generate_operation_params_class(context: GeneratorContext, operation: str) -> DocumentParts:
     """Generate params class for a specific operation"""
     class_name = f"{context.contract_name}Factory{operation.title()}Params"
     method_name = "create" if operation == "create" else f"deploy_{operation}"
 
     bare_params_class = "AppFactoryCreateParams" if operation == "create" else "AppClientBareCallParams"
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {class_name}:
     \"\"\"Parameters for '{operation}' operations of {context.contract_name} contract\"\"\"
 
@@ -164,15 +148,19 @@ class {class_name}:
         \"\"\"{operation.title()}s an instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.bare.{method_name}(
-            algokit_utils.{bare_params_class}(**dataclasses.asdict(params)),
-            {"compilation_params=compilation_params" if operation == "create" else ""})
+            _extend(
+                algokit_utils.{bare_params_class},
+                params,
+                {"compilation_params=compilation_params," if operation == "create" else ""}
+            )
+        )
 """)
 
     if operation == "create":
         for method in context.methods.all_abi_methods:
             if method.abi:
                 yield Part.Gap1
-                yield _generate_abi_method(context, method, operation)
+                yield from _generate_abi_method(context, method, operation)
 
 
 def _generate_deploy_params(context: GeneratorContext) -> tuple[list[str], list[str], TypeNames]:
@@ -215,7 +203,7 @@ def generate_factory_deploy_types(
     context: GeneratorContext,
     param_type: Literal["create", "update_application", "delete_application"],
     deploy_params: list[str],
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate factory deploy types with proper indentation"""
     methods = getattr(context.methods, param_type)
     if not methods:
@@ -253,7 +241,7 @@ def generate_factory_deploy_types(
 
 def _generate_abi_params_class(
     *, context: GeneratorContext, abi_methods: list[ContractMethod], is_create: bool, type_suffix: str
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate ABI params class with proper indentation"""
     # Build method signature and args unions
     args_dataclasses = []
@@ -263,7 +251,7 @@ def _generate_abi_params_class(
 
     # Get unique on_complete values
     on_completes = {
-        f"OnComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}OC"
+        f"OnApplicationComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}"
         for method in abi_methods
         for on_complete in method.on_complete
     }
@@ -273,7 +261,7 @@ def _generate_abi_params_class(
     args_union_str = " | ".join(args_dataclasses) if args_dataclasses else "typing.Any"
     on_complete_str = ", ".join(sorted(on_completes))
 
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
 class {class_name}(
     {create_schema}algokit_utils.BaseAppClientMethodCallParams[
@@ -286,30 +274,28 @@ class {class_name}(
     method: str | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params:
-        method_args = _parse_abi_args(self.args)
-        return algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params(
-            **{{
-                **self.__dict__,
-                "method": self.method or getattr(self.args, "abi_method_signature", None),
-                "args": method_args,
-            }}
+        return _extend(
+            algokit_utils.AppClientMethodCall{"Create" if is_create else ""}Params,
+            self,
+            method=self.method or getattr(self.args, "abi_method_signature", None),
+            args=_unpack_args(self.args)
         )
 """)
 
 
 def _generate_bare_params_class(
     *, context: GeneratorContext, bare_methods: list[ContractMethod], is_create: bool, type_suffix: str
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate bare params class with proper indentation"""
     on_complete_options = ", ".join(
-        f"OnComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}OC"
+        f"OnApplicationComplete.{on_complete.replace('_', ' ').title().replace(' ', '')}"
         for method in bare_methods
         for on_complete in method.on_complete
     )
 
     class_name = f"{context.contract_name}BareCall{type_suffix}Params"
     sub_class = "AppClientBareCallCreateParams" if is_create else "AppClientBareCallParams"
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 @dataclasses.dataclass(frozen=True)
 class {class_name}(algokit_utils.{sub_class}):
     \"\"\"Parameters for {"creating" if is_create else "calling"} {context.contract_name} contract with bare calls\"\"\"
@@ -322,7 +308,7 @@ class {class_name}(algokit_utils.{sub_class}):
 
 def generate_factory_class(  # noqa: PLR0915
     context: GeneratorContext, deploy_params: list[str], argument_forwarding: list[str], type_names: TypeNames
-) -> Iterator[DocumentParts]:
+) -> DocumentParts:
     """Generate the main factory class"""
     create_type_names = " | ".join(type_names.create)
     update_type_names = " | ".join(type_names.update)
@@ -337,11 +323,11 @@ def generate_factory_class(  # noqa: PLR0915
     yield Part.IncIndent
 
     # Class docstring
-    yield utils.docstring(f"Factory for deploying and managing {context.contract_name}Client smart contracts")
+    yield from utils.docstring(f"Factory for deploying and managing {context.contract_name}Client smart contracts")
     yield Part.NewLine
 
     # __init__ method with all parameters
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def __init__(
     self,
     algorand: _AlgoKitAlgorandClient,
@@ -370,13 +356,13 @@ def __init__(
 
     # Properties
     yield Part.Gap1
-    yield utils.indented("""
+    yield from utils.indented("""
 @property
 def app_name(self) -> str:
     return self.app_factory.app_name
 
 @property
-def app_spec(self) -> algokit_utils.Arc56Contract:
+def app_spec(self) -> arc56.Arc56Contract:
     return self.app_factory.app_spec
 
 @property
@@ -403,7 +389,7 @@ def algorand(self) -> _AlgoKitAlgorandClient:
     yield f") -> tuple[{context.contract_name}Client, algokit_utils.AppFactoryDeployResult]:"
 
     yield Part.IncIndent
-    yield utils.docstring("Deploy the application")
+    yield from utils.docstring("Deploy the application")
 
     yield "deploy_response = self.app_factory.deploy("
     yield Part.IncIndent
@@ -424,7 +410,7 @@ def algorand(self) -> _AlgoKitAlgorandClient:
 
     # Get app client methods
     yield Part.Gap1
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def get_app_client_by_creator_and_name(
     self,
     creator_address: str,
@@ -437,8 +423,8 @@ def get_app_client_by_creator_and_name(
     clear_source_map: SourceMap | None = None,
 ) -> {context.contract_name}Client:""")
     yield Part.IncIndent
-    yield utils.docstring("Get an app client by creator address and name")
-    yield utils.indented(f"""
+    yield from utils.docstring("Get an app client by creator address and name")
+    yield from utils.indented(f"""
 return {context.contract_name}Client(
     self.app_factory.get_app_client_by_creator_and_name(
         creator_address,
@@ -455,7 +441,7 @@ return {context.contract_name}Client(
     yield Part.DecIndent
 
     yield Part.Gap1
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 def get_app_client_by_id(
     self,
     app_id: int,
@@ -466,8 +452,8 @@ def get_app_client_by_id(
     clear_source_map: SourceMap | None = None,
 ) -> {context.contract_name}Client:""")
     yield Part.IncIndent
-    yield utils.docstring("Get an app client by app ID")
-    yield utils.indented(
+    yield from utils.docstring("Get an app client by app ID")
+    yield from utils.indented(
         f"""
 return {context.contract_name}Client(
     self.app_factory.get_app_client_by_id(
@@ -485,9 +471,9 @@ return {context.contract_name}Client(
     yield Part.DecIndent
 
 
-def generate_factory_params(context: GeneratorContext) -> Iterator[DocumentParts]:
+def generate_factory_params(context: GeneratorContext) -> DocumentParts:
     """Generate factory params classes"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}FactoryParams:
     \"\"\"Parameters for creating transactions for {context.contract_name} contract\"\"\"
 
@@ -504,9 +490,9 @@ class {context.contract_name}FactoryParams:
         yield from _generate_operation_params_class(context, operation)
 
 
-def _generate_factory_create_transaction(context: GeneratorContext) -> Iterator[DocumentParts]:
+def _generate_factory_create_transaction(context: GeneratorContext) -> DocumentParts:
     """Generate factory create transaction classes"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}FactoryCreateTransaction:
     \"\"\"Create transactions for {context.contract_name} contract\"\"\"
 
@@ -516,9 +502,9 @@ class {context.contract_name}FactoryCreateTransaction:
 """)
 
 
-def _generate_factory_send(context: GeneratorContext) -> Iterator[DocumentParts]:
+def _generate_factory_send(context: GeneratorContext) -> DocumentParts:
     """Generate factory send classes"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}FactorySend:
     \"\"\"Send calls to {context.contract_name} contract\"\"\"
 
@@ -528,9 +514,9 @@ class {context.contract_name}FactorySend:
 """)
 
 
-def _generate_create_transaction_class(context: GeneratorContext) -> Iterator[DocumentParts]:
+def _generate_create_transaction_class(context: GeneratorContext) -> DocumentParts:
     """Generate the create transaction class"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}FactoryCreateTransactionCreate:
     \"\"\"Create new instances of {context.contract_name} contract\"\"\"
 
@@ -544,14 +530,17 @@ class {context.contract_name}FactoryCreateTransactionCreate:
         \"\"\"Creates a new instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.create_transaction.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            )
         )
 """)
 
 
-def _generate_send_class(context: GeneratorContext) -> Iterator[DocumentParts]:
+def _generate_send_class(context: GeneratorContext) -> DocumentParts:
     """Generate the send class"""
-    yield utils.indented(f"""
+    yield from utils.indented(f"""
 class {context.contract_name}FactorySendCreate:
     \"\"\"Send create calls to {context.contract_name} contract\"\"\"
 
@@ -568,9 +557,12 @@ class {context.contract_name}FactorySendCreate:
         \"\"\"Creates a new instance using a bare call\"\"\"
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
-            algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
+            _extend(
+                algokit_utils.AppFactoryCreateParams,
+                params,
+            ),
             send_params=send_params,
-            compilation_params=compilation_params
+            compilation_params=compilation_params,
         )
         return {context.contract_name}Client(result[0]), result[1]
 """)

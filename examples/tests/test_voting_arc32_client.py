@@ -1,6 +1,5 @@
 # mypy: disable-error-code="call-overload"
 
-import base64
 import random
 import uuid
 from dataclasses import dataclass
@@ -8,12 +7,13 @@ from dataclasses import dataclass
 import algokit_utils
 import algokit_utils.applications
 import algokit_utils.transactions
-import algosdk
 import pytest
+from algokit_abi import abi
+from algokit_algod_client import AlgodClient
+from algokit_transact import AddressWithSigners, generate_address_with_signers
 from algokit_utils import AlgorandClient, CommonAppCallCreateParams, CommonAppCallParams
 from algokit_utils.applications import FundAppAccountParams, OnUpdate
 from algokit_utils.models import AlgoAmount
-from algosdk.v2client.algod import AlgodClient
 from nacl.signing import SigningKey
 
 from examples.smart_contracts.artifacts.voting_round.voting_round_arc32_client import (
@@ -26,16 +26,48 @@ from examples.smart_contracts.artifacts.voting_round.voting_round_arc32_client i
 )
 
 
+@dataclass
+class VoterAccount:
+    """A test account with access to raw key material for signing."""
+
+    address_with_signers: AddressWithSigners
+    signing_key: SigningKey
+    public_key: bytes
+    private_key: bytes
+
+    @property
+    def addr(self) -> str:
+        return self.address_with_signers.addr
+
+    @classmethod
+    def create(cls) -> "VoterAccount":
+        """Create a new voter account with access to raw keys."""
+        signing_key = SigningKey.generate()
+        private_key = bytes(signing_key)
+        public_key = bytes(signing_key.verify_key)
+
+        def raw_signer(data: bytes) -> bytes:
+            return bytes(signing_key.sign(data).signature)
+
+        address_with_signers = generate_address_with_signers(public_key, raw_signer)
+        return cls(
+            address_with_signers=address_with_signers,
+            signing_key=signing_key,
+            public_key=public_key,
+            private_key=private_key,
+        )
+
+
 @pytest.fixture
-def default_deployer(algorand: AlgorandClient) -> algokit_utils.SigningAccount:
+def default_deployer(algorand: AlgorandClient) -> algokit_utils.AddressWithSigners:
     account = algorand.account.random()
     algorand.account.ensure_funded_from_environment(account, AlgoAmount.from_algo(100))
     return account
 
 
 @pytest.fixture
-def voting_factory(algorand: AlgorandClient, default_deployer: algokit_utils.SigningAccount) -> VotingRoundFactory:
-    return algorand.client.get_typed_app_factory(VotingRoundFactory, default_sender=default_deployer.address)
+def voting_factory(algorand: AlgorandClient, default_deployer: algokit_utils.AddressWithSigners) -> VotingRoundFactory:
+    return algorand.client.get_typed_app_factory(VotingRoundFactory, default_sender=default_deployer.addr)
 
 
 @pytest.fixture
@@ -57,12 +89,10 @@ class RandomVotingAppDeployment:
     algod: AlgodClient
     client: VotingRoundClient
     total_question_options: int
-    test_account: algokit_utils.SigningAccount
-    private_key: bytes
+    test_account: VoterAccount
     quorum: int
     question_count: int
     question_counts: list[int]
-    public_key: bytes
     current_time: int
     signature: bytes
     random_answer_ids: list[int]
@@ -70,22 +100,30 @@ class RandomVotingAppDeployment:
 
 @pytest.fixture
 def random_voting_round_app(
-    voting_factory: VotingRoundFactory, default_deployer: algokit_utils.SigningAccount
+    algorand: AlgorandClient,
 ) -> RandomVotingAppDeployment:
-    algod = voting_factory.algorand.client.algod
-    status = algod.status()
-    last_round = status["last-round"]
-    last_round = algod.block_info(last_round)
-    current_time = last_round["block"]["ts"]
+    # Create a voter account with access to raw keys
+    voter = VoterAccount.create()
 
-    voter = default_deployer
+    # Register the voter account's signer with the AlgorandClient
+    algorand.account.set_signer(voter.addr, voter.address_with_signers.signer)
+
+    # Fund the voter account
+    algorand.account.ensure_funded_from_environment(voter.address_with_signers, AlgoAmount.from_algo(100))
+
+    # Create the factory with the voter as the default sender
+    voting_factory = algorand.client.get_typed_app_factory(VotingRoundFactory, default_sender=voter.addr)
+
+    algod = algorand.client.algod
+    status = algod.status()
+    last_round = status.last_round
+    block = algod.block(last_round)
+    current_time = block.block.header.timestamp or 0
+
     quorum = random.randint(1, 1000)
     question_count = random.randint(1, 10)
     question_counts = [random.randint(1, 10) for _ in range(question_count)]
     total_question_options = sum(question_counts)
-
-    private_key = base64.b64decode(voter.private_key)
-    public_key = voter.public_key
 
     client, result = voting_factory.send.create.create(
         args=CreateArgs(
@@ -94,7 +132,7 @@ def random_voting_round_app(
             start_time=current_time,
             end_time=current_time + 1000,
             quorum=quorum,
-            snapshot_public_key=public_key,
+            snapshot_public_key=voter.public_key,
             nft_image_url="ipfs://cid",
             option_counts=question_counts,
         ),
@@ -106,21 +144,18 @@ def random_voting_round_app(
     assert result.abi_return is None
 
     random_answer_ids = [random.randint(0, question_counts[i] - 1) for i in range(question_count)]
-    signing_key = SigningKey(private_key[: algosdk.constants.key_len_bytes])
-    signed = signing_key.sign(voter.public_key)
+    signed = voter.signing_key.sign(voter.public_key)
     signature = signed.signature
 
     return RandomVotingAppDeployment(
-        algorand=voting_factory.algorand,
+        algorand=algorand,
         algod=algod,
         client=client,
         total_question_options=total_question_options,
-        test_account=default_deployer,
-        private_key=private_key,
+        test_account=voter,
         quorum=quorum,
         question_count=question_count,
         question_counts=question_counts,
-        public_key=public_key,
         current_time=current_time,
         signature=signature,
         random_answer_ids=random_answer_ids,
@@ -175,7 +210,7 @@ def test_global_state(random_voting_round_app: RandomVotingAppDeployment) -> Non
     assert state["nft_image_url"] == b"ipfs://cid"
     assert state["nft_asset_id"] == 0
     assert state["total_options"] == total_question_options
-    assert algosdk.abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
+    assert abi.ABIType.from_string("uint8[]").decode(state["option_counts"]) == question_counts
 
 
 def test_works_with_separate_transactions(
@@ -188,7 +223,7 @@ def test_works_with_separate_transactions(
     preconditions_result = client.send.get_preconditions(
         args=GetPreconditionsArgs(signature=signature),
         params=CommonAppCallParams(
-            box_references=[test_account.address],
+            box_references=[test_account.addr],
             static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
         ),
     )
@@ -260,7 +295,7 @@ def test_it_works_with_manual_use_of_the_transaction_composer(
                 args=GetPreconditionsArgs(signature=signature),
                 params=CommonAppCallParams(
                     static_fee=AlgoAmount.from_micro_algo(1_000 + 3 * 1_000),
-                    box_references=[test_account.address],
+                    box_references=[test_account.addr],
                 ),
             )
         )

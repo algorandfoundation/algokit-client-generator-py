@@ -8,61 +8,16 @@
 # common
 import dataclasses
 import typing
-# core algosdk
-import algosdk
-from algosdk.transaction import OnComplete
-from algosdk.atomic_transaction_composer import TransactionSigner
-from algosdk.source_map import SourceMap
-from algosdk.transaction import Transaction
-from algosdk.v2client.models import SimulateTraceConfig
-# utils
+# algokit utils
+from algokit_abi import arc56
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
+from algokit_common.source_map import ProgramSourceMap as SourceMap
+from algokit_transact.models.common import OnApplicationComplete
+from algokit_transact.models.transaction import Transaction
+from algokit_utils.protocols.signer import TransactionSigner
+from algokit_algod_client.models import SimulateTraceConfig
 
-_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}], "name": "create", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["CloseOut"], "create": []}, "args": [], "name": "close_out_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [], "name": "delete_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [], "name": "update_test", "returns": {"type": "string"}, "events": []}], "name": "LifeCycle", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}}"""
-APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
-
-def _parse_abi_args(args: object | None = None) -> list[object] | None:
-    """Helper to parse ABI args into the format expected by underlying client"""
-    if args is None:
-        return None
-
-    def convert_dataclass(value: object) -> object:
-        if dataclasses.is_dataclass(value):
-            return tuple(convert_dataclass(getattr(value, field.name)) for field in dataclasses.fields(value))
-        elif isinstance(value, (list, tuple)):
-            return type(value)(convert_dataclass(item) for item in value)
-        return value
-
-    match args:
-        case tuple():
-            method_args = list(args)
-        case _ if dataclasses.is_dataclass(args):
-            method_args = [getattr(args, field.name) for field in dataclasses.fields(args)]
-        case _:
-            raise ValueError("Invalid 'args' type. Expected 'tuple' or 'TypedDict' for respective typed arguments.")
-
-    return [
-        convert_dataclass(arg) if not isinstance(arg, algokit_utils.AppMethodCallTransactionArgument) else arg
-        for arg in method_args
-    ] if method_args else None
-
-def _init_dataclass(cls: type, data: dict) -> object:
-    """
-    Recursively instantiate a dataclass of type `cls` from `data`.
-
-    For each field on the dataclass, if the field type is also a dataclass
-    and the corresponding data is a dict, instantiate that field recursively.
-    """
-    field_values = {}
-    for field in dataclasses.fields(cls):
-        field_value = data.get(field.name)
-        # Check if the field expects another dataclass and the value is a dict.
-        if dataclasses.is_dataclass(field.type) and isinstance(field_value, dict):
-            field_values[field.name] = _init_dataclass(typing.cast(type, field.type), field_value)
-        else:
-            field_values[field.name] = field_value
-    return cls(**field_values)
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class HelloStringStringArgs:
@@ -101,12 +56,12 @@ class _LifeCycleCloseOut:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }))
+        return self.app_client.params.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ))
 
 
 class LifeCycleParams:
@@ -122,24 +77,24 @@ class LifeCycleParams:
         args: tuple[str] | HelloStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }))
+        return self.app_client.params.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ))
 
     def clear_state(
         self,
@@ -160,12 +115,12 @@ class _LifeCycleCloseOutTransaction:
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }))
+        return self.app_client.create_transaction.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ))
 
 
 class LifeCycleCreateTransactionParams:
@@ -181,24 +136,24 @@ class LifeCycleCreateTransactionParams:
         args: tuple[str] | HelloStringStringArgs,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ))
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }))
+        return self.app_client.create_transaction.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ))
 
     def clear_state(
         self,
@@ -220,14 +175,13 @@ class _LifeCycleCloseOutSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.close_out(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "close_out_test()string",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.close_out(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="close_out_test()string",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
 
 class LifeCycleSend:
@@ -244,29 +198,27 @@ class LifeCycleSend:
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-        method_args = _parse_abi_args(args)
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello(string)string",
-            "args": method_args,
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello(string)string",
+            args=_unpack_args(args),
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def hello_string(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
     ) -> algokit_utils.SendAppTransactionResult[str]:
-    
         params = params or algokit_utils.CommonAppCallParams()
-        response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
-            **dataclasses.asdict(params),
-            "method": "hello()string",
-        }), send_params=send_params)
-        parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
+        response = self.app_client.send.call(_extend(
+            algokit_utils.AppClientMethodCallParams,
+            params,
+            method="hello()string",
+        ), send_params=send_params)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], response)
 
     def clear_state(
         self,
@@ -302,38 +254,22 @@ class _GlobalState:
         self.app_client = app_client
         
         # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
 
     def get_all(self) -> GlobalStateValue:
         """Get all current keyed values from global_state state"""
         result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
+        return typing.cast(GlobalStateValue, result)
 
     @property
     def greeting(self) -> bytes:
         """Get the current value of the greeting key in global_state state"""
         value = self.app_client.state.global_state.get_value("greeting")
-        if isinstance(value, dict) and "AVMBytes" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMBytes"], value)  # type: ignore
         return typing.cast(bytes, value)
 
     @property
     def times(self) -> int:
         """Get the current value of the times key in global_state state"""
         value = self.app_client.state.global_state.get_value("times")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
         return typing.cast(int, value)
 
 class LifeCycleClient:
@@ -451,7 +387,7 @@ class LifeCycleClient:
         return self.app_client.app_name
     
     @property
-    def app_spec(self) -> algokit_utils.Arc56Contract:
+    def app_spec(self) -> arc56.Arc56Contract:
         return self.app_client.app_spec
     
     @property
@@ -537,18 +473,7 @@ class LifeCycleClient:
         if return_value is None:
             return None
     
-        arc56_method = self.app_spec.get_arc56_method(method)
-        decoded = return_value.get_arc56_value(arc56_method, self.app_spec.structs)
-    
-        # If method returns a struct, convert the dict to appropriate dataclass
-        if (arc56_method and
-            arc56_method.returns and
-            arc56_method.returns.struct and
-            isinstance(decoded, dict)):
-            struct_class = globals().get(arc56_method.returns.struct)
-            if struct_class:
-                return struct_class(**typing.cast(dict, decoded))
-        return decoded
+        return return_value.value
 
 
 class _LifeCycleCloseOutComposer:
@@ -565,11 +490,6 @@ class _LifeCycleCloseOutComposer:
                 
             )
         )
-        self.composer._result_mappers.append(
-            lambda v: self.composer.client.decode_return_value(
-                "close_out_test()string", v
-            )
-        )
         return self.composer
 
 
@@ -579,7 +499,6 @@ class LifeCycleComposer:
     def __init__(self, client: "LifeCycleClient"):
         self.client = client
         self._composer = client.algorand.new_group()
-        self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
     @property
     def close_out(self) -> "_LifeCycleCloseOutComposer":
@@ -596,11 +515,6 @@ class LifeCycleComposer:
                 params=params,
             )
         )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello(string)string", v
-            )
-        )
         return self
 
     def hello_string(
@@ -611,11 +525,6 @@ class LifeCycleComposer:
             self.client.params.hello_string(
                 
                 params=params,
-            )
-        )
-        self._result_mappers.append(
-            lambda v: self.client.decode_return_value(
-                "hello()string", v
             )
         )
         return self
@@ -629,12 +538,7 @@ class LifeCycleComposer:
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
-                algokit_utils.AppClientBareCallParams(
-                    **{
-                        **dataclasses.asdict(params),
-                        "args": args
-                    }
-                )
+                _extend(algokit_utils.AppClientBareCallParams, params, args=args)
             )
         )
         return self
@@ -656,8 +560,8 @@ class LifeCycleComposer:
         extra_opcode_budget: int | None = None,
         exec_trace_config: SimulateTraceConfig | None = None,
         simulation_round: int | None = None,
-        skip_signatures: bool | None = None,
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+        skip_signatures: bool = False,
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.simulate(
             allow_more_logs=allow_more_logs,
             allow_empty_signatures=allow_empty_signatures,
@@ -671,5 +575,41 @@ class LifeCycleComposer:
     def send(
         self,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAtomicTransactionComposerResults:
+    ) -> algokit_utils.SendTransactionComposerResults:
         return self._composer.send(send_params)
+
+
+_T = typing.TypeVar("_T")
+def _extend(
+    new_type: type[_T], base_instance: typing.Any, **changes: object
+) -> _T:
+    """Creates a new type from an existing object and additional fields"""
+    old_type_fields = {f.name : f for f in dataclasses.fields(base_instance)}
+    new_type_fields = dataclasses.fields(new_type) # type: ignore[arg-type]
+    for field in new_type_fields:
+        if not field.init:
+            continue
+        attr_name = field.name
+        if attr_name not in changes and attr_name in old_type_fields:
+            changes[attr_name] = getattr(base_instance, attr_name)
+    return new_type(**changes)
+
+
+
+def _unpack_args(args: object | tuple | None) -> tuple | None:
+    if dataclasses.is_dataclass(args):
+        return tuple(getattr(args, f.name) for f in dataclasses.fields(args))
+    elif isinstance(args, tuple | None):
+        return args
+    else:
+        raise TypeError("unsupported argument type")
+
+_APP_SPEC_JSON = r"""{"arcs": [], "bareActions": {"call": ["UpdateApplication"], "create": ["NoOp", "OptIn"]}, "methods": [{"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}], "name": "create", "returns": {"type": "string"}, "events": []}, {"actions": {"call": [], "create": ["NoOp"]}, "args": [{"type": "string", "name": "greeting"}, {"type": "uint32", "name": "times"}], "name": "create", "returns": {"type": "void"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [{"type": "string", "name": "name"}], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["CloseOut"], "create": []}, "args": [], "name": "close_out_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["DeleteApplication"], "create": []}, "args": [], "name": "delete_test", "returns": {"type": "string"}, "events": []}, {"actions": {"call": ["UpdateApplication"], "create": []}, "args": [], "name": "update_test", "returns": {"type": "string"}, "events": []}], "name": "LifeCycle", "state": {"keys": {"box": {}, "global": {"greeting": {"key": "Z3JlZXRpbmc=", "keyType": "AVMString", "valueType": "AVMBytes"}, "times": {"key": "dGltZXM=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 1, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}}"""
+
+_STRUCT_NAME_TO_TYPE: dict[str, type] = {
+}
+
+APP_SPEC = arc56.Arc56Contract.from_json(
+    _APP_SPEC_JSON,
+    lambda s: _STRUCT_NAME_TO_TYPE[s.struct_name],
+)

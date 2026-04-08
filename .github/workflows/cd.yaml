@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - alpha
     paths-ignore:
       - "docs/**"
   workflow_dispatch:
@@ -48,16 +49,17 @@ jobs:
           app-id: ${{ secrets.BOT_ID }}
           private-key: ${{ secrets.BOT_SK }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Fetch entire repository history so we can determine version number from it
           fetch-depth: 0
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Install poetry
         run: pipx install poetry
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: "poetry"
@@ -70,10 +72,20 @@ jobs:
         run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
         id: get_branch
 
-      - name: Set Git user
+      - name: Set Git user as GitHub actions
+        run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+
+      - name: Create Continuous Deployment - Alpha
+        if: steps.get_branch.outputs.branch == 'alpha'
         run: |
-          git config user.name "engineering-ci[bot]"
-          git config user.email "179917785+engineering-ci[bot]@users.noreply.github.com"
+          poetry run semantic-release \
+            -v DEBUG \
+            --prerelease \
+            --define=prerelease_tag=alpha \
+            --define=branch=alpha \
+            publish
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
 
       - name: Create Continuous Deployment - Beta (non-prod)
         if: steps.get_branch.outputs.branch == 'main' && !inputs.production_release
@@ -83,7 +95,6 @@ jobs:
             --prerelease \
             --define=branch=main \
             publish
-          gh release edit --prerelease "v$(poetry run semantic-release print-version --current)"
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
 
