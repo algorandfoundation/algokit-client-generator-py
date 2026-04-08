@@ -2,23 +2,25 @@
 
 [[package]]
 name = "algokit-utils"
-version = "5.0.0a20"
+version = "5.0.0b1"
 description = "Utilities for Algorand development for use by AlgoKit"
 optional = false
 python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "algokit_utils-5.0.0a20-py3-none-any.whl", hash = "sha256:988150cfdadffd7d1058c6eff3d783405800dd7f310b09d96a395b5a310c082d"},
-    {file = "algokit_utils-5.0.0a20.tar.gz", hash = "sha256:ab3d8b867b24d09d202ba277ca27a0cfb01f42a3c7eb9b33e4d5842fec7e443f"},
+    {file = "algokit_utils-5.0.0b1-py3-none-any.whl", hash = "sha256:9aca756c058606fe5d25eba19d0e350e96085e4aecc58a615a9ea16e3143e86c"},
+    {file = "algokit_utils-5.0.0b1.tar.gz", hash = "sha256:4ac5d99b4c354aef01347a0392b441f363c888505cf9ee62dc7af781e9730417"},
 ]
 
 [package.dependencies]
+exceptiongroup = ">=1.3.1"
 httpx = ">=0.23.1,<=0.28.1"
 msgpack = ">=1.0.0,<2"
 msgpack-types = ">=0.2.0,<=0.5.0"
 pycryptodomex = ">=3.19,<4"
 pynacl = ">=1.4.0,<2"
 typing-extensions = ">=4.6.0"
+xhd-wallet-api = ">=1.0.0"
 
 [[package]]
 name = "algorand-python"
@@ -251,7 +253,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\""}
+markers = {dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -688,11 +690,11 @@ description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
 groups = ["main", "dev"]
-markers = "python_version == \"3.10\""
 files = [
     {file = "exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"},
     {file = "exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219"},
 ]
+markers = {dev = "python_version == \"3.10\""}
 
 [package.dependencies]
 typing-extensions = {version = ">=4.6.0", markers = "python_version < \"3.13\""}
@@ -1661,15 +1663,34 @@ pyyaml = ">=5.1"
 virtualenv = ">=20.10.0"
 
 [[package]]
+name = "prettytable"
+version = "3.17.0"
+description = "A simple Python library for easily displaying tabular data in a visually appealing ASCII table format"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+markers = "python_version >= \"3.12\""
+files = [
+    {file = "prettytable-3.17.0-py3-none-any.whl", hash = "sha256:aad69b294ddbe3e1f95ef8886a060ed1666a0b83018bbf56295f6f226c43d287"},
+    {file = "prettytable-3.17.0.tar.gz", hash = "sha256:59f2590776527f3c9e8cf9fe7b66dd215837cca96a9c39567414cbc632e8ddb0"},
+]
+
+[package.dependencies]
+wcwidth = "*"
+
+[package.extras]
+tests = ["pytest", "pytest-cov", "pytest-lazy-fixtures"]
+
+[[package]]
 name = "puyapy"
-version = "5.7.1"
+version = "5.8.0"
 description = "An optimising compiler for Algorand Python"
 optional = false
 python-versions = "<4,>=3.12.0"
 groups = ["dev"]
 markers = "python_version >= \"3.12\""
 files = [
-    {file = "puyapy-5.7.1-py3-none-any.whl", hash = "sha256:20e38743f8086f59622a57b40d5b4a4c4e3097ba232dbfaa2df0ea5781c937b1"},
+    {file = "puyapy-5.8.0-py3-none-any.whl", hash = "sha256:28aef5fdd942ac82f32583d5c5cd06a80049c2a16515454aa38130a33b493e73"},
 ]
 
 [package.dependencies]
@@ -1682,6 +1703,7 @@ immutabledict = ">=4.2.0,<5"
 mypy = "1.19.1"
 networkx = ">=3.6,<4"
 packaging = ">=24.0,<25.0"
+prettytable = ">=3.17.0,<4"
 pycryptodomex = ">=3.6.0,<4"
 pygls = ">=2.0.0"
 structlog = ">=25.2.0,<26"
@@ -1713,7 +1735,7 @@ files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\" and implementation_name != \"PyPy\""}
+markers = {main = "implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\" and implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pycryptodomex"
@@ -2171,7 +2193,6 @@ files = [
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
 pygments = ">=2.13.0,<3.0.0"
-typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
@@ -2467,6 +2488,33 @@ tqdm = ">=4.14"
 urllib3 = ">=1.26.0"
 
 [[package]]
+name = "types-cffi"
+version = "2.0.0.20260408"
+description = "Typing stubs for cffi"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "types_cffi-2.0.0.20260408-py3-none-any.whl", hash = "sha256:68bd296742b4ff7c0afe3547f50bd0acc55416ecf322ffefd2b7344ef6388a42"},
+    {file = "types_cffi-2.0.0.20260408.tar.gz", hash = "sha256:aa8b9c456ab715c079fc655929811f21f331bfb940f4a821987c581bf4e36230"},
+]
+
+[package.dependencies]
+types-setuptools = "*"
+
+[[package]]
+name = "types-setuptools"
+version = "82.0.0.20260408"
+description = "Typing stubs for setuptools"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "types_setuptools-82.0.0.20260408-py3-none-any.whl", hash = "sha256:ece0a215cdfa6463a65fd6f68bd940f39e455729300ddfe61cab1147ed1d2462"},
+    {file = "types_setuptools-82.0.0.20260408.tar.gz", hash = "sha256:036c68caf7e672a699f5ebbf914708d40644c14e05298bc49f7272be91cf43d3"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -2516,6 +2564,19 @@ python-discovery = ">=1"
 typing-extensions = {version = ">=4.13.2", markers = "python_version < \"3.11\""}
 
 [[package]]
+name = "wcwidth"
+version = "0.6.0"
+description = "Measures the displayed width of unicode strings in a terminal"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+markers = "python_version >= \"3.12\""
+files = [
+    {file = "wcwidth-0.6.0-py3-none-any.whl", hash = "sha256:1a3a1e510b553315f8e146c54764f4fb6264ffad731b3d78088cdb1478ffbdad"},
+    {file = "wcwidth-0.6.0.tar.gz", hash = "sha256:cdc4e4262d6ef9a1a57e018384cbeb1208d8abbc64176027e2c2455c81313159"},
+]
+
+[[package]]
 name = "wheel"
 version = "0.46.3"
 description = "Command line tool for manipulating wheel files"
@@ -2532,6 +2593,27 @@ packaging = ">=24.0"
 
 [package.extras]
 test = ["pytest (>=6.0.0)", "setuptools (>=77)"]
+
+[[package]]
+name = "xhd-wallet-api"
+version = "1.0.0"
+description = "BIP32-ed25519 library that supports Khovratovich derivation and Peikert derivation"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "xhd_wallet_api-1.0.0-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:e37dbb3f434d9baf28f49decf09d52a8ab64a58f926d50f49eab124a961a3a7e"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:915a89efacc1174f64af07c52672b026a355aee4374ab04d92721fc2b0930db9"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:092b079f244e5d88c254d8af3630181b4c049269374e4e25ed764baf417fdd3d"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:38b4843464cdf2398ca635bc4cb6ba37ef7fbd2191c6b9053743bcc66a4784be"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:71d6aa0291fea0f0ecc22f7eda8a0f61482dc92e19345c0a354dd8a4f1bdb72a"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:a956ca70a155de9a0afc528a3bf216f9408172bc54afc5b8103c5425c5f9f912"},
+    {file = "xhd_wallet_api-1.0.0-py3-none-win_amd64.whl", hash = "sha256:d4a633e0cdb8095e941b9ce84e05e96904ef273f7b655abd81f13f265bf195a9"},
+]
+
+[package.dependencies]
+cffi = ">=2.0.0"
+types-cffi = ">=1.17.0.20250915"
 
 [[package]]
 name = "zipp"
@@ -2556,4 +2638,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "66a25aaa4e609b8d1fe58959c36dfbb7b76521382f19fbaee10f855d283c23c9"
+content-hash = "4d7c9c6cef1263c966616ff3a7d4f2786b5f966e8b5bd7c3b0e091ad2f869b31"
