@@ -2,6 +2,7 @@ import pathlib
 from itertools import chain, product
 
 from algokit_client_generator import generate_client
+from algokit_client_generator.context import AppSpecMode
 from algokit_client_generator.utils import to_pascal_case, to_snake_case
 from scripts._helpers import enable_mypy
 
@@ -27,7 +28,7 @@ def update_approvals() -> None:
     ]
 
     # Generate both full and minimal clients for each app
-    modes = ["full", "minimal"]
+    modes: list[AppSpecMode] = ["full", "minimal"]
 
     for app, extension, mode in chain(product(arc32_apps, ["arc32"], modes), product(arc56_apps, ["arc56"], modes)):
         app_path = artifacts / app
