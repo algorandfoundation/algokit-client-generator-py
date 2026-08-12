@@ -53,8 +53,12 @@ def test_composer_with_manual_transaction(
 ) -> None:
     client, _ = helloworld_factory.deploy()
 
-    # Create transactions to add manually
-    transactions = client.create_transaction.hello_world_check(args=HelloWorldCheckArgs(name="World"))
+    # Create transactions to add manually. `build_transactions` only reports signers that were
+    # explicitly supplied, so pass one through in order to exercise `add_transaction(txn, signer)`.
+    transactions = client.create_transaction.hello_world_check(
+        args=HelloWorldCheckArgs(name="World"),
+        params=CommonAppCallParams(signer=algorand.account.get_signer(default_deployer.address)),
+    )
 
     # Get client from creator and name
     client2 = algorand.client.get_typed_app_client_by_creator_and_name(
