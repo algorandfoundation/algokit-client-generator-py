@@ -1,36 +1,41 @@
-[tool.poetry]
+[project]
 name = "algokit-client-generator"
 version = "2.2.0"
 description = "Algorand typed client Generator"
-authors = ["Algorand Foundation <contact@algorand.foundation>"]
+authors = [
+    { name = "Algorand Foundation", email = "contact@algorand.foundation" },
+]
 license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
+requires-python = ">=3.10,<4"
+dependencies = [
+    "algokit-utils>=4.0.1,<5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-algokit-utils = "^4.0.1"
+[project.scripts]
+algokitgen-py = "algokit_client_generator.cli:main"
 
-[tool.poetry.group.dev.dependencies]
-ruff = ">=0.8.6,<0.13.0"
-mypy = "*"
-pytest = "*"
-pytest-cov = "*"
-pip-audit = "^2.5.5"
-python-semantic-release = "^7.33.4"
-pre-commit = ">=3.3.2,<5.0.0"
-poethepoet = ">=0.20,<0.37"
-pytest-xdist = "^3.5.0"
-puyapy = { version = "^5.8.0", python = "^3.12" }
-algorand-python = { version = "^3.4.0", python = "^3.12" }
-setuptools = ">=83.0,<84.0"
-pytest-sugar = "^1.0.0"
+[dependency-groups]
+dev = [
+    "ruff>=0.8.6,<0.13.0",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pip-audit>=2.5.5,<3",
+    "python-semantic-release>=10,<11",
+    "pre-commit>=3.3.2,<5.0.0",
+    "poethepoet>=0.20,<0.37",
+    "pytest-xdist>=3.5.0,<4",
+    "puyapy>=5.8.0,<6; python_version >= '3.12'",
+    "algorand-python>=3.4.0,<4; python_version >= '3.12'",
+    "setuptools>=83.0,<84.0",
+    "pytest-sugar>=1.0.0,<2",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-algokitgen-py = "algokit_client_generator.cli:main"
+requires = ["uv_build>=0.9.5,<0.12"]
+build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120
@@ -115,21 +120,18 @@ allow-star-arg-any = true
 suppress-none-returning = true
 
 [tool.poe.tasks]
-update-approvals = "poetry run python -m scripts.update_approvals"
+update-approvals = "uv run python -m scripts.update_approvals"
 
 [tool.poe.tasks.release-preview]
 sequence = [
-    { cmd = "semantic-release print-version --current" },
-    { cmd = "semantic-release print-version --prerelease" },
+    # `git describe` only sees tags in the history of HEAD; `--print-last-released-tag` also reports the v3 line tags
+    { cmd = "git describe --tags --abbrev=0" },
+    { cmd = "uv run semantic-release version --print-tag --as-prerelease" },
 ]
 help = "Preview current and next prerelease version"
 
-[tool.poe.tasks.release-dry-run-alpha]
-shell = "semantic-release -v DEBUG --noop --prerelease --define=prerelease_tag=alpha publish"
-help = "Dry-run alpha release (no changes made)"
-
 [tool.poe.tasks.release-dry-run-beta]
-shell = "semantic-release -v DEBUG --noop --prerelease --define=prerelease_tag=beta publish"
+shell = "uv run semantic-release --noop -vv version --as-prerelease --prerelease-token beta --print-tag"
 help = "Dry-run beta release (no changes made)"
 
 [tool.pytest.ini_options]
@@ -152,12 +154,33 @@ show_error_codes = true
 disable_error_code = ['return']
 
 [tool.semantic_release]
-version_toml = "pyproject.toml:tool.poetry.version"
-remove_dist = false
-build_command = "poetry build --format wheel"
-version_source = "tag"
+version_toml = ["pyproject.toml:project.version"]
+build_command = "uv build"
 major_on_zero = true
-upload_to_repository = false
-tag_commit = true
-branch = "main"
 commit_message = "{version}\n\nskip-checks: true"
+tag_format = "v{version}"
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease_token = "beta"
+prerelease = false
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "build", "chore", "refactor"]
+
+[tool.semantic_release.remote]
+type = "github"
+token = { env = "GH_TOKEN" }

@@ -1,6 +1,6 @@
 # AlgoKit Python client generator (algokit-client-generator-py)
 
-This project generates a type-safe smart contract client in Python for the Algorand Blockchain that wraps the [application client](https://algorandfoundation.github.io/algokit-utils-py/html/apidocs/algokit_utils/algokit_utils.html#algokit_utils.ApplicationClient) in [AlgoKit Utils](https://github.com/algorandfoundation/algokit-utils-py) and tailors it to a specific smart contract. It does this by reading an [ARC-56](https://github.com/algorandfoundation/ARCs/pull/258) or [ARC-32](https://github.com/algorandfoundation/ARCs/blob/main/ARCs/arc-0032.md) application spec file and generating a client which exposes methods for each ABI method in the target smart contract, along with helpers to create, update, and delete the application.
+This project generates a type-safe smart contract client in Python for the Algorand Blockchain that wraps the [application client](https://github.com/algorandfoundation/algokit-utils-py/blob/main/docs/src/content/docs/concepts/building/app-client.md) in [AlgoKit Utils](https://github.com/algorandfoundation/algokit-utils-py) and tailors it to a specific smart contract. It does this by reading an [ARC-56](https://github.com/algorandfoundation/ARCs/pull/258) or [ARC-32](https://github.com/algorandfoundation/ARCs/blob/main/ARCs/arc-0032.md) application spec file and generating a client which exposes methods for each ABI method in the target smart contract, along with helpers to create, update, and delete the application.
 
 ## Usage
 
@@ -9,10 +9,10 @@ This project generates a type-safe smart contract client in Python for the Algor
 To be able to consume the generated file you need to include it in a Python project that has (at least) the following package installed:
 
 ```bash
-poetry add algokit-utils@^3
+poetry add algokit-utils@^4.0.1
 ```
 
-> Note: Requires at least version `3.x` of AlgoKit Utils to work with the latest version of the generator.
+> Note: version 2 of the generator requires `algokit-utils@^4.0.1` (with py-algorand-sdk v2); it is not compatible with AlgoKit Utils v5, which decoupled from py-algorand-sdk.
 
 ### Use
 
@@ -76,8 +76,8 @@ If you want to contribute to this project the following information will be help
 
     - Install `AlgoKit` - [Link](https://github.com/algorandfoundation/algokit-cli#install): Ensure you can execute `algokit --version`.
     - Bootstrap your local environment; run `algokit project bootstrap all` within this folder, which will:
-        - Install `Poetry` - [Link](https://python-poetry.org/docs/#installation): The minimum required version is `1.2`. Ensure you can execute `poetry -V` and get `1.2`+
-        - Run `poetry install` in the root directory, which will set up a `.venv` folder with a Python virtual environment and also install all Python dependencies
+        - Install `uv` - [Link](https://docs.astral.sh/uv/getting-started/installation/) if it is not already installed. Ensure you can execute `uv --version`
+        - Run `uv sync` in the root directory, which will set up a `.venv` folder with a Python virtual environment and also install all Python dependencies
 
 3. Open the project and start debugging/developing via:
     - VS Code
@@ -86,11 +86,11 @@ If you want to contribute to this project the following information will be help
         3. Run tests via test explorer
     - IDEA (e.g. PyCharm)
         1. Open the repository root in the IDE
-        2. It should automatically detect it's a Poetry project and set up a Python interpreter and virtual environment.
+        2. It should automatically detect it's a uv project and set up a Python interpreter and virtual environment.
         3. Run tests
     - Other
         1. Open the repository root in your text editor of choice
-        2. Run `poetry run pytest`
+        2. Run `uv run pytest`
 
 ### Subsequently
 
@@ -106,12 +106,12 @@ Some contracts are directly imported through the ARC-32/56 app spec and not thro
 If you want to make changes to any of the smart contract examples and re-generate the ARC-32/56 JSON specs files then change the corresponding `examples/smart_contracts/{app_name}/contract.py` file and then run:
 
 ```bash
-poetry run python -m examples
+uv run python -m examples
 ```
 
 Or in Visual Studio Code you can use the default build task (Ctrl+Shift+B).
 
-To regenerate the generated clients run `poetry run poe update-approvals`.
+To regenerate the generated clients run `uv run poe update-approvals`.
 
 This package currently depends on Python 3.10, however the development depends on Python 3.12. This is represented by the `pyproject.toml` file which requires 3.10 with additional requirements on dev dependencies.
 
@@ -121,4 +121,4 @@ This project uses [GitHub Actions](https://docs.github.com/en/actions/learn-gith
 
 ### Approval tests
 
-Making any changes to the generated code will result in the approval tests failing. The approval tests work by generating a version of client and outputting it to `./examples/APP_NAME/client_generated.py` then comparing to the approved version `./examples/APP_NAME/client.py`. If you make a change and break the approval tests, you will need to update the approved version by overwriting it with the generated version. You can run `poetry run poe update-approvals` to update all approved clients in one go.
+Making any changes to the generated code will result in the approval tests failing. The approval tests work by generating a version of client and outputting it to `./examples/APP_NAME/client_generated.py` then comparing to the approved version `./examples/APP_NAME/client.py`. If you make a change and break the approval tests, you will need to update the approved version by overwriting it with the generated version. You can run `uv run poe update-approvals` to update all approved clients in one go.
