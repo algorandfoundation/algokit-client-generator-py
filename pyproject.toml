@@ -1,110 +1,114 @@
-[tool.poetry]
+[project]
 name = "algokit-client-generator"
 version = "2.2.0"
 description = "Algorand typed client Generator"
-authors = ["Algorand Foundation <contact@algorand.foundation>"]
+authors = [
+    { name = "Algorand Foundation", email = "contact@algorand.foundation" },
+]
 license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
+requires-python = ">=3.10,<4"
+dependencies = [
+    "algokit-utils>=4.0.1,<5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-algokit-utils = "^4.0.1"
+[project.scripts]
+algokitgen-py = "algokit_client_generator.cli:main"
 
-[tool.poetry.group.dev.dependencies]
-ruff = ">=0.8.6,<0.13.0"
-mypy = "*"
-pytest = "*"
-pytest-cov = "*"
-pip-audit = "^2.5.5"
-python-semantic-release = "^7.33.4"
-pre-commit = ">=3.3.2,<5.0.0"
-poethepoet = ">=0.20,<0.37"
-pytest-xdist = "^3.5.0"
-puyapy = { version = "^4.1.1", python = "^3.12" }
-algorand-python = { version = "^2.4.1", python = "^3.12" }
-setuptools = ">=75.8,<81.0"
-pytest-sugar = "^1.0.0"
+[dependency-groups]
+dev = [
+    "ruff>=0.8.6,<0.13.0",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pip-audit>=2.5.5,<3",
+    "python-semantic-release>=10,<11",
+    "pre-commit>=3.3.2,<5.0.0",
+    "poethepoet>=0.20,<0.37",
+    "pytest-xdist>=3.5.0,<4",
+    "puyapy>=5.8.0,<6; python_version >= '3.12'",
+    "algorand-python>=3.4.0,<4; python_version >= '3.12'",
+    "setuptools>=83.0,<84.0",
+    "pytest-sugar>=1.0.0,<2",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-algokitgen-py = "algokit_client_generator.cli:main"
+requires = ["uv_build>=0.9.5,<0.12"]
+build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120
 lint.select = [
-  # all possible codes as of this ruff version are listed here,
-  # ones we don't want/need are commented out to make it clear
-  # which have been omitted on purpose vs which ones get added
-  # in new ruff releases and should be considered for enabling
-  "F",      # pyflakes
-  "E", "W", # pycodestyle
-  "C90",    # mccabe
-  "I",      # isort
-  "N",      # PEP8 naming
-  "UP",     # pyupgrade
-  "YTT",    # flake8-2020
-  "ANN",    # flake8-annotations
-  # "S",    # flake8-bandit
-  # "BLE",  # flake8-blind-except
-  "FBT",    # flake8-boolean-trap
-  "B",      # flake8-bugbear
-  "A",      # flake8-builtins
-  # "COM",  # flake8-commas
-  "C4",     # flake8-comprehensions
-  "DTZ",    # flake8-datetimez
-  "T10",    # flake8-debugger
-  # "DJ",   # flake8-django
-  # "EM",   # flake8-errmsg
-  # "EXE",  # flake8-executable
-  "ISC",    # flake8-implicit-str-concat
-  "ICN",    # flake8-import-conventions
-  # "G",    # flake8-logging-format
-  # "INP",  # flake8-no-pep420
-  "PIE",    # flake8-pie
-  # "T20",    # flake8-print
-  "PYI",    # flake8-pyi
-  "PT",     # flake8-pytest-style
-  "Q",      # flake8-quotes
-  "RSE",    # flake8-raise
-  "RET",    # flake8-return
-  "SLF",    # flake8-self
-  "SIM",    # flake8-simplify
-  "TID",    # flake8-tidy-imports
-  "PTH",    # flake8-use-pathlib
-  "ERA",    # eradicate
-  # "PD",   # pandas-vet
-  "PGH",    # pygrep-hooks
-  "PL",     # pylint
-  # "TRY",  # tryceratops
-  # "NPY",  # NumPy-specific rules
-  "RUF",    # Ruff-specific rules
+    # all possible codes as of this ruff version are listed here,
+    # ones we don't want/need are commented out to make it clear
+    # which have been omitted on purpose vs which ones get added
+    # in new ruff releases and should be considered for enabling
+    "F",   # pyflakes
+    "E",
+    "W",   # pycodestyle
+    "C90", # mccabe
+    "I",   # isort
+    "N",   # PEP8 naming
+    "UP",  # pyupgrade
+    "YTT", # flake8-2020
+    "ANN", # flake8-annotations
+    # "S",    # flake8-bandit
+    # "BLE",  # flake8-blind-except
+    "FBT", # flake8-boolean-trap
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    # "COM",  # flake8-commas
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    # "DJ",   # flake8-django
+    # "EM",   # flake8-errmsg
+    # "EXE",  # flake8-executable
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    # "G",    # flake8-logging-format
+    # "INP",  # flake8-no-pep420
+    "PIE", # flake8-pie
+    # "T20",    # flake8-print
+    "PYI", # flake8-pyi
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    # "PD",   # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    # "TRY",  # tryceratops
+    # "NPY",  # NumPy-specific rules
+    "RUF", # Ruff-specific rules
 ]
 lint.ignore = [
-  "RET505", # allow else after return
-  "SIM108", # allow if-else in place of ternary
-  "PLR2004", # magic values... can't configure to ignore simple low value ints like 2
-  # To avoid conflict with ruff formatter. More details on https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-  "E111", # indentation is not a multiple of four
-  "E117", # over-indented
-  "ISC001", # single line implicit string concatenation
-  "ISC002", # multi line implicit string concatenation
-  "Q000", # bad quotes inline string
-  "Q001", # bad quotes multiline string
-  "Q002", # bad quotes docstring
-  "Q003", # avoidable escaped quotes
-  "W191", # indentation contains tabs
-  "B018", # found useless expression
-  "N815", # mixed case variable in class scope
-  "N801", # invalid class name
-  "PGH004", # blanket noqa
+    "RET505",  # allow else after return
+    "SIM108",  # allow if-else in place of ternary
+    "PLR2004", # magic values... can't configure to ignore simple low value ints like 2
+    # To avoid conflict with ruff formatter. More details on https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "E111",   # indentation is not a multiple of four
+    "E117",   # over-indented
+    "ISC001", # single line implicit string concatenation
+    "ISC002", # multi line implicit string concatenation
+    "Q000",   # bad quotes inline string
+    "Q001",   # bad quotes multiline string
+    "Q002",   # bad quotes docstring
+    "Q003",   # avoidable escaped quotes
+    "W191",   # indentation contains tabs
+    "B018",   # found useless expression
+    "N815",   # mixed case variable in class scope
+    "N801",   # invalid class name
+    "PGH004", # blanket noqa
 ]
 # Exclude a variety of commonly ignored directories.
-extend-exclude = [
-  "docs",
-]
+extend-exclude = ["docs"]
 # Assume Python 3.10.
 target-version = "py310"
 
@@ -116,7 +120,19 @@ allow-star-arg-any = true
 suppress-none-returning = true
 
 [tool.poe.tasks]
-update-approvals = "poetry run python -m scripts.update_approvals"
+update-approvals = "uv run python -m scripts.update_approvals"
+
+[tool.poe.tasks.release-preview]
+sequence = [
+    # `git describe` only sees tags in the history of HEAD; `--print-last-released-tag` also reports the v3 line tags
+    { cmd = "git describe --tags --abbrev=0" },
+    { cmd = "uv run semantic-release version --print-tag --as-prerelease" },
+]
+help = "Preview current and next prerelease version"
+
+[tool.poe.tasks.release-dry-run-beta]
+shell = "uv run semantic-release --noop -vv version --as-prerelease --prerelease-token beta --print-tag"
+help = "Dry-run beta release (no changes made)"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
@@ -138,13 +154,33 @@ show_error_codes = true
 disable_error_code = ['return']
 
 [tool.semantic_release]
-version_toml = "pyproject.toml:tool.poetry.version"
-remove_dist = false
-build_command = "poetry build --format wheel"
-version_source = "tag"
+version_toml = ["pyproject.toml:project.version"]
+build_command = "uv build"
 major_on_zero = true
-upload_to_repository = false
-tag_commit = true
-branch = "main"
 commit_message = "{version}\n\nskip-checks: true"
+tag_format = "v{version}"
 
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease_token = "beta"
+prerelease = false
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "build", "chore", "refactor"]
+
+[tool.semantic_release.remote]
+type = "github"
+token = { env = "GH_TOKEN" }

@@ -50,6 +50,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+pytest-coverage.txt
+pytest-junit.xml
 
 # Translations
 *.mo
@@ -172,3 +174,5 @@ smart_contracts/coverage/
 
 examples/smart_contracts/artifacts/*/client_generated.py
 examples/smart_contracts/artifacts/*/client_generated*.py
+
+AGENTS.md
