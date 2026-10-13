@@ -1,6 +1,6 @@
 [project]
 name = "algokit-client-generator"
-version = "2.2.0"
+version = "2.2.1-beta.3"
 description = "Algorand typed client Generator"
 authors = [
     { name = "Algorand Foundation", email = "contact@algorand.foundation" },
