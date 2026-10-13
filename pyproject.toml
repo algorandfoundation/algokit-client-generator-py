@@ -29,7 +29,7 @@ dev = [
     "pytest-xdist>=3.5.0,<4",
     "puyapy>=5.8.0,<6; python_version >= '3.12'",
     "algorand-python>=3.4.0,<4; python_version >= '3.12'",
-    "setuptools>=83.0,<84.0",
+    "setuptools>=83.0,<85.0",
     "pytest-sugar>=1.0.0,<2",
 ]
 
