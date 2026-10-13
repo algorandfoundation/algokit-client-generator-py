@@ -18,7 +18,7 @@ algokitgen-py = "algokit_client_generator.cli:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.8.6,<0.13.0",
+    "ruff>=0.8.6,<0.18.0",
     "mypy",
     "pytest",
     "pytest-cov",
